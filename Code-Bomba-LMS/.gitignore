@@ -35,3 +35,16 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Secrets / Environment ###
+application-*.properties
+application-*.yml
+*.env
+.env*
+
+### Logs ###
+*.log
+logs/
+
+### macOS ###
+.DS_Store
