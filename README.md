@@ -46,7 +46,6 @@ spring.datasource.password=your_password
 
 - `application.properties`(기본 파일)는 공통 설정만 작성하고 커밋합니다.
 - 민감한 값은 반드시 `application-local.properties` 같은 별도 파일에 분리하세요.
-- 실수로 시크릿을 커밋했다면 즉시 팀장에게 알리고 해당 키를 재발급하세요.
 
 ### Windows 사용자 주의사항
 
