@@ -31,12 +31,10 @@ body:
       required: true
 
   - type: input
-    id: module
+    id: check
     attributes:
       label: 리뷰어가 확인해야 할 내용이나 공유할 사항이 있다면 작성해주세요.
       placeholder: "자유롭게 적어주세요!!"
-    validations:
-      required: true   
 
 ---
 # name: Feature
