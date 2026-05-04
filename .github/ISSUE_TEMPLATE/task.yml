@@ -40,7 +40,6 @@ body:
     attributes:
       label: ✅ 액션 아이템 (Action Items)
       description: 구체적으로 수행해야 할 작업 목록을  작성해주세요.
-      value: |
     validations:
       required: true
 
