@@ -1,0 +1,60 @@
+name: Task
+description: 프로젝트 진행을 위한 일반적인 업무 및 태스크를 생성합니다.
+title: "[TASK] "
+labels: ["Type: Task"]
+body:
+  - type: checkboxes
+    id: assignee_name
+    attributes:
+      label: 👤 담당자 (Assignee)
+      description: 이 작업을 수행할 담당자를 모두 체크해주세요.
+      options:
+        - label: 김동훈
+        - label: 김동현
+        - label: 김용준
+        - label: 이강욱
+        - label: 배정현
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 📝 개요 (Context)
+      description: 이 작업이 왜 필요한지, 어떤 배경에서 시작되었는지 간략히 작성해주세요.
+      placeholder: 예시) LMS 프로젝트의 핵심 도메인인 강의 관리 기능의 API 설계를 위해 필요합니다.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_outcome
+    attributes:
+      label: 🎯 목표 및 기대 결과 (Expected Outcome)
+      description: 이 이슈가 완료되었을 때 달성해야 하는 구체적인 결과물을 적어주세요.
+      placeholder: 예시) 강의 CRUD API 명세 완료 및 팀 내 공유
+    validations:
+      required: true
+
+  - type: textarea
+    id: action_items
+    attributes:
+      label: ✅ 액션 아이템 (Action Items)
+      description: 구체적으로 수행해야 할 작업 목록을 작성해주세요
+      value:
+    validations:
+      required: true
+
+  - type: input
+    id: due_date
+    attributes:
+      label: 📅 기한 (Due Date)
+      placeholder: 2026.00.00 (요일) 00:00
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 🔗 참고 자료 및 의존성 (References & Dependencies)
+      description: 관련된 PR, 이슈 번호, 혹은 노션 링크 등을 남겨주세요.
+      placeholder: 예시) 선행 작업 이슈 #10, 노션 API 명세서 링크 등
+    validations:
+      required: false
