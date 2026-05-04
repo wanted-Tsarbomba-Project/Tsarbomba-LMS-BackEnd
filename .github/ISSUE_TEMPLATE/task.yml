@@ -7,7 +7,7 @@ body:
     id: assignee_name
     attributes:
       label: 👤 담당자 (Assignee)
-      description: 이 작업을 수행할 담당자를 체크해주세요. (해당하는 분의 [ ] 안에 x를 넣거나, 이슈 생성 후 본문에서 클릭하세요)
+      description: 이 작업을 수행할 담당자를 체크해주세요. (이슈 생성 후 본문에서 클릭 가능합니다)
       value: |
         - [ ] 김동훈
         - [ ] 김동현
@@ -36,15 +36,13 @@ body:
       required: true
 
   - type: textarea
-    id: action_items
-    attributes:
-      label: ✅ 액션 아이템 (Action Items)
-      description: 구체적으로 수행해야 할 작업 목록을  작성해주세요.
-      value: |
-        - 
-        -
-    validations:
-      required: true
+      id: action_items
+      attributes:
+        label: ✅ 액션 아이템 (Action Items)
+        description: 구체적으로 수행해야 할 작업 목록을 자유롭게 작성해주세요.
+        placeholder: "예시: \n1. 도메인 분석\n2. API 명세서 작성\n3. 팀 내 공유"
+      validations:
+        required: true
 
   - type: input
     id: due_date
