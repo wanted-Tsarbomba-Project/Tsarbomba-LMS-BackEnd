@@ -1,19 +1,21 @@
-name: Task
+name: 📒Task
 description: 프로젝트 진행을 위한 일반적인 업무 및 태스크를 생성합니다.
 title: "[TASK] "
 labels: ["Type: Task"]
 body:
-  - type: checkboxes
+  - type: textarea
     id: assignee_name
     attributes:
       label: 👤 담당자 (Assignee)
-      description: 이 작업을 수행할 담당자를 모두 체크해주세요.
-      options:
-        - label: 김동훈
-        - label: 김동현
-        - label: 김용준
-        - label: 이강욱
-        - label: 배정현
+      description: 이 작업을 수행할 담당자를 체크해주세요. (해당하는 분의 [ ] 안에 x를 넣거나, 이슈 생성 후 본문에서 클릭하세요)
+      value: |
+        - [ ] 김동훈
+        - [ ] 김동현
+        - [ ] 김용준
+        - [ ] 이강욱
+        - [ ] 배정현
+    validations:
+      required: true
 
   - type: textarea
     id: context
@@ -28,8 +30,8 @@ body:
     id: expected_outcome
     attributes:
       label: 🎯 목표 및 기대 결과 (Expected Outcome)
-      description: 이 이슈가 완료되었을 때 달성해야 하는 구체적인 결과물을 적어주세요.
-      placeholder: 예시) 강의 CRUD API 명세 완료 및 팀 내 공유
+      description: 이 이슈가 완료되었을 때 댓글로 남길 구체적인 결과물을 적어주세요.
+      placeholder: 예시) 강의 CRUD API 명세 완료 Notion 링크
     validations:
       required: true
 
@@ -37,8 +39,8 @@ body:
     id: action_items
     attributes:
       label: ✅ 액션 아이템 (Action Items)
-      description: 구체적으로 수행해야 할 작업 목록을 작성해주세요
-      value:
+      description: 구체적으로 수행해야 할 작업 목록을  작성해주세요.
+      value: |
     validations:
       required: true
 
