@@ -17,11 +17,11 @@ public class ProgressApiController {
         this.progressService = progressService;
     }
 
-    @GetMapping("/api/v1/problem-sets/{id}/progress")
+    @GetMapping("/api/v1/problem-sets/{problemSetId}/progress")
     public ResponseEntity<ProblemProgressResponse> findProblemSetProgress(
-            @PathVariable Long id,
+            @PathVariable Long problemSetId,
             @RequestParam Long userId
     ) {
-        return ResponseEntity.ok(progressService.findProblemSetProgress(id, userId));
+        return ResponseEntity.ok(progressService.findProblemSetProgress(problemSetId, userId));
     }
 }

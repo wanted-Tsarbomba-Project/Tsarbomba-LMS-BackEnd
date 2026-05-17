@@ -4,4 +4,3 @@
 ### 문제 힌트 조회
 GET {{baseUrl}}/api/v1/problems/{{problemId}}/hints
 Accept: application/json
-

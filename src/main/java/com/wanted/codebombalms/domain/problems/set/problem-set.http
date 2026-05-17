@@ -1,13 +1,269 @@
 @baseUrl = http://localhost:8080
 @categoryId = 1
 @problemSetId = 1
-@userId = 1
+@userId = 3
 
 ### 문제 세트 목록 조회
 GET {{baseUrl}}/api/v1/problem-sets?categoryId={{categoryId}}
 Accept: application/json
 
-### 문제 세트 진입 및 현재 문제 조회
-POST {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
+### 문제 세트 상세 진입 및 현재 문제 조회
+GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
 Accept: application/json
 
+### 문제 세트 등록 성공 - 기존 카테고리 사용
+# 기대 결과:
+# - 이미 ACTIVE 상태의 "데이터 분석" 카테고리가 있으면 기존 카테고리를 사용합니다.
+# - problem_set 1건, problem 2건, problem_hint 2건이 저장됩니다.
+# - 응답 상태는 201 Created 입니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "고객 분석 기초 문제 세트",
+  "categoryName": "데이터 분석",
+  "description": "고객 세그먼트와 핵심 지표를 이해하는 문제 세트입니다.",
+  "dataFileName": "customer_analysis.csv",
+  "problems": [
+    {
+      "title": "고객 세그먼트 식별",
+      "content": "서비스를 설계할 때 고객 세그먼트를 나누는 이유를 설명하시오.",
+      "point": 10,
+      "startCode": "df = pd.read_csv(\"data/customer_analysis.csv\")",
+      "answer": "고객별 특성에 맞는 서비스를 제공하기 위해서",
+      "hint": "모든 고객이 같은 요구를 가진 것은 아닙니다.",
+      "explanation": "고객 세그먼트는 고객을 특성별로 나누어 더 적절한 서비스와 전략을 제공하기 위해 사용합니다."
+    },
+    {
+      "title": "핵심 지표 선택",
+      "content": "서비스 성장 여부를 판단하기 위해 확인할 수 있는 대표 지표를 하나 작성하시오.",
+      "point": 10,
+      "startCode": "df = pd.read_csv(\"data/customer_analysis.csv\")",
+      "answer": "재방문율",
+      "hint": "고객이 다시 돌아오는지를 생각해보세요.",
+      "explanation": "재방문율은 사용자가 서비스를 반복해서 이용하는지 확인할 수 있는 대표적인 지표입니다."
+    }
+  ]
+}
+
+### 문제 세트 등록 성공 - 신규 카테고리 자동 생성
+# 기대 결과:
+# - "Python 실습" 카테고리가 없으면 problem_category에 새로 저장됩니다.
+# - 이미 있으면 기존 ACTIVE 카테고리를 재사용합니다.
+# - 카테고리 중복 입력은 실패가 아니라 재사용이 현재 정책입니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "M2 코드 실행형 준비 세트",
+  "categoryName": "Python 실습",
+  "description": "M2 코드 실행형 문제를 고려한 테스트 문제 세트입니다.",
+  "dataFileName": "employee_performance.csv",
+  "problems": [
+    {
+      "title": "데이터프레임 행 개수 확인",
+      "content": "직원 성과 데이터의 전체 행 개수를 확인하는 코드를 작성하기 전, 행 개수를 확인할 때 사용하는 pandas 속성을 작성하시오.",
+      "point": 15,
+      "startCode": "df = pd.read_csv(\"data/employee_performance.csv\")",
+      "answer": "shape",
+      "hint": "행과 열 개수를 함께 알려주는 속성입니다.",
+      "explanation": "pandas DataFrame의 shape 속성은 행과 열 개수를 튜플 형태로 반환합니다."
+    }
+  ]
+}
+
+### 문제 세트 등록 성공 - 힌트 없이 등록
+# 기대 결과:
+# - problem_set과 problem은 저장됩니다.
+# - hint가 비어 있으므로 problem_hint는 저장되지 않습니다.
+# - 현재 정책상 힌트는 필수가 아닙니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "힌트 없는 단답형 문제 세트",
+  "categoryName": "SQL",
+  "description": "힌트 없이도 풀 수 있는 단답형 문제 세트입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "SELECT 키워드 의미",
+      "content": "SQL에서 데이터를 조회할 때 사용하는 대표 키워드를 작성하시오.",
+      "point": 5,
+      "startCode": null,
+      "answer": "SELECT",
+      "hint": "",
+      "explanation": "SELECT는 테이블에서 데이터를 조회할 때 사용하는 SQL 키워드입니다."
+    }
+  ]
+}
+
+### 문제 세트 등록 성공 - M1에서 startCode/dataFileName은 받아만 둠
+# 기대 결과:
+# - M1 DB에는 dataFileName, startCode 저장 칼럼이 없으므로 저장되지 않습니다.
+# - 요청 DTO로만 받고, M2 데이터셋/코드 실행형 확장 때 저장 대상으로 전환할 수 있습니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "시작 코드 포함 문제 세트",
+  "categoryName": "Python 실습",
+  "description": "M2 확장을 위해 시작 코드 입력을 포함한 문제 세트입니다.",
+  "dataFileName": "sales.csv",
+  "problems": [
+    {
+      "title": "매출 컬럼 확인",
+      "content": "매출 데이터에서 금액 컬럼을 확인할 때 사용할 수 있는 DataFrame 속성을 작성하시오.",
+      "point": 10,
+      "startCode": "df = pd.read_csv(\"data/sales.csv\")",
+      "answer": "columns",
+      "hint": "DataFrame이 가진 컬럼 이름 목록을 확인하는 속성입니다.",
+      "explanation": "columns 속성은 DataFrame의 컬럼 이름 목록을 반환합니다."
+    }
+  ]
+}
+
+### 문제 세트 등록 실패 - 카테고리 없음
+# 기대 결과:
+# - categoryName이 빈 문자열이므로 실패합니다.
+# - 현재 전역 예외 포맷이 완성되지 않았다면 Spring 기본 오류 응답이 나올 수 있습니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "카테고리 없는 문제 세트",
+  "categoryName": "",
+  "description": "카테고리 검증 실패 확인용 요청입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "문제 제목",
+      "content": "문제 내용",
+      "point": 10,
+      "startCode": null,
+      "answer": "정답",
+      "hint": "힌트",
+      "explanation": "해설"
+    }
+  ]
+}
+
+### 문제 세트 등록 실패 - 문제 세트 제목 없음
+# 기대 결과:
+# - title이 빈 문자열이므로 실패합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "",
+  "categoryName": "데이터 분석",
+  "description": "문제 세트 제목 검증 실패 확인용 요청입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "문제 제목",
+      "content": "문제 내용",
+      "point": 10,
+      "startCode": null,
+      "answer": "정답",
+      "hint": "힌트",
+      "explanation": "해설"
+    }
+  ]
+}
+
+### 문제 세트 등록 실패 - 소문제 없음
+# 기대 결과:
+# - problems가 빈 배열이므로 실패합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "소문제 없는 문제 세트",
+  "categoryName": "테스트",
+  "description": "소문제가 없어서 실패해야 하는 요청입니다.",
+  "dataFileName": null,
+  "problems": []
+}
+
+### 문제 세트 등록 실패 - 소문제 제목 없음
+# 기대 결과:
+# - 첫 번째 소문제의 title이 빈 문자열이므로 실패합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "소문제 제목 검증 세트",
+  "categoryName": "데이터 분석",
+  "description": "소문제 제목 검증 실패 확인용 요청입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "",
+      "content": "문제 내용",
+      "point": 10,
+      "startCode": null,
+      "answer": "정답",
+      "hint": "힌트",
+      "explanation": "해설"
+    }
+  ]
+}
+
+### 문제 세트 등록 실패 - 소문제 내용 없음
+# 기대 결과:
+# - 첫 번째 소문제의 content가 빈 문자열이므로 실패합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "소문제 내용 검증 세트",
+  "categoryName": "데이터 분석",
+  "description": "소문제 내용 검증 실패 확인용 요청입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "문제 제목",
+      "content": "",
+      "point": 10,
+      "startCode": null,
+      "answer": "정답",
+      "hint": "힌트",
+      "explanation": "해설"
+    }
+  ]
+}
+
+### 문제 세트 등록 실패 - 소문제 정답 없음
+# 기대 결과:
+# - 첫 번째 소문제의 answer가 빈 문자열이므로 실패합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "소문제 정답 검증 세트",
+  "categoryName": "데이터 분석",
+  "description": "소문제 정답 검증 실패 확인용 요청입니다.",
+  "dataFileName": null,
+  "problems": [
+    {
+      "title": "문제 제목",
+      "content": "문제 내용",
+      "point": 10,
+      "startCode": null,
+      "answer": "",
+      "hint": "힌트",
+      "explanation": "해설"
+    }
+  ]
+}

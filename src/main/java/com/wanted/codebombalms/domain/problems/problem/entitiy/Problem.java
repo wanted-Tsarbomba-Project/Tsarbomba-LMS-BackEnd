@@ -42,6 +42,29 @@ public class Problem {
 
     protected Problem() {
     }
+    public Problem(
+            ProblemSet problemSet,
+            String title,
+            String content,
+            String answer,
+            String explanation,
+            int score,
+            Integer problemOrder
+    ) {
+        this.problemSet = problemSet;
+        this.title = title;
+        this.content = content;
+        this.problemType = "TEXT";
+        this.difficulty = "EASY";
+        this.answer = answer;
+        this.explanation = explanation;
+        this.score = score;
+        this.attemptLimit = 3;
+        this.isRetriable = true;
+        this.status = "ACTIVE";
+        this.problemOrder = problemOrder;
+    }
+
 
     public Long getProblemId() {
         return problemId;

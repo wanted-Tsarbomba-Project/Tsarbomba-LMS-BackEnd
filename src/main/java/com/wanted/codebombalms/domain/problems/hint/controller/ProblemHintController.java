@@ -18,8 +18,8 @@ public class ProblemHintController {
         this.problemHintService = problemHintService;
     }
 
-    @GetMapping("/api/v1/problems/{id}/hints")
-    public ResponseEntity<List<ProblemHintResponse>> findHints(@PathVariable Long id) {
-        return ResponseEntity.ok(problemHintService.findHints(id));
+    @GetMapping("/api/v1/problems/{problemId}/hints")
+    public ResponseEntity<List<ProblemHintResponse>> findHints(@PathVariable Long problemId) {
+        return ResponseEntity.ok(problemHintService.findHints(problemId));
     }
 }

@@ -17,11 +17,11 @@ public class ResultController {
         this.resultService = resultService;
     }
 
-    @GetMapping("/api/v1/problem-sets/{id}/result")
+    @GetMapping("/api/v1/problem-sets/{problemSetId}/result")
     public ResponseEntity<ProblemSetResultResponse> findResult(
-            @PathVariable Long id,
+            @PathVariable Long problemSetId,
             @RequestParam Long userId
     ) {
-        return ResponseEntity.ok(resultService.findResult(id, userId));
+        return ResponseEntity.ok(resultService.findResult(problemSetId, userId));
     }
 }

@@ -35,6 +35,13 @@ public class ProblemHint {
     protected ProblemHint() {
     }
 
+    public ProblemHint(Problem problem, Integer hintOrder, String hintContent) {
+        this.problem = problem;
+        this.hintOrder = hintOrder;
+        this.hintContent = hintContent;
+        this.createdAt = LocalDateTime.now();
+    }
+
     public Long getHintId() {
         return hintId;
     }
