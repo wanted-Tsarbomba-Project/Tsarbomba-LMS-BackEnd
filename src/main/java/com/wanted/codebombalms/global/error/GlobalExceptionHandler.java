@@ -1,98 +1,77 @@
 package com.wanted.codebombalms.global.error;
 
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;  // course 예외처리에 필요
-import com.wanted.codebombalms.domain.lecture.exception.LectureNotFoundException;  // lecture 예외처리에 필요
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Arrays;
 
+@Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(CourseNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleCourseNotFoundException(
-            CourseNotFoundException exception,
+    private final Environment env;
+
+    // ===== 비즈니스 예외 (우리가 만든 예외 전부) =====
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessException(
+            BusinessException e,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.NOT_FOUND,
-                exception.getErrorCode(),
-                exception.getMessage(),
-                request.getRequestURI()
-        );
+        ErrorCode errorCode = e.getErrorCode();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        if (isDev()) {
+            log.warn("[GlobalExceptionHandler] {} - path: {}", e.getMessage(), request.getRequestURI(), e);
+        } else {
+            log.warn("[GlobalExceptionHandler] {} - path: {}", e.getMessage(), request.getRequestURI());
+        }
+
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(new ErrorResponse(errorCode, request.getRequestURI()));
     }
 
-    @ExceptionHandler(LectureNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleLectureNotFoundException(
-            LectureNotFoundException exception,
-            HttpServletRequest request
-    ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.NOT_FOUND,
-                exception.getErrorCode(),
-                exception.getMessage(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-    }
-
+    // ===== @Valid 검증 실패 =====
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException exception,
+            MethodArgumentNotValidException e,
             HttpServletRequest request
     ) {
-        String message = exception.getBindingResult()
+        String message = e.getBindingResult()
                 .getFieldErrors()
                 .get(0)
                 .getDefaultMessage();
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "VALIDATION_FAILED",
-                message,
-                request.getRequestURI()
-        );
+        log.warn("[GlobalExceptionHandler] validation failed - path: {}, message: {}",
+                request.getRequestURI(), message);
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        return ResponseEntity
+                .status(400)
+                .body(new ErrorResponse(400, "VALIDATION_FAILED", message, request.getRequestURI()));
     }
 
+    // ===== 예상치 못한 예외 (항상 스택트레이스) =====
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(
-            Exception exception,
+            Exception e,
             HttpServletRequest request
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "INTERNAL_SERVER_ERROR",
-                "서버 내부 오류가 발생했습니다.",
-                request.getRequestURI()
-        );
+        log.error("[GlobalExceptionHandler] 예상치 못한 예외 - path: {}", request.getRequestURI(), e);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        String message = isDev() ? e.getMessage() : "서버 오류가 발생했습니다.";
+
+        return ResponseEntity
+                .status(500)
+                .body(new ErrorResponse(500, "INTERNAL_ERROR", message, request.getRequestURI()));
     }
 
-
-    @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(
-            CustomException exception,
-            HttpServletRequest request
-    ) {
-        ErrorCode errorCode = exception.getErrorCode();
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                errorCode.getHttpStatus(),
-                errorCode.name(),
-                exception.getMessage(),
-                request.getRequestURI()
-        );
-
-        return ResponseEntity.status(errorCode.getHttpStatus()).body(errorResponse);
+    private boolean isDev() {
+        return Arrays.asList(env.getActiveProfiles()).contains("local");
     }
 }
