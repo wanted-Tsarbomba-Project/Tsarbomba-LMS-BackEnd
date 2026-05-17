@@ -1,24 +1,30 @@
 package com.wanted.codebombalms.global.error;
 
-import lombok.*;
-import org.springframework.http.HttpStatus;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor
 @Getter
-@Setter
-@ToString
 public class ErrorResponse {
 
-    private int status;
-    private String errorCode;
-    private String message;
-    private String path;
-    private LocalDateTime timestamp;
+    private final int status;
+    private final String errorCode;
+    private final String message;
+    private final String path;
+    private final LocalDateTime timestamp;
 
-    public ErrorResponse(HttpStatus status, String errorCode, String message, String path) {
-        this.status = status.value();
+    // BusinessException용
+    public ErrorResponse(ErrorCode errorCode, String path) {
+        this.status = errorCode.getStatus();
+        this.errorCode = errorCode.getCode();
+        this.message = errorCode.getMessage();
+        this.path = path;
+        this.timestamp = LocalDateTime.now();
+    }
+
+    // Validation / 500용
+    public ErrorResponse(int status, String errorCode, String message, String path) {
+        this.status = status;
         this.errorCode = errorCode;
         this.message = message;
         this.path = path;

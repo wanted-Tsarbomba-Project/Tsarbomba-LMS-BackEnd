@@ -3,6 +3,8 @@ package com.wanted.codebombalms.domain.problems.problem.service;
 import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemResponse;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.repository.ProblemRepository;
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,12 +34,12 @@ public class ProblemService {
                         "ACTIVE"
                 )
                 .map(ProblemResponse::new)
-                .orElseThrow(() -> new RuntimeException("현재 풀 문제가 없습니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.NO_CURRENT_PROBLEM));
     }
 
     public Problem findProblemEntity(Long problemId) {
         return problemRepository.findById(problemId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
     }
 
     public Optional<Long> findProblemIdByProblemSetAndOrder(Long problemSetId, Integer problemOrder) {
