@@ -38,6 +38,23 @@ public class ProblemSet {
 
     protected ProblemSet() {
     }
+    public ProblemSet(
+            ProblemCategory category,
+            String title,
+            String description,
+            String difficulty,
+            Integer totalProblemCount
+    ) {
+        this.category = category;
+        this.title = title;
+        this.description = description;
+        this.difficulty = difficulty;
+        this.status = "ACTIVE";
+        this.totalProblemCount = totalProblemCount;
+        this.completedUserCount = 0;
+        this.startedUserCount = 0;
+        this.createdAt = LocalDateTime.now();
+    }
 
     public Long getProblemSetId() {
         return problemSetId;

@@ -3,6 +3,8 @@ package com.wanted.codebombalms.domain.problems.problem.service;
 import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemResponse;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.repository.ProblemRepository;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
+import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -37,7 +39,7 @@ public class ProblemService {
 
     public Problem findProblemEntity(Long problemId) {
         return problemRepository.findById(problemId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
     }
 
     public Optional<Long> findProblemIdByProblemSetAndOrder(Long problemSetId, Integer problemOrder) {
@@ -62,4 +64,26 @@ public class ProblemService {
                 .findTopByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderDesc(problemSetId, "ACTIVE")
                 .map(ProblemResponse::new);
     }
+
+    public Problem createProblem(
+            ProblemSet problemSet,
+            ProblemCreateRequest request,
+            Integer problemOrder
+    ) {
+        int score = request.point() == null ? 0 : request.point();
+
+        Problem problem = new Problem(
+                problemSet,
+                request.title(),
+                request.content(),
+                request.answer(),
+                request.explanation(),
+                score,
+                problemOrder
+        );
+
+        return problemRepository.save(problem);
+    }
+
+
 }

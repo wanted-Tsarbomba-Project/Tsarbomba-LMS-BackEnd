@@ -19,6 +19,12 @@ public class ProblemCategory {
     protected ProblemCategory() {
     }
 
+    public ProblemCategory(String categoryName, String description) {
+        this.categoryName = categoryName;
+        this.description = description;
+        this.status = "ACTIVE";
+    }
+
     public Long getCategoryId() {
         return categoryId;
     }
@@ -33,4 +39,6 @@ public class ProblemCategory {
     public String getDescription() {
         return description;
     }
+
+
 }

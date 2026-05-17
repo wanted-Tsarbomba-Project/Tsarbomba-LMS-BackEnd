@@ -1,15 +1,22 @@
 package com.wanted.codebombalms.domain.problems.set.service;
 
+import com.wanted.codebombalms.domain.problems.category.entity.ProblemCategory;
 import com.wanted.codebombalms.domain.problems.category.service.ProblemCategoryService;
+import com.wanted.codebombalms.domain.problems.hint.service.ProblemHintService;
 import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemResponse;
+import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.service.ProblemService;
 import com.wanted.codebombalms.domain.problems.progress.service.ProgressService;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetCreateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreateResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetEnterResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetListResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.set.exception.SetNotFoundException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -21,17 +28,20 @@ public class ProblemSetService {
     private final ProblemCategoryService problemCategoryService;
     private final ProblemService problemService;
     private final ProgressService progressService;
+    private final ProblemHintService problemHintService;
 
     public ProblemSetService(
             ProblemSetRepository problemSetRepository,
             ProblemCategoryService problemCategoryService,
             ProblemService problemService,
-            ProgressService progressService
+            ProgressService progressService,
+            ProblemHintService problemHintService
     ) {
         this.problemSetRepository = problemSetRepository;
         this.problemCategoryService = problemCategoryService;
         this.problemService = problemService;
         this.progressService = progressService;
+        this.problemHintService = problemHintService;
     }
 
     public List<ProblemSetListResponse> findActiveSetsByCategory(Long categoryId) {
@@ -68,4 +78,6 @@ public class ProblemSetService {
                 currentProblem
         );
     }
+
+
 }

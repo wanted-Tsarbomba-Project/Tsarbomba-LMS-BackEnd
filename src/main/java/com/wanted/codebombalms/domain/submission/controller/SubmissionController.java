@@ -17,12 +17,12 @@ public class SubmissionController {
         this.submissionService = submissionService;
     }
 
-    @PostMapping("/api/v1/problems/{id}/submissions")
+    @PostMapping("/api/v1/problems/{problemId}/submissions")
     public ResponseEntity<SubmissionResponse> submitAnswer(
-            @PathVariable Long id,
+            @PathVariable Long problemId,
             @RequestBody SubmissionRequest request
     ) {
-        SubmissionResponse response = submissionService.submitAnswer(id, request);
+        SubmissionResponse response = submissionService.submitAnswer(problemId, request);
 
         return ResponseEntity.ok(response);
     }

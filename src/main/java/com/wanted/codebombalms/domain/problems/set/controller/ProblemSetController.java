@@ -23,11 +23,11 @@ public class ProblemSetController {
     ) {
         return ResponseEntity.ok(problemSetService.findActiveSetsByCategory(categoryId));
     }
-    @PostMapping("/api/v1/problem-sets/{id}")
+    @GetMapping("/api/v1/problem-sets/{problemSetId}")
     public ResponseEntity<ProblemSetEnterResponse> enterProblemSet(
-            @PathVariable Long id,
+            @PathVariable Long problemSetId,
             @RequestParam Long userId
     ) {
-        return ResponseEntity.ok(problemSetService.enterProblemSet(id, userId));
+        return ResponseEntity.ok(problemSetService.enterProblemSet(problemSetId, userId));
     }
 }

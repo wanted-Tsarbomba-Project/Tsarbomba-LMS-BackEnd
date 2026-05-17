@@ -1,8 +1,7 @@
 @baseUrl = http://localhost:8080
 @problemSetId = 1
-@userId = 1
+@userId = 3
 
 ### 문제 세트 진행 상태 조회
 GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}/progress?userId={{userId}}
 Accept: application/json
-
