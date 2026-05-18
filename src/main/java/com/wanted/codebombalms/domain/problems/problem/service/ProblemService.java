@@ -4,6 +4,7 @@ import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemRespo
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.repository.ProblemRepository;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,11 @@ public class ProblemService {
     public Problem findProblemEntity(Long problemId) {
         return problemRepository.findById(problemId)
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
+    }
+
+    public Problem findProblemEntity(Long problemSetId, Long problemId) {
+        return problemRepository.findByProblemIdAndProblemSet_ProblemSetId(problemId, problemSetId)
+                .orElseThrow(() -> new RuntimeException("해당 문제 세트에 속한 소문제가 아닙니다."));
     }
 
     public Optional<Long> findProblemIdByProblemSetAndOrder(Long problemSetId, Integer problemOrder) {
@@ -83,6 +89,43 @@ public class ProblemService {
         );
 
         return problemRepository.save(problem);
+    }
+
+    public Problem createProblem(
+            ProblemSet problemSet,
+            ProblemUpdateRequest request,
+            Integer problemOrder
+    ) {
+        int score = request.point() == null ? 0 : request.point();
+
+        Problem problem = new Problem(
+                problemSet,
+                request.title(),
+                request.content(),
+                request.answer(),
+                request.explanation(),
+                score,
+                problemOrder
+        );
+
+        return problemRepository.save(problem);
+    }
+
+
+    public Problem updateProblem(Long problemSetId, ProblemUpdateRequest request) {
+        Problem problem = findProblemEntity(problemSetId, request.problemId());
+
+        int score = request.point() == null ? 0 : request.point();
+
+        problem.update(
+                request.title(),
+                request.content(),
+                request.answer(),
+                request.explanation(),
+                score
+        );
+
+        return problem;
     }
 
 

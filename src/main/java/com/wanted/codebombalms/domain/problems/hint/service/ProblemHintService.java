@@ -40,4 +40,23 @@ public class ProblemHintService {
         return problemHintRepository.save(problemHint);
     }
 
+    public ProblemHint updateHint(Long hintId, String hintContent) {
+        ProblemHint problemHint = problemHintRepository.findById(hintId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 힌트입니다."));
+
+        problemHint.update(hintContent);
+
+        return problemHint;
+    }
+
+    public ProblemHint updateHint(Problem problem, Long hintId, String hintContent) {
+        ProblemHint problemHint = problemHintRepository
+                .findByHintIdAndProblem_ProblemId(hintId, problem.getProblemId())
+                .orElseThrow(() -> new RuntimeException("해당 소문제에 속한 힌트가 아닙니다."));
+
+        problemHint.update(hintContent);
+
+        return problemHint;
+    }
+
 }

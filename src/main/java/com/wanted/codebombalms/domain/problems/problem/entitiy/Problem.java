@@ -65,6 +65,23 @@ public class Problem {
         this.problemOrder = problemOrder;
     }
 
+    public void update(
+            String title,
+            String content,
+            String answer,
+            String explanation,
+            int score
+    ) {
+        this.title = title;
+        this.content = content;
+        this.answer = answer;
+        this.explanation = explanation;
+        this.score = score;
+    }
+
+    public void deactivate() {
+        this.status = "INACTIVE";
+    }
 
     public Long getProblemId() {
         return problemId;

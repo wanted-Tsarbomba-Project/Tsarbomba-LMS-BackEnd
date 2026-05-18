@@ -27,4 +27,9 @@ public interface ProblemRepository extends JpaRepository<Problem, Long> {
             String status
     );
 
+    Optional<Problem> findByProblemIdAndProblemSet_ProblemSetId(
+            Long problemId,
+            Long problemSetId
+    );
+
 }

@@ -56,6 +56,24 @@ public class ProblemSet {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void update(
+            ProblemCategory category,
+            String title,
+            String description
+    ) {
+        this.category = category;
+        this.title = title;
+        this.description = description;
+    }
+
+    public void updateTotalProblemCount(Integer totalProblemCount) {
+        this.totalProblemCount = totalProblemCount;
+    }
+
+    public void deactivate() {
+        this.status = "INACTIVE";
+    }
+
     public Long getProblemSetId() {
         return problemSetId;
     }

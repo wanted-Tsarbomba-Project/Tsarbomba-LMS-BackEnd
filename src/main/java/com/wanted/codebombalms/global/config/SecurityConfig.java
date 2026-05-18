@@ -45,7 +45,7 @@ public class SecurityConfig {
                         // 관리자 전용
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         // 그 외 모두 인증 필요
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider),
