@@ -3,7 +3,9 @@ package com.wanted.codebombalms.domain.problems.problem.controller;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetCreateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreateResponse;
+import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetDeleteResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetUpdateResponse;
+import com.wanted.codebombalms.domain.problems.set.service.ProblemSetDeleteService;
 import com.wanted.codebombalms.domain.problems.set.service.ProblemSetRegistrationService;
 import com.wanted.codebombalms.domain.problems.set.service.ProblemSetUpdateService;
 import org.springframework.http.HttpStatus;
@@ -15,10 +17,14 @@ public class ProblemManageController {
 
     private final ProblemSetRegistrationService problemSetRegistrationService;
     private final ProblemSetUpdateService  problemSetUpdateService;
+    private final ProblemSetDeleteService problemSetDeleteService;
+
     public ProblemManageController(ProblemSetRegistrationService problemSetRegistrationService,
-                                   ProblemSetUpdateService problemSetUpdateService) {
+                                   ProblemSetUpdateService problemSetUpdateService,
+                                   ProblemSetDeleteService problemSetDeleteService) {
         this.problemSetRegistrationService = problemSetRegistrationService;
         this.problemSetUpdateService = problemSetUpdateService;
+        this.problemSetDeleteService = problemSetDeleteService;
     }
 
     @PostMapping("/api/v1/problems")
@@ -42,4 +48,14 @@ public class ProblemManageController {
         return ResponseEntity.ok(response);
     }
 
+    @DeleteMapping("/api/v1/problems/{problemSetId}")
+    public ResponseEntity<ProblemSetDeleteResponse> deleteProblemSet(
+            @PathVariable Long problemSetId,
+            @RequestParam(defaultValue = "false") boolean force
+    ) {
+        ProblemSetDeleteResponse response =
+                problemSetDeleteService.deactivateProblemSet(problemSetId, force);
+
+        return ResponseEntity.ok(response);
+    }
 }

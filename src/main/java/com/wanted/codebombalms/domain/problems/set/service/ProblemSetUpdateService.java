@@ -2,15 +2,17 @@ package com.wanted.codebombalms.domain.problems.set.service;
 
 import com.wanted.codebombalms.domain.problems.category.entity.ProblemCategory;
 import com.wanted.codebombalms.domain.problems.category.service.ProblemCategoryService;
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.hint.service.ProblemHintService;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.service.ProblemService;
-import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetUpdateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetUpdateResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
-import com.wanted.codebombalms.domain.problems.set.exception.SetNotFoundException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.error.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +41,7 @@ public class ProblemSetUpdateService {
         validateUpdateRequest(request);
 
         ProblemSet problemSet = problemSetRepository.findById(problemSetId)
-                .orElseThrow(() -> new SetNotFoundException("존재하지 않는 문제 세트입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         ProblemCategory category = problemCategoryService.findOrCreateActiveCategory(
                 request.categoryName()
@@ -97,15 +99,15 @@ public class ProblemSetUpdateService {
 
     private void validateUpdateRequest(ProblemSetUpdateRequest request) {
         if (request.title() == null || request.title().isBlank()) {
-            throw new IllegalArgumentException("문제 세트 제목은 필수입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_SET_TITLE_REQUIRED);
         }
 
         if (request.categoryName() == null || request.categoryName().isBlank()) {
-            throw new IllegalArgumentException("카테고리는 필수입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_CATEGORY_REQUIRED);
         }
 
         if (request.problems() == null || request.problems().isEmpty()) {
-            throw new IllegalArgumentException("소문제는 1개 이상 필요합니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_REQUIRED);
         }
 
         for (ProblemUpdateRequest problem : request.problems()) {
@@ -115,15 +117,15 @@ public class ProblemSetUpdateService {
 
     private void validateProblemRequest(ProblemUpdateRequest problem) {
         if (problem.title() == null || problem.title().isBlank()) {
-            throw new IllegalArgumentException("소문제 제목은 필수입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         }
 
         if (problem.content() == null || problem.content().isBlank()) {
-            throw new IllegalArgumentException("소문제 내용은 필수입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_CONTENT_REQUIRED);
         }
 
         if (problem.answer() == null || problem.answer().isBlank()) {
-            throw new IllegalArgumentException("소문제 정답은 필수입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
         }
     }
 }
