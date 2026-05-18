@@ -68,4 +68,23 @@ public class User {
     private LocalDateTime updatedAt;
 
     private LocalDateTime deletedAt;
+
+
+
+    public static User createLocalUser(
+            String email,
+            String encodedPassword,
+            String name,
+            String nickname,
+            String phone
+    ) {
+        User user = new User();
+        user.email = email;
+        user.password = encodedPassword;
+        user.name = name;
+        user.nickname = nickname;
+        user.phone = phone;
+
+        return user;
+    }
 }
