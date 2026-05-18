@@ -5,8 +5,11 @@ import com.wanted.codebombalms.domain.course.dto.request.CourseUpdateRequest;
 import com.wanted.codebombalms.domain.course.dto.response.CourseDetailResponse;
 import com.wanted.codebombalms.domain.course.dto.response.CourseResponse;
 import com.wanted.codebombalms.domain.course.entity.Course;
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;
+import com.wanted.codebombalms.domain.course.exception.CourseErrorCode;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
+import com.wanted.codebombalms.global.logging.aop.LogBusiness;
+import com.wanted.codebombalms.global.logging.aop.LogPerformance;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +30,8 @@ public class CourseService {
     /**
      * 강좌 등록
      */
+    @LogBusiness
+    @LogPerformance
     @Transactional
     public CourseDetailResponse createCourse(CourseCreateRequest request) {
 
@@ -49,6 +54,8 @@ public class CourseService {
     /**
      * 강좌 목록 조회
      */
+    @LogBusiness
+    @LogPerformance
     public List<CourseResponse> findAllCourses() {
 
         log.info("[CourseService] 강좌 목록 조회 시작");
@@ -71,7 +78,7 @@ public class CourseService {
         log.info("[CourseService] 강좌 상세 조회 시작 - courseId: {}", courseId);
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         log.info("[CourseService] 강좌 상세 조회 완료 - courseId: {}", courseId);
 
@@ -87,7 +94,7 @@ public class CourseService {
         log.info("[CourseService] 강좌 수정 시작 - courseId: {}", courseId);
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         if (request.getTitle() != null) {
             course.setTitle(request.getTitle());
@@ -119,7 +126,7 @@ public class CourseService {
         log.info("[CourseService] 강좌 삭제 시작 - courseId: {}", courseId);
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         course.delete();
 
