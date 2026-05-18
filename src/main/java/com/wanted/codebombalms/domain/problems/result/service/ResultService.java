@@ -7,7 +7,10 @@ import com.wanted.codebombalms.domain.problems.progress.repository.ProgressRepos
 import com.wanted.codebombalms.domain.problems.result.dto.response.ProblemSetResultResponse;
 import com.wanted.codebombalms.domain.problems.result.dto.response.ProblemSubmissionResultResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.error.exception.ValidationException;
 import com.wanted.codebombalms.domain.submission.dto.response.LatestSubmissionResult;
 import com.wanted.codebombalms.domain.submission.service.SubmissionQueryService;
 import org.springframework.stereotype.Service;
@@ -38,14 +41,14 @@ public class ResultService {
     @Transactional(readOnly = true)
     public ProblemSetResultResponse findResult(Long problemSetId, Long userId) {
         ProblemSet problemSet = problemSetRepository.findById(problemSetId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제 세트입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         Progress progress = progressRepository
                 .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
-                .orElseThrow(() -> new RuntimeException("문제 세트를 완료하지 않았습니다."));
+                .orElseThrow(() -> new ValidationException(ProblemErrorCode.PROBLEM_SET_NOT_COMPLETED));
 
         if (!Boolean.TRUE.equals(progress.getCompleted())) {
-            throw new RuntimeException("문제 세트를 완료하지 않았습니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_SET_NOT_COMPLETED);
         }
 
         List<ProblemSubmissionResultResponse> submissions = problemService

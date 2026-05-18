@@ -13,7 +13,8 @@ import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreate
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetEnterResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetListResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
-import com.wanted.codebombalms.domain.problems.set.exception.SetNotFoundException;
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +47,7 @@ public class ProblemSetService {
 
     public List<ProblemSetListResponse> findActiveSetsByCategory(Long categoryId) {
         if (!problemCategoryService.existsActiveCategory(categoryId)) {
-            throw new SetNotFoundException("존재하지 않는 문제 분야입니다.");
+            throw new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND);
         }
 
         List<ProblemSet> problemSets = problemSetRepository
@@ -59,7 +60,7 @@ public class ProblemSetService {
 
     public ProblemSetEnterResponse enterProblemSet(Long problemSetId, Long userId) {
         ProblemSet problemSet = problemSetRepository.findById(problemSetId)
-                .orElseThrow(() -> new SetNotFoundException("존재하지 않는 문제 세트입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         Integer currentProblemNumber =
                 progressService.findOrCreateCurrentProblemNumber(userId, problemSet);

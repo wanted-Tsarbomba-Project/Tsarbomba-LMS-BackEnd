@@ -8,7 +8,10 @@ import com.wanted.codebombalms.domain.problems.progress.entitiy.Progress;
 import com.wanted.codebombalms.domain.problems.progress.enums.ProblemProgressStatus;
 import com.wanted.codebombalms.domain.problems.progress.repository.ProgressRepository;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
-import com.wanted.codebombalms.domain.problems.set.exception.SetNotFoundException;
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.global.error.exception.ConflictException;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.error.exception.ValidationException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import com.wanted.codebombalms.domain.submission.dto.response.LatestSubmissionResult;
 import com.wanted.codebombalms.domain.submission.service.SubmissionQueryService;
@@ -63,11 +66,11 @@ public class ProgressService {
         Progress progress = findOrCreateProgress(userId, problemSet);
 
         if (Boolean.TRUE.equals(progress.getCompleted())) {
-            throw new RuntimeException("이미 완료된 문제 세트입니다.");
+            throw new ConflictException(ProblemErrorCode.ALREADY_COMPLETED);
         }
 
         if (!progress.getCurrentProblemNumber().equals(problemOrder)) {
-            throw new RuntimeException("아직 열리지 않은 문제입니다.");
+            throw new ValidationException(ProblemErrorCode.PROBLEM_NOT_UNLOCKED);
         }
     }
 
@@ -98,7 +101,7 @@ public class ProgressService {
     @Transactional(readOnly = true)
     public ProblemProgressResponse findProblemSetProgress(Long problemSetId, Long userId) {
         ProblemSet problemSet = problemSetRepository.findById(problemSetId)
-                .orElseThrow(() -> new SetNotFoundException("존재하지 않는 문제 세트입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         Integer currentProblemNumber = findCurrentProblemNumber(userId, problemSetId);
         List<Problem> problems = problemService.findActiveProblemEntitiesByProblemSet(problemSetId);

@@ -13,7 +13,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@DataJpaTest(properties = {
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @DisplayName("CourseRepository 테스트")
 class CourseRepositoryTest {
 

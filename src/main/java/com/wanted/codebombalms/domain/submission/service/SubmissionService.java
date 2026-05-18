@@ -8,6 +8,10 @@ import com.wanted.codebombalms.domain.submission.dto.response.SubmissionResponse
 import com.wanted.codebombalms.domain.submission.entitiy.Submission;
 import com.wanted.codebombalms.domain.submission.event.ProblemSetCompletedEvent;
 import com.wanted.codebombalms.domain.submission.repository.SubmissionRepository;
+import com.wanted.codebombalms.domain.submission.exception.SubmissionErrorCode;
+import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.logging.aop.LogBusiness;
+import com.wanted.codebombalms.global.logging.aop.LogPerformance;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,10 +42,12 @@ public class SubmissionService {
         this.eventPublisher = eventPublisher;
     }
 
+    @LogBusiness
+    @LogPerformance
     @Transactional
     public SubmissionResponse submitAnswer(Long problemId, SubmissionRequest request) {
         if (request.getSubmittedAnswer() == null || request.getSubmittedAnswer().isEmpty()) {
-            throw new IllegalArgumentException("답안을 입력해주세요.");
+            throw new ValidationException(SubmissionErrorCode.INVALID_ANSWER);
         }
 
         Problem problem = problemService.findProblemEntity(problemId);
