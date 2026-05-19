@@ -13,3 +13,7 @@ spring:
   sql:
     init:
       mode: never
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
