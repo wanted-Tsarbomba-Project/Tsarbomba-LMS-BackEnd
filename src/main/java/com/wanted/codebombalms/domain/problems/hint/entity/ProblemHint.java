@@ -42,6 +42,10 @@ public class ProblemHint {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void update(String hintContent) {
+        this.hintContent = hintContent;
+    }
+
     public Long getHintId() {
         return hintId;
     }

@@ -13,4 +13,6 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
             Long userId,
             Long problemId
     );
+
+    boolean existsByProblem_ProblemSet_ProblemSetId(Long problemSetId);
 }

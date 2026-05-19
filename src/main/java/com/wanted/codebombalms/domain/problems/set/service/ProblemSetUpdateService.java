@@ -6,76 +6,98 @@ import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.hint.service.ProblemHintService;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.service.ProblemService;
-import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
-import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetCreateRequest;
-import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreateResponse;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetUpdateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
+import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetUpdateResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.error.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ProblemSetRegistrationService {
+public class ProblemSetUpdateService {
 
-    private final ProblemCategoryService problemCategoryService;
     private final ProblemSetRepository problemSetRepository;
+    private final ProblemCategoryService problemCategoryService;
     private final ProblemService problemService;
     private final ProblemHintService problemHintService;
 
-    public ProblemSetRegistrationService(
-            ProblemCategoryService problemCategoryService,
+    public ProblemSetUpdateService(
             ProblemSetRepository problemSetRepository,
+            ProblemCategoryService problemCategoryService,
             ProblemService problemService,
             ProblemHintService problemHintService
     ) {
-        this.problemCategoryService = problemCategoryService;
         this.problemSetRepository = problemSetRepository;
+        this.problemCategoryService = problemCategoryService;
         this.problemService = problemService;
         this.problemHintService = problemHintService;
     }
 
     @Transactional
-    public ProblemSetCreateResponse createProblemSet(ProblemSetCreateRequest request) {
-        validateCreateRequest(request);
+    public ProblemSetUpdateResponse updateProblemSet(Long problemSetId, ProblemSetUpdateRequest request) {
+        validateUpdateRequest(request);
+
+        ProblemSet problemSet = problemSetRepository.findById(problemSetId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         ProblemCategory category = problemCategoryService.findOrCreateActiveCategory(
                 request.categoryName()
         );
 
-        ProblemSet problemSet = new ProblemSet(
+        problemSet.update(
                 category,
                 request.title(),
-                request.description(),
-                "EASY",
-                request.problems().size()
+                request.description()
         );
 
-        ProblemSet savedProblemSet = problemSetRepository.save(problemSet);
-
-        int createdProblemCount = 0;
+        int updatedProblemCount = 0;
 
         for (int i = 0; i < request.problems().size(); i++) {
-            ProblemCreateRequest problemRequest = request.problems().get(i);
-
-            Problem savedProblem = problemService.createProblem(
-                    savedProblemSet,
-                    problemRequest,
-                    i + 1
-            );
-
-            problemHintService.createHint(
-                    savedProblem,
-                    problemRequest.hint()
-            );
-
-            createdProblemCount++;
+            ProblemUpdateRequest problemRequest = request.problems().get(i);
+            Problem problem = updateOrCreateProblem(problemSet, problemRequest, i + 1);
+            updateOrCreateHint(problem, problemRequest);
+            updatedProblemCount++;
         }
 
-        return new ProblemSetCreateResponse(savedProblemSet, createdProblemCount);
+        problemSet.updateTotalProblemCount(request.problems().size());
+
+        return new ProblemSetUpdateResponse(
+                problemSet.getProblemSetId(),
+                problemSet.getTitle(),
+                problemSet.getCategory().getCategoryName(),
+                updatedProblemCount
+        );
     }
 
-    private void validateCreateRequest(ProblemSetCreateRequest request) {
+    private Problem updateOrCreateProblem(
+            ProblemSet problemSet,
+            ProblemUpdateRequest problemRequest,
+            Integer problemOrder
+    ) {
+        if (problemRequest.problemId() == null) {
+            return problemService.createProblem(problemSet, problemRequest, problemOrder);
+        }
+
+        return problemService.updateProblem(problemSet.getProblemSetId(), problemRequest);
+    }
+
+    private void updateOrCreateHint(Problem problem, ProblemUpdateRequest problemRequest) {
+        if (problemRequest.hint() == null || problemRequest.hint().isBlank()) {
+            return;
+        }
+
+        if (problemRequest.hintId() == null) {
+            problemHintService.createHint(problem, problemRequest.hint());
+            return;
+        }
+
+        problemHintService.updateHint(problem, problemRequest.hintId(), problemRequest.hint());
+    }
+
+    private void validateUpdateRequest(ProblemSetUpdateRequest request) {
         if (request.title() == null || request.title().isBlank()) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_SET_TITLE_REQUIRED);
         }
@@ -88,12 +110,12 @@ public class ProblemSetRegistrationService {
             throw new ValidationException(ProblemErrorCode.PROBLEM_REQUIRED);
         }
 
-        for (ProblemCreateRequest problem : request.problems()) {
+        for (ProblemUpdateRequest problem : request.problems()) {
             validateProblemRequest(problem);
         }
     }
 
-    private void validateProblemRequest(ProblemCreateRequest problem) {
+    private void validateProblemRequest(ProblemUpdateRequest problem) {
         if (problem.title() == null || problem.title().isBlank()) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         }

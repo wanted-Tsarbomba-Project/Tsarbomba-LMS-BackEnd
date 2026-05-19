@@ -1,0 +1,76 @@
+package com.wanted.codebombalms.domain.admin.automationrule.entity;
+
+import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationRuleCode;
+import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationSeverity;
+import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationTargetType;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "automation_rule")
+@Getter
+@NoArgsConstructor
+public class AutomationRule {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "operation_rule_id")
+    private Long operationRuleId;
+
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rule_code", nullable = false)
+    private OperationRuleCode ruleCode;
+
+    @Column(name = "rule_name", nullable = false, length = 100)
+    private String ruleName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false)
+    private OperationTargetType targetType;
+
+    @Column(name = "threshold_value", nullable = false, precision = 10, scale = 2)
+    private BigDecimal thresholdValue;
+
+    @Column(name = "min_sample_count")
+    private Integer minSampleCount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "severity", nullable = false)
+    private OperationSeverity severity;
+
+    @Column(name = "enabled", nullable = false)
+    private boolean enabled = true;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void delete() {
+        this.enabled = false;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+}
