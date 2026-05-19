@@ -46,6 +46,9 @@ application-*.yml
 *.log
 logs/
 
+### Uploaded Files ###
+uploads/
+
 ### macOS ###
 .DS_Store
 
