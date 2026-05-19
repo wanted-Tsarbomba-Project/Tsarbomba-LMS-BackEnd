@@ -7,7 +7,8 @@ public record ProblemResponse(
         Integer problemNumber,
         String title,
         String content,
-        String problemType
+        String problemType,
+        String startCode
 ) {
     public ProblemResponse(Problem problem) {
         this(
@@ -15,7 +16,18 @@ public record ProblemResponse(
                 problem.getProblemOrder(),
                 problem.getTitle(),
                 problem.getContent(),
-                problem.getProblemType()
+                problem.getProblemType(),
+                null
+        );
+    }
+    public ProblemResponse withStartCode(String startCode) {
+        return new ProblemResponse(
+                problemId,
+                problemNumber,
+                title,
+                content,
+                problemType,
+                startCode
         );
     }
 }

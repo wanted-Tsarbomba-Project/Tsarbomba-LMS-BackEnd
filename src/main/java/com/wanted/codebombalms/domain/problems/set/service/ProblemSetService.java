@@ -2,6 +2,7 @@ package com.wanted.codebombalms.domain.problems.set.service;
 
 import com.wanted.codebombalms.domain.problems.category.entity.ProblemCategory;
 import com.wanted.codebombalms.domain.problems.category.service.ProblemCategoryService;
+import com.wanted.codebombalms.domain.problems.dataset.service.ProblemDatasetReader;
 import com.wanted.codebombalms.domain.problems.hint.service.ProblemHintService;
 import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemResponse;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
@@ -16,13 +17,14 @@ import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.IntStream;
 
 @Service
+@RequiredArgsConstructor
 public class ProblemSetService {
 
     private final ProblemSetRepository problemSetRepository;
@@ -30,20 +32,7 @@ public class ProblemSetService {
     private final ProblemService problemService;
     private final ProgressService progressService;
     private final ProblemHintService problemHintService;
-
-    public ProblemSetService(
-            ProblemSetRepository problemSetRepository,
-            ProblemCategoryService problemCategoryService,
-            ProblemService problemService,
-            ProgressService progressService,
-            ProblemHintService problemHintService
-    ) {
-        this.problemSetRepository = problemSetRepository;
-        this.problemCategoryService = problemCategoryService;
-        this.problemService = problemService;
-        this.progressService = progressService;
-        this.problemHintService = problemHintService;
-    }
+    private final ProblemDatasetReader problemDatasetReader;
 
     public List<ProblemSetListResponse> findActiveSetsByCategory(Long categoryId) {
         if (!problemCategoryService.existsActiveCategory(categoryId)) {
@@ -70,6 +59,10 @@ public class ProblemSetService {
                 ? problemService.findLastProblem(problemSetId).orElse(null)
                 : problemService.findCurrentProblem(problemSetId, currentProblemNumber);
 
+        if (currentProblem != null) {
+            String startCode = problemDatasetReader.findStartCodeByProblemId(currentProblem.problemId());
+            currentProblem = currentProblem.withStartCode(startCode);
+        }
         return new ProblemSetEnterResponse(
                 problemSet.getProblemSetId(),
                 problemSet.getTitle(),
