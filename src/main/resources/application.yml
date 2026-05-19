@@ -3,3 +3,13 @@ spring:
     name: Code-Bomba-LMS
   profiles:
     active: local
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 3600000
+
+

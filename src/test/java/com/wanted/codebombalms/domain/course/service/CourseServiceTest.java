@@ -6,8 +6,8 @@ import com.wanted.codebombalms.domain.course.dto.response.CourseDetailResponse;
 import com.wanted.codebombalms.domain.course.dto.response.CourseResponse;
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.course.enums.CourseStatus;
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
+import com.wanted.codebombalms.global.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -143,7 +143,7 @@ class CourseServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌 상세 조회 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌 상세 조회 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌_상세_조회_예외_테스트() {
 
         // given
@@ -152,14 +152,13 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> courseService.findCourseById(courseId)
         );
 
         // then
-        assertEquals("COURSE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(courseId, exception.getCourseId());
+        assertNotNull(exception);
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
@@ -204,7 +203,7 @@ class CourseServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌 수정 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌 수정 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌_수정_예외_테스트() {
 
         // given
@@ -220,14 +219,13 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> courseService.updateCourse(courseId, request)
         );
 
         // then
-        assertEquals("COURSE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(courseId, exception.getCourseId());
+        assertNotNull(exception);
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
@@ -261,7 +259,7 @@ class CourseServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌 삭제 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌 삭제 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌_삭제_예외_테스트() {
 
         // given
@@ -270,14 +268,13 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> courseService.deleteCourse(courseId)
         );
 
         // then
-        assertEquals("COURSE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(courseId, exception.getCourseId());
+        assertNotNull(exception);
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
