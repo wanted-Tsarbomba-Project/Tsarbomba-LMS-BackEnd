@@ -9,6 +9,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.Arrays;
 
 @Slf4j
@@ -73,5 +78,32 @@ public class GlobalExceptionHandler {
 
     private boolean isDev() {
         return Arrays.asList(env.getActiveProfiles()).contains("local");
+    }
+
+
+
+    // ===== 메서드 레벨 보안 거부 (@PreAuthorize 등) =====
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAuthorizationDenied(
+            AuthorizationDeniedException e,
+            HttpServletRequest request
+    ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null
+                && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken);
+
+        if (!isAuthenticated) {
+            log.warn("[GlobalExceptionHandler] 인증 필요 - path: {}, reason: {}",
+                    request.getRequestURI(), e.getMessage());
+            return ResponseEntity
+                    .status(401)
+                    .body(new ErrorResponse(401, "AUTH_REQUIRED", "인증이 필요합니다.", request.getRequestURI()));
+        }
+        log.warn("[GlobalExceptionHandler] 권한 없음 - path: {}, reason: {}",
+                request.getRequestURI(), e.getMessage());
+        return ResponseEntity
+                .status(403)
+                .body(new ErrorResponse(403, "AUTH_FORBIDDEN", "권한이 없습니다.", request.getRequestURI()));
     }
 }

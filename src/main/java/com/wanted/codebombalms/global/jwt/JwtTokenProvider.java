@@ -8,6 +8,11 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.io.Decoders;
 
+import com.wanted.codebombalms.domain.user.exception.AuthErrorCode;
+import com.wanted.codebombalms.global.error.exception.UnauthorizedException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+
 import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
@@ -55,23 +60,29 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 
-    public boolean validateToken(String token) {
+    // ===== 토큰 검증 (Access / Refresh 분리) =====
+
+    public void validateAccessToken(String token) {
         try {
             getClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_TOKEN_INVALID);
         }
     }
 
-    public long getAccessExpiration() {
-        return accessExpiration;
+    public void validateRefreshToken(String token) {
+        try {
+            getClaims(token);
+        } catch (ExpiredJwtException e) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REFRESH_TOKEN_EXPIRED);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REFRESH_TOKEN_INVALID);
+        }
     }
 
-    public long getRefreshExpiration() {
-        return refreshExpiration;
-    }
+    public long getAccessExpiration() {return accessExpiration;}
 
-
-
+    public long getRefreshExpiration() {return refreshExpiration;}
 }

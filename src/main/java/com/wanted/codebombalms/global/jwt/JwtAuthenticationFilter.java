@@ -12,6 +12,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
+import com.wanted.codebombalms.global.error.exception.UnauthorizedException;
 
 import java.io.IOException;
 import java.util.List;
@@ -32,11 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (cookie != null) {
             String token = cookie.getValue();
 
-            // 2. 토큰 유효성 검사
-            if (jwtTokenProvider.validateToken(token)) {
-                Claims claims = jwtTokenProvider.getClaims(token);
+            try {
+                // 2. 토큰 유효성 검사 (실패 시 예외 throw)
+                jwtTokenProvider.validateAccessToken(token);
 
                 // 3. claims에서 userId, role 꺼내기
+                Claims claims = jwtTokenProvider.getClaims(token);
                 Long userId = Long.parseLong(claims.getSubject());
                 String role = claims.get("role", String.class);
 
@@ -48,6 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 List.of(new SimpleGrantedAuthority("ROLE_" + role))
                         );
                 SecurityContextHolder.getContext().setAuthentication(auth);
+
+            } catch (UnauthorizedException e) {
+                // 토큰이 유효하지 않으면 SecurityContext 비우고 다음 필터로 진행
+                // (실제 401 응답은 SecurityFilterChain 의 ExceptionTranslationFilter 가 처리)
+                SecurityContextHolder.clearContext();
             }
         }
 
