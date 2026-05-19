@@ -22,4 +22,4 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: 빌드
-        run: ./gradlew build -x test
+        run: ./gradlew build
