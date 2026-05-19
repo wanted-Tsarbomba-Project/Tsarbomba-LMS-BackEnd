@@ -13,8 +13,3 @@ spring:
   sql:
     init:
       mode: never
-
-jwt:
-  secret: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
-  access-expiration: 3600000
-  refresh-expiration: 1209600000
