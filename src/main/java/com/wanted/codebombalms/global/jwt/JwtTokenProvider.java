@@ -64,4 +64,14 @@ public class JwtTokenProvider {
         }
     }
 
+    public long getAccessExpiration() {
+        return accessExpiration;
+    }
+
+    public long getRefreshExpiration() {
+        return refreshExpiration;
+    }
+
+
+
 }
