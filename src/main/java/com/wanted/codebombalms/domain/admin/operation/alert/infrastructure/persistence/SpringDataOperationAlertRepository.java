@@ -1,0 +1,48 @@
+package com.wanted.codebombalms.domain.admin.operation.alert.infrastructure.persistence;
+
+import com.wanted.codebombalms.domain.admin.operation.alert.domain.model.OperationAlertStatus;
+import com.wanted.codebombalms.domain.admin.operation.common.domain.model.OperationTargetType;
+import com.wanted.codebombalms.domain.admin.operation.rule.infrastructure.persistence.AutomationRuleJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+public interface SpringDataOperationAlertRepository extends JpaRepository<OperationAlertJpaEntity, Long> {
+
+    @Query(
+            value = """
+                    select new com.wanted.codebombalms.domain.admin.operation.alert.infrastructure.persistence.OperationAlertWithRuleProjection(
+                        oa.operationAlertId,
+                        oa.operationRuleId,
+                        oa.targetType,
+                        oa.targetId,
+                        oa.detectedValue,
+                        oa.thresholdValueSnapshot,
+                        ar.severity,
+                        oa.status,
+                        oa.assigneeId,
+                        oa.reason,
+                        oa.recommendedAction,
+                        oa.firstDetectedAt,
+                        oa.lastDetectedAt
+                    )
+                    from OperationAlertJpaEntity oa
+                    join AutomationRuleJpaEntity ar on ar.operationRuleId = oa.operationRuleId
+                    where (:targetType is null or oa.targetType = :targetType)
+                    and (:status is null or oa.status = :status)
+                    """,
+            countQuery = """
+                    select count(oa)
+                    from OperationAlertJpaEntity oa
+                    where (:targetType is null or oa.targetType = :targetType)
+                    and (:status is null or oa.status = :status)
+                    """
+    )
+    Page<OperationAlertWithRuleProjection> findAlerts(
+            @Param("targetType") OperationTargetType targetType,
+            @Param("status") OperationAlertStatus status,
+            Pageable pageable
+    );
+}
