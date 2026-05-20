@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.domain.problems.category.controller;
 
-import com.wanted.codebombalms.domain.problems.category.dto.response.CategoryResponse;
-import com.wanted.codebombalms.domain.problems.category.service.ProblemCategoryService;
+import com.wanted.codebombalms.domain.problems.category.application.usecase.GetProblemCategoriesUseCase;
+import com.wanted.codebombalms.domain.problems.category.presentation.response.ProblemCategoryResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,14 +13,19 @@ import java.util.List;
 @RequestMapping("/api/v1/problem-categories")
 public class ProblemCategoryController {
 
-    private final ProblemCategoryService problemCategoryService;
+    private final GetProblemCategoriesUseCase getProblemCategoriesUseCase;
 
-    public ProblemCategoryController(ProblemCategoryService problemCategoryService) {
-        this.problemCategoryService = problemCategoryService;
+    public ProblemCategoryController(GetProblemCategoriesUseCase getProblemCategoriesUseCase) {
+        this.getProblemCategoriesUseCase = getProblemCategoriesUseCase;
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponse>> findCategories() {
-        return ResponseEntity.ok(problemCategoryService.findActiveCategories());
+    public ResponseEntity<List<ProblemCategoryResponse>> findCategories() {
+        return ResponseEntity.ok(
+                getProblemCategoriesUseCase.getActiveCategories()
+                        .stream()
+                        .map(ProblemCategoryResponse::new)
+                        .toList()
+        );
     }
 }
