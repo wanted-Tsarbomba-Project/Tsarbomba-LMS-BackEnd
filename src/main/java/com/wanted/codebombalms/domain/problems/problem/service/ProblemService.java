@@ -4,7 +4,7 @@ import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemRespo
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.repository.ProblemRepository;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;

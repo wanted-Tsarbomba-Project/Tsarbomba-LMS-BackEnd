@@ -7,8 +7,8 @@ import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetDelete
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import com.wanted.codebombalms.domain.submission.repository.SubmissionRepository;
-import com.wanted.codebombalms.global.error.exception.ConflictException;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

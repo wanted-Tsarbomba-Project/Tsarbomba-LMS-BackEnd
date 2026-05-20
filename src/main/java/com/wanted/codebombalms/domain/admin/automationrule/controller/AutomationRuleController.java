@@ -3,7 +3,7 @@ package com.wanted.codebombalms.domain.admin.automationrule.controller;
 import com.wanted.codebombalms.domain.admin.automationrule.dto.request.AutomationRuleCreateRequest;
 import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationTargetType;
 import com.wanted.codebombalms.domain.admin.automationrule.service.AutomationRuleService;
-import com.wanted.codebombalms.global.common.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
