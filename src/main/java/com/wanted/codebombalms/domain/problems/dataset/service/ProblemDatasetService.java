@@ -10,7 +10,7 @@ import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.service.ProblemService;
 import com.wanted.codebombalms.domain.problems.dataset.storage.DatasetFileStorage;
 import com.wanted.codebombalms.domain.problems.dataset.storage.StoredDatasetFile;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

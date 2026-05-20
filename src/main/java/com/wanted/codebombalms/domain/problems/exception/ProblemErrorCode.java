@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.domain.problems.exception;
 
-import com.wanted.codebombalms.global.error.ErrorCode;
+import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

@@ -9,8 +9,8 @@ import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationSeveri
 import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationTargetType;
 import com.wanted.codebombalms.domain.admin.automationrule.exception.AutomationRuleErrorCode;
 import com.wanted.codebombalms.domain.admin.automationrule.repository.AutomationRuleRepository;
-import com.wanted.codebombalms.global.error.exception.ConflictException;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

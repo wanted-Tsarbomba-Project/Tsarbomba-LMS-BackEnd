@@ -4,7 +4,7 @@ import com.wanted.codebombalms.domain.admin.automationrule.enums.OperationTarget
 import com.wanted.codebombalms.domain.admin.operationalert.dto.request.OperationAlertStatusUpdateRequest;
 import com.wanted.codebombalms.domain.admin.operationalert.enums.OperationAlertStatus;
 import com.wanted.codebombalms.domain.admin.operationalert.service.OperationAlertService;
-import com.wanted.codebombalms.global.common.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

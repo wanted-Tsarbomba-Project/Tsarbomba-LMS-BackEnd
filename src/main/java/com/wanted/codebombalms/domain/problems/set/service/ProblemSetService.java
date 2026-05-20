@@ -1,21 +1,16 @@
 package com.wanted.codebombalms.domain.problems.set.service;
 
-import com.wanted.codebombalms.domain.problems.category.entity.ProblemCategory;
 import com.wanted.codebombalms.domain.problems.category.service.ProblemCategoryService;
 import com.wanted.codebombalms.domain.problems.dataset.service.ProblemDatasetReader;
 import com.wanted.codebombalms.domain.problems.hint.service.ProblemHintService;
 import com.wanted.codebombalms.domain.problems.problem.dto.response.ProblemResponse;
-import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.service.ProblemService;
 import com.wanted.codebombalms.domain.problems.progress.service.ProgressService;
-import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
-import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetCreateRequest;
-import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreateResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetEnterResponse;
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetListResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

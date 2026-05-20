@@ -3,7 +3,7 @@ package com.wanted.codebombalms.domain.lecture.controller;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureCreateRequest;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureUpdateRequest;
 import com.wanted.codebombalms.domain.lecture.service.LectureService;
-import com.wanted.codebombalms.global.common.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

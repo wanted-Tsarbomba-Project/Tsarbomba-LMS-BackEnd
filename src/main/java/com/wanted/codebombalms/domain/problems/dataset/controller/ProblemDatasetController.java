@@ -5,7 +5,7 @@ import com.wanted.codebombalms.domain.problems.dataset.dto.request.ProblemDatase
 import com.wanted.codebombalms.domain.problems.dataset.dto.response.ProblemDatasetConnectResponse;
 import com.wanted.codebombalms.domain.problems.dataset.dto.response.ProblemDatasetUploadResponse;
 import com.wanted.codebombalms.domain.problems.dataset.service.ProblemDatasetService;
-import com.wanted.codebombalms.global.common.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -11,7 +11,7 @@ import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemSetCreateR
 import com.wanted.codebombalms.domain.problems.set.dto.response.ProblemSetCreateResponse;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

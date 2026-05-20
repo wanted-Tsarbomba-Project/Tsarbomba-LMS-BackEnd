@@ -9,8 +9,8 @@ import com.wanted.codebombalms.domain.problems.result.dto.response.ProblemSubmis
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.domain.submission.dto.response.LatestSubmissionResult;
 import com.wanted.codebombalms.domain.submission.service.SubmissionQueryService;
 import org.springframework.stereotype.Service;

@@ -3,7 +3,7 @@ package com.wanted.codebombalms.domain.submission.service;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.submission.exception.SubmissionErrorCode;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.springframework.stereotype.Service;
 
 @Service

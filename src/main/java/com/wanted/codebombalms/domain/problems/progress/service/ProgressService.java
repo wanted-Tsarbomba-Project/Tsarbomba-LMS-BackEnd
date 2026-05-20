@@ -9,9 +9,9 @@ import com.wanted.codebombalms.domain.problems.progress.enums.ProblemProgressSta
 import com.wanted.codebombalms.domain.problems.progress.repository.ProgressRepository;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.global.error.exception.ConflictException;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.domain.problems.set.repository.ProblemSetRepository;
 import com.wanted.codebombalms.domain.submission.dto.response.LatestSubmissionResult;
 import com.wanted.codebombalms.domain.submission.service.SubmissionQueryService;

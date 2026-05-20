@@ -2,7 +2,7 @@ package com.wanted.codebombalms.domain.enrollment.controller;
 
 import com.wanted.codebombalms.domain.enrollment.dto.request.EnrollmentCreateRequest;
 import com.wanted.codebombalms.domain.enrollment.service.EnrollmentService;
-import com.wanted.codebombalms.global.common.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

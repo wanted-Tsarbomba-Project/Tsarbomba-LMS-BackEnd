@@ -8,8 +8,8 @@ import com.wanted.codebombalms.domain.admin.operationalert.entity.OperationAlert
 import com.wanted.codebombalms.domain.admin.operationalert.enums.OperationAlertStatus;
 import com.wanted.codebombalms.domain.admin.operationalert.exception.OperationAlertErrorCode;
 import com.wanted.codebombalms.domain.admin.operationalert.repository.OperationAlertRepository;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
-import com.wanted.codebombalms.global.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

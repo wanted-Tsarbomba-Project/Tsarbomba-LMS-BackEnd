@@ -7,7 +7,7 @@ import com.wanted.codebombalms.domain.course.dto.response.CourseResponse;
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.course.enums.CourseStatus;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
-import com.wanted.codebombalms.global.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
