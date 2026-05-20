@@ -73,4 +73,26 @@ public class AutomationRule {
         this.deletedAt = LocalDateTime.now();
     }
 
+    public static AutomationRule create(
+            OperationRuleCode ruleCode,
+            String ruleName,
+            OperationTargetType targetType,
+            BigDecimal thresholdValue,
+            Integer minSampleCount,
+            OperationSeverity severity,
+            boolean enabled,
+            Long createdBy
+    ) {
+        AutomationRule rule = new AutomationRule();
+        rule.ruleCode = ruleCode;
+        rule.ruleName = ruleName;
+        rule.targetType = targetType;
+        rule.thresholdValue = thresholdValue;
+        rule.minSampleCount = minSampleCount;
+        rule.severity = severity;
+        rule.enabled = enabled;
+        rule.createdBy = createdBy;
+        return rule;
+    }
+
 }
