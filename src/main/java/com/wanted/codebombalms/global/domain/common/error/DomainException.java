@@ -3,12 +3,14 @@ package com.wanted.codebombalms.global.domain.common.error;
 import lombok.Getter;
 
 @Getter
-public abstract class BusinessException extends RuntimeException {
+public abstract class DomainException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    protected BusinessException(ErrorCode errorCode) {
+    protected DomainException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
+
+    public abstract int getHttpStatus();
 }

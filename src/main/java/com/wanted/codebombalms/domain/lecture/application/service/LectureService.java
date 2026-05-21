@@ -1,17 +1,17 @@
-package com.wanted.codebombalms.domain.lecture.application.service;
+package com.wanted.codebombalms.domain.lecture.service;
 
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.lecture.presentation.api.request.LectureCreateRequest;
-import com.wanted.codebombalms.domain.lecture.presentation.api.request.LectureUpdateRequest;
-import com.wanted.codebombalms.domain.lecture.presentation.api.response.LectureDetailResponse;
-import com.wanted.codebombalms.domain.lecture.presentation.api.response.LectureResponse;
-import com.wanted.codebombalms.domain.lecture.domain.model.Lecture;
-import com.wanted.codebombalms.domain.lecture.domain.exception.LectureNotFoundException;
-import com.wanted.codebombalms.domain.lecture.domain.repository.LectureRepository;
-import lombok.RequiredArgsConstructor;
+import com.wanted.codebombalms.domain.course.entity.Course;
+import com.wanted.codebombalms.domain.course.exception.CourseErrorCode;
+import com.wanted.codebombalms.domain.course.repository.CourseRepository;
+import com.wanted.codebombalms.domain.lecture.dto.request.LectureCreateRequest;
+import com.wanted.codebombalms.domain.lecture.dto.request.LectureUpdateRequest;
+import com.wanted.codebombalms.domain.lecture.dto.response.LectureDetailResponse;
+import com.wanted.codebombalms.domain.lecture.dto.response.LectureResponse;
+import com.wanted.codebombalms.domain.lecture.entity.Lecture;
+import com.wanted.codebombalms.domain.lecture.exception.LectureErrorCode;
+import com.wanted.codebombalms.domain.lecture.repository.LectureRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,7 +68,7 @@ public class LectureService {
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         List<LectureResponse> lectures = lectureRepository
-                .findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
+                .findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
                 .stream()
                 .map(LectureResponse::from)
                 .toList();
@@ -86,7 +86,7 @@ public class LectureService {
         log.info("[LectureService] 강의 상세 조회 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         log.info("[LectureService] 강의 상세 조회 완료 - lectureId: {}", lectureId);
 
@@ -102,7 +102,7 @@ public class LectureService {
         log.info("[LectureService] 강의 수정 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         lecture.update(
                 request.getTitle(),
@@ -112,11 +112,10 @@ public class LectureService {
                 request.getLectureOrder(),
                 request.getStatus()
         );
-        Lecture savedLecture = lectureRepository.save(lecture);
 
         log.info("[LectureService] 강의 수정 완료 - lectureId: {}", lectureId);
 
-        return LectureDetailResponse.from(savedLecture);
+        return LectureDetailResponse.from(lecture);
     }
 
     /**
@@ -128,10 +127,9 @@ public class LectureService {
         log.info("[LectureService] 강의 삭제 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         lecture.delete();
-        lectureRepository.save(lecture);
 
         log.info("[LectureService] 강의 삭제 완료 - lectureId: {}", lectureId);
     }

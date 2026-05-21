@@ -1,6 +1,9 @@
 package com.wanted.codebombalms.domain.admin.operation.alert.domain.model;
 
+import com.wanted.codebombalms.domain.admin.operation.alert.domain.exception.OperationAlertErrorCode;
 import com.wanted.codebombalms.domain.admin.operation.common.domain.model.OperationTargetType;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -105,11 +108,11 @@ public class OperationAlert {
 
     public void process(OperationAlertStatus status, Long resolvedBy, String adminMemo) {
         if (this.status != OperationAlertStatus.OPEN) {
-            throw new IllegalStateException("이미 처리된 운영 알림입니다.");
+            throw new ConflictException(OperationAlertErrorCode.ALREADY_PROCESSED_ALERT);
         }
 
         if (status != OperationAlertStatus.RESOLVED && status != OperationAlertStatus.IGNORED) {
-            throw new IllegalArgumentException("운영 알림 처리 상태가 올바르지 않습니다.");
+            throw new ValidationException(OperationAlertErrorCode.INVALID_STATUS_UPDATE_REQUEST);
         }
 
         this.status = status;

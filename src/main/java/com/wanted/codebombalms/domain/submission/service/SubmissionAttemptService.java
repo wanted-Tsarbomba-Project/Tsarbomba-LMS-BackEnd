@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.domain.submission.service;
 
-import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.submission.exception.SubmissionErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -11,7 +10,7 @@ public class SubmissionAttemptService {
 
     public void validateAttemptLimit(Problem problem, int previousAttemptCount) {
         if (problem.getAttemptLimit() != null && previousAttemptCount >= problem.getAttemptLimit()) {
-            throw new ValidationException(ProblemErrorCode.ATTEMPT_LIMIT_EXCEEDED);
+            throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
         }
 
         if (!Boolean.TRUE.equals(problem.getRetriable()) && previousAttemptCount > 0) {
