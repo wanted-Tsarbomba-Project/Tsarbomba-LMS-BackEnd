@@ -52,6 +52,12 @@ public class CourseRepositoryAdapter implements CourseRepository {
     }
 
     @Override
+    public Optional<Course> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status) {
+        return springDataCourseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, status)
+                .map(CourseJpaEntity::toDomain);
+    }
+
+    @Override
     public List<Course> findByInstructorIdAndDeletedAtIsNull(Long instructorId) {
         return springDataCourseRepository.findByInstructorIdAndDeletedAtIsNull(instructorId)
                 .stream()

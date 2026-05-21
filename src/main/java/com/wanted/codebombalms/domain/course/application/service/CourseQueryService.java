@@ -1,12 +1,11 @@
 package com.wanted.codebombalms.domain.course.application.service;
 
+import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
+import com.wanted.codebombalms.domain.course.application.result.CourseSummaryResult;
 import com.wanted.codebombalms.domain.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.model.Course;
 import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseDetailResponse;
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseResponse;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.infrastructure.logging.aop.LogBusiness;
 import com.wanted.codebombalms.global.infrastructure.logging.aop.LogPerformance;
@@ -30,30 +29,28 @@ public class CourseQueryService implements CourseQueryUseCase {
     @LogBusiness
     @LogPerformance
     @Override
-    public List<CourseResponse> findAllCourses() {
+    public List<CourseSummaryResult> findAllCourses() {
+        log.info("[CourseQueryService] find active courses");
 
-        log.info("[CourseQueryService] 강좌 목록 조회 시작");
-
-        List<CourseResponse> courses = courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)
+        List<CourseSummaryResult> courses = courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)
                 .stream()
-                .map(CourseResponse::from)
+                .map(CourseSummaryResult::from)
                 .toList();
 
-        log.info("[CourseQueryService] 강좌 목록 조회 완료 - count: {}", courses.size());
+        log.info("[CourseQueryService] found active courses - count: {}", courses.size());
 
         return courses;
     }
 
     @Override
-    public CourseDetailResponse findCourseById(Long courseId) {
+    public CourseDetailResult findCourseById(Long courseId) {
+        log.info("[CourseQueryService] find active course - courseId: {}", courseId);
 
-        log.info("[CourseQueryService] 강좌 상세 조회 시작 - courseId: {}", courseId);
-
-        Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
+        var course = courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE)
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
-        log.info("[CourseQueryService] 강좌 상세 조회 완료 - courseId: {}", courseId);
+        log.info("[CourseQueryService] found active course - courseId: {}", courseId);
 
-        return CourseDetailResponse.from(course);
+        return CourseDetailResult.from(course);
     }
 }

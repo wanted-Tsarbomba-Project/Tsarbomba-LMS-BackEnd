@@ -24,7 +24,7 @@ public class EnrollmentResponse {
         return new EnrollmentResponse(
                 enrollment.getEnrollmentId(),
                 enrollment.getCourse().getCourseId(),
-                enrollment.getStudent().getUserId(),
+                enrollment.getStudentId(),
                 enrollment.getStatus(),
                 enrollment.getEnrolledAt(),
                 enrollment.getCanceledAt()

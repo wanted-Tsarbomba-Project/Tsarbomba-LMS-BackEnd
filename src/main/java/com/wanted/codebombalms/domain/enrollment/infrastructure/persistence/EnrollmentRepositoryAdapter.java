@@ -6,7 +6,6 @@ import com.wanted.codebombalms.domain.course.infrastructure.persistence.SpringDa
 import com.wanted.codebombalms.domain.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.domain.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.domain.enrollment.domain.repository.EnrollmentRepository;
-import com.wanted.codebombalms.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -37,17 +36,17 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
-    public boolean existsByCourseAndStudentAndStatus(Course course, User student, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.existsByCourse_CourseIdAndStudentAndStatus(
+    public boolean existsByCourseAndStudentIdAndStatus(Course course, Long studentId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.existsByCourse_CourseIdAndStudentIdAndStatus(
                 course.getCourseId(),
-                student,
+                studentId,
                 status
         );
     }
 
     @Override
-    public List<Enrollment> findByStudentAndStatus(User student, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.findByStudentAndStatus(student, status)
+    public List<Enrollment> findByStudentIdAndStatus(Long studentId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.findByStudentIdAndStatus(studentId, status)
                 .stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
@@ -60,12 +59,12 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
-    public Optional<Enrollment> findByEnrollmentIdAndStudentAndStatus(
+    public Optional<Enrollment> findByEnrollmentIdAndStudentIdAndStatus(
             Long enrollmentId,
-            User student,
+            Long studentId,
             EnrollmentStatus status
     ) {
-        return springDataEnrollmentRepository.findByEnrollmentIdAndStudentAndStatus(enrollmentId, student, status)
+        return springDataEnrollmentRepository.findByEnrollmentIdAndStudentIdAndStatus(enrollmentId, studentId, status)
                 .map(EnrollmentJpaEntity::toDomain);
     }
 }

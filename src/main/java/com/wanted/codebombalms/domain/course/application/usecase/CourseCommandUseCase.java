@@ -3,15 +3,15 @@ package com.wanted.codebombalms.domain.course.application.usecase;
 import com.wanted.codebombalms.domain.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.domain.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.domain.course.application.command.UpdateCourseCommand;
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseDetailResponse;
+import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
 
 public interface CourseCommandUseCase {
 
-    CourseDetailResponse createCourse(CreateCourseCommand command);
+    CourseDetailResult createCourse(CreateCourseCommand command);
 
-    CourseDetailResponse updateCourse(UpdateCourseCommand command);
+    CourseDetailResult updateCourse(UpdateCourseCommand command);
 
-    CourseDetailResponse publishCourse(PublishCourseCommand command);
+    CourseDetailResult publishCourse(PublishCourseCommand command);
 
     void deleteCourse(Long courseId);
 }

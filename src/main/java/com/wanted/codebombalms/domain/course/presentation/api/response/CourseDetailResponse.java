@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.domain.course.presentation.api.response;
 
-import com.wanted.codebombalms.domain.course.domain.model.Course;
+import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
 import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
 
 import java.time.LocalDateTime;
@@ -16,16 +16,16 @@ public record CourseDetailResponse(
         LocalDateTime updatedAt
 ) {
 
-    public static CourseDetailResponse from(Course course) {
+    public static CourseDetailResponse from(CourseDetailResult result) {
         return new CourseDetailResponse(
-                course.getCourseId(),
-                course.getInstructorId(),
-                course.getTitle(),
-                course.getDescription(),
-                course.getThumbnailUrl(),
-                course.getStatus(),
-                course.getCreatedAt(),
-                course.getUpdatedAt()
+                result.courseId(),
+                result.instructorId(),
+                result.title(),
+                result.description(),
+                result.thumbnailUrl(),
+                result.status(),
+                result.createdAt(),
+                result.updatedAt()
         );
     }
 }

@@ -4,12 +4,12 @@ import com.wanted.codebombalms.domain.course.application.command.CreateCourseCom
 import com.wanted.codebombalms.domain.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.domain.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.domain.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
 import com.wanted.codebombalms.domain.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.domain.course.domain.model.Course;
 import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseDetailResponse;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.logging.aop.LogBusiness;
@@ -33,9 +33,8 @@ public class CourseCommandService implements CourseCommandUseCase {
     @LogBusiness
     @LogPerformance
     @Override
-    public CourseDetailResponse createCourse(CreateCourseCommand command) {
-
-        log.info("[CourseCommandService] 강좌 등록 시작 - title: {}", command.title());
+    public CourseDetailResult createCourse(CreateCourseCommand command) {
+        log.info("[CourseCommandService] create course - title: {}", command.title());
 
         Course course = Course.create(
                 command.instructorId(),
@@ -45,23 +44,19 @@ public class CourseCommandService implements CourseCommandUseCase {
         );
 
         Course savedCourse = courseRepository.save(course);
+        log.info("[CourseCommandService] created course - courseId: {}", savedCourse.getCourseId());
 
-        log.info("[CourseCommandService] 강좌 등록 완료 - courseId: {}", savedCourse.getCourseId());
-
-        return CourseDetailResponse.from(savedCourse);
+        return CourseDetailResult.from(savedCourse);
     }
 
     @Override
-    public CourseDetailResponse updateCourse(UpdateCourseCommand command) {
-
-        log.info("[CourseCommandService] 강좌 수정 시작 - courseId: {}", command.courseId());
+    public CourseDetailResult updateCourse(UpdateCourseCommand command) {
+        log.info("[CourseCommandService] update course - courseId: {}", command.courseId());
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(command.courseId())
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
-        if (command.status() == CourseStatus.ACTIVE && course.getStatus() != CourseStatus.ACTIVE) {
-            throw new ValidationException(CourseErrorCode.COURSE_ACTIVE_STATUS_REQUIRES_PUBLISH);
-        }
+        validateStatusChange(command.status(), course.getStatus());
 
         course.update(
                 command.title(),
@@ -69,17 +64,16 @@ public class CourseCommandService implements CourseCommandUseCase {
                 command.thumbnailUrl(),
                 command.status()
         );
+
         Course savedCourse = courseRepository.save(course);
+        log.info("[CourseCommandService] updated course - courseId: {}", command.courseId());
 
-        log.info("[CourseCommandService] 강좌 수정 완료 - courseId: {}", command.courseId());
-
-        return CourseDetailResponse.from(savedCourse);
+        return CourseDetailResult.from(savedCourse);
     }
 
     @Override
-    public CourseDetailResponse publishCourse(PublishCourseCommand command) {
-
-        log.info("[CourseCommandService] 강좌 개설 시작 - courseId: {}", command.courseId());
+    public CourseDetailResult publishCourse(PublishCourseCommand command) {
+        log.info("[CourseCommandService] publish course - courseId: {}", command.courseId());
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(command.courseId())
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
@@ -88,16 +82,14 @@ public class CourseCommandService implements CourseCommandUseCase {
         course.publish();
 
         Course savedCourse = courseRepository.save(course);
+        log.info("[CourseCommandService] published course - courseId: {}", command.courseId());
 
-        log.info("[CourseCommandService] 강좌 개설 완료 - courseId: {}", command.courseId());
-
-        return CourseDetailResponse.from(savedCourse);
+        return CourseDetailResult.from(savedCourse);
     }
 
     @Override
     public void deleteCourse(Long courseId) {
-
-        log.info("[CourseCommandService] 강좌 삭제 시작 - courseId: {}", courseId);
+        log.info("[CourseCommandService] delete course - courseId: {}", courseId);
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
@@ -105,6 +97,18 @@ public class CourseCommandService implements CourseCommandUseCase {
         course.delete();
         courseRepository.save(course);
 
-        log.info("[CourseCommandService] 강좌 삭제 완료 - courseId: {}", courseId);
+        log.info("[CourseCommandService] deleted course - courseId: {}", courseId);
+    }
+
+    private void validateStatusChange(CourseStatus requestedStatus, CourseStatus currentStatus) {
+        if (requestedStatus == null) {
+            return;
+        }
+        if (requestedStatus == CourseStatus.ACTIVE && currentStatus != CourseStatus.ACTIVE) {
+            throw new ValidationException(CourseErrorCode.COURSE_ACTIVE_STATUS_REQUIRES_PUBLISH);
+        }
+        if (requestedStatus == CourseStatus.DELETED) {
+            throw new ValidationException(CourseErrorCode.COURSE_DELETE_STATUS_REQUIRES_DELETE);
+        }
     }
 }

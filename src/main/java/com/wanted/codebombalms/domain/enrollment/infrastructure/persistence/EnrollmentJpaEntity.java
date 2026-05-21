@@ -3,7 +3,6 @@ package com.wanted.codebombalms.domain.enrollment.infrastructure.persistence;
 import com.wanted.codebombalms.domain.course.infrastructure.persistence.CourseJpaEntity;
 import com.wanted.codebombalms.domain.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.domain.enrollment.domain.model.EnrollmentStatus;
-import com.wanted.codebombalms.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,10 +27,11 @@ public class EnrollmentJpaEntity {
     @ToString.Exclude
     private CourseJpaEntity course;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @ToString.Exclude
-    private User student;
+    @Column(name = "user_id", nullable = false)
+    private Long studentId;
+
+    @Column(name = "instructor_id")
+    private Long instructorId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -43,16 +43,17 @@ public class EnrollmentJpaEntity {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
-    public EnrollmentJpaEntity(CourseJpaEntity course, User student, EnrollmentStatus status) {
+    public EnrollmentJpaEntity(CourseJpaEntity course, Long studentId, EnrollmentStatus status) {
         this.course = course;
-        this.student = student;
+        this.studentId = studentId;
+        this.instructorId = course.getInstructorId();
         this.status = status;
     }
 
     public static EnrollmentJpaEntity from(Enrollment enrollment, CourseJpaEntity course) {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity(
                 course,
-                enrollment.getStudent(),
+                enrollment.getStudentId(),
                 enrollment.getStatus()
         );
         entity.enrollmentId = enrollment.getEnrollmentId();
@@ -63,7 +64,8 @@ public class EnrollmentJpaEntity {
 
     public void apply(Enrollment enrollment, CourseJpaEntity course) {
         this.course = course;
-        this.student = enrollment.getStudent();
+        this.studentId = enrollment.getStudentId();
+        this.instructorId = course.getInstructorId();
         this.status = enrollment.getStatus();
         this.canceledAt = enrollment.getCanceledAt();
     }
@@ -72,7 +74,7 @@ public class EnrollmentJpaEntity {
         return Enrollment.restore(
                 enrollmentId,
                 course.toDomain(),
-                student,
+                studentId,
                 status,
                 enrolledAt,
                 canceledAt

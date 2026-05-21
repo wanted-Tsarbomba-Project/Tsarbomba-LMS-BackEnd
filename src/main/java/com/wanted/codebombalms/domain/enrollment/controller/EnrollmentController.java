@@ -1,8 +1,8 @@
-package com.wanted.codebombalms.domain.enrollment.presentation.api;
+package com.wanted.codebombalms.domain.enrollment.controller;
 
-import com.wanted.codebombalms.domain.enrollment.presentation.api.request.EnrollmentCreateRequest;
 import com.wanted.codebombalms.domain.enrollment.application.service.EnrollmentService;
-import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
+import com.wanted.codebombalms.domain.enrollment.presentation.api.request.EnrollmentCreateRequest;
+import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,52 +20,41 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    /**
-     * 수강 신청
-     */
     @PostMapping("/courses/{courseId}/enrollments")
-    public ResponseEntity<ResponseDTO> createEnrollment(
+    public ResponseEntity<ApiResponse<?>> createEnrollment(
             @PathVariable Long courseId,
             @Valid @RequestBody EnrollmentCreateRequest request
     ) {
-        log.info("[EnrollmentController] 수강 신청 요청 - courseId: {}, studentId: {}",
+        log.info("[EnrollmentController] create enrollment - courseId: {}, studentId: {}",
                 courseId,
                 request.getStudentId()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseDTO(
-                        HttpStatus.CREATED,
-                        "수강 신청 성공",
+                .body(ApiResponse.created(
+                        EnrollmentResponseCode.CREATED,
+                        EnrollmentResponseMessage.CREATED,
                         enrollmentService.createEnrollment(courseId, request)
                 ));
     }
 
-    /**
-     * 내 수강 강좌 목록 조회
-     */
     @GetMapping("/students/{studentId}/enrollments")
-    public ResponseEntity<ResponseDTO> findMyCourses(@PathVariable Long studentId) {
+    public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long studentId) {
+        log.info("[EnrollmentController] find my courses - studentId: {}", studentId);
 
-        log.info("[EnrollmentController] 내 수강 강좌 목록 조회 요청 - studentId: {}", studentId);
-
-        return ResponseEntity.ok()
-                .body(new ResponseDTO(
-                        HttpStatus.OK,
-                        "내 수강 강좌 목록 조회 성공",
-                        enrollmentService.findMyCourses(studentId)
-                ));
+        return ResponseEntity.ok(ApiResponse.success(
+                EnrollmentResponseCode.RETRIEVED,
+                EnrollmentResponseMessage.RETRIEVED,
+                enrollmentService.findMyCourses(studentId)
+        ));
     }
 
-    /**
-     * 수강 신청 취소
-     */
     @DeleteMapping("/students/{studentId}/enrollments/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long studentId,
             @PathVariable Long enrollmentId
     ) {
-        log.info("[EnrollmentController] 수강 신청 취소 요청 - studentId: {}, enrollmentId: {}",
+        log.info("[EnrollmentController] cancel enrollment - studentId: {}, enrollmentId: {}",
                 studentId,
                 enrollmentId
         );
@@ -74,5 +63,4 @@ public class EnrollmentController {
 
         return ResponseEntity.noContent().build();
     }
-
 }

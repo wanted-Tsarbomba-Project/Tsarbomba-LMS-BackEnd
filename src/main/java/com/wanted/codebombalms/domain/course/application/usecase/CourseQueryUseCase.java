@@ -1,13 +1,13 @@
 package com.wanted.codebombalms.domain.course.application.usecase;
 
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseDetailResponse;
-import com.wanted.codebombalms.domain.course.presentation.api.response.CourseResponse;
+import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
+import com.wanted.codebombalms.domain.course.application.result.CourseSummaryResult;
 
 import java.util.List;
 
 public interface CourseQueryUseCase {
 
-    List<CourseResponse> findAllCourses();
+    List<CourseSummaryResult> findAllCourses();
 
-    CourseDetailResponse findCourseById(Long courseId);
+    CourseDetailResult findCourseById(Long courseId);
 }

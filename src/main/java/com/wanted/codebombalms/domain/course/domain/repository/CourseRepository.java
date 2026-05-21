@@ -16,5 +16,7 @@ public interface CourseRepository {
 
     Optional<Course> findByCourseIdAndDeletedAtIsNull(Long courseId);
 
+    Optional<Course> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
+
     List<Course> findByInstructorIdAndDeletedAtIsNull(Long instructorId);
 }
