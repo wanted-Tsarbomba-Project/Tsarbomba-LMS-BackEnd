@@ -44,4 +44,25 @@ public class GlobalExceptionHandler {
     private boolean isDev() {
         return Arrays.asList(env.getActiveProfiles()).contains("local");
     }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthorizationDenied(
+            AuthorizationDeniedException e, HttpServletRequest request) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAuthenticated = auth != null
+                && auth.isAuthenticated()
+                && !(auth instanceof AnonymousAuthenticationToken);
+
+        if (!isAuthenticated) {
+            log.warn("[401] 인증되지 않은 요청 - path: {}", request.getRequestURI());
+            return ResponseEntity.status(401)
+                    .body(ApiErrorResponse.of(401, "AUT-016", "인증이 필요합니다.", request.getRequestURI()));
+        } else {
+            log.warn("[403] 권한 부족 - path: {}", request.getRequestURI());
+            return ResponseEntity.status(403)
+                    .body(ApiErrorResponse.of(403, "AUT-015", "접근 권한이 없습니다.", request.getRequestURI()));
+        }
+    }
 }
+
