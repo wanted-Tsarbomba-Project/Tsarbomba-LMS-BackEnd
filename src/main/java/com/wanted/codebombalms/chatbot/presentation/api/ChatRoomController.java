@@ -105,4 +105,14 @@ public class ChatRoomController {
         );
     }
 
+
+    @Operation(summary = "채팅방 삭제", description = "본인 채팅방만 삭제 가능, 소유권 검증 포함")
+    @DeleteMapping("/{roomId}")
+    public ResponseEntity<Void> deleteChatRoom(
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        chatRoomCommandUseCase.delete(roomId, userId);
+        return ResponseEntity.noContent().build();
+    }
 }

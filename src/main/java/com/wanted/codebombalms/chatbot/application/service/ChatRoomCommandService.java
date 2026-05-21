@@ -3,8 +3,10 @@ package com.wanted.codebombalms.chatbot.application.service;
 import com.wanted.codebombalms.chatbot.application.command.CreateChatRoomCommand;
 import com.wanted.codebombalms.chatbot.application.result.ChatRoomResult;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomCommandUseCase;
+import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
 import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
 import com.wanted.codebombalms.chatbot.domain.repository.ChatRoomRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,4 +41,11 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
                 chatRoom.getUpdatedAt()
         );
     }
+
+    @Override
+    public void delete(Long roomId, Long userId) {
+        chatRoomRepository.getById(roomId).verifyOwner(userId);
+        chatRoomRepository.deleteById(roomId);
+    }
+
 }

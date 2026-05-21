@@ -40,4 +40,9 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
                 .map(ChatRoomMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void deleteById(Long id) {
+        springDataRepository.deleteById(id);
+    }
 }
