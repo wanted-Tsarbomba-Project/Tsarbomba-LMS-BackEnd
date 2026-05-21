@@ -3,8 +3,6 @@ package com.wanted.codebombalms.auth.presentation.api;
 import com.wanted.codebombalms.auth.application.usecase.SignupUseCase;
 import com.wanted.codebombalms.auth.presentation.api.dto.request.SignupRequest;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
-import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
-import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,8 +28,8 @@ public class SignupController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.created(
-                        ApiResponseCode.AUTH_SIGNUP_COMPLETED,
-                        ApiResponseMessage.AUTH_SIGNUP_COMPLETED,
+                        AuthResponseCode.SIGNUP_COMPLETED,
+                        AuthResponseMessage.SIGNUP_COMPLETED,
                         userId
                 ));
     }

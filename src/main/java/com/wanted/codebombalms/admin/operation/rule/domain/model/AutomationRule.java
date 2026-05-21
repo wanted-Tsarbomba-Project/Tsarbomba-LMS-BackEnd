@@ -13,42 +13,33 @@ public class AutomationRule {
     private final Long operationRuleId;
     private final Long createdBy;
     private final OperationRuleCode ruleCode;
-    private final String ruleName;
-    private final OperationTargetType targetType;
     private final BigDecimal thresholdValue;
     private final Integer minSampleCount;
     private final OperationSeverity severity;
     private final boolean enabled;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
-    private final LocalDateTime deletedAt;
 
     private AutomationRule(
             Long operationRuleId,
             Long createdBy,
             OperationRuleCode ruleCode,
-            String ruleName,
-            OperationTargetType targetType,
             BigDecimal thresholdValue,
             Integer minSampleCount,
             OperationSeverity severity,
             boolean enabled,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt,
-            LocalDateTime deletedAt
+            LocalDateTime updatedAt
     ) {
         this.operationRuleId = operationRuleId;
         this.createdBy = createdBy;
         this.ruleCode = ruleCode;
-        this.ruleName = ruleName;
-        this.targetType = targetType;
         this.thresholdValue = thresholdValue;
         this.minSampleCount = minSampleCount;
         this.severity = severity;
         this.enabled = enabled;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
-        this.deletedAt = deletedAt;
     }
 
     public static AutomationRule create(
@@ -68,13 +59,10 @@ public class AutomationRule {
                 null,
                 createdBy,
                 ruleCode,
-                ruleCode.getLabel(),
-                ruleCode.getTargetType(),
                 thresholdValue,
                 normalizeMinSampleCount(ruleCode, minSampleCount),
                 resolvedSeverity,
                 resolvedEnabled,
-                null,
                 null,
                 null
         );
@@ -84,29 +72,23 @@ public class AutomationRule {
             Long operationRuleId,
             Long createdBy,
             OperationRuleCode ruleCode,
-            String ruleName,
-            OperationTargetType targetType,
             BigDecimal thresholdValue,
             Integer minSampleCount,
             OperationSeverity severity,
             boolean enabled,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt,
-            LocalDateTime deletedAt
+            LocalDateTime updatedAt
     ) {
         return new AutomationRule(
                 operationRuleId,
                 createdBy,
                 ruleCode,
-                ruleName,
-                targetType,
                 thresholdValue,
                 minSampleCount,
                 severity,
                 enabled,
                 createdAt,
-                updatedAt,
-                deletedAt
+                updatedAt
         );
     }
 
@@ -138,18 +120,6 @@ public class AutomationRule {
         }
     }
 
-    public String buildRuleContent() {
-        return switch (ruleCode) {
-            case COURSE_LOW_ENROLLMENT ->
-                    "수강생 수가 " + thresholdValue.stripTrailingZeros().toPlainString() + "명 이하인 강좌를 탐지합니다.";
-            case USER_INACTIVE_NO_COURSE ->
-                    "마지막 로그인 후 " + thresholdValue.stripTrailingZeros().toPlainString() + "일 이상 지났고 수강 중인 강좌가 없는 학생을 탐지합니다.";
-            case PROBLEM_HIGH_WRONG_RATE ->
-                    "제출 수가 " + minSampleCount + "회 이상이고 오답률이 "
-                            + thresholdValue.stripTrailingZeros().toPlainString() + "% 이상인 문제를 탐지합니다.";
-        };
-    }
-
     public Long getOperationRuleId() {
         return operationRuleId;
     }
@@ -163,11 +133,11 @@ public class AutomationRule {
     }
 
     public String getRuleName() {
-        return ruleName;
+        return ruleCode.getLabel();
     }
 
     public OperationTargetType getTargetType() {
-        return targetType;
+        return ruleCode.getTargetType();
     }
 
     public BigDecimal getThresholdValue() {
@@ -194,7 +164,4 @@ public class AutomationRule {
         return updatedAt;
     }
 
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
 }

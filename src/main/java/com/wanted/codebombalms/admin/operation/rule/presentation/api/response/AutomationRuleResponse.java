@@ -20,15 +20,17 @@ public class AutomationRuleResponse {
     private OperationRuleCode ruleCode;
     private String ruleName;
     private OperationTargetType targetType;
-    private String ruleContent;
     private BigDecimal thresholdValue;
     private String thresholdLabel;
     private String thresholdUnit;
+    private BigDecimal thresholdMin;
+    private BigDecimal thresholdMax;
     private Integer minSampleCount;
+    private boolean requiresMinSampleCount;
+    private String minSampleCountLabel;
+    private String minSampleCountUnit;
     private OperationSeverity severity;
     private boolean enabled;
-    private Long createdBy;
-    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     public static AutomationRuleResponse from(AutomationRule rule) {
@@ -39,15 +41,17 @@ public class AutomationRuleResponse {
                 rule.getRuleCode(),
                 rule.getRuleName(),
                 rule.getTargetType(),
-                rule.buildRuleContent(),
                 rule.getThresholdValue(),
                 ruleCode.getThresholdLabel(),
                 ruleCode.getThresholdUnit(),
+                ruleCode.getThresholdMin(),
+                ruleCode.getThresholdMax(),
                 rule.getMinSampleCount(),
+                ruleCode.isRequiresMinSampleCount(),
+                ruleCode.getMinSampleCountLabel(),
+                ruleCode.getMinSampleCountUnit(),
                 rule.getSeverity(),
                 rule.isEnabled(),
-                rule.getCreatedBy(),
-                rule.getCreatedAt(),
                 rule.getUpdatedAt()
         );
     }
