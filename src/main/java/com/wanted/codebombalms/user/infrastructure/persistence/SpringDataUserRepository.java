@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.domain.user.infrastructure.persistence;
+package com.wanted.codebombalms.user.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

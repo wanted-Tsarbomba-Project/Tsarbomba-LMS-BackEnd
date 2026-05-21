@@ -1,6 +1,6 @@
-package com.wanted.codebombalms.domain.user.domain.repository;
+package com.wanted.codebombalms.user.domain.repository;
 
-import com.wanted.codebombalms.domain.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.model.User;
 
 import java.util.Optional;
 

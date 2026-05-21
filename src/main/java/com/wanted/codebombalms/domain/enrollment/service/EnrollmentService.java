@@ -12,8 +12,8 @@ import com.wanted.codebombalms.domain.enrollment.exception.DuplicateEnrollmentEx
 import com.wanted.codebombalms.domain.enrollment.dto.response.MyCourseResponse;
 import java.util.List;
 import com.wanted.codebombalms.domain.enrollment.repository.EnrollmentRepository;
-import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
-import com.wanted.codebombalms.domain.user.infrastructure.persistence.SpringDataUserRepository;
+import com.wanted.codebombalms.user.infrastructure.persistence.UserJpaEntity;
+import com.wanted.codebombalms.user.infrastructure.persistence.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

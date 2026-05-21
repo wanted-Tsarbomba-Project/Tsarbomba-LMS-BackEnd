@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.domain.user.domain.model;
+package com.wanted.codebombalms.user.domain.model;
 
 import java.time.LocalDateTime;
 

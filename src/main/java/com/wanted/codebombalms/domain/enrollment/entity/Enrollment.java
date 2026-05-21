@@ -2,7 +2,7 @@ package com.wanted.codebombalms.domain.enrollment.entity;
 
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
-import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
+import com.wanted.codebombalms.user.infrastructure.persistence.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
