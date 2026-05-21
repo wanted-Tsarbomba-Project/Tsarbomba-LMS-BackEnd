@@ -1,0 +1,33 @@
+package com.wanted.codebombalms.enrollment.presentation.api.response;
+
+import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
+import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+public class EnrollmentResponse {
+
+    private Long enrollmentId;
+    private Long courseId;
+    private Long studentId;
+    private EnrollmentStatus status;
+    private LocalDateTime enrolledAt;
+    private LocalDateTime canceledAt;
+
+    public static EnrollmentResponse from(Enrollment enrollment) {
+        return new EnrollmentResponse(
+                enrollment.getEnrollmentId(),
+                enrollment.getCourse().getCourseId(),
+                enrollment.getStudentId(),
+                enrollment.getStatus(),
+                enrollment.getEnrolledAt(),
+                enrollment.getCanceledAt()
+        );
+    }
+}
