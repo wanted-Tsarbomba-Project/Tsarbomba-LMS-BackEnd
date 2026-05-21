@@ -13,3 +13,9 @@ jwt:
   expiration: 3600000
 
 
+#챗봇설정
+fastapi:
+  url: http://localhost:8000
+
+chat:
+  max-history-messages: 20
