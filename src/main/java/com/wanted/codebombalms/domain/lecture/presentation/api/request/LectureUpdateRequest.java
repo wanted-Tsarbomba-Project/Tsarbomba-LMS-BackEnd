@@ -1,0 +1,28 @@
+package com.wanted.codebombalms.domain.lecture.presentation.api.request;
+
+import com.wanted.codebombalms.domain.lecture.domain.model.LectureStatus;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+public class LectureUpdateRequest {
+
+    @Size(max = 100, message = "강의 제목은 100자 이하로 입력해야 합니다.")
+    private String title;
+
+    private String description;
+
+    @Size(max = 500, message = "영상 URL은 500자 이하로 입력해야 합니다.")
+    private String videoUrl;
+
+    @Size(max = 500, message = "썸네일 URL은 500자 이하로 입력해야 합니다.")
+    private String thumbnailUrl;
+
+    private Integer lectureOrder;
+
+    private LectureStatus status;
+}
