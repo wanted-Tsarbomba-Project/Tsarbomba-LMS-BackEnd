@@ -1,8 +1,8 @@
-package com.wanted.codebombalms.domain.user.infrastructure.persistence;
+package com.wanted.codebombalms.user.infrastructure.persistence;
 
-import com.wanted.codebombalms.domain.user.domain.model.AuthProvider;
-import com.wanted.codebombalms.domain.user.domain.model.User;
-import com.wanted.codebombalms.domain.user.domain.model.UserRole;
+import com.wanted.codebombalms.user.domain.model.AuthProvider;
+import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.model.UserRole;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

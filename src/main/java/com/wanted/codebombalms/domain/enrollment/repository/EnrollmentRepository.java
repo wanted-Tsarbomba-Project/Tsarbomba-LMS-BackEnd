@@ -3,7 +3,7 @@ package com.wanted.codebombalms.domain.enrollment.repository;
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.enrollment.entity.Enrollment;
 import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
-import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
+import com.wanted.codebombalms.user.infrastructure.persistence.UserJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
