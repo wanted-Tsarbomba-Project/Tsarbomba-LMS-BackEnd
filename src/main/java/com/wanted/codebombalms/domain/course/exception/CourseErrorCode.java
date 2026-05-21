@@ -8,9 +8,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum CourseErrorCode implements ErrorCode {
 
-    COURSE_NOT_FOUND(404, "CR-001", "존재하지 않는 강좌입니다.");
+    COURSE_NOT_FOUND("CRS-001", "존재하지 않는 강좌입니다.");
 
-    private final int status;
     private final String code;
     private final String message;
 }

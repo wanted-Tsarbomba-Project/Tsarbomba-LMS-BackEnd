@@ -1,16 +1,21 @@
 package com.wanted.codebombalms.global.presentation.api.common;
 
+import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
+
 import java.time.Instant;
 
-// 공통 에러 응답 포멧
 public record ApiErrorResponse(
         Instant timestamp,
         int status,
         String code,
-        String message
+        String message,
+        String path
 ) {
-
-    public static ApiErrorResponse of(int status, String code, String message) {
-        return new ApiErrorResponse(Instant.now(), status, code, message);
+    public static ApiErrorResponse of(int status, ErrorCode errorCode, String path) {
+        return new ApiErrorResponse(Instant.now(), status, errorCode.getCode(), errorCode.getMessage(), path);
     }
-}
+
+    public static ApiErrorResponse of(int status, String code, String message, String path) {
+        return new ApiErrorResponse(Instant.now(), status, code, message, path);
+    }
+} 

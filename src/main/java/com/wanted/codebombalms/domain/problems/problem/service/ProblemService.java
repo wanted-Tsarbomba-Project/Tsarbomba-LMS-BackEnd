@@ -5,6 +5,7 @@ import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
 import com.wanted.codebombalms.domain.problems.problem.repository.ProblemRepository;
 import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemCreateRequest;
 import com.wanted.codebombalms.domain.problems.set.dto.request.ProblemUpdateRequest;
 import com.wanted.codebombalms.domain.problems.set.entity.ProblemSet;
@@ -47,7 +48,7 @@ public class ProblemService {
 
     public Problem findProblemEntity(Long problemSetId, Long problemId) {
         return problemRepository.findByProblemIdAndProblemSet_ProblemSetId(problemId, problemSetId)
-                .orElseThrow(() -> new RuntimeException("해당 문제 세트에 속한 소문제가 아닙니다."));
+                .orElseThrow(() -> new ValidationException(ProblemErrorCode.PROBLEM_NOT_IN_SET));
     }
 
     public Optional<Long> findProblemIdByProblemSetAndOrder(Long problemSetId, Integer problemOrder) {
