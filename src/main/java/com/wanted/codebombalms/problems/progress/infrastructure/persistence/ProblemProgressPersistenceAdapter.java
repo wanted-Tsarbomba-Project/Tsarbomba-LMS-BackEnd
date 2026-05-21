@@ -10,10 +10,11 @@ import com.wanted.codebombalms.problems.progress.application.port.LoadProgressPr
 import com.wanted.codebombalms.problems.progress.application.port.ProgressManagementPort;
 import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
 import com.wanted.codebombalms.problems.set.infrastructure.persistence.SpringDataProblemSetRepository;
-import com.wanted.codebombalms.submission.infrastructure.persistence.SpringDataSubmissionRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.submission.application.port.SubmissionQueryPort;
+import com.wanted.codebombalms.submission.domain.model.LatestSubmission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +31,7 @@ public class ProblemProgressPersistenceAdapter implements
     private final SpringDataProblemSetRepository problemSetRepository;
     private final SpringDataProgressRepository progressRepository;
     private final SpringDataProblemRepository problemRepository;
-    private final SpringDataSubmissionRepository submissionRepository;
+    private final SubmissionQueryPort submissionQueryPort;
 
     @Override
     public void checkProblemSetExists(Long problemSetId) {
@@ -65,9 +66,9 @@ public class ProblemProgressPersistenceAdapter implements
             Integer currentProblemNumber,
             ProblemJpaEntity problem
     ) {
-        Boolean latestCorrect = submissionRepository
-                .findTopByUserIdAndProblem_ProblemIdOrderBySubmittedAtDesc(userId, problem.getProblemId())
-                .map(submission -> submission.getCorrect())
+        Boolean latestCorrect = submissionQueryPort
+                .findLatestResult(userId, problem.getProblemId())
+                .map(LatestSubmission::correct)
                 .orElse(null);
 
         return ProblemProgressItem.of(

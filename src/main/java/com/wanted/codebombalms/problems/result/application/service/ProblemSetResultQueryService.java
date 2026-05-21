@@ -2,6 +2,7 @@ package com.wanted.codebombalms.problems.result.application.service;
 
 import com.wanted.codebombalms.problems.result.application.query.GetProblemSetResultQuery;
 import com.wanted.codebombalms.problems.result.application.usecase.GetProblemSetResultUseCase;
+import com.wanted.codebombalms.problems.result.domain.model.ProblemSubmissionResult;
 import com.wanted.codebombalms.problems.result.domain.model.ProblemSetResult;
 import com.wanted.codebombalms.problems.result.application.port.CheckProblemSetCompletionPort;
 import com.wanted.codebombalms.problems.result.application.port.LoadProblemSetResultPort;
@@ -18,9 +19,37 @@ public class ProblemSetResultQueryService implements GetProblemSetResultUseCase 
 
     @Override
     @Transactional(readOnly = true)
-    public ProblemSetResult handle(GetProblemSetResultQuery query) {
+    public ProblemSetResultView handle(GetProblemSetResultQuery query) {
         checkProblemSetCompletionPort.checkCompleted(query.userId(), query.problemSetId());
 
-        return loadProblemSetResultPort.loadResult(query.userId(), query.problemSetId());
+        return toView(loadProblemSetResultPort.loadResult(query.userId(), query.problemSetId()));
+    }
+
+    private ProblemSetResultView toView(ProblemSetResult result) {
+        return new ProblemSetResultView(
+                result.getProblemSetId(),
+                result.getTitle(),
+                result.getCompleted(),
+                result.getAccuracyRate(),
+                result.getTotalCompletedUserCount(),
+                result.getCorrectCompletedUserCount(),
+                result.getSubmissions()
+                        .stream()
+                        .map(this::toView)
+                        .toList()
+        );
+    }
+
+    private ProblemSubmissionResultView toView(ProblemSubmissionResult submission) {
+        return new ProblemSubmissionResultView(
+                submission.getProblemId(),
+                submission.getProblemNumber(),
+                submission.getTitle(),
+                submission.getContent(),
+                submission.getSubmittedAnswer(),
+                submission.getCorrect(),
+                submission.getSubmittedAt(),
+                submission.getExplanation()
+        );
     }
 }

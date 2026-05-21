@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:8080
-@problemSetId = 1
+@problemSetId = 2001
 @userId = 3
 
 ### 문제 세트 진행 상태 조회

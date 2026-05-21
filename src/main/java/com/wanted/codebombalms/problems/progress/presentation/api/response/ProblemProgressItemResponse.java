@@ -1,18 +1,17 @@
 package com.wanted.codebombalms.problems.progress.presentation.api.response;
 
-import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
-import com.wanted.codebombalms.problems.progress.enums.ProblemProgressStatus;
+import com.wanted.codebombalms.problems.progress.application.usecase.GetProblemProgressUseCase.ProblemProgressItemView;
 
 public record ProblemProgressItemResponse(
         Long problemId,
         Integer problemNumber,
-        ProblemProgressStatus status
+        String status
 ) {
-    public ProblemProgressItemResponse(ProblemProgressItem item) {
+    public ProblemProgressItemResponse(ProblemProgressItemView item) {
         this(
-                item.getProblemId(),
-                item.getProblemNumber(),
-                item.getStatus()
+                item.problemId(),
+                item.problemNumber(),
+                item.status()
         );
     }
 }

@@ -22,11 +22,26 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProblemSetSummary> handle(GetProblemSetsQuery query) {
+    public List<ProblemSetSummaryView> handle(GetProblemSetsQuery query) {
         if (!checkProblemSetCategoryPort.existsActiveCategory(query.categoryId())) {
             throw new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND);
         }
 
-        return loadProblemSetPort.loadActiveProblemSetsByCategory(query.categoryId());
+        return loadProblemSetPort.loadActiveProblemSetsByCategory(query.categoryId())
+                .stream()
+                .map(this::toView)
+                .toList();
+    }
+
+    private ProblemSetSummaryView toView(ProblemSetSummary problemSet) {
+        return new ProblemSetSummaryView(
+                problemSet.getProblemSetId(),
+                problemSet.getProblemNumber(),
+                problemSet.getTitle(),
+                problemSet.getDescription(),
+                problemSet.getDifficulty(),
+                problemSet.getAccuracyRate(),
+                problemSet.getCreatedAt()
+        );
     }
 }

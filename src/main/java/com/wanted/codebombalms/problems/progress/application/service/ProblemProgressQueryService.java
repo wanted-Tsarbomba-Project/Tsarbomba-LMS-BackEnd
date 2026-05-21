@@ -3,6 +3,7 @@ package com.wanted.codebombalms.problems.progress.application.service;
 import com.wanted.codebombalms.problems.progress.application.query.GetProblemProgressQuery;
 import com.wanted.codebombalms.problems.progress.application.usecase.GetProblemProgressUseCase;
 import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgress;
+import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
 import com.wanted.codebombalms.problems.progress.application.port.CheckProgressProblemSetPort;
 import com.wanted.codebombalms.problems.progress.application.port.LoadCurrentProgressPort;
 import com.wanted.codebombalms.problems.progress.application.port.LoadProgressProblemPort;
@@ -20,7 +21,7 @@ public class ProblemProgressQueryService implements GetProblemProgressUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public ProblemProgress handle(GetProblemProgressQuery query) {
+    public ProblemProgressView handle(GetProblemProgressQuery query) {
         checkProgressProblemSetPort.checkProblemSetExists(query.problemSetId());
 
         Integer currentProblemNumber = loadCurrentProgressPort.loadCurrentProblemNumber(
@@ -28,7 +29,7 @@ public class ProblemProgressQueryService implements GetProblemProgressUseCase {
                 query.problemSetId()
         );
 
-        return ProblemProgress.of(
+        ProblemProgress progress = ProblemProgress.of(
                 query.problemSetId(),
                 currentProblemNumber,
                 loadProgressProblemPort.loadProgressProblems(
@@ -36,6 +37,30 @@ public class ProblemProgressQueryService implements GetProblemProgressUseCase {
                         query.problemSetId(),
                         currentProblemNumber
                 )
+        );
+
+        return toView(progress);
+    }
+
+    private ProblemProgressView toView(ProblemProgress progress) {
+        return new ProblemProgressView(
+                progress.getProblemSetId(),
+                progress.getTotalProblemCount(),
+                progress.getCurrentProblemNumber(),
+                progress.getCurrentProblemId(),
+                progress.getSolvedProblemCount(),
+                progress.getProblems()
+                        .stream()
+                        .map(this::toView)
+                        .toList()
+        );
+    }
+
+    private ProblemProgressItemView toView(ProblemProgressItem problem) {
+        return new ProblemProgressItemView(
+                problem.getProblemId(),
+                problem.getProblemNumber(),
+                problem.getStatus().name()
         );
     }
 }

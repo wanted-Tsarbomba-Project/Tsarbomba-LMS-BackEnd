@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.set.presentation.api.response;
 
-import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
+import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase.ProblemSetEntryView;
 
 public record ProblemSetEnterResponse(
         Long problemSetId,
@@ -10,14 +10,14 @@ public record ProblemSetEnterResponse(
         Boolean isCompleted,
         ProblemDetailResponse problem
 ) {
-    public ProblemSetEnterResponse(ProblemSetEntry entry) {
+    public ProblemSetEnterResponse(ProblemSetEntryView entry) {
         this(
-                entry.getProblemSetId(),
-                entry.getTitle(),
-                entry.getDescription(),
-                entry.getCurrentProblemNumber(),
-                entry.getCompleted(),
-                entry.getProblem() == null ? null : new ProblemDetailResponse(entry.getProblem())
+                entry.problemSetId(),
+                entry.title(),
+                entry.description(),
+                entry.currentProblemNumber(),
+                entry.isCompleted(),
+                entry.problem() == null ? null : new ProblemDetailResponse(entry.problem())
         );
     }
 }

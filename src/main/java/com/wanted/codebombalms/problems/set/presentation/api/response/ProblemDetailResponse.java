@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.set.presentation.api.response;
 
-import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
+import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase.ProblemDetailView;
 
 public record ProblemDetailResponse(
         Long problemId,
@@ -10,14 +10,14 @@ public record ProblemDetailResponse(
         String problemType,
         String startCode
 ) {
-    public ProblemDetailResponse(ProblemDetail problem) {
+    public ProblemDetailResponse(ProblemDetailView problem) {
         this(
-                problem.getProblemId(),
-                problem.getProblemNumber(),
-                problem.getTitle(),
-                problem.getContent(),
-                problem.getProblemType(),
-                problem.getStartCode()
+                problem.problemId(),
+                problem.problemNumber(),
+                problem.title(),
+                problem.content(),
+                problem.problemType(),
+                problem.startCode()
         );
     }
 }

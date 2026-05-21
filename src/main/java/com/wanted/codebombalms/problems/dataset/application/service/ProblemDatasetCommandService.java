@@ -2,14 +2,16 @@ package com.wanted.codebombalms.problems.dataset.application.service;
 
 import com.wanted.codebombalms.problems.dataset.application.command.ConnectProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
+import com.wanted.codebombalms.problems.dataset.application.policy.ProblemDatasetConnectionPolicy;
 import com.wanted.codebombalms.problems.dataset.application.policy.ProblemDatasetFileValidationPolicy;
-import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetManagementPort;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
 import com.wanted.codebombalms.problems.dataset.application.usecase.ConnectProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnection;
+import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionRequest;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
+import com.wanted.codebombalms.problems.dataset.domain.repository.ProblemDatasetRepository;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +27,18 @@ public class ProblemDatasetCommandService implements
         UploadProblemDatasetUseCase {
 
     private final ProblemDatasetFileValidationPolicy validationPolicy;
+    private final ProblemDatasetConnectionPolicy connectionPolicy;
     private final StoreDatasetFilePort storeDatasetFilePort;
-    private final ProblemDatasetManagementPort problemDatasetManagementPort;
+    private final ProblemDatasetRepository problemDatasetRepository;
 
     @Override
     @Transactional
     public ConnectProblemDatasetView handle(ConnectProblemDatasetCommand command) {
-        ProblemDatasetConnection connection = problemDatasetManagementPort.connectDataset(command);
+        ProblemDatasetConnectionRequest request =
+                ProblemDatasetConnectionRequest.of(command.problemId(), command.datasetId());
+
+        connectionPolicy.validate(problemDatasetRepository.loadConnectionTarget(request));
+        ProblemDatasetConnection connection = problemDatasetRepository.connectDataset(request);
 
         return new ConnectProblemDatasetView(
                 connection.getProblemId(),
@@ -47,7 +54,7 @@ public class ProblemDatasetCommandService implements
 
         try {
             StoredDatasetFile storedFile = storeDatasetFilePort.store(command);
-            ProblemDataset dataset = problemDatasetManagementPort.saveUploadedDataset(storedFile);
+            ProblemDataset dataset = problemDatasetRepository.saveUploadedDataset(storedFile);
 
             return new UploadProblemDatasetView(
                     dataset.getDatasetId(),

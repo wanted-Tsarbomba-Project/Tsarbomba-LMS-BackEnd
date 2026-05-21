@@ -1,19 +1,18 @@
-package com.wanted.codebombalms.submission.application.service;
+package com.wanted.codebombalms.submission.application.policy;
 
-import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
-import com.wanted.codebombalms.domain.submission.exception.SubmissionErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
-import org.springframework.stereotype.Service;
+import com.wanted.codebombalms.submission.exception.SubmissionErrorCode;
+import org.springframework.stereotype.Component;
 
-@Service
-public class SubmissionAttemptService {
+@Component
+public class SubmissionAttemptPolicy {
 
-    public void validateAttemptLimit(Problem problem, int previousAttemptCount) {
-        if (problem.getAttemptLimit() != null && previousAttemptCount >= problem.getAttemptLimit()) {
+    public void validateAttemptLimit(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {
+        if (attemptLimit != null && previousAttemptCount >= attemptLimit) {
             throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
         }
 
-        if (!Boolean.TRUE.equals(problem.getRetriable()) && previousAttemptCount > 0) {
+        if (!Boolean.TRUE.equals(retriable) && previousAttemptCount > 0) {
             throw new ValidationException(SubmissionErrorCode.PROBLEM_NOT_RETRIABLE);
         }
     }

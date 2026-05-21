@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.result.presentation.api.response;
 
-import com.wanted.codebombalms.problems.result.domain.model.ProblemSubmissionResult;
+import com.wanted.codebombalms.problems.result.application.usecase.GetProblemSetResultUseCase.ProblemSubmissionResultView;
 
 import java.time.LocalDateTime;
 
@@ -14,16 +14,16 @@ public record ProblemSubmissionResultResponse(
         LocalDateTime submittedAt,
         String explanation
 ) {
-    public ProblemSubmissionResultResponse(ProblemSubmissionResult submission) {
+    public ProblemSubmissionResultResponse(ProblemSubmissionResultView submission) {
         this(
-                submission.getProblemId(),
-                submission.getProblemNumber(),
-                submission.getTitle(),
-                submission.getContent(),
-                submission.getSubmittedAnswer(),
-                submission.getCorrect(),
-                submission.getSubmittedAt(),
-                submission.getExplanation()
+                submission.problemId(),
+                submission.problemNumber(),
+                submission.title(),
+                submission.content(),
+                submission.submittedAnswer(),
+                submission.isCorrect(),
+                submission.submittedAt(),
+                submission.explanation()
         );
     }
 }

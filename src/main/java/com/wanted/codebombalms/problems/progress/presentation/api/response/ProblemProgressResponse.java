@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.progress.presentation.api.response;
 
-import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgress;
+import com.wanted.codebombalms.problems.progress.application.usecase.GetProblemProgressUseCase.ProblemProgressView;
 
 import java.util.List;
 
@@ -12,14 +12,14 @@ public record ProblemProgressResponse(
         Integer solvedProblemCount,
         List<ProblemProgressItemResponse> problems
 ) {
-    public ProblemProgressResponse(ProblemProgress progress) {
+    public ProblemProgressResponse(ProblemProgressView progress) {
         this(
-                progress.getProblemSetId(),
-                progress.getTotalProblemCount(),
-                progress.getCurrentProblemNumber(),
-                progress.getCurrentProblemId(),
-                progress.getSolvedProblemCount(),
-                progress.getProblems()
+                progress.problemSetId(),
+                progress.totalProblemCount(),
+                progress.currentProblemNumber(),
+                progress.currentProblemId(),
+                progress.solvedProblemCount(),
+                progress.problems()
                         .stream()
                         .map(ProblemProgressItemResponse::new)
                         .toList()

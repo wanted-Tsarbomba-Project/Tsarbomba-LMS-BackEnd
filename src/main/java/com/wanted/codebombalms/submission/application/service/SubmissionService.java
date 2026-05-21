@@ -1,16 +1,19 @@
 package com.wanted.codebombalms.submission.application.service;
 
-import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
-import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService.ProblemForSubmissionView;
-import com.wanted.codebombalms.problems.progress.application.service.ProgressCommandService;
 import com.wanted.codebombalms.submission.application.command.SubmitAnswerCommand;
-import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
-import com.wanted.codebombalms.submission.domain.event.ProblemSetCompletedEvent;
-import com.wanted.codebombalms.submission.domain.model.TextSubmission;
+import com.wanted.codebombalms.submission.application.policy.SubmissionAnswerPolicy;
+import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
+import com.wanted.codebombalms.submission.application.policy.SubmissionScorePolicy;
+import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
+import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort.ProblemForSubmission;
+import com.wanted.codebombalms.submission.application.port.ProblemProgressPort;
+import com.wanted.codebombalms.submission.application.port.ProblemSetCompletionEventPort;
 import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
+import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
+import com.wanted.codebombalms.submission.domain.model.TextSubmission;
 import com.wanted.codebombalms.submission.exception.SubmissionErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
-import org.springframework.context.ApplicationEventPublisher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,37 +21,44 @@ import org.springframework.transaction.annotation.Transactional;
 public class SubmissionService implements SubmissionCommandUseCase {
 
     private final SubmissionCommandPort submissionCommandPort;
-    private final ProblemQueryService problemQueryService;
-    private final ProgressCommandService progressCommandService;
+    private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
+    private final ProblemProgressPort problemProgressPort;
+    private final ProblemSetCompletionEventPort problemSetCompletionEventPort;
     private final AnswerGradingService answerGradingService;
-    private final SubmissionAttemptService submissionAttemptService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final SubmissionAttemptPolicy submissionAttemptPolicy;
+    private final SubmissionAnswerPolicy submissionAnswerPolicy;
+    private final SubmissionScorePolicy submissionScorePolicy;
+
 
     public SubmissionService(
             SubmissionCommandPort submissionCommandPort,
-            ProblemQueryService problemQueryService,
-            ProgressCommandService progressCommandService,
+            LoadProblemForSubmissionPort loadProblemForSubmissionPort,
+            ProblemProgressPort problemProgressPort,
+            ProblemSetCompletionEventPort problemSetCompletionEventPort,
             AnswerGradingService answerGradingService,
-            SubmissionAttemptService submissionAttemptService,
-            ApplicationEventPublisher eventPublisher
+            SubmissionAttemptPolicy submissionAttemptPolicy,
+            SubmissionScorePolicy submissionScorePolicy,
+            SubmissionAnswerPolicy submissionAnswerPolicy
     ) {
         this.submissionCommandPort = submissionCommandPort;
-        this.problemQueryService = problemQueryService;
-        this.progressCommandService = progressCommandService;
+        this.loadProblemForSubmissionPort = loadProblemForSubmissionPort;
+        this.problemProgressPort = problemProgressPort;
+        this.problemSetCompletionEventPort = problemSetCompletionEventPort;
         this.answerGradingService = answerGradingService;
-        this.submissionAttemptService = submissionAttemptService;
-        this.eventPublisher = eventPublisher;
+        this.submissionAttemptPolicy = submissionAttemptPolicy;
+        this.submissionScorePolicy = submissionScorePolicy;
+        this.submissionAnswerPolicy = submissionAnswerPolicy;
     }
 
     @Override
     @Transactional
     public SubmissionView handle(Long problemId, SubmitAnswerCommand command) {
-        validateAnswer(command.submittedAnswer());
+        submissionAnswerPolicy.validate(command.submittedAnswer());
 
-        ProblemForSubmissionView problem = problemQueryService.findProblemForSubmission(problemId);
+        ProblemForSubmission problem = loadProblemForSubmissionPort.loadProblem(problemId);
         Long problemSetId = problem.problemSetId();
 
-        progressCommandService.validateCurrentProblem(
+        problemProgressPort.validateCurrentProblem(
                 command.userId(),
                 problemSetId,
                 problem.problemOrder()
@@ -56,7 +66,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
         int previousAttemptCount = submissionCommandPort.countAttempts(command.userId(), problemId);
 
-        submissionAttemptService.validateAttemptLimit(
+        submissionAttemptPolicy.validateAttemptLimit(
                 problem.attemptLimit(),
                 problem.retriable(),
                 previousAttemptCount
@@ -66,13 +76,16 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 problem.answer(),
                 command.submittedAnswer()
         );
-        int earnedScore = isCorrect ? problem.score() : 0;
+        int earnedScore = submissionScorePolicy.calculateEarnedScore(
+                isCorrect,
+                problem.score()
+        );
         int attemptNo = previousAttemptCount + 1;
-        int remainingAttemptCount = submissionAttemptService.calculateRemainingAttemptCount(
+        int remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
                 problem.attemptLimit(),
                 attemptNo
         );
-        boolean canRetry = submissionAttemptService.canRetry(
+        boolean canRetry = submissionAttemptPolicy.canRetry(
                 problem.retriable(),
                 remainingAttemptCount,
                 isCorrect
@@ -91,25 +104,22 @@ public class SubmissionService implements SubmissionCommandUseCase {
         boolean isProblemSetCompleted = false;
 
         if (isCorrect) {
-            nextProblemId = problemQueryService
-                    .findProblemIdByProblemSetAndOrder(
-                            problemSetId,
-                            problem.problemOrder() + 1
-                    )
+            nextProblemId = loadProblemForSubmissionPort
+                    .findNextProblemId(problemSetId, problem.problemOrder() + 1)
                     .orElse(null);
 
             if (nextProblemId == null) {
                 isProblemSetCompleted = true;
-                progressCommandService.completeProblemSet(
+                problemProgressPort.completeProblemSet(
                         command.userId(),
                         problemSetId
                 );
-                eventPublisher.publishEvent(new ProblemSetCompletedEvent(
+                problemSetCompletionEventPort.publishCompleted(
                         command.userId(),
                         problemSetId
-                ));
+                );
             } else {
-                progressCommandService.openNextProblem(
+                problemProgressPort.openNextProblem(
                         command.userId(),
                         problemSetId
                 );
@@ -126,11 +136,5 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 isProblemSetCompleted,
                 isCorrect ? problem.explanation() : null
         );
-    }
-
-    private void validateAnswer(String submittedAnswer) {
-        if (submittedAnswer == null || submittedAnswer.isEmpty()) {
-            throw new ValidationException(SubmissionErrorCode.INVALID_ANSWER);
-        }
     }
 }

@@ -24,7 +24,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
 
     @Override
     @Transactional
-    public ProblemSetEntry handle(EnterProblemSetQuery query) {
+    public ProblemSetEntryView handle(EnterProblemSetQuery query) {
         ProblemSetEntry problemSet = loadProblemSetEntryPort.loadProblemSetEntry(query.problemSetId());
         ProblemSetProgressState progress =
                 findOrCreateProblemSetProgressPort.findOrCreateProgress(query.userId(), query.problemSetId());
@@ -42,13 +42,28 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
             );
         }
 
-        return ProblemSetEntry.of(
+        return new ProblemSetEntryView(
                 problemSet.getProblemSetId(),
                 problemSet.getTitle(),
                 problemSet.getDescription(),
                 progress.currentProblemNumber(),
                 progress.completed(),
-                currentProblem
+                toView(currentProblem)
+        );
+    }
+
+    private ProblemDetailView toView(ProblemDetail problem) {
+        if (problem == null) {
+            return null;
+        }
+
+        return new ProblemDetailView(
+                problem.getProblemId(),
+                problem.getProblemNumber(),
+                problem.getTitle(),
+                problem.getContent(),
+                problem.getProblemType(),
+                problem.getStartCode()
         );
     }
 }

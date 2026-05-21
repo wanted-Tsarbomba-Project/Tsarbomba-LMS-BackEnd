@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.set.presentation.api.response;
 
-import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
+import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase.ProblemSetSummaryView;
 
 import java.time.LocalDateTime;
 
@@ -13,15 +13,15 @@ public record ProblemSetListResponse(
         Double accuracyRate,
         LocalDateTime createdAt
 ) {
-    public ProblemSetListResponse(ProblemSetSummary problemSet) {
+    public ProblemSetListResponse(ProblemSetSummaryView problemSet) {
         this(
-                problemSet.getProblemSetId(),
-                problemSet.getProblemNumber(),
-                problemSet.getTitle(),
-                problemSet.getDescription(),
-                problemSet.getDifficulty(),
-                problemSet.getAccuracyRate(),
-                problemSet.getCreatedAt()
+                problemSet.problemSetId(),
+                problemSet.problemNumber(),
+                problemSet.title(),
+                problemSet.description(),
+                problemSet.difficulty(),
+                problemSet.accuracyRate(),
+                problemSet.createdAt()
         );
     }
 }

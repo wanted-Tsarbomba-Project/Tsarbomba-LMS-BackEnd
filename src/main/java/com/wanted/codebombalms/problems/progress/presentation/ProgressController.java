@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.progress.presentation.page;
+package com.wanted.codebombalms.problems.progress.presentation;
 
 import com.wanted.codebombalms.problems.progress.application.query.GetProblemProgressQuery;
 import com.wanted.codebombalms.problems.progress.application.usecase.GetProblemProgressUseCase;

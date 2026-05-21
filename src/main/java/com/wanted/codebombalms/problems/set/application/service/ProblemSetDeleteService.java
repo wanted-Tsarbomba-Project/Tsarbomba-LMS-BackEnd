@@ -3,6 +3,7 @@ package com.wanted.codebombalms.problems.set.application.service;
 import com.wanted.codebombalms.problems.set.application.command.DeleteProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.command.ProblemSetDeleteCommandResult;
 import com.wanted.codebombalms.problems.set.application.policy.ProblemSetDeletionPolicy;
+import com.wanted.codebombalms.problems.set.application.port.CheckProblemSetSubmissionPort;
 import com.wanted.codebombalms.problems.set.application.usecase.DeleteProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetDeactivationResult;
 import com.wanted.codebombalms.problems.set.domain.repository.ProblemSetManagementRepository;
@@ -14,19 +15,22 @@ public class ProblemSetDeleteService implements DeleteProblemSetUseCase {
 
     private final ProblemSetDeletionPolicy deletionPolicy;
     private final ProblemSetManagementRepository problemSetManagementRepository;
+    private final CheckProblemSetSubmissionPort checkProblemSetSubmissionPort;
 
     public ProblemSetDeleteService(
             ProblemSetDeletionPolicy deletionPolicy,
-            ProblemSetManagementRepository problemSetManagementRepository
+            ProblemSetManagementRepository problemSetManagementRepository,
+            CheckProblemSetSubmissionPort checkProblemSetSubmissionPort
     ) {
         this.deletionPolicy = deletionPolicy;
         this.problemSetManagementRepository = problemSetManagementRepository;
+        this.checkProblemSetSubmissionPort = checkProblemSetSubmissionPort;
     }
 
     @Override
     @Transactional
     public ProblemSetDeleteCommandResult handle(DeleteProblemSetCommand command) {
-        boolean hasSubmission = problemSetManagementRepository.existsSubmission(command.problemSetId());
+        boolean hasSubmission = checkProblemSetSubmissionPort.existsSubmission(command.problemSetId());
 
         deletionPolicy.validate(hasSubmission, command.force());
 

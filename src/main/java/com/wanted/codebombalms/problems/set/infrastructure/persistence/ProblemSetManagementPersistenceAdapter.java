@@ -17,7 +17,6 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemSetModificationR
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistration;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistrationResult;
 import com.wanted.codebombalms.problems.set.domain.repository.ProblemSetManagementRepository;
-import com.wanted.codebombalms.submission.infrastructure.persistence.SpringDataSubmissionRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.springframework.stereotype.Component;
 
@@ -30,20 +29,17 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
     private final SpringDataProblemSetRepository problemSetRepository;
     private final SpringDataProblemRepository problemRepository;
     private final SpringDataProblemHintRepository problemHintRepository;
-    private final SpringDataSubmissionRepository submissionRepository;
 
     public ProblemSetManagementPersistenceAdapter(
             SpringDataProblemCategoryRepository problemCategoryRepository,
             SpringDataProblemSetRepository problemSetRepository,
             SpringDataProblemRepository problemRepository,
-            SpringDataProblemHintRepository problemHintRepository,
-            SpringDataSubmissionRepository submissionRepository
+            SpringDataProblemHintRepository problemHintRepository
     ) {
         this.problemCategoryRepository = problemCategoryRepository;
         this.problemSetRepository = problemSetRepository;
         this.problemRepository = problemRepository;
         this.problemHintRepository = problemHintRepository;
-        this.submissionRepository = submissionRepository;
     }
 
     @Override
@@ -111,11 +107,6 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 problemSet.getCategory().getCategoryName(),
                 updatedProblemCount
         );
-    }
-
-    @Override
-    public boolean existsSubmission(Long problemSetId) {
-        return submissionRepository.existsByProblem_ProblemSet_ProblemSetId(problemSetId);
     }
 
     @Override

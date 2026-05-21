@@ -12,7 +12,5 @@ public interface ProblemSetManagementRepository {
 
     ProblemSetModificationResult updateProblemSet(ProblemSetModification modification);
 
-    boolean existsSubmission(Long problemSetId);
-
     ProblemSetDeactivationResult deactivateProblemSet(Long problemSetId);
 }

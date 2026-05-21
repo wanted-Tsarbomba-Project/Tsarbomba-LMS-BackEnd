@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public record LatestSubmission(
         Long problemId,
-        Integer problemNumber,
+        Integer problemOrder,
         String submittedAnswer,
         Boolean correct,
         LocalDateTime submittedAt
