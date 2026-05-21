@@ -4,7 +4,11 @@ import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTarg
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.CreateAutomationRuleUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.GetAutomationRuleOptionsUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.GetAutomationRulesUseCase;
+import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleEnabledUseCase;
+import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleUseCase;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleCreateRequest;
+import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleEnabledUpdateRequest;
+import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleUpdateRequest;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleOptionsResponse;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -24,7 +28,10 @@ public class AutomationRuleController {
     private final GetAutomationRulesUseCase getAutomationRulesUseCase;
     private final GetAutomationRuleOptionsUseCase getAutomationRuleOptionsUseCase;
     private final CreateAutomationRuleUseCase createAutomationRuleUseCase;
+    private final UpdateAutomationRuleUseCase updateAutomationRuleUseCase;
+    private final UpdateAutomationRuleEnabledUseCase updateAutomationRuleEnabledUseCase;
 
+    //규칙 목록 조회
     @GetMapping
     public ResponseEntity<ApiResponse<List<AutomationRuleResponse>>> findAutomationRules(
             @RequestParam(required = false) OperationTargetType targetType
@@ -41,6 +48,7 @@ public class AutomationRuleController {
         ));
     }
 
+    //규칙 옵션 조회
     @GetMapping("/options")
     public ResponseEntity<ApiResponse<AutomationRuleOptionsResponse>> findAutomationRuleOptions() {
         AutomationRuleOptionsResponse response = AutomationRuleOptionsResponse.from(
@@ -54,6 +62,7 @@ public class AutomationRuleController {
         ));
     }
 
+    // 규칙 등록
     @PostMapping
     public ResponseEntity<ApiResponse<AutomationRuleResponse>> createAutomationRule(
             @AuthenticationPrincipal Long createdBy,
@@ -69,4 +78,40 @@ public class AutomationRuleController {
                 response
         ));
     }
+
+    // 규칙 threshold 수정
+    @PatchMapping("/{automationRuleId}")
+    public ResponseEntity<ApiResponse<AutomationRuleResponse>> updateAutomationRule(
+            @PathVariable Long automationRuleId,
+            @RequestBody AutomationRuleUpdateRequest request
+    ) {
+        AutomationRuleResponse response = AutomationRuleResponse.from(
+                updateAutomationRuleUseCase.update(request.toCommand(automationRuleId))
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(
+                AutomationRuleResponseCode.UPDATED,
+                AutomationRuleResponseMessage.UPDATED,
+                response
+        ));
+    }
+
+    // 규칙 활성화 상태 수정
+    @PatchMapping("/{automationRuleId}/enabled")
+    public ResponseEntity<ApiResponse<AutomationRuleResponse>> updateAutomationRuleEnabled(
+            @PathVariable Long automationRuleId,
+            @RequestBody AutomationRuleEnabledUpdateRequest request
+    ) {
+        AutomationRuleResponse response = AutomationRuleResponse.from(
+                updateAutomationRuleEnabledUseCase.updateEnabled(request.toCommand(automationRuleId))
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(
+                AutomationRuleResponseCode.UPDATED,
+                AutomationRuleResponseMessage.UPDATED,
+                response
+        ));
+    }
+
+
 }
