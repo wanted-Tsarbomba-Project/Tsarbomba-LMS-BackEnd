@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/v1/admin/operation-alerts")
 @RequiredArgsConstructor
@@ -22,6 +23,8 @@ public class OperationAlertController {
     private final GetOperationAlertsUseCase getOperationAlertsUseCase;
     private final UpdateOperationAlertStatusUseCase updateOperationAlertStatusUseCase;
 
+
+    //알람 목록 조회
     @GetMapping
     public ResponseEntity<ApiResponse<OperationAlertListResponse>> findOperationAlerts(
             @RequestParam(required = false) OperationTargetType targetType,
@@ -40,6 +43,7 @@ public class OperationAlertController {
         ));
     }
 
+    //알람 상태 변경
     @PatchMapping("/{operationAlertId}/status")
     public ResponseEntity<ApiResponse<OperationAlertStatusUpdateResponse>> updateOperationAlertStatus(
             @PathVariable Long operationAlertId,

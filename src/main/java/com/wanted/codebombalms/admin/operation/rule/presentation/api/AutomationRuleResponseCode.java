@@ -6,4 +6,5 @@ public class AutomationRuleResponseCode {
 
     public static final String RETRIEVED = "AUTOMATION_RULE-RETRIEVED";
     public static final String CREATED   = "AUTOMATION_RULE-CREATED";
+    public static final String UPDATED   = "AUTOMATION_RULE-UPDATED";
 }
