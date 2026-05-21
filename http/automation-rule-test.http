@@ -1,11 +1,20 @@
 @baseUrl = http://localhost:8080
-@adminAccessToken = 여기에_관리자_ACCESS_TOKEN_입력
+
+### 2. 로그인 - 쿠키 자동 저장됨
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "Test1234!"
+}
+
+
 
 ### =========================================================
 ### 자동화 규칙 목록 조회 - 전체
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules
-Cookie: accessToken={{adminAccessToken}}
 
 
 ### =========================================================
@@ -13,7 +22,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 화면 탭: 학생
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules?targetType=USER
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -21,7 +30,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 화면 탭: 강좌
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules?targetType=COURSE
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -29,7 +38,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 화면 탭: 문제
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules?targetType=PROBLEM
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -37,7 +46,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 등록 모달에서 전체 규칙 옵션이 필요할 때 사용
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules/options
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -45,7 +54,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 기대 ruleCode: USER_INACTIVE_NO_COURSE
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules/options?targetType=USER
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -53,7 +62,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 기대 ruleCode: COURSE_LOW_ENROLLMENT
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules/options?targetType=COURSE
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -61,7 +70,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### 기대 ruleCode: PROBLEM_HIGH_WRONG_RATE
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/automation-rules/options?targetType=PROBLEM
-Cookie: accessToken={{adminAccessToken}}
+
 
 
 ### =========================================================
@@ -70,7 +79,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "COURSE_LOW_ENROLLMENT",
@@ -87,7 +96,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "USER_INACTIVE_NO_COURSE",
@@ -104,7 +113,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "PROBLEM_HIGH_WRONG_RATE",
@@ -123,7 +132,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "PROBLEM_HIGH_WRONG_RATE",
@@ -141,7 +150,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "thresholdValue": 70,
@@ -158,7 +167,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "COURSE_LOW_ENROLLMENT",
@@ -174,7 +183,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "COURSE_LOW_ENROLLMENT",
@@ -191,7 +200,6 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
 
 {
   "ruleCode": "COURSE_LOW_ENROLLMENT",
@@ -209,7 +217,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "PROBLEM_HIGH_WRONG_RATE",
@@ -228,7 +236,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "PROBLEM_HIGH_WRONG_RATE",
@@ -245,7 +253,7 @@ Cookie: accessToken={{adminAccessToken}}
 ### =========================================================
 POST {{baseUrl}}/api/v1/admin/automation-rules
 Content-Type: application/json
-Cookie: accessToken={{adminAccessToken}}
+
 
 {
   "ruleCode": "PROBLEM_HIGH_WRONG_RATE",
