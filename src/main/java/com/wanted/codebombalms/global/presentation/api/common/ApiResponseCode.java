@@ -6,4 +6,5 @@ public class ApiResponseCode {
 
     public static final String SUCCESS = "COMMON-SUCCESS";
     public static final String CREATED = "COMMON-CREATED";
+    public static final String AUTH_SIGNUP_COMPLETED = "AUTH-SIGNUP-COMPLETED";
 }

@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.domain.lecture.service;
 
 import com.wanted.codebombalms.domain.course.entity.Course;
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;
+import com.wanted.codebombalms.domain.course.exception.CourseErrorCode;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureCreateRequest;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureUpdateRequest;
@@ -9,8 +9,9 @@ import com.wanted.codebombalms.domain.lecture.dto.response.LectureDetailResponse
 import com.wanted.codebombalms.domain.lecture.dto.response.LectureResponse;
 import com.wanted.codebombalms.domain.lecture.entity.Lecture;
 import com.wanted.codebombalms.domain.lecture.enums.LectureStatus;
-import com.wanted.codebombalms.domain.lecture.exception.LectureNotFoundException;
+import com.wanted.codebombalms.domain.lecture.exception.LectureErrorCode;
 import com.wanted.codebombalms.domain.lecture.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,7 +95,7 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌에 강의 등록 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌에 강의 등록 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌에_강의_등록_예외_테스트() {
 
         // given
@@ -113,14 +114,13 @@ class LectureServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureService.createLecture(courseId, request)
         );
 
         // then
-        assertEquals("COURSE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(courseId, exception.getCourseId());
+        assertSame(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
@@ -179,7 +179,7 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌의 강의 목록 조회 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌의 강의 목록 조회 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌의_강의_목록_조회_예외_테스트() {
 
         // given
@@ -189,14 +189,13 @@ class LectureServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureService.findLecturesByCourseId(courseId)
         );
 
         // then
-        assertEquals("COURSE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(courseId, exception.getCourseId());
+        assertSame(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
@@ -241,7 +240,7 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강의 상세 조회 시 LectureNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강의 상세 조회 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강의_상세_조회_예외_테스트() {
 
         // given
@@ -251,14 +250,13 @@ class LectureServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        LectureNotFoundException exception = assertThrows(
-                LectureNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureService.findLectureById(lectureId)
         );
 
         // then
-        assertEquals("LECTURE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(lectureId, exception.getLectureId());
+        assertSame(LectureErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
 
         verify(lectureRepository).findByLectureIdAndDeletedAtIsNull(lectureId);
     }
@@ -312,7 +310,7 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강의 수정 시 LectureNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강의 수정 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강의_수정_예외_테스트() {
 
         // given
@@ -331,14 +329,13 @@ class LectureServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        LectureNotFoundException exception = assertThrows(
-                LectureNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureService.updateLecture(lectureId, request)
         );
 
         // then
-        assertEquals("LECTURE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(lectureId, exception.getLectureId());
+        assertSame(LectureErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
 
         verify(lectureRepository).findByLectureIdAndDeletedAtIsNull(lectureId);
     }
@@ -377,7 +374,7 @@ class LectureServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강의 삭제 시 LectureNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강의 삭제 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강의_삭제_예외_테스트() {
 
         // given
@@ -387,14 +384,13 @@ class LectureServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        LectureNotFoundException exception = assertThrows(
-                LectureNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureService.deleteLecture(lectureId)
         );
 
         // then
-        assertEquals("LECTURE_NOT_FOUND", exception.getErrorCode());
-        assertEquals(lectureId, exception.getLectureId());
+        assertSame(LectureErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
 
         verify(lectureRepository).findByLectureIdAndDeletedAtIsNull(lectureId);
     }
