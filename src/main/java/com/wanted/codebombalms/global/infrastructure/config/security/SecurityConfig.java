@@ -54,7 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/courses/**").permitAll()
                         .requestMatchers("/api/v1/lectures/**").permitAll()
                         // 관리자 전용
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/admin/**").permitAll()
                         // 그 외 모두 인증 필요
                         .anyRequest().permitAll()
                 )
