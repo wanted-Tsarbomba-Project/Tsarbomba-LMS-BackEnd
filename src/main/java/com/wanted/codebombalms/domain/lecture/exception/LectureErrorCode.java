@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum LectureErrorCode implements ErrorCode {
 
+    // 조회
     LECTURE_NOT_FOUND("LCT-001", "존재하지 않는 강의입니다.");
 
     private final String code;
