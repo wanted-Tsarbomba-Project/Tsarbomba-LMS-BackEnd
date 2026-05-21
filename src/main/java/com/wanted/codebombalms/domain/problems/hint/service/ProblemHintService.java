@@ -1,9 +1,12 @@
 package com.wanted.codebombalms.domain.problems.hint.service;
 
+import com.wanted.codebombalms.domain.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.domain.problems.hint.dto.response.ProblemHintResponse;
 import com.wanted.codebombalms.domain.problems.hint.entity.ProblemHint;
 import com.wanted.codebombalms.domain.problems.hint.repository.ProblemHintRepository;
 import com.wanted.codebombalms.domain.problems.problem.entitiy.Problem;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +45,7 @@ public class ProblemHintService {
 
     public ProblemHint updateHint(Long hintId, String hintContent) {
         ProblemHint problemHint = problemHintRepository.findById(hintId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 힌트입니다."));
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.HINT_NOT_FOUND));
 
         problemHint.update(hintContent);
 
@@ -52,7 +55,7 @@ public class ProblemHintService {
     public ProblemHint updateHint(Problem problem, Long hintId, String hintContent) {
         ProblemHint problemHint = problemHintRepository
                 .findByHintIdAndProblem_ProblemId(hintId, problem.getProblemId())
-                .orElseThrow(() -> new RuntimeException("해당 소문제에 속한 힌트가 아닙니다."));
+                .orElseThrow(() -> new ValidationException(ProblemErrorCode.HINT_NOT_IN_PROBLEM));
 
         problemHint.update(hintContent);
 

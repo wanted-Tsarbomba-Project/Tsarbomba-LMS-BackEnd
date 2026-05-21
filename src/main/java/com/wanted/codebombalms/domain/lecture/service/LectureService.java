@@ -1,15 +1,16 @@
 package com.wanted.codebombalms.domain.lecture.service;
 
 import com.wanted.codebombalms.domain.course.entity.Course;
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;
+import com.wanted.codebombalms.domain.course.exception.CourseErrorCode;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureCreateRequest;
 import com.wanted.codebombalms.domain.lecture.dto.request.LectureUpdateRequest;
 import com.wanted.codebombalms.domain.lecture.dto.response.LectureDetailResponse;
 import com.wanted.codebombalms.domain.lecture.dto.response.LectureResponse;
 import com.wanted.codebombalms.domain.lecture.entity.Lecture;
-import com.wanted.codebombalms.domain.lecture.exception.LectureNotFoundException;
+import com.wanted.codebombalms.domain.lecture.exception.LectureErrorCode;
 import com.wanted.codebombalms.domain.lecture.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class LectureService {
         log.info("[LectureService] 강의 등록 시작 - courseId: {}, title: {}", courseId, request.getTitle());
 
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         Lecture lecture = Lecture.create(
                 course,
@@ -64,7 +65,7 @@ public class LectureService {
         log.info("[LectureService] 강의 목록 조회 시작 - courseId: {}", courseId);
 
         courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
-                .orElseThrow(() -> new CourseNotFoundException(courseId));
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         List<LectureResponse> lectures = lectureRepository
                 .findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
@@ -85,7 +86,7 @@ public class LectureService {
         log.info("[LectureService] 강의 상세 조회 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         log.info("[LectureService] 강의 상세 조회 완료 - lectureId: {}", lectureId);
 
@@ -101,7 +102,7 @@ public class LectureService {
         log.info("[LectureService] 강의 수정 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         lecture.update(
                 request.getTitle(),
@@ -126,7 +127,7 @@ public class LectureService {
         log.info("[LectureService] 강의 삭제 시작 - lectureId: {}", lectureId);
 
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new LectureNotFoundException(lectureId));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
         lecture.delete();
 

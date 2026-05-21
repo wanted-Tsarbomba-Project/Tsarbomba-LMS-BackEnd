@@ -29,7 +29,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        ApiErrorResponse.of(401, "A-002", "유효하지 않은 토큰입니다.", request.getRequestURI())
+                        ApiErrorResponse.of(401, "AUT-002", "유효하지 않은 토큰입니다.", request.getRequestURI())
                 )
         );
     }

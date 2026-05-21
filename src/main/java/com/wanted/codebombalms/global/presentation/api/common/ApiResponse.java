@@ -17,18 +17,22 @@ public record ApiResponse<T>(
         T data
 ) {
 
+    // GET, PUT, PATCH
     public static <T> ApiResponse<T> success(String code, String message, T data) {
         return new ApiResponse<>(Instant.now(), 200, code, message, data);
     }
 
-    // 생성과 일반 성공을 분리해두면 controller가 REST 의도를 더 명확히 표현할 수 있다.
+    // POST
     public static <T> ApiResponse<T> created(String code, String message, T data) {
         return new ApiResponse<>(Instant.now(), 201, code, message, data);
     }
 
+    // 응답을 안하는
     public static ApiResponse<Void> success(String code, String message) {
-        return new ApiResponse<>(Instant.now(), 200, code, message, null);
+        return new ApiResponse<>(Instant.now(), 201, code, message, null);
     }
-    
+
+    // 비동기 삭제 시 204 추후 사용
+    // 일반 삭제 시 프론트로 반환할 값 없음.
 
 }

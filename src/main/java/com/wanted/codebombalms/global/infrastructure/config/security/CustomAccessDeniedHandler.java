@@ -29,7 +29,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        ApiErrorResponse.of(403, "A-015", "접근 권한이 없습니다.", request.getRequestURI())
+                        ApiErrorResponse.of(403, "AUT-015", "접근 권한이 없습니다.", request.getRequestURI())
                 )
         );
     }
