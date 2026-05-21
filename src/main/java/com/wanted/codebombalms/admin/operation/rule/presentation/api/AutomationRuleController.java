@@ -7,12 +7,14 @@ import com.wanted.codebombalms.admin.operation.rule.application.usecase.GetAutom
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleCreateRequest;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleOptionsResponse;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleResponse;
-import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin/automation-rules")
@@ -24,46 +26,46 @@ public class AutomationRuleController {
     private final CreateAutomationRuleUseCase createAutomationRuleUseCase;
 
     @GetMapping
-    public ResponseEntity<ResponseDTO> findAutomationRules(
+    public ResponseEntity<ApiResponse<List<AutomationRuleResponse>>> findAutomationRules(
             @RequestParam(required = false) OperationTargetType targetType
     ) {
-        var response = getAutomationRulesUseCase.getRules(targetType)
+        List<AutomationRuleResponse> response = getAutomationRulesUseCase.getRules(targetType)
                 .stream()
                 .map(AutomationRuleResponse::from)
                 .toList();
 
-        return ResponseEntity.ok(new ResponseDTO(
-                HttpStatus.OK,
-                "자동화 규칙 목록 조회 성공",
+        return ResponseEntity.ok(ApiResponse.success(
+                AutomationRuleResponseCode.RETRIEVED,
+                AutomationRuleResponseMessage.RETRIEVED,
                 response
         ));
     }
 
     @GetMapping("/options")
-    public ResponseEntity<ResponseDTO> findAutomationRuleOptions() {
-        var response = AutomationRuleOptionsResponse.from(
+    public ResponseEntity<ApiResponse<AutomationRuleOptionsResponse>> findAutomationRuleOptions() {
+        AutomationRuleOptionsResponse response = AutomationRuleOptionsResponse.from(
                 getAutomationRuleOptionsUseCase.getOptions()
         );
 
-        return ResponseEntity.ok(new ResponseDTO(
-                HttpStatus.OK,
-                "자동화 규칙 옵션 조회 성공",
+        return ResponseEntity.ok(ApiResponse.success(
+                AutomationRuleResponseCode.RETRIEVED,
+                AutomationRuleResponseMessage.RETRIEVED,
                 response
         ));
     }
 
     @PostMapping
-    public ResponseEntity<ResponseDTO> createAutomationRule(
+    public ResponseEntity<ApiResponse<AutomationRuleResponse>> createAutomationRule(
             @AuthenticationPrincipal Long createdBy,
             @RequestBody AutomationRuleCreateRequest request
     ) {
-        var response = AutomationRuleResponse.from(
+        AutomationRuleResponse response = AutomationRuleResponse.from(
                 createAutomationRuleUseCase.create(request.toCommand(createdBy))
         );
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDTO(
-                HttpStatus.CREATED,
-                "자동화 규칙 등록 성공",
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(
+                AutomationRuleResponseCode.CREATED,
+                AutomationRuleResponseMessage.CREATED,
                 response
         ));
     }

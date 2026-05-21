@@ -8,9 +8,8 @@ import com.wanted.codebombalms.admin.operation.alert.presentation.api.request.Op
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertListResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertStatusUpdateResponse;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
-import com.wanted.codebombalms.global.presentation.api.commonLegacy.ResponseDTO;
+import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,7 @@ public class OperationAlertController {
     private final UpdateOperationAlertStatusUseCase updateOperationAlertStatusUseCase;
 
     @GetMapping
-    public ResponseEntity<ResponseDTO> findOperationAlerts(
+    public ResponseEntity<ApiResponse<OperationAlertListResponse>> findOperationAlerts(
             @RequestParam(required = false) OperationTargetType targetType,
             @RequestParam(required = false) OperationAlertStatus status,
             @RequestParam(defaultValue = "0") int page,
@@ -34,15 +33,15 @@ public class OperationAlertController {
                 new GetOperationAlertsQuery(targetType, status, page, size)
         );
 
-        return ResponseEntity.ok(new ResponseDTO(
-                HttpStatus.OK,
-                "운영 알림 목록 조회 성공",
+        return ResponseEntity.ok(ApiResponse.success(
+                OperationAlertResponseCode.RETRIEVED,
+                OperationAlertResponseMessage.RETRIEVED,
                 OperationAlertListResponse.from(result)
         ));
     }
 
     @PatchMapping("/{operationAlertId}/status")
-    public ResponseEntity<ResponseDTO> updateOperationAlertStatus(
+    public ResponseEntity<ApiResponse<OperationAlertStatusUpdateResponse>> updateOperationAlertStatus(
             @PathVariable Long operationAlertId,
             @AuthenticationPrincipal Long resolvedBy,
             @RequestBody OperationAlertStatusUpdateRequest request
@@ -51,9 +50,9 @@ public class OperationAlertController {
                 request.toCommand(operationAlertId, resolvedBy)
         );
 
-        return ResponseEntity.ok(new ResponseDTO(
-                HttpStatus.OK,
-                "운영 알림 처리에 성공했습니다.",
+        return ResponseEntity.ok(ApiResponse.success(
+                OperationAlertResponseCode.UPDATED,
+                OperationAlertResponseMessage.UPDATED,
                 OperationAlertStatusUpdateResponse.from(result)
         ));
     }
