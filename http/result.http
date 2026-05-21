@@ -1,0 +1,11 @@
+@baseUrl = http://localhost:8080
+@problemSetId = 2001
+@userId = 3
+
+### 문제 세트 결과 조회
+GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}/result?userId={{userId}}
+Accept: application/json
+
+### 문제 세트 결과 조회 실패 - 완료되지 않은 사용자
+GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}/result?userId=999
+Accept: application/json
