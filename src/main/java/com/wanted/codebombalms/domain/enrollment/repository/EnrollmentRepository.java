@@ -3,7 +3,7 @@ package com.wanted.codebombalms.domain.enrollment.repository;
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.enrollment.entity.Enrollment;
 import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
-import com.wanted.codebombalms.domain.user.entity.User;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +18,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      */
     boolean existsByCourseAndStudentAndStatus(
             Course course,
-            User student,
+            UserJpaEntity student,
             EnrollmentStatus status
     );
 
@@ -26,7 +26,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      * 학생의 수강 중인 강좌 목록 조회
      */
     List<Enrollment> findByStudentAndStatus(
-            User student,
+            UserJpaEntity student,
             EnrollmentStatus status
     );
 
@@ -43,7 +43,7 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      */
     Optional<Enrollment> findByEnrollmentIdAndStudentAndStatus(
             Long enrollmentId,
-            User student,
+            UserJpaEntity student,
             EnrollmentStatus status
     );
 }

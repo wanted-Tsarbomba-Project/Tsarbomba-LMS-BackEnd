@@ -12,8 +12,8 @@ import com.wanted.codebombalms.domain.enrollment.exception.DuplicateEnrollmentEx
 import com.wanted.codebombalms.domain.enrollment.dto.response.MyCourseResponse;
 import java.util.List;
 import com.wanted.codebombalms.domain.enrollment.repository.EnrollmentRepository;
-import com.wanted.codebombalms.domain.user.entity.User;
-import com.wanted.codebombalms.domain.user.repository.UserRepository;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.SpringDataUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseRepository courseRepository;
-    private final UserRepository userRepository;
+    private final SpringDataUserRepository userRepository;
 
     /**
      * 수강 신청
@@ -44,7 +44,7 @@ public class EnrollmentService {
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new CourseNotFoundException(courseId));
 
-        User student = userRepository.findById(studentId)
+        UserJpaEntity student = userRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다. userId: " + studentId));
 
         boolean alreadyEnrolled = enrollmentRepository.existsByCourseAndStudentAndStatus(
@@ -73,7 +73,7 @@ public class EnrollmentService {
 
         log.info("[EnrollmentService] 내 수강 강좌 목록 조회 시작 - studentId: {}", studentId);
 
-        User student = userRepository.findById(studentId)
+        UserJpaEntity student = userRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다. userId: " + studentId));
 
         List<MyCourseResponse> myCourses = enrollmentRepository
@@ -101,7 +101,7 @@ public class EnrollmentService {
                 enrollmentId
         );
 
-        User student = userRepository.findById(studentId)
+        UserJpaEntity student = userRepository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다. userId: " + studentId));
 
         Enrollment enrollment = enrollmentRepository

@@ -18,4 +18,13 @@ public class ApiResponseCode {
     public static final String ENROLLMENT_CREATED = "ENROLLMENT-CREATED";
     public static final String MODULE_COMPLETED = "LEARNING-MODULE-COMPLETED";
 
+
+    public static final String AUTH_SIGNUP_COMPLETED = "AUTH-SIGNUP-COMPLETED";
+    public static final String AUTH_LOGIN_COMPLETED = "AUTH-LOGIN-COMPLETED";
+    public static final String AUTH_LOGOUT_COMPLETED = "AUTH-LOGOUT-COMPLETED";
+    public static final String AUTH_TOKEN_REISSUED = "AUTH-TOKEN-REISSUED";
+
+    public static final String USER_ME_RETRIEVED = "USER-ME-RETRIEVED";
+    public static final String USER_WITHDRAWN = "USER-WITHDRAWN";
+
 }

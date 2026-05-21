@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.jwt;
 
-import com.wanted.codebombalms.domain.user.entity.UserRole;
+import com.wanted.codebombalms.domain.user.domain.model.UserRole;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.io.Decoders;
 
-import com.wanted.codebombalms.domain.user.exception.AuthErrorCode;
+import com.wanted.codebombalms.domain.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

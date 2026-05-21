@@ -18,4 +18,13 @@ public class ApiResponseMessage {
     public static final String ENROLLMENT_CREATED = "Enrollment created.";
     public static final String MODULE_COMPLETED = "Module completed.";
 
+
+    public static final String AUTH_SIGNUP_COMPLETED = "Sign-up completed successfully.";
+    public static final String AUTH_LOGIN_COMPLETED = "Login successful.";
+    public static final String AUTH_LOGOUT_COMPLETED = "Logout successful.";
+    public static final String AUTH_TOKEN_REISSUED = "Access token reissued.";
+
+    public static final String USER_ME_RETRIEVED = "User profile retrieved.";
+    public static final String USER_WITHDRAWN = "Account withdrawn successfully.";
+
 }
