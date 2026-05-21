@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.domain.admin.operation.alert.presentation.api;
+package com.wanted.codebombalms.admin.operation.alert.presentation.api;
 
 public class OperationAlertResponseMessage {
 
