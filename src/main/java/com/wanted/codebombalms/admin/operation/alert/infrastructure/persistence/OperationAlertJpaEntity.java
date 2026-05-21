@@ -70,6 +70,9 @@ public class OperationAlertJpaEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     public OperationAlertJpaEntity(
             Long operationAlertId,
             Long operationRuleId,
@@ -89,6 +92,48 @@ public class OperationAlertJpaEntity {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
+        this(
+                operationAlertId,
+                operationRuleId,
+                targetType,
+                targetId,
+                detectedValue,
+                thresholdValueSnapshot,
+                assigneeId,
+                reason,
+                recommendedAction,
+                firstDetectedAt,
+                lastDetectedAt,
+                status,
+                resolvedBy,
+                resolvedAt,
+                adminMemo,
+                createdAt,
+                updatedAt,
+                null
+        );
+    }
+
+    public OperationAlertJpaEntity(
+            Long operationAlertId,
+            Long operationRuleId,
+            OperationTargetType targetType,
+            Long targetId,
+            BigDecimal detectedValue,
+            BigDecimal thresholdValueSnapshot,
+            Long assigneeId,
+            String reason,
+            String recommendedAction,
+            LocalDateTime firstDetectedAt,
+            LocalDateTime lastDetectedAt,
+            OperationAlertStatus status,
+            Long resolvedBy,
+            LocalDateTime resolvedAt,
+            String adminMemo,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            LocalDateTime deletedAt
+    ) {
         this.operationAlertId = operationAlertId;
         this.operationRuleId = operationRuleId;
         this.targetType = targetType;
@@ -106,6 +151,7 @@ public class OperationAlertJpaEntity {
         this.adminMemo = adminMemo;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     @PrePersist

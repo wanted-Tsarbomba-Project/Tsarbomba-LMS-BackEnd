@@ -15,7 +15,7 @@ public class OperationAlertRepositoryAdapter implements OperationAlertRepository
 
     @Override
     public Optional<OperationAlert> findById(Long operationAlertId) {
-        return springDataRepository.findById(operationAlertId)
+        return springDataRepository.findByOperationAlertIdAndDeletedAtIsNull(operationAlertId)
                 .map(OperationAlertMapper::toDomain);
     }
 
