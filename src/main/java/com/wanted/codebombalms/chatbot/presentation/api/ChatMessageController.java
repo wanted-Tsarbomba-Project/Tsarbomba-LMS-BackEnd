@@ -19,7 +19,7 @@ public class ChatMessageController {
 
     private final ChatMessageQueryUseCase chatMessageQueryUseCase;
 
-    @Operation(summary = "채팅 내역 조회", description = "roomId 기준 메시지 목록 조회, 소유권 검증 포함")
+    @Operation(summary = "채팅 내역 조회", description = "roomId 기준 메시지 목록 조회 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음")
     @GetMapping("/{roomId}/messages")
     public ResponseEntity<ApiResponse<List<ChatMessageResponse>>> listMessages(
             @PathVariable Long roomId,

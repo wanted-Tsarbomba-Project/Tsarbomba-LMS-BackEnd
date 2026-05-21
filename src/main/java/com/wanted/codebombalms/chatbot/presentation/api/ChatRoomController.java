@@ -12,12 +12,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-// import 추가
 import com.wanted.codebombalms.chatbot.application.command.SendMessageCommand;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatMessageCommandUseCase;
 import com.wanted.codebombalms.chatbot.presentation.api.request.ChatMessageRequest;
 import com.wanted.codebombalms.chatbot.presentation.api.response.AiChatResponse;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/chat")
@@ -28,7 +28,7 @@ public class ChatRoomController {
     private final ChatRoomQueryUseCase chatRoomQueryUseCase;
     private final ChatMessageCommandUseCase chatMessageCommandUseCase;
 
-    @Operation(summary = "채팅방 생성", description = "기존 방 있으면 200, 새 방이면 201")
+    @Operation(summary = "채팅방 생성", description = "기존 방 있으면 200 / 새 방이면 201 | 에러: CHT-002 권한없음")
     @PostMapping
     public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(
             @AuthenticationPrincipal Long userId,
@@ -60,7 +60,7 @@ public class ChatRoomController {
         );
     }
 
-    @Operation(summary = "채팅방 목록 조회", description = "userId 기준 채팅방 목록 최신순 반환")
+    @Operation(summary = "채팅방 목록 조회", description = "userId 기준 채팅방 목록 최신순 반환 | 200")
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<ChatRoomResponse>>> listChatRooms(
             @AuthenticationPrincipal Long userId
@@ -68,7 +68,7 @@ public class ChatRoomController {
         List<ChatRoomResponse> response = chatRoomQueryUseCase.listRooms(userId)
                 .stream()
                 .map(ChatRoomResponse::from)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -80,7 +80,7 @@ public class ChatRoomController {
     }
 
 
-    @Operation(summary = "메시지 전송", description = "유저 메시지 저장 + FastAPI 호출 + AI 응답 반환")
+    @Operation(summary = "메시지 전송", description = "유저 메시지 저장 + FastAPI 호출 + AI 응답 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음, CHT-003 AI 응답 실패")
     @PostMapping("/{roomId}/messages")
     public ResponseEntity<ApiResponse<AiChatResponse>> sendMessage(
             @PathVariable Long roomId,
@@ -106,7 +106,7 @@ public class ChatRoomController {
     }
 
 
-    @Operation(summary = "채팅방 삭제", description = "본인 채팅방만 삭제 가능, 소유권 검증 포함")
+    @Operation(summary = "채팅방 삭제", description = "204 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음")
     @DeleteMapping("/{roomId}")
     public ResponseEntity<Void> deleteChatRoom(
             @PathVariable Long roomId,
