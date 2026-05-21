@@ -37,13 +37,8 @@ public interface ChatContextPort {
     ) {}
 
     record SubmissionInfo(
-            String submittedCode,
             String submittedAnswer,
-            boolean isCorrect,
-            String executionStatus,
-            String errorMessage,
-            Integer passedTestCount,
-            Integer totalTestCount
+            boolean isCorrect
     ) {}
 
     record SessionProgressInfo(

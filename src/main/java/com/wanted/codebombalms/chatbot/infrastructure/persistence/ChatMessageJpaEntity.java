@@ -15,10 +15,10 @@ public class ChatMessageJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_message_id")
+    @Column(name = "message_id")
     private Long id;
 
-    @Column(name = "chat_room_id", nullable = false)
+    @Column(name = "room_id", nullable = false)
     private Long roomId;
 
     @Enumerated(EnumType.STRING)

@@ -18,4 +18,5 @@ public interface ChatRoomRepository {
 
     // userId로 채팅방 목록 조회
     List<ChatRoom> findByUserId(Long userId);
+
 }

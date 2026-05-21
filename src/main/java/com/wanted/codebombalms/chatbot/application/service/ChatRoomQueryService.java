@@ -1,33 +1,29 @@
 package com.wanted.codebombalms.chatbot.application.service;
 
-import com.wanted.codebombalms.chatbot.application.command.CreateChatRoomCommand;
 import com.wanted.codebombalms.chatbot.application.result.ChatRoomResult;
-import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomCommandUseCase;
+import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomQueryUseCase;
 import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
 import com.wanted.codebombalms.chatbot.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
-@Transactional
-public class ChatRoomCommandService implements ChatRoomCommandUseCase {
+@Transactional(readOnly = true)
+public class ChatRoomQueryService implements ChatRoomQueryUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
 
     @Override
-    public ChatRoomResult create(CreateChatRoomCommand command) {
-        return chatRoomRepository
-                .findByUserIdAndProblemSetId(command.userId(), command.problemSetId())
+    public List<ChatRoomResult> listRooms(Long userId) {
+        return chatRoomRepository.findByUserId(userId)
+                .stream()
                 .map(this::toResult)
-                .orElseGet(() -> createNewRoom(command));
-    }
-
-    private ChatRoomResult createNewRoom(CreateChatRoomCommand command) {
-        ChatRoom newRoom = ChatRoom.create(command.userId(), command.problemSetId());
-        ChatRoom saved = chatRoomRepository.save(newRoom);
-        return toResult(saved);
+                .collect(Collectors.toList());
     }
 
     private ChatRoomResult toResult(ChatRoom chatRoom) {

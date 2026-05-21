@@ -14,7 +14,7 @@ public class ChatRoomJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_room_id")
+    @Column(name = "room_id")
     private Long id;
 
     @Column(name = "user_id", nullable = false)
