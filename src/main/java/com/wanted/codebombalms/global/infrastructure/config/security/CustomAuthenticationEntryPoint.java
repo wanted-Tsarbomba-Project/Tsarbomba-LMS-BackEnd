@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.global.infrastructure.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanted.codebombalms.global.domain.common.error.ErrorResponse;
+import com.wanted.codebombalms.global.presentation.api.common.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.AuthenticationException;
@@ -19,7 +19,6 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         this.objectMapper = objectMapper;
     }
 
-
     @Override
     public void commence(
             HttpServletRequest request,
@@ -30,7 +29,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        new ErrorResponse(401, "A-002", "유효하지 않은 토큰입니다.", request.getRequestURI())
+                        ApiErrorResponse.of(401, "A-002", "유효하지 않은 토큰입니다.", request.getRequestURI())
                 )
         );
     }

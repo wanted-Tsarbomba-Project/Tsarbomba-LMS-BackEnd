@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.global.infrastructure.config.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanted.codebombalms.global.domain.common.error.ErrorResponse;
+import com.wanted.codebombalms.global.presentation.api.common.ApiErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,8 +15,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
 
-    // CustomAccessDeniedHandler.java
-    public CustomAccessDeniedHandler(ObjectMapper objectMapper) {  // 클래스명과 일치해야 함
+    public CustomAccessDeniedHandler(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
@@ -30,7 +29,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        new ErrorResponse(403, "A-015", "접근 권한이 없습니다.", request.getRequestURI())
+                        ApiErrorResponse.of(403, "A-015", "접근 권한이 없습니다.", request.getRequestURI())
                 )
         );
     }
