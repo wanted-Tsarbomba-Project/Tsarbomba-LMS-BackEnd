@@ -1,8 +1,9 @@
 package com.wanted.codebombalms.domain.course.infrastructure.persistence;
 
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.course.infrastructure.persistence.CourseRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

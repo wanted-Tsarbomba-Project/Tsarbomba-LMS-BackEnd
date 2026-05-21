@@ -1,16 +1,18 @@
 package com.wanted.codebombalms.domain.course.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wanted.codebombalms.domain.course.application.command.CreateCourseCommand;
-import com.wanted.codebombalms.domain.course.application.command.PublishCourseCommand;
-import com.wanted.codebombalms.domain.course.application.command.UpdateCourseCommand;
-import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
-import com.wanted.codebombalms.domain.course.application.result.CourseSummaryResult;
-import com.wanted.codebombalms.domain.course.application.usecase.CourseCommandUseCase;
-import com.wanted.codebombalms.domain.course.application.usecase.CourseQueryUseCase;
-import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.domain.course.presentation.api.request.CourseCreateRequest;
-import com.wanted.codebombalms.domain.course.presentation.api.request.CourseUpdateRequest;
+import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
+import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
+import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
+import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.controller.CourseController;
+import com.wanted.codebombalms.course.controller.CourseResponseCode;
+import com.wanted.codebombalms.course.controller.CourseResponseMessage;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.presentation.api.request.CourseCreateRequest;
+import com.wanted.codebombalms.course.presentation.api.request.CourseUpdateRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,7 @@ class CourseControllerTest {
     @Test
     void findAllCourses_returnsApiResponse() throws Exception {
         given(courseQueryUseCase.findAllCourses()).willReturn(List.of(
-                new CourseSummaryResult(1L, 10L, "Java", "java.png", CourseStatus.ACTIVE)
+                createCourse(1L, "Java")
         ));
 
         mockMvc.perform(get("/api/v1/courses").contentType(MediaType.APPLICATION_JSON))
@@ -131,16 +133,20 @@ class CourseControllerTest {
         verify(courseCommandUseCase).deleteCourse(courseId);
     }
 
-    private CourseDetailResult createDetailResult(Long courseId, String title) {
-        return new CourseDetailResult(
-                courseId,
-                10L,
-                title,
-                "description",
-                "java.png",
-                CourseStatus.ACTIVE,
-                LocalDateTime.now(),
-                LocalDateTime.now()
-        );
+    private Course createDetailResult(Long courseId, String title) {
+        return createCourse(courseId, title);
+    }
+
+    private Course createCourse(Long courseId, String title) {
+        Course course = new Course();
+        course.setCourseId(courseId);
+        course.setInstructorId(10L);
+        course.setTitle(title);
+        course.setDescription("description");
+        course.setThumbnailUrl("java.png");
+        course.setStatus(CourseStatus.ACTIVE);
+        course.setCreatedAt(LocalDateTime.now());
+        course.setUpdatedAt(LocalDateTime.now());
+        return course;
     }
 }

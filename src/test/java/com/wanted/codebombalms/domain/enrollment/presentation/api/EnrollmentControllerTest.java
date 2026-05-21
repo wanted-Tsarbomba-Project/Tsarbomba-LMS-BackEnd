@@ -1,13 +1,13 @@
 package com.wanted.codebombalms.domain.enrollment.presentation.api;
 
-import com.wanted.codebombalms.domain.enrollment.application.service.EnrollmentService;
-import com.wanted.codebombalms.domain.enrollment.controller.EnrollmentController;
-import com.wanted.codebombalms.domain.enrollment.controller.EnrollmentResponseCode;
-import com.wanted.codebombalms.domain.enrollment.controller.EnrollmentResponseMessage;
-import com.wanted.codebombalms.domain.enrollment.domain.model.EnrollmentStatus;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.request.EnrollmentCreateRequest;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.response.EnrollmentResponse;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.response.MyCourseResponse;
+import com.wanted.codebombalms.enrollment.application.service.EnrollmentService;
+import com.wanted.codebombalms.enrollment.controller.EnrollmentController;
+import com.wanted.codebombalms.enrollment.controller.EnrollmentResponseCode;
+import com.wanted.codebombalms.enrollment.controller.EnrollmentResponseMessage;
+import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
+import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollmentCreateRequest;
+import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollmentResponse;
+import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

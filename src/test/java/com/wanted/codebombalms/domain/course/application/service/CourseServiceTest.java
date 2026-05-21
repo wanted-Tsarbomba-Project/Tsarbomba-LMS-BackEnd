@@ -1,15 +1,15 @@
 package com.wanted.codebombalms.domain.course.application.service;
 
-import com.wanted.codebombalms.domain.course.application.command.CreateCourseCommand;
-import com.wanted.codebombalms.domain.course.application.command.PublishCourseCommand;
-import com.wanted.codebombalms.domain.course.application.command.UpdateCourseCommand;
-import com.wanted.codebombalms.domain.course.application.policy.CoursePublishPolicy;
-import com.wanted.codebombalms.domain.course.application.result.CourseDetailResult;
-import com.wanted.codebombalms.domain.course.application.result.CourseSummaryResult;
-import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
+import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
+import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.service.CourseCommandService;
+import com.wanted.codebombalms.course.application.service.CourseQueryService;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
@@ -45,18 +45,18 @@ class CourseServiceTest {
     private CourseQueryService courseQueryService;
 
     @Test
-    void createCourse_returnsDetailResult() {
+    void createCourse_returnsCourse() {
         CreateCourseCommand command = new CreateCourseCommand(10L, "Java", "description", "java.png");
         Course savedCourse = createCourse(1L, 10L, "Java", "description", "java.png", CourseStatus.DRAFT);
 
         given(courseRepository.save(any(Course.class))).willReturn(savedCourse);
 
-        CourseDetailResult result = courseCommandService.createCourse(command);
+        Course result = courseCommandService.createCourse(command);
 
-        assertEquals(1L, result.courseId());
-        assertEquals(10L, result.instructorId());
-        assertEquals("Java", result.title());
-        assertEquals(CourseStatus.DRAFT, result.status());
+        assertEquals(1L, result.getCourseId());
+        assertEquals(10L, result.getInstructorId());
+        assertEquals("Java", result.getTitle());
+        assertEquals(CourseStatus.DRAFT, result.getStatus());
         verify(courseRepository).save(any(Course.class));
     }
 
@@ -67,11 +67,11 @@ class CourseServiceTest {
 
         given(courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)).willReturn(List.of(course1, course2));
 
-        List<CourseSummaryResult> results = courseQueryService.findAllCourses();
+        List<Course> results = courseQueryService.findAllCourses();
 
         assertEquals(2, results.size());
-        assertEquals("Java", results.get(0).title());
-        assertEquals("Spring", results.get(1).title());
+        assertEquals("Java", results.get(0).getTitle());
+        assertEquals("Spring", results.get(1).getTitle());
         verify(courseRepository).findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE);
     }
 
@@ -83,10 +83,10 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
                 .willReturn(Optional.of(course));
 
-        CourseDetailResult result = courseQueryService.findCourseById(courseId);
+        Course result = courseQueryService.findCourseById(courseId);
 
-        assertEquals(courseId, result.courseId());
-        assertEquals("Java", result.title());
+        assertEquals(courseId, result.getCourseId());
+        assertEquals("Java", result.getTitle());
         verify(courseRepository).findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE);
     }
 
@@ -120,11 +120,11 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
         given(courseRepository.save(course)).willReturn(course);
 
-        CourseDetailResult result = courseCommandService.updateCourse(command);
+        Course result = courseCommandService.updateCourse(command);
 
-        assertEquals("Updated Java", result.title());
-        assertEquals("updated", result.description());
-        assertEquals(CourseStatus.INACTIVE, result.status());
+        assertEquals("Updated Java", result.getTitle());
+        assertEquals("updated", result.getDescription());
+        assertEquals(CourseStatus.INACTIVE, result.getStatus());
         verify(courseRepository).save(course);
     }
 
@@ -182,9 +182,9 @@ class CourseServiceTest {
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
         given(courseRepository.save(course)).willReturn(course);
 
-        CourseDetailResult result = courseCommandService.publishCourse(new PublishCourseCommand(courseId));
+        Course result = courseCommandService.publishCourse(new PublishCourseCommand(courseId));
 
-        assertEquals(CourseStatus.ACTIVE, result.status());
+        assertEquals(CourseStatus.ACTIVE, result.getStatus());
         verify(coursePublishPolicy).validate(course);
         verify(courseRepository).save(course);
     }

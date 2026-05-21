@@ -1,15 +1,16 @@
 package com.wanted.codebombalms.domain.enrollment.application.service;
 
-import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.enrollment.domain.exception.EnrollmentErrorCode;
-import com.wanted.codebombalms.domain.enrollment.domain.model.Enrollment;
-import com.wanted.codebombalms.domain.enrollment.domain.model.EnrollmentStatus;
-import com.wanted.codebombalms.domain.enrollment.domain.repository.EnrollmentRepository;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.request.EnrollmentCreateRequest;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.response.EnrollmentResponse;
-import com.wanted.codebombalms.domain.enrollment.presentation.api.response.MyCourseResponse;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.enrollment.application.service.EnrollmentService;
+import com.wanted.codebombalms.enrollment.domain.exception.EnrollmentErrorCode;
+import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
+import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
+import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
+import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollmentCreateRequest;
+import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollmentResponse;
+import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;

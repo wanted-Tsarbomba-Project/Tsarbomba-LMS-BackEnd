@@ -1,17 +1,19 @@
 package com.wanted.codebombalms.domain.lecture.application.service;
 
-import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.lecture.domain.model.Lecture;
-import com.wanted.codebombalms.domain.lecture.domain.model.LectureStatus;
-import com.wanted.codebombalms.domain.lecture.domain.repository.LectureRepository;
-import com.wanted.codebombalms.domain.lecture.domain.exception.LectureErrorCode;
-import com.wanted.codebombalms.domain.lecture.presentation.api.request.LectureCreateRequest;
-import com.wanted.codebombalms.domain.lecture.presentation.api.request.LectureUpdateRequest;
-import com.wanted.codebombalms.domain.lecture.presentation.api.response.LectureDetailResponse;
-import com.wanted.codebombalms.domain.lecture.presentation.api.response.LectureResponse;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
+import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.service.LectureCommandService;
+import com.wanted.codebombalms.lecture.application.service.LectureQueryService;
+import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
+import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,48 +31,53 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LectureService unit test")
+@DisplayName("Lecture application service unit test")
 class LectureServiceTest {
 
     @Mock
     private LectureRepository lectureRepository;
 
     @Mock
-    private CourseRepository courseRepository;
+    private CourseCatalogPort courseCatalogPort;
+
+    @Mock
+    private LectureCreationPolicy lectureCreationPolicy;
 
     @InjectMocks
-    private LectureService lectureService;
+    private LectureCommandService lectureCommandService;
+
+    @InjectMocks
+    private LectureQueryService lectureQueryService;
 
     @Test
-    void createLecture_returnsResponse() {
+    void createLecture_returnsLecture() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java");
         Lecture savedLecture = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
 
-        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
         given(lectureRepository.save(any(Lecture.class))).willReturn(savedLecture);
 
-        LectureDetailResponse response = lectureService.createLecture(
-                courseId,
-                new LectureCreateRequest("Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+        Lecture result = lectureCommandService.createLecture(
+                new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
         );
 
-        assertEquals(1L, response.getLectureId());
-        assertEquals(courseId, response.getCourseId());
-        assertEquals(10L, response.getInstructorId());
-        assertEquals("Java 1", response.getTitle());
+        assertEquals(1L, result.getLectureId());
+        assertEquals(courseId, result.getCourse().getCourseId());
+        assertEquals("Java 1", result.getTitle());
+        verify(lectureCreationPolicy).validate(course);
     }
 
     @Test
     void createLecture_throwsNotFound_whenCourseMissing() {
         Long courseId = 999L;
-        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.empty());
+        given(courseCatalogPort.findCourse(courseId))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> lectureService.createLecture(
-                        courseId,
-                        new LectureCreateRequest("Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
                 )
         );
 
@@ -78,20 +85,19 @@ class LectureServiceTest {
     }
 
     @Test
-    void findLecturesByCourseId_returnsOrderedLectures() {
+    void findLecturesByCourseId_returnsSummaries() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java");
         Lecture lecture = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
 
-        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
         given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
                 .willReturn(List.of(lecture));
 
-        List<LectureResponse> responses = lectureService.findLecturesByCourseId(courseId);
+        List<Lecture> results = lectureQueryService.findLecturesByCourseId(courseId);
 
-        assertEquals(1, responses.size());
-        assertEquals(1L, responses.get(0).getLectureId());
-        assertEquals("Java 1", responses.get(0).getTitle());
+        assertEquals(1, results.size());
+        assertEquals("Java 1", results.get(0).getTitle());
     }
 
     @Test
@@ -101,7 +107,7 @@ class LectureServiceTest {
 
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> lectureService.findLectureById(lectureId)
+                () -> lectureQueryService.findLectureById(lectureId)
         );
 
         assertEquals(LectureErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
@@ -116,14 +122,28 @@ class LectureServiceTest {
         given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
         given(lectureRepository.save(lecture)).willReturn(lecture);
 
-        LectureDetailResponse response = lectureService.updateLecture(
-                lectureId,
-                new LectureUpdateRequest("Updated Java", "updated", "updated.mp4", "updated.png", 2, LectureStatus.INACTIVE)
+        Lecture result = lectureCommandService.updateLecture(
+                new UpdateLectureCommand(lectureId, "Updated Java", "updated", "updated.mp4", "updated.png", 2, LectureStatus.INACTIVE)
         );
 
-        assertEquals("Updated Java", response.getTitle());
-        assertEquals(LectureStatus.INACTIVE, response.getStatus());
+        assertEquals("Updated Java", result.getTitle());
+        assertEquals(LectureStatus.INACTIVE, result.getStatus());
         verify(lectureRepository).save(lecture);
+    }
+
+    @Test
+    void updateLecture_throwsValidation_whenDeletingByStatus() {
+        Long lectureId = 1L;
+        Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.updateLecture(new UpdateLectureCommand(lectureId, null, null, null, null, null, LectureStatus.DELETED))
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_DELETE_STATUS_REQUIRES_DELETE, exception.getErrorCode());
     }
 
     @Test
@@ -134,7 +154,7 @@ class LectureServiceTest {
         given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
         given(lectureRepository.save(lecture)).willReturn(lecture);
 
-        lectureService.deleteLecture(lectureId);
+        lectureCommandService.deleteLecture(lectureId);
 
         assertEquals(LectureStatus.DELETED, lecture.getStatus());
         assertNotNull(lecture.getDeletedAt());
@@ -152,13 +172,7 @@ class LectureServiceTest {
         return course;
     }
 
-    private Lecture createLecture(
-            Long lectureId,
-            Course course,
-            String title,
-            LectureStatus status,
-            Integer lectureOrder
-    ) {
+    private Lecture createLecture(Long lectureId, Course course, String title, LectureStatus status, Integer lectureOrder) {
         Lecture lecture = new Lecture();
         lecture.setLectureId(lectureId);
         lecture.setCourse(course);

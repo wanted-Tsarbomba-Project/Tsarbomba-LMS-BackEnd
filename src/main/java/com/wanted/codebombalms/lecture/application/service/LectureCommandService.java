@@ -1,0 +1,85 @@
+package com.wanted.codebombalms.lecture.application.service;
+
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
+import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
+import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
+import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class LectureCommandService implements LectureCommandUseCase {
+
+    private static final Logger log = LoggerFactory.getLogger(LectureCommandService.class);
+
+    private final LectureRepository lectureRepository;
+    private final CourseCatalogPort courseCatalogPort;
+    private final LectureCreationPolicy lectureCreationPolicy;
+
+    @Override
+    public Lecture createLecture(CreateLectureCommand command) {
+        log.info("[LectureCommandService] create lecture - courseId: {}, title: {}", command.courseId(), command.title());
+
+        Course course = courseCatalogPort.findCourse(command.courseId());
+        lectureCreationPolicy.validate(course);
+
+        Lecture lecture = Lecture.create(
+                course,
+                command.title(),
+                command.description(),
+                command.videoUrl(),
+                command.thumbnailUrl(),
+                command.lectureOrder(),
+                command.status()
+        );
+
+        return lectureRepository.save(lecture);
+    }
+
+    @Override
+    public Lecture updateLecture(UpdateLectureCommand command) {
+        log.info("[LectureCommandService] update lecture - lectureId: {}", command.lectureId());
+
+        Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(command.lectureId())
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
+
+        if (command.status() == LectureStatus.DELETED) {
+            throw new ValidationException(LectureErrorCode.LECTURE_DELETE_STATUS_REQUIRES_DELETE);
+        }
+
+        lecture.update(
+                command.title(),
+                command.description(),
+                command.videoUrl(),
+                command.thumbnailUrl(),
+                command.lectureOrder(),
+                command.status()
+        );
+
+        return lectureRepository.save(lecture);
+    }
+
+    @Override
+    public void deleteLecture(Long lectureId) {
+        log.info("[LectureCommandService] delete lecture - lectureId: {}", lectureId);
+
+        Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
+
+        lecture.delete();
+        lectureRepository.save(lecture);
+    }
+}

@@ -1,9 +1,10 @@
 package com.wanted.codebombalms.domain.course.application.policy;
 
-import com.wanted.codebombalms.domain.course.application.port.LectureCatalogPort;
-import com.wanted.codebombalms.domain.course.domain.exception.CourseErrorCode;
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.port.LectureCatalogPort;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

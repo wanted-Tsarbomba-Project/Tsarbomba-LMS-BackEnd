@@ -1,12 +1,13 @@
 package com.wanted.codebombalms.domain.lecture.infrastructure.persistence;
 
-import com.wanted.codebombalms.domain.course.domain.model.Course;
-import com.wanted.codebombalms.domain.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.domain.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.domain.course.infrastructure.persistence.CourseRepositoryAdapter;
-import com.wanted.codebombalms.domain.lecture.domain.model.Lecture;
-import com.wanted.codebombalms.domain.lecture.domain.model.LectureStatus;
-import com.wanted.codebombalms.domain.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.course.infrastructure.persistence.CourseRepositoryAdapter;
+import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.lecture.infrastructure.persistence.LectureRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
