@@ -2,7 +2,7 @@ package com.wanted.codebombalms.domain.enrollment.entity;
 
 import com.wanted.codebombalms.domain.course.entity.Course;
 import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
-import com.wanted.codebombalms.domain.user.entity.User;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,7 +30,7 @@ public class Enrollment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
-    private User student;
+    private UserJpaEntity student;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -42,7 +42,7 @@ public class Enrollment {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
-    public static Enrollment create(Course course, User student) {
+    public static Enrollment create(Course course, UserJpaEntity student) {
         Enrollment enrollment = new Enrollment();
         enrollment.setCourse(course);
         enrollment.setStudent(student);

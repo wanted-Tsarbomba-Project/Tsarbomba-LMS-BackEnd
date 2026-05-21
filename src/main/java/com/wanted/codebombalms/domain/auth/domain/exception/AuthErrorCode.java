@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.domain.user.exception;
+package com.wanted.codebombalms.domain.auth.domain.exception;
 
 import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 import lombok.Getter;

@@ -11,8 +11,8 @@ import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
 import com.wanted.codebombalms.domain.enrollment.exception.DuplicateEnrollmentException;
 import com.wanted.codebombalms.domain.enrollment.exception.EnrollmentNotFoundException;
 import com.wanted.codebombalms.domain.enrollment.repository.EnrollmentRepository;
-import com.wanted.codebombalms.domain.user.entity.User;
-import com.wanted.codebombalms.domain.user.repository.UserRepository;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.UserJpaEntity;
+import com.wanted.codebombalms.domain.user.infrastructure.persistence.SpringDataUserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +41,7 @@ class EnrollmentServiceTest {
     private CourseRepository courseRepository;
 
     @Mock
-    private UserRepository userRepository;
+    private SpringDataUserRepository userRepository;
 
     @InjectMocks
     private EnrollmentService enrollmentService;
@@ -55,7 +55,7 @@ class EnrollmentServiceTest {
         Long studentId = 10L;
 
         Course course = createCourse(courseId, "Java 기초 강좌");
-        User student = createStudent(studentId);
+        UserJpaEntity student = createStudent(studentId);
 
         EnrollmentCreateRequest request = new EnrollmentCreateRequest(studentId);
 
@@ -133,7 +133,7 @@ class EnrollmentServiceTest {
         Long studentId = 10L;
 
         Course course = createCourse(courseId, "Java 기초 강좌");
-        User student = createStudent(studentId);
+        UserJpaEntity student = createStudent(studentId);
 
         EnrollmentCreateRequest request = new EnrollmentCreateRequest(studentId);
 
@@ -173,7 +173,7 @@ class EnrollmentServiceTest {
         // given
         Long studentId = 10L;
 
-        User student = createStudent(studentId);
+        UserJpaEntity student = createStudent(studentId);
 
         Course course1 = createCourse(1L, "Java 기초 강좌");
         Course course2 = createCourse(2L, "Spring 기초 강좌");
@@ -222,7 +222,7 @@ class EnrollmentServiceTest {
         Long studentId = 10L;
         Long enrollmentId = 1L;
 
-        User student = createStudent(studentId);
+        UserJpaEntity student = createStudent(studentId);
         Course course = createCourse(1L, "Java 기초 강좌");
 
         Enrollment enrollment = createEnrollment(
@@ -263,7 +263,7 @@ class EnrollmentServiceTest {
         Long studentId = 10L;
         Long enrollmentId = 999L;
 
-        User student = createStudent(studentId);
+        UserJpaEntity student = createStudent(studentId);
 
         given(userRepository.findById(studentId))
                 .willReturn(Optional.of(student));
@@ -302,8 +302,8 @@ class EnrollmentServiceTest {
         return course;
     }
 
-    private User createStudent(Long studentId) {
-        User student = mock(User.class);
+    private UserJpaEntity createStudent(Long studentId) {
+        UserJpaEntity student = mock(UserJpaEntity.class);
         lenient().when(student.getUserId()).thenReturn(studentId);
         return student;
     }
@@ -311,7 +311,7 @@ class EnrollmentServiceTest {
     private Enrollment createEnrollment(
             Long enrollmentId,
             Course course,
-            User student,
+            UserJpaEntity student,
             EnrollmentStatus status
     ) {
         Enrollment enrollment = new Enrollment();
