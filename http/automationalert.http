@@ -1,6 +1,5 @@
 @baseUrl = http://localhost:8080
 @operationAlertId = 1
-@resolvedBy = 1
 
 ### =========================================================
 ### 운영 알림 목록 조회 - 전체
@@ -178,9 +177,7 @@ Content-Type: application/json
 
 
 {
-  "status": "RESOLVED",
-  "adminMemo": "문제 해설을 수정했고 테스트 완료",
-  "resolvedBy": {{resolvedBy}}
+  "status": "RESOLVED"
 }
 
 
@@ -193,9 +190,7 @@ Content-Type: application/json
 
 
 {
-  "status": "IGNORED",
-  "adminMemo": "현재 수치 확인 결과 조치 불필요",
-  "resolvedBy": {{resolvedBy}}
+  "status": "IGNORED"
 }
 
 
@@ -209,14 +204,12 @@ Content-Type: application/json
 
 
 {
-  "status": "OPEN",
-  "adminMemo": "잘못된 상태 변경 테스트",
-  "resolvedBy": {{resolvedBy}}
+  "status": "OPEN"
 }
 
 
 ### =========================================================
-### 운영 알림 상태 변경 - resolvedBy 누락
+### 운영 알림 상태 변경 - 상태 누락
 ### 기대 결과: INVALID_STATUS_UPDATE_REQUEST
 ### =========================================================
 PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/status
@@ -224,6 +217,4 @@ Content-Type: application/json
 
 
 {
-  "status": "RESOLVED",
-  "adminMemo": "resolvedBy 누락 테스트"
 }
