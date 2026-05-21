@@ -12,15 +12,12 @@ public class AutomationRuleMapper {
                 entity.getOperationRuleId(),
                 entity.getCreatedBy(),
                 entity.getRuleCode(),
-                entity.getRuleName(),
-                entity.getTargetType(),
                 entity.getThresholdValue(),
                 entity.getMinSampleCount(),
                 entity.getSeverity(),
                 entity.isEnabled(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                entity.getDeletedAt()
+                entity.getUpdatedAt()
         );
     }
 
@@ -29,15 +26,12 @@ public class AutomationRuleMapper {
                 domain.getOperationRuleId(),
                 domain.getCreatedBy(),
                 domain.getRuleCode(),
-                domain.getRuleName(),
-                domain.getTargetType(),
                 domain.getThresholdValue(),
                 domain.getMinSampleCount(),
                 domain.getSeverity(),
                 domain.isEnabled(),
                 domain.getCreatedAt(),
-                domain.getUpdatedAt(),
-                domain.getDeletedAt()
+                domain.getUpdatedAt()
         );
     }
 }
