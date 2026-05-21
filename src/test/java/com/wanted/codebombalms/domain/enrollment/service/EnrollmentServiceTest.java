@@ -1,16 +1,17 @@
 package com.wanted.codebombalms.domain.enrollment.service;
 
 import com.wanted.codebombalms.domain.course.entity.Course;
-import com.wanted.codebombalms.domain.course.exception.CourseNotFoundException;
+import com.wanted.codebombalms.domain.course.exception.CourseErrorCode;
 import com.wanted.codebombalms.domain.course.repository.CourseRepository;
 import com.wanted.codebombalms.domain.enrollment.dto.request.EnrollmentCreateRequest;
 import com.wanted.codebombalms.domain.enrollment.dto.response.EnrollmentResponse;
 import com.wanted.codebombalms.domain.enrollment.dto.response.MyCourseResponse;
 import com.wanted.codebombalms.domain.enrollment.entity.Enrollment;
 import com.wanted.codebombalms.domain.enrollment.enums.EnrollmentStatus;
-import com.wanted.codebombalms.domain.enrollment.exception.DuplicateEnrollmentException;
-import com.wanted.codebombalms.domain.enrollment.exception.EnrollmentNotFoundException;
+import com.wanted.codebombalms.domain.enrollment.exception.EnrollmentErrorCode;
 import com.wanted.codebombalms.domain.enrollment.repository.EnrollmentRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.user.infrastructure.persistence.UserJpaEntity;
 import com.wanted.codebombalms.user.infrastructure.persistence.SpringDataUserRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -100,7 +101,7 @@ class EnrollmentServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 강좌에 수강 신청 시 CourseNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 강좌에 수강 신청 시 NotFoundException이 발생한다.")
     void 존재하지_않는_강좌_수강_신청_예외_테스트() {
 
         // given
@@ -113,19 +114,19 @@ class EnrollmentServiceTest {
                 .willReturn(Optional.empty());
 
         // when
-        CourseNotFoundException exception = assertThrows(
-                CourseNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> enrollmentService.createEnrollment(courseId, request)
         );
 
         // then
-        assertEquals(courseId, exception.getCourseId());
+        assertSame(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
     }
 
     @Test
-    @DisplayName("이미 수강 신청한 강좌를 다시 신청하면 DuplicateEnrollmentException이 발생한다.")
+    @DisplayName("이미 수강 신청한 강좌를 다시 신청하면 ConflictException이 발생한다.")
     void 중복_수강_신청_예외_테스트() {
 
         // given
@@ -148,14 +149,13 @@ class EnrollmentServiceTest {
         )).willReturn(true);
 
         // when
-        DuplicateEnrollmentException exception = assertThrows(
-                DuplicateEnrollmentException.class,
+        ConflictException exception = assertThrows(
+                ConflictException.class,
                 () -> enrollmentService.createEnrollment(courseId, request)
         );
 
         // then
-        assertEquals(courseId, exception.getCourseId());
-        assertEquals(studentId, exception.getStudentId());
+        assertSame(EnrollmentErrorCode.DUPLICATE_ENROLLMENT, exception.getErrorCode());
 
         verify(courseRepository).findByCourseIdAndDeletedAtIsNull(courseId);
         verify(userRepository).findById(studentId);
@@ -256,7 +256,7 @@ class EnrollmentServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 수강 신청 취소 시 EnrollmentNotFoundException이 발생한다.")
+    @DisplayName("존재하지 않는 수강 신청 취소 시 NotFoundException이 발생한다.")
     void 존재하지_않는_수강_신청_취소_예외_테스트() {
 
         // given
@@ -274,13 +274,13 @@ class EnrollmentServiceTest {
         )).willReturn(Optional.empty());
 
         // when
-        EnrollmentNotFoundException exception = assertThrows(
-                EnrollmentNotFoundException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> enrollmentService.cancelEnrollment(studentId, enrollmentId)
         );
 
         // then
-        assertEquals(enrollmentId, exception.getEnrollmentId());
+        assertSame(EnrollmentErrorCode.ENROLLMENT_NOT_FOUND, exception.getErrorCode());
 
         verify(userRepository).findById(studentId);
         verify(enrollmentRepository).findByEnrollmentIdAndStudentAndStatus(

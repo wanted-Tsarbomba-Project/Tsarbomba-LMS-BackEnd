@@ -1,9 +1,10 @@
 @baseUrl = http://localhost:8080
 @userId = 3
+@problemId = 2001
 
 ### 문제 답안 제출 - 정답 예시
 # 주의: userId의 현재 progress가 problemId=1을 풀 수 있는 상태여야 합니다.
-POST {{baseUrl}}/api/v1/problems/1/submissions
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/submissions
 Accept: application/json
 Content-Type: application/json
 
@@ -14,7 +15,7 @@ Content-Type: application/json
 
 ### 문제 답안 제출 - 오답 예시
 # 주의: 이미 완료된 문제 세트이거나 현재 열린 문제가 아니면 실패할 수 있습니다.
-POST {{baseUrl}}/api/v1/problems/1/submissions
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/submissions
 Accept: application/json
 Content-Type: application/json
 
