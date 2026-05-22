@@ -42,6 +42,156 @@ GET {{baseUrl}}/api/v1/admin/automation-rules?targetType=PROBLEM
 
 
 ### =========================================================
+### 자동화 규칙 threshold 수정 - 강좌: 수강생 부족 강좌
+### operationRuleId: 1 = COURSE_LOW_ENROLLMENT
+### minSampleCount는 강좌 규칙에서 사용하지 않으므로 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/1
+Content-Type: application/json
+
+{
+  "thresholdValue": 200
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 - 문제: 오답률 높은 문제
+### operationRuleId: 2 = PROBLEM_HIGH_WRONG_RATE
+### PROBLEM_HIGH_WRONG_RATE는 minSampleCount 필수
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/2
+Content-Type: application/json
+
+{
+  "thresholdValue": 70,
+  "minSampleCount": 10
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 - 학생: 장기 미접속 + 수강 강좌 없음
+### operationRuleId: 3 = USER_INACTIVE_NO_COURSE
+### minSampleCount는 학생 규칙에서 사용하지 않으므로 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/3
+Content-Type: application/json
+
+{
+  "thresholdValue": 14
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 실패 - 존재하지 않는 규칙
+### 기대 결과: 404 / ADM-ARL-006
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/9999
+Content-Type: application/json
+
+{
+  "thresholdValue": 70,
+  "minSampleCount": 10
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 실패 - thresholdValue 누락
+### 기대 결과: 400 / ADM-ARL-005
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/1
+Content-Type: application/json
+
+{
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 실패 - 문제 오답률 100 초과
+### 기대 결과: 400 / ADM-ARL-002
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/2
+Content-Type: application/json
+
+{
+  "thresholdValue": 101,
+  "minSampleCount": 10
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 실패 - 문제 규칙 최소 표본 수 누락
+### 기대 결과: 400 / ADM-ARL-003
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/2
+Content-Type: application/json
+
+{
+  "thresholdValue": 70
+}
+
+
+### =========================================================
+### 자동화 규칙 threshold 수정 실패 - 문제 규칙 최소 표본 수 0
+### 기대 결과: 400 / ADM-ARL-003
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/2
+Content-Type: application/json
+
+{
+  "thresholdValue": 70,
+  "minSampleCount": 0
+}
+
+
+### =========================================================
+### 자동화 규칙 enabled 수정 - 활성화
+### operationRuleId: 1 = COURSE_LOW_ENROLLMENT
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/1/enabled
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+
+### =========================================================
+### 자동화 규칙 enabled 수정 - 비활성화
+### operationRuleId: 1 = COURSE_LOW_ENROLLMENT
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/1/enabled
+Content-Type: application/json
+
+{
+  "enabled": false
+}
+
+
+### =========================================================
+### 자동화 규칙 enabled 수정 실패 - enabled 누락
+### 기대 결과: 400 / ADM-ARL-007
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/1/enabled
+Content-Type: application/json
+
+{
+}
+
+
+### =========================================================
+### 자동화 규칙 enabled 수정 실패 - 존재하지 않는 규칙
+### 기대 결과: 404 / ADM-ARL-006
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/automation-rules/9999/enabled
+Content-Type: application/json
+
+{
+  "enabled": true
+}
+
+
+
+### =========================================================
 ### 자동화 규칙 옵션 조회 - 전체
 ### 등록 모달에서 전체 규칙 옵션이 필요할 때 사용
 ### =========================================================

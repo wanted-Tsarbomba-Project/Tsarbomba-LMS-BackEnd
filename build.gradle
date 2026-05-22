@@ -50,6 +50,9 @@ dependencies {
     //로깅
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
+    //챗봇
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {

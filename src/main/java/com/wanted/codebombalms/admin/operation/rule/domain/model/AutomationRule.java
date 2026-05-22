@@ -92,6 +92,46 @@ public class AutomationRule {
         );
     }
 
+
+    // threshold 범위 검증, 각 도메인별 minSampleCount 규칙 검증
+    public AutomationRule updateThreshold(
+            BigDecimal thresholdValue,
+            Integer minSampleCount
+    ) {
+        validateThresholdRequest(ruleCode, thresholdValue, minSampleCount);
+
+        return new AutomationRule(
+                operationRuleId,
+                createdBy,
+                ruleCode,
+                thresholdValue,
+                normalizeMinSampleCount(ruleCode, minSampleCount),
+                severity,
+                enabled,
+                createdAt,
+                updatedAt
+        );
+    }
+
+    // enable null 검증
+    public AutomationRule updateEnabled(Boolean enabled) {
+        if (enabled == null) {
+            throw new ValidationException(AutomationRuleErrorCode.INVALID_ENABLED_UPDATE_REQUEST);
+        }
+
+        return new AutomationRule(
+                operationRuleId,
+                createdBy,
+                ruleCode,
+                thresholdValue,
+                minSampleCount,
+                severity,
+                enabled,
+                createdAt,
+                updatedAt
+        );
+    }
+
     private static Integer normalizeMinSampleCount(OperationRuleCode ruleCode, Integer minSampleCount) {
         if (!ruleCode.isRequiresMinSampleCount()) {
             return null;
@@ -108,6 +148,18 @@ public class AutomationRule {
     ) {
         if (createdBy == null || ruleCode == null || thresholdValue == null) {
             throw new ValidationException(AutomationRuleErrorCode.INVALID_CREATE_REQUEST);
+        }
+
+        validateThresholdRequest(ruleCode, thresholdValue, minSampleCount);
+    }
+
+    private static void validateThresholdRequest(
+            OperationRuleCode ruleCode,
+            BigDecimal thresholdValue,
+            Integer minSampleCount
+    ) {
+        if (ruleCode == null || thresholdValue == null) {
+            throw new ValidationException(AutomationRuleErrorCode.INVALID_UPDATE_REQUEST);
         }
 
         if (!ruleCode.isValidThreshold(thresholdValue)) {

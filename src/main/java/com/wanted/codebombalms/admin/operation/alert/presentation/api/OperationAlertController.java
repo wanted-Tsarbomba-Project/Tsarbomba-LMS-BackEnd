@@ -1,10 +1,12 @@
 package com.wanted.codebombalms.admin.operation.alert.presentation.api;
 
 import com.wanted.codebombalms.admin.operation.alert.application.query.GetOperationAlertsQuery;
+import com.wanted.codebombalms.admin.operation.alert.application.usecase.DeleteOperationAlertUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.GetOperationAlertsUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.UpdateOperationAlertStatusUseCase;
 import com.wanted.codebombalms.admin.operation.alert.domain.model.OperationAlertStatus;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.request.OperationAlertStatusUpdateRequest;
+import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertDeleteResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertListResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertStatusUpdateResponse;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/api/v1/admin/operation-alerts")
 @RequiredArgsConstructor
@@ -21,7 +24,10 @@ public class OperationAlertController {
 
     private final GetOperationAlertsUseCase getOperationAlertsUseCase;
     private final UpdateOperationAlertStatusUseCase updateOperationAlertStatusUseCase;
+    private final DeleteOperationAlertUseCase deleteOperationAlertUseCase;
 
+
+    //알람 목록 조회
     @GetMapping
     public ResponseEntity<ApiResponse<OperationAlertListResponse>> findOperationAlerts(
             @RequestParam(required = false) OperationTargetType targetType,
@@ -40,6 +46,7 @@ public class OperationAlertController {
         ));
     }
 
+    //알람 상태 변경
     @PatchMapping("/{operationAlertId}/status")
     public ResponseEntity<ApiResponse<OperationAlertStatusUpdateResponse>> updateOperationAlertStatus(
             @PathVariable Long operationAlertId,
@@ -54,6 +61,20 @@ public class OperationAlertController {
                 OperationAlertResponseCode.UPDATED,
                 OperationAlertResponseMessage.UPDATED,
                 OperationAlertStatusUpdateResponse.from(result)
+        ));
+    }
+
+    //알람 삭제
+    @DeleteMapping("/{operationAlertId}")
+    public ResponseEntity<ApiResponse<OperationAlertDeleteResponse>> deleteOperationAlert(
+            @PathVariable Long operationAlertId
+    ) {
+        var result = deleteOperationAlertUseCase.delete(operationAlertId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                OperationAlertResponseCode.DELETED,
+                OperationAlertResponseMessage.DELETED,
+                OperationAlertDeleteResponse.from(result)
         ));
     }
 }
