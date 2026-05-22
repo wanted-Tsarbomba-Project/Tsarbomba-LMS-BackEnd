@@ -28,7 +28,7 @@ public class RefreshTokenJpaEntity {
     @Column(name = "token", nullable = false, length = 512)
     private String token;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "expired_at", nullable = false)
     private LocalDateTime expiresAt;
 
     @CreatedDate
@@ -42,7 +42,7 @@ public class RefreshTokenJpaEntity {
         e.refreshTokenId = refreshToken.getRefreshTokenId();
         e.userId         = refreshToken.getUserId();
         e.token          = refreshToken.getToken();
-        e.expiresAt      = refreshToken.getExpiresAt();
+        e.expiresAt      = refreshToken.getExpiredAt();
         return e;
     }
 
