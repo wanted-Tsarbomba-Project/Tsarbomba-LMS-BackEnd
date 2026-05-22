@@ -1,47 +1,43 @@
-### 기본 주소
+### Base URL
 @host = http://localhost:8080
 
-### 테스트용 ID
-### courseId는 course-test.http에서 강좌 등록 후 나온 ID로 수정
-### studentId는 DB users 테이블에 실제 존재하는 학생 userId로 수정
-@courseId = 1
-@studentId = 1
+### Test IDs
+@courseId = 101
+@userId = 1
 @enrollmentId = 1
 
 
-### 1. 수강 신청
+### 1. Enroll course
 POST {{host}}/api/v1/courses/{{courseId}}/enrollments
 Content-Type: application/json
 
 {
-  "studentId": {{studentId}}
+  "userId": {{userId}},
+  "courseId": {{courseId}}
 }
 
 
-### 2. 중복 수강 신청 확인
-### 이미 신청한 강좌를 한 번 더 신청하면 409가 나와야 정상
+### 2. Check duplicate enrollment
 POST {{host}}/api/v1/courses/{{courseId}}/enrollments
 Content-Type: application/json
 
 {
-  "studentId": {{studentId}}
+  "userId": {{userId}},
+  "courseId": {{courseId}}
 }
 
 
-### 3. 내 수강 강좌 목록 조회
-GET {{host}}/api/v1/students/{{studentId}}/enrollments
+### 3. My enrolled courses
+GET {{host}}/api/v1/students/{{userId}}/enrollments
 
 
-### 4. 수강 신청 취소
-### 1번 수강 신청 응답에서 나온 enrollmentId로 수정 후 실행
-DELETE {{host}}/api/v1/students/{{studentId}}/enrollments/{{enrollmentId}}
+### 4. Cancel enrollment
+DELETE {{host}}/api/v1/students/{{userId}}/enrollments/{{enrollmentId}}
 
 
-### 5. 수강 취소 후 내 수강 강좌 목록 조회
-### 취소된 강좌는 ACTIVE 목록에서 빠져야 정상
-GET {{host}}/api/v1/students/{{studentId}}/enrollments
+### 5. My enrolled courses after cancellation
+GET {{host}}/api/v1/students/{{userId}}/enrollments
 
 
-### 6. 이미 취소된 수강 신청 다시 취소 확인
-### 다시 취소하면 404 ENROLLMENT_NOT_FOUND가 나와야 정상
-DELETE {{host}}/api/v1/students/{{studentId}}/enrollments/{{enrollmentId}}
+### 6. Check canceling already canceled enrollment
+DELETE {{host}}/api/v1/students/{{userId}}/enrollments/{{enrollmentId}}

@@ -8,19 +8,19 @@ import java.util.Optional;
 
 public interface SpringDataEnrollmentRepository extends JpaRepository<EnrollmentJpaEntity, Long> {
 
-    boolean existsByCourse_CourseIdAndStudentIdAndStatus(
+    boolean existsByCourse_CourseIdAndUserIdAndStatus(
             Long courseId,
-            Long studentId,
+            Long userId,
             EnrollmentStatus status
     );
 
-    List<EnrollmentJpaEntity> findByStudentIdAndStatus(Long studentId, EnrollmentStatus status);
+    List<EnrollmentJpaEntity> findByUserIdAndStatus(Long userId, EnrollmentStatus status);
 
     Optional<EnrollmentJpaEntity> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status);
 
-    Optional<EnrollmentJpaEntity> findByEnrollmentIdAndStudentIdAndStatus(
+    Optional<EnrollmentJpaEntity> findByEnrollmentIdAndUserIdAndStatus(
             Long enrollmentId,
-            Long studentId,
+            Long userId,
             EnrollmentStatus status
     );
 }

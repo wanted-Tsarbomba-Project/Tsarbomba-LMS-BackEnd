@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.enrollment.infrastructure.persistence;
 
-import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
 import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
@@ -21,8 +20,9 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public Enrollment save(Enrollment enrollment) {
-        CourseJpaEntity courseEntity = springDataCourseRepository.findById(enrollment.getCourse().getCourseId())
+        CourseJpaEntity courseEntity = springDataCourseRepository.findById(enrollment.getCourseId())
                 .orElseThrow();
+
         EnrollmentJpaEntity entity = enrollment.getEnrollmentId() == null
                 ? EnrollmentJpaEntity.from(enrollment, courseEntity)
                 : springDataEnrollmentRepository.findById(enrollment.getEnrollmentId())
@@ -36,17 +36,13 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
-    public boolean existsByCourseAndStudentIdAndStatus(Course course, Long studentId, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.existsByCourse_CourseIdAndStudentIdAndStatus(
-                course.getCourseId(),
-                studentId,
-                status
-        );
+    public boolean existsByCourseIdAndUserIdAndStatus(Long courseId, Long userId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.existsByCourse_CourseIdAndUserIdAndStatus(courseId, userId, status);
     }
 
     @Override
-    public List<Enrollment> findByStudentIdAndStatus(Long studentId, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.findByStudentIdAndStatus(studentId, status)
+    public List<Enrollment> findByUserIdAndStatus(Long userId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.findByUserIdAndStatus(userId, status)
                 .stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
@@ -59,12 +55,12 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
-    public Optional<Enrollment> findByEnrollmentIdAndStudentIdAndStatus(
+    public Optional<Enrollment> findByEnrollmentIdAndUserIdAndStatus(
             Long enrollmentId,
-            Long studentId,
+            Long userId,
             EnrollmentStatus status
     ) {
-        return springDataEnrollmentRepository.findByEnrollmentIdAndStudentIdAndStatus(enrollmentId, studentId, status)
+        return springDataEnrollmentRepository.findByEnrollmentIdAndUserIdAndStatus(enrollmentId, userId, status)
                 .map(EnrollmentJpaEntity::toDomain);
     }
 }

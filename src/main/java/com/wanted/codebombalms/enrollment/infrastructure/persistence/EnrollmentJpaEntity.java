@@ -22,14 +22,13 @@ public class EnrollmentJpaEntity {
     @Column(name = "enrollment_id")
     private Long enrollmentId;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     @ToString.Exclude
     private CourseJpaEntity course;
-
-    @Column(name = "user_id", nullable = false)
-    private Long studentId;
-
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -41,16 +40,20 @@ public class EnrollmentJpaEntity {
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 
-    public EnrollmentJpaEntity(CourseJpaEntity course, Long studentId, EnrollmentStatus status) {
+    public EnrollmentJpaEntity(
+            Long userId,
+            CourseJpaEntity course,
+            EnrollmentStatus status
+    ) {
+        this.userId = userId;
         this.course = course;
-        this.studentId = studentId;
         this.status = status;
     }
 
     public static EnrollmentJpaEntity from(Enrollment enrollment, CourseJpaEntity course) {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity(
+                enrollment.getUserId(),
                 course,
-                enrollment.getStudentId(),
                 enrollment.getStatus()
         );
         entity.enrollmentId = enrollment.getEnrollmentId();
@@ -60,8 +63,8 @@ public class EnrollmentJpaEntity {
     }
 
     public void apply(Enrollment enrollment, CourseJpaEntity course) {
+        this.userId = enrollment.getUserId();
         this.course = course;
-        this.studentId = enrollment.getStudentId();
         this.status = enrollment.getStatus();
         this.canceledAt = enrollment.getCanceledAt();
     }
@@ -69,8 +72,8 @@ public class EnrollmentJpaEntity {
     public Enrollment toDomain() {
         return Enrollment.restore(
                 enrollmentId,
-                course.toDomain(),
-                studentId,
+                userId,
+                course.getCourseId(),
                 status,
                 enrolledAt,
                 canceledAt
