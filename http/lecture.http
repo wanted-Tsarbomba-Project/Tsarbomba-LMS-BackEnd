@@ -1,24 +1,18 @@
-### 기본 주소
+### Base URL
 @host = http://localhost:8080
 
-### Spring Security 기본 계정
-@username = user
-@password = 05f9efe7-2940-4024-934c-efe49f7ceac2
-
-### 테스트용 ID
-@courseId = 2
-@lectureId = 1
-
-### 1. 특정 강좌의 강의 목록 조회
-GET http://localhost:8080/api/v1/courses/{{courseId}}/lectures
-Authorization: Basic {{username}} {{password}}
+### Test IDs
+@courseId = 101
+@lectureId = 101
 
 
+### 1. Lecture list by course
+GET {{host}}/api/v1/courses/{{courseId}}/lectures
 
-### 2. 강의 등록
-POST http://localhost:8080/api/v1/courses/{{courseId}}/lectures
+
+### 2. Create lecture
+POST {{host}}/api/v1/courses/{{courseId}}/lectures
 Content-Type: application/json
-Authorization: Basic {{username}} {{password}}
 
 {
   "title": "Java 1강",
@@ -30,15 +24,13 @@ Authorization: Basic {{username}} {{password}}
 }
 
 
-### 3. 강의 상세 조회
-GET http://localhost:8080/api/v1/lectures/{{lectureId}}
-Authorization: Basic {{username}} {{password}}
+### 3. Lecture detail
+GET {{host}}/api/v1/lectures/{{lectureId}}
 
 
-### 4. 강의 수정
-PUT http://localhost:8080/api/v1/lectures/{{lectureId}}
+### 4. Update lecture
+PUT {{host}}/api/v1/lectures/{{lectureId}}
 Content-Type: application/json
-Authorization: Basic {{username}} {{password}}
 
 {
   "title": "수정된 Java 1강",
@@ -50,11 +42,9 @@ Authorization: Basic {{username}} {{password}}
 }
 
 
-### 5. 강의 삭제
-DELETE http://localhost:8080/api/v1/lectures/{{lectureId}}
-Authorization: Basic {{username}} {{password}}
+### 5. Delete lecture
+DELETE {{host}}/api/v1/lectures/{{lectureId}}
 
 
-### 6. 삭제된 강의 상세 조회 확인
-GET http://localhost:8080/api/v1/lectures/{{lectureId}}
-Authorization: Basic {{username}} {{password}}
+### 6. Check deleted lecture detail
+GET {{host}}/api/v1/lectures/{{lectureId}}
