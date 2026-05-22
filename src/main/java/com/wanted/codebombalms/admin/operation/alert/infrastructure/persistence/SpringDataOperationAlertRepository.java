@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface SpringDataOperationAlertRepository
         extends JpaRepository<OperationAlertJpaEntity, Long> {
 
@@ -31,7 +33,8 @@ public interface SpringDataOperationAlertRepository
                     from OperationAlertJpaEntity oa
                     join AutomationRuleJpaEntity ar
                         on ar.operationRuleId = oa.operationRuleId
-                    where (:targetType is null or oa.targetType = :targetType)
+                    where oa.deletedAt is null
+                      and (:targetType is null or oa.targetType = :targetType)
                       and (:status is null or oa.status = :status)
                     """,
             countQuery = """
@@ -39,7 +42,8 @@ public interface SpringDataOperationAlertRepository
                     from OperationAlertJpaEntity oa
                     join AutomationRuleJpaEntity ar
                         on ar.operationRuleId = oa.operationRuleId
-                    where (:targetType is null or oa.targetType = :targetType)
+                    where oa.deletedAt is null
+                      and (:targetType is null or oa.targetType = :targetType)
                       and (:status is null or oa.status = :status)
                     """
     )
@@ -48,4 +52,6 @@ public interface SpringDataOperationAlertRepository
             @Param("status") OperationAlertStatus status,
             Pageable pageable
     );
+
+    Optional<OperationAlertJpaEntity> findByOperationAlertIdAndDeletedAtIsNull(Long operationAlertId);
 }

@@ -25,7 +25,8 @@ public class OperationAlertMapper {
                 entity.getResolvedAt(),
                 entity.getAdminMemo(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getDeletedAt()
         );
     }
 
@@ -47,7 +48,8 @@ public class OperationAlertMapper {
                 domain.getResolvedAt(),
                 domain.getAdminMemo(),
                 domain.getCreatedAt(),
-                domain.getUpdatedAt()
+                domain.getUpdatedAt(),
+                domain.getDeletedAt()
         );
     }
 }

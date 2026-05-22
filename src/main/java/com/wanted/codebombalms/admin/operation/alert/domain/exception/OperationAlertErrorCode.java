@@ -15,7 +15,11 @@ public enum OperationAlertErrorCode implements ErrorCode {
 
     // 상태 변경
     INVALID_STATUS_UPDATE_REQUEST("ADM-ALT-004", "운영 알림 상태 변경 요청이 올바르지 않습니다."),
-    ALREADY_PROCESSED_ALERT("ADM-ALT-005", "이미 처리된 운영 알림입니다.");
+    ALREADY_PROCESSED_ALERT("ADM-ALT-005", "이미 처리된 운영 알림입니다."),
+
+    // 삭제
+    INVALID_DELETE_REQUEST("ADM-ALT-006", "운영 알림 삭제 요청이 올바르지 않습니다."),
+    CANNOT_DELETE_OPEN_ALERT("ADM-ALT-007", "OPEN 상태의 운영 알림은 삭제할 수 없습니다.");
 
     private final String code;
     private final String message;

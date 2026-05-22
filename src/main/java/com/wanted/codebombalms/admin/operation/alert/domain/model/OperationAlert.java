@@ -26,6 +26,7 @@ public class OperationAlert {
     private String adminMemo;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
     private OperationAlert(
             Long operationAlertId,
@@ -44,7 +45,8 @@ public class OperationAlert {
             LocalDateTime resolvedAt,
             String adminMemo,
             LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            LocalDateTime updatedAt,
+            LocalDateTime deletedAt
     ) {
         this.operationAlertId = operationAlertId;
         this.operationRuleId = operationRuleId;
@@ -63,6 +65,7 @@ public class OperationAlert {
         this.adminMemo = adminMemo;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deletedAt = deletedAt;
     }
 
     public static OperationAlert restore(
@@ -84,6 +87,48 @@ public class OperationAlert {
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
+        return restore(
+                operationAlertId,
+                operationRuleId,
+                targetType,
+                targetId,
+                detectedValue,
+                thresholdValueSnapshot,
+                assigneeId,
+                reason,
+                recommendedAction,
+                firstDetectedAt,
+                lastDetectedAt,
+                status,
+                resolvedBy,
+                resolvedAt,
+                adminMemo,
+                createdAt,
+                updatedAt,
+                null
+        );
+    }
+
+    public static OperationAlert restore(
+            Long operationAlertId,
+            Long operationRuleId,
+            OperationTargetType targetType,
+            Long targetId,
+            BigDecimal detectedValue,
+            BigDecimal thresholdValueSnapshot,
+            Long assigneeId,
+            String reason,
+            String recommendedAction,
+            LocalDateTime firstDetectedAt,
+            LocalDateTime lastDetectedAt,
+            OperationAlertStatus status,
+            Long resolvedBy,
+            LocalDateTime resolvedAt,
+            String adminMemo,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt,
+            LocalDateTime deletedAt
+    ) {
         return new OperationAlert(
                 operationAlertId,
                 operationRuleId,
@@ -101,7 +146,8 @@ public class OperationAlert {
                 resolvedAt,
                 adminMemo,
                 createdAt,
-                updatedAt
+                updatedAt,
+                deletedAt
         );
     }
 
@@ -131,6 +177,15 @@ public class OperationAlert {
         this.recommendedAction = recommendedAction;
         this.lastDetectedAt = detectedAt;
         this.updatedAt = detectedAt;
+    }
+
+    public void delete(LocalDateTime deletedAt) {
+        if (this.status == OperationAlertStatus.OPEN) {
+            throw new ValidationException(OperationAlertErrorCode.CANNOT_DELETE_OPEN_ALERT);
+        }
+
+        this.deletedAt = deletedAt;
+        this.updatedAt = deletedAt;
     }
 
     public Long getOperationAlertId() {
@@ -199,5 +254,9 @@ public class OperationAlert {
 
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }
