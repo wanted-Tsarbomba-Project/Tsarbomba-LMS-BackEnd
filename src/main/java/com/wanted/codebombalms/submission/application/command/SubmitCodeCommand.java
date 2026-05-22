@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.submission.application.command;
 
-public record SubmitAnswerCommand(
+public record SubmitCodeCommand(
         Long userId,
-        String submittedAnswer
+        String code
 ) {
 }

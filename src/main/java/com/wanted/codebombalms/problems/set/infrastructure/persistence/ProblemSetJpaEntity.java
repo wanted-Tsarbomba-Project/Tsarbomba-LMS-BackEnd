@@ -74,11 +74,13 @@ public class ProblemSetJpaEntity {
     public void update(
             ProblemCategoryJpaEntity category,
             String title,
-            String description
+            String description,
+            String difficulty
     ) {
         this.category = category;
         this.title = title;
         this.description = description;
+        this.difficulty = difficulty;
     }
 
     public void updateTotalProblemCount(Integer totalProblemCount) {

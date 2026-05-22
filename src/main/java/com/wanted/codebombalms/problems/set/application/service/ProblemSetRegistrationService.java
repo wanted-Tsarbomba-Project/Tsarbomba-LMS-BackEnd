@@ -55,6 +55,7 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
         return new ProblemSetRegistration(
                 command.title(),
                 command.categoryName(),
+                command.difficulty(),
                 command.description(),
                 problems
         );

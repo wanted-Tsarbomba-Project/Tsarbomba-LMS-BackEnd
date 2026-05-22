@@ -6,6 +6,7 @@ public record ProblemSetCreateRequest(
         String title,
         String categoryName,
         String description,
+        String difficulty,
         String dataFileName,
         List<ProblemCreateRequest> problems
 ) {
