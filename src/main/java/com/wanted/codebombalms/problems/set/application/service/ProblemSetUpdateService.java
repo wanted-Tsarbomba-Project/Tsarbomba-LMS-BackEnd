@@ -53,6 +53,7 @@ public class ProblemSetUpdateService implements UpdateProblemSetUseCase {
                 command.problemSetId(),
                 command.title(),
                 command.categoryName(),
+                command.difficulty(),
                 command.description(),
                 problems
         );

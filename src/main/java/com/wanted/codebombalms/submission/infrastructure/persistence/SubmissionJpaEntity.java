@@ -30,6 +30,9 @@ public class SubmissionJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String submittedAnswer;
 
+    @Column(columnDefinition = "TEXT")
+    private String submittedCode;
+
     private Boolean isCorrect;
 
     @Column(nullable = false)
@@ -37,6 +40,17 @@ public class SubmissionJpaEntity {
 
     @Column(nullable = false)
     private Integer attemptNo;
+
+    @Column(nullable = false)
+    private Integer passedTestCount;
+
+    @Column(nullable = false)
+    private Integer totalTestCount;
+
+    private String executionStatus;
+
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage;
 
     @Column(nullable = false)
     private LocalDateTime submittedAt;
@@ -55,9 +69,40 @@ public class SubmissionJpaEntity {
         this.userId = userId;
         this.problem = problem;
         this.submittedAnswer = submittedAnswer;
+        this.submittedCode = null;
         this.isCorrect = isCorrect;
         this.earnedScore = earnedScore;
         this.attemptNo = attemptNo;
+        this.passedTestCount = 0;
+        this.totalTestCount = 0;
+        this.executionStatus = null;
+        this.errorMessage = null;
+        this.submittedAt = LocalDateTime.now();
+    }
+
+    public SubmissionJpaEntity(
+            Long userId,
+            ProblemJpaEntity problem,
+            String submittedCode,
+            Boolean isCorrect,
+            Integer earnedScore,
+            Integer attemptNo,
+            Integer passedTestCount,
+            Integer totalTestCount,
+            String executionStatus,
+            String errorMessage
+    ) {
+        this.userId = userId;
+        this.problem = problem;
+        this.submittedAnswer = null;
+        this.submittedCode = submittedCode;
+        this.isCorrect = isCorrect;
+        this.earnedScore = earnedScore;
+        this.attemptNo = attemptNo;
+        this.passedTestCount = passedTestCount;
+        this.totalTestCount = totalTestCount;
+        this.executionStatus = executionStatus;
+        this.errorMessage = errorMessage;
         this.submittedAt = LocalDateTime.now();
     }
 
@@ -77,6 +122,10 @@ public class SubmissionJpaEntity {
         return submittedAnswer;
     }
 
+    public String getSubmittedCode() {
+        return submittedCode;
+    }
+
     public Boolean getCorrect() {
         return isCorrect;
     }
@@ -87,6 +136,22 @@ public class SubmissionJpaEntity {
 
     public Integer getAttemptNo() {
         return attemptNo;
+    }
+
+    public Integer getPassedTestCount() {
+        return passedTestCount;
+    }
+
+    public Integer getTotalTestCount() {
+        return totalTestCount;
+    }
+
+    public String getExecutionStatus() {
+        return executionStatus;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     public LocalDateTime getSubmittedAt() {

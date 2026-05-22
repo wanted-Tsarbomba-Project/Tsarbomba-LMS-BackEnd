@@ -95,6 +95,7 @@ public class ProblemManageController {
         return new RegisterProblemSetCommand(
                 request.title(),
                 request.categoryName(),
+                request.difficulty(),
                 request.description(),
                 request.dataFileName(),
                 problems
@@ -125,6 +126,7 @@ public class ProblemManageController {
                 problemSetId,
                 request.title(),
                 request.categoryName(),
+                request.difficulty(),
                 request.description(),
                 request.dataFileName(),
                 problems

@@ -8,16 +8,23 @@ import com.wanted.codebombalms.problems.set.application.command.UpdateProblemSet
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class ProblemSetCommandValidationPolicy {
 
     public void validate(RegisterProblemSetCommand command) {
-        validateProblemSet(command.title(), command.categoryName(), command.problems());
+        validateProblemSet(
+                command.title(),
+                command.categoryName(),
+                command.difficulty(),
+                command.problems()
+        );
         command.problems().forEach(this::validate);
     }
 
     public void validate(UpdateProblemSetCommand command) {
-        validateProblemSet(command.title(), command.categoryName(), command.problems());
+        validateProblemSet(command.title(), command.categoryName(), command.difficulty(), command.problems());
         command.problems().forEach(this::validate);
     }
 
@@ -33,12 +40,28 @@ public class ProblemSetCommandValidationPolicy {
         requireNotBlank(command.answer(), ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
     }
 
-    private void validateProblemSet(String title, String categoryName, java.util.List<?> problems) {
+    private void validateProblemSet(
+            String title,
+            String categoryName,
+            String difficulty,
+            java.util.List<?> problems
+    ) {
         requireNotBlank(title, ProblemErrorCode.PROBLEM_SET_TITLE_REQUIRED);
         requireNotBlank(categoryName, ProblemErrorCode.PROBLEM_CATEGORY_REQUIRED);
+        validateDifficulty(difficulty);
         requireNotEmpty(problems, ProblemErrorCode.PROBLEM_REQUIRED);
     }
+    private void validateDifficulty(String difficulty) {
+        if (difficulty == null || difficulty.isBlank()) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
 
+        if (!difficulty.equals("EASY")
+                && !difficulty.equals("MEDIUM")
+                && !difficulty.equals("HARD")) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+    }
     private void requireNotBlank(String value, ProblemErrorCode errorCode) {
         if (value == null || value.isBlank()) {
             throw new ValidationException(errorCode);
