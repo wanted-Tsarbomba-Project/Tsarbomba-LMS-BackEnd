@@ -17,3 +17,9 @@ jwt:
   secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
   access-expiration: 3600000
   refresh-expiration: 1209600000
+
+fastapi:
+  url: http://localhost:8000
+
+chat:
+  max-history-messages: 20
