@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.enrollment.domain.model;
 
-import com.wanted.codebombalms.course.domain.model.Course;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -13,29 +12,32 @@ import java.time.LocalDateTime;
 public class Enrollment {
 
     private Long enrollmentId;
-    private Course course;
-    private Long studentId;
+    private Long userId;
+    private Long courseId;
+    private Long instructorId;
     private EnrollmentStatus status;
     private LocalDateTime enrolledAt;
     private LocalDateTime canceledAt;
 
-    public static Enrollment create(Course course, Long studentId) {
+    public static Enrollment create(Long userId, Long courseId, Long instructorId) {
         Enrollment enrollment = new Enrollment();
-        enrollment.course = course;
-        enrollment.studentId = studentId;
+        enrollment.userId = userId;
+        enrollment.courseId = courseId;
+        enrollment.instructorId = instructorId;
         enrollment.status = EnrollmentStatus.ACTIVE;
         return enrollment;
     }
 
     public static Enrollment restore(
             Long enrollmentId,
-            Course course,
-            Long studentId,
+            Long userId,
+            Long courseId,
+            Long instructorId,
             EnrollmentStatus status,
             LocalDateTime enrolledAt,
             LocalDateTime canceledAt
     ) {
-        return new Enrollment(enrollmentId, course, studentId, status, enrolledAt, canceledAt);
+        return new Enrollment(enrollmentId, userId, courseId, instructorId, status, enrolledAt, canceledAt);
     }
 
     public void cancel() {

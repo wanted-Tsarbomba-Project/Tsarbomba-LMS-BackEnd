@@ -1,13 +1,16 @@
 package com.wanted.codebombalms.domain.enrollment.presentation.api;
 
-import com.wanted.codebombalms.enrollment.application.service.EnrollmentService;
+import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
+import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
+import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
+import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
+import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.controller.EnrollmentController;
 import com.wanted.codebombalms.enrollment.controller.EnrollmentResponseCode;
 import com.wanted.codebombalms.enrollment.controller.EnrollmentResponseMessage;
+import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
-import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollmentCreateRequest;
-import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollmentResponse;
-import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,41 +40,41 @@ class EnrollmentControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private EnrollmentService enrollmentService;
+    private EnrollmentCommandUseCase enrollmentCommandUseCase;
+
+    @MockitoBean
+    private EnrollmentQueryUseCase enrollmentQueryUseCase;
+
+    @MockitoBean
+    private CourseCatalogPort courseCatalogPort;
 
     @Test
     void createEnrollment_returnsApiResponse() throws Exception {
         Long courseId = 1L;
         Long studentId = 10L;
-        EnrollmentResponse response = new EnrollmentResponse(
-                1L,
-                courseId,
-                studentId,
-                EnrollmentStatus.ACTIVE,
-                LocalDateTime.now(),
-                null
-        );
+        Enrollment enrollment = createEnrollment(1L, studentId, courseId, 1L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentService.createEnrollment(eq(courseId), any(EnrollmentCreateRequest.class)))
-                .willReturn(response);
+        given(enrollmentCommandUseCase.createEnrollment(any(EnrollCourseCommand.class)))
+                .willReturn(enrollment);
 
         mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", courseId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"studentId\":10}"))
+                        .content("{\"userId\":10,\"courseId\":1}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value(201))
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.CREATED))
                 .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.CREATED))
-                .andExpect(jsonPath("$.data.enrollmentId").value(1L))
-                .andExpect(jsonPath("$.data.studentId").value(studentId));
+                .andExpect(jsonPath("$.data.enrollmentId").value(1L));
     }
 
     @Test
     void findMyCourses_returnsApiResponse() throws Exception {
         Long studentId = 10L;
-        given(enrollmentService.findMyCourses(studentId)).willReturn(List.of(
-                new MyCourseResponse(1L, 1L, "Java", "description", "java.png", EnrollmentStatus.ACTIVE, LocalDateTime.now())
-        ));
+        Enrollment enrollment = createEnrollment(1L, studentId, 1L, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
         mockMvc.perform(get("/api/v1/students/{studentId}/enrollments", studentId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -90,6 +93,23 @@ class EnrollmentControllerTest {
         mockMvc.perform(delete("/api/v1/students/{studentId}/enrollments/{enrollmentId}", studentId, enrollmentId))
                 .andExpect(status().isNoContent());
 
-        verify(enrollmentService).cancelEnrollment(studentId, enrollmentId);
+        verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
+    }
+
+    private Enrollment createEnrollment(
+            Long enrollmentId,
+            Long userId,
+            Long courseId,
+            Long instructorId,
+            EnrollmentStatus status
+    ) {
+        Enrollment enrollment = new Enrollment();
+        enrollment.setEnrollmentId(enrollmentId);
+        enrollment.setUserId(userId);
+        enrollment.setCourseId(courseId);
+        enrollment.setInstructorId(instructorId);
+        enrollment.setStatus(status);
+        enrollment.setEnrolledAt(LocalDateTime.now());
+        return enrollment;
     }
 }

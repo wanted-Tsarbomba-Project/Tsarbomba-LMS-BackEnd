@@ -1,33 +1,32 @@
 package com.wanted.codebombalms.enrollment.presentation.api.response;
 
+import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
-import lombok.*;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-@ToString
-public class MyCourseResponse {
+public record MyCourseResponse(
+        Long enrollmentId,
+        Long studentId,
+        Long courseId,
+        Long instructorId,
+        String courseTitle,
+        String courseDescription,
+        String courseThumbnailUrl,
+        EnrollmentStatus status,
+        LocalDateTime enrolledAt
+) {
 
-    private Long enrollmentId;
-    private Long courseId;
-    private String courseTitle;
-    private String courseDescription;
-    private String courseThumbnailUrl;
-    private EnrollmentStatus status;
-    private LocalDateTime enrolledAt;
-
-    public static MyCourseResponse from(Enrollment enrollment) {
+    public static MyCourseResponse from(Enrollment enrollment, CoursePublicationStatus course) {
         return new MyCourseResponse(
                 enrollment.getEnrollmentId(),
-                enrollment.getCourse().getCourseId(),
-                enrollment.getCourse().getTitle(),
-                enrollment.getCourse().getDescription(),
-                enrollment.getCourse().getThumbnailUrl(),
+                enrollment.getUserId(),
+                enrollment.getCourseId(),
+                enrollment.getInstructorId(),
+                course.title(),
+                course.description(),
+                course.thumbnailUrl(),
                 enrollment.getStatus(),
                 enrollment.getEnrolledAt()
         );

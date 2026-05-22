@@ -1,7 +1,13 @@
 package com.wanted.codebombalms.enrollment.controller;
 
-import com.wanted.codebombalms.enrollment.application.service.EnrollmentService;
-import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollmentCreateRequest;
+import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
+import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
+import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
+import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
+import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollCourseRequest;
+import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
+import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,48 +24,52 @@ public class EnrollmentController {
 
     private static final Logger log = LoggerFactory.getLogger(EnrollmentController.class);
 
-    private final EnrollmentService enrollmentService;
+    private final EnrollmentCommandUseCase enrollmentCommandUseCase;
+    private final EnrollmentQueryUseCase enrollmentQueryUseCase;
+    private final CourseCatalogPort courseCatalogPort;
 
     @PostMapping("/courses/{courseId}/enrollments")
     public ResponseEntity<ApiResponse<?>> createEnrollment(
             @PathVariable Long courseId,
-            @Valid @RequestBody EnrollmentCreateRequest request
+            @Valid @RequestBody EnrollCourseRequest request
     ) {
-        log.info("[EnrollmentController] create enrollment - courseId: {}, studentId: {}",
-                courseId,
-                request.getStudentId()
-        );
+        log.info("[EnrollmentController] create enrollment - courseId: {}, userId: {}", courseId, request.userId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(
                         EnrollmentResponseCode.CREATED,
                         EnrollmentResponseMessage.CREATED,
-                        enrollmentService.createEnrollment(courseId, request)
+                        EnrollCourseResponse.from(enrollmentCommandUseCase.createEnrollment(
+                                new EnrollCourseCommand(request.userId(), courseId)
+                        ))
                 ));
     }
 
-    @GetMapping("/students/{studentId}/enrollments")
-    public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long studentId) {
-        log.info("[EnrollmentController] find my courses - studentId: {}", studentId);
+    @GetMapping("/students/{userId}/enrollments")
+    public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long userId) {
+        log.info("[EnrollmentController] find my courses - userId: {}", userId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 EnrollmentResponseCode.RETRIEVED,
                 EnrollmentResponseMessage.RETRIEVED,
-                enrollmentService.findMyCourses(studentId)
+                enrollmentQueryUseCase.findMyCourses(userId)
+                        .stream()
+                        .map(enrollment -> MyCourseResponse.from(
+                                enrollment,
+                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        ))
+                        .toList()
         ));
     }
 
-    @DeleteMapping("/students/{studentId}/enrollments/{enrollmentId}")
+    @DeleteMapping("/students/{userId}/enrollments/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(
-            @PathVariable Long studentId,
+            @PathVariable Long userId,
             @PathVariable Long enrollmentId
     ) {
-        log.info("[EnrollmentController] cancel enrollment - studentId: {}, enrollmentId: {}",
-                studentId,
-                enrollmentId
-        );
+        log.info("[EnrollmentController] cancel enrollment - userId: {}, enrollmentId: {}", userId, enrollmentId);
 
-        enrollmentService.cancelEnrollment(studentId, enrollmentId);
+        enrollmentCommandUseCase.cancelEnrollment(new CancelEnrollmentCommand(userId, enrollmentId));
 
         return ResponseEntity.noContent().build();
     }
