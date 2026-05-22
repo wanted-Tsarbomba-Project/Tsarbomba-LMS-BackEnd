@@ -40,8 +40,7 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
 
         return enrollmentRepository.save(Enrollment.create(
                 command.userId(),
-                course.courseId(),
-                course.instructorId()
+                course.courseId()
         ));
     }
 

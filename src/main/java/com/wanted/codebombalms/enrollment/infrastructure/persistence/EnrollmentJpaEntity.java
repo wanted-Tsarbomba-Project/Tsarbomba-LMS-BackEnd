@@ -30,9 +30,6 @@ public class EnrollmentJpaEntity {
     @ToString.Exclude
     private CourseJpaEntity course;
 
-    @Column(name = "instructor_id", nullable = false)
-    private Long instructorId;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private EnrollmentStatus status;
@@ -46,12 +43,10 @@ public class EnrollmentJpaEntity {
     public EnrollmentJpaEntity(
             Long userId,
             CourseJpaEntity course,
-            Long instructorId,
             EnrollmentStatus status
     ) {
         this.userId = userId;
         this.course = course;
-        this.instructorId = instructorId;
         this.status = status;
     }
 
@@ -59,7 +54,6 @@ public class EnrollmentJpaEntity {
         EnrollmentJpaEntity entity = new EnrollmentJpaEntity(
                 enrollment.getUserId(),
                 course,
-                enrollment.getInstructorId(),
                 enrollment.getStatus()
         );
         entity.enrollmentId = enrollment.getEnrollmentId();
@@ -71,7 +65,6 @@ public class EnrollmentJpaEntity {
     public void apply(Enrollment enrollment, CourseJpaEntity course) {
         this.userId = enrollment.getUserId();
         this.course = course;
-        this.instructorId = enrollment.getInstructorId();
         this.status = enrollment.getStatus();
         this.canceledAt = enrollment.getCanceledAt();
     }
@@ -81,7 +74,6 @@ public class EnrollmentJpaEntity {
                 enrollmentId,
                 userId,
                 course.getCourseId(),
-                instructorId,
                 status,
                 enrolledAt,
                 canceledAt

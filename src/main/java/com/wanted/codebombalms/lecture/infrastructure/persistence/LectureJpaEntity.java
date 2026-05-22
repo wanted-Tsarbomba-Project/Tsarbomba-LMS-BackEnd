@@ -43,6 +43,9 @@ public class LectureJpaEntity {
     @Column(name = "status", nullable = false, length = 20)
     private LectureStatus status;
 
+    @Column(name = "lecture_order", nullable = false)
+    private Integer lectureOrder;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -51,9 +54,6 @@ public class LectureJpaEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-    @Column(name = "lecture_order", nullable = false)
-    private Integer lectureOrder;
 
     public LectureJpaEntity(
             CourseJpaEntity course,

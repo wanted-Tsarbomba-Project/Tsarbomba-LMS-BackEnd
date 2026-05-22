@@ -53,7 +53,7 @@ class EnrollmentServiceTest {
         Long courseId = 1L;
         Long userId = 10L;
         CoursePublicationStatus course = createCourseStatus(courseId);
-        Enrollment savedEnrollment = createEnrollment(1L, userId, courseId, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment savedEnrollment = createEnrollment(1L, userId, courseId, EnrollmentStatus.ACTIVE);
 
         given(courseCatalogPort.getPublicationStatus(courseId)).willReturn(course);
         given(enrollmentRepository.save(any(Enrollment.class))).willReturn(savedEnrollment);
@@ -63,7 +63,6 @@ class EnrollmentServiceTest {
         assertEquals(1L, result.getEnrollmentId());
         assertEquals(courseId, result.getCourseId());
         assertEquals(userId, result.getUserId());
-        assertEquals(1L, result.getInstructorId());
         assertEquals(EnrollmentStatus.ACTIVE, result.getStatus());
         verify(enrollmentEligibilityPolicy).validate(userId, course);
         verify(enrollmentRepository).save(any(Enrollment.class));
@@ -86,7 +85,7 @@ class EnrollmentServiceTest {
     @Test
     void findMyCourses_returnsActiveEnrollments() {
         Long userId = 10L;
-        Enrollment enrollment = createEnrollment(1L, userId, 1L, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment enrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
 
         given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
                 .willReturn(List.of(enrollment));
@@ -102,7 +101,7 @@ class EnrollmentServiceTest {
     void cancelEnrollment_cancelsEnrollment() {
         Long userId = 10L;
         Long enrollmentId = 1L;
-        Enrollment enrollment = createEnrollment(enrollmentId, userId, 1L, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment enrollment = createEnrollment(enrollmentId, userId, 1L, EnrollmentStatus.ACTIVE);
 
         given(enrollmentRepository.findByEnrollmentIdAndUserIdAndStatus(
                 enrollmentId,
@@ -145,14 +144,12 @@ class EnrollmentServiceTest {
             Long enrollmentId,
             Long userId,
             Long courseId,
-            Long instructorId,
             EnrollmentStatus status
     ) {
         Enrollment enrollment = new Enrollment();
         enrollment.setEnrollmentId(enrollmentId);
         enrollment.setUserId(userId);
         enrollment.setCourseId(courseId);
-        enrollment.setInstructorId(instructorId);
         enrollment.setStatus(status);
         enrollment.setEnrolledAt(LocalDateTime.now());
         return enrollment;

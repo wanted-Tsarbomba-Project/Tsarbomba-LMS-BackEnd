@@ -23,7 +23,7 @@ public record MyCourseResponse(
                 enrollment.getEnrollmentId(),
                 enrollment.getUserId(),
                 enrollment.getCourseId(),
-                enrollment.getInstructorId(),
+                course.instructorId(),
                 course.title(),
                 course.description(),
                 course.thumbnailUrl(),

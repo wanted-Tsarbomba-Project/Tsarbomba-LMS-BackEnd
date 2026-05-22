@@ -52,7 +52,7 @@ class EnrollmentControllerTest {
     void createEnrollment_returnsApiResponse() throws Exception {
         Long courseId = 1L;
         Long studentId = 10L;
-        Enrollment enrollment = createEnrollment(1L, studentId, courseId, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment enrollment = createEnrollment(1L, studentId, courseId, EnrollmentStatus.ACTIVE);
 
         given(enrollmentCommandUseCase.createEnrollment(any(EnrollCourseCommand.class)))
                 .willReturn(enrollment);
@@ -70,7 +70,7 @@ class EnrollmentControllerTest {
     @Test
     void findMyCourses_returnsApiResponse() throws Exception {
         Long studentId = 10L;
-        Enrollment enrollment = createEnrollment(1L, studentId, 1L, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
 
         given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(enrollment));
         given(courseCatalogPort.getPublicationStatus(1L))
@@ -100,14 +100,12 @@ class EnrollmentControllerTest {
             Long enrollmentId,
             Long userId,
             Long courseId,
-            Long instructorId,
             EnrollmentStatus status
     ) {
         Enrollment enrollment = new Enrollment();
         enrollment.setEnrollmentId(enrollmentId);
         enrollment.setUserId(userId);
         enrollment.setCourseId(courseId);
-        enrollment.setInstructorId(instructorId);
         enrollment.setStatus(status);
         enrollment.setEnrolledAt(LocalDateTime.now());
         return enrollment;
