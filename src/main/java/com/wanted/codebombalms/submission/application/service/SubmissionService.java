@@ -1,19 +1,16 @@
 package com.wanted.codebombalms.submission.application.service;
 
-import com.wanted.codebombalms.submission.application.command.SubmitAnswerCommand;
-import com.wanted.codebombalms.submission.application.policy.SubmissionAnswerPolicy;
+import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
+import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
 import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
-import com.wanted.codebombalms.submission.application.policy.SubmissionScorePolicy;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort.ProblemForSubmission;
+import com.wanted.codebombalms.submission.application.port.LoadTestCasesForGradingPort;
 import com.wanted.codebombalms.submission.application.port.ProblemProgressPort;
 import com.wanted.codebombalms.submission.application.port.ProblemSetCompletionEventPort;
 import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
-import com.wanted.codebombalms.submission.domain.model.TextSubmission;
-import com.wanted.codebombalms.submission.exception.SubmissionErrorCode;
-import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
-import lombok.RequiredArgsConstructor;
+import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,38 +19,38 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
     private final SubmissionCommandPort submissionCommandPort;
     private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
+    private final LoadTestCasesForGradingPort loadTestCasesForGradingPort;
     private final ProblemProgressPort problemProgressPort;
     private final ProblemSetCompletionEventPort problemSetCompletionEventPort;
-    private final AnswerGradingService answerGradingService;
+    private final CodeGradingService codeGradingService;
     private final SubmissionAttemptPolicy submissionAttemptPolicy;
-    private final SubmissionAnswerPolicy submissionAnswerPolicy;
-    private final SubmissionScorePolicy submissionScorePolicy;
+    private final SubmissionCodePolicy submissionCodePolicy;
 
 
     public SubmissionService(
             SubmissionCommandPort submissionCommandPort,
             LoadProblemForSubmissionPort loadProblemForSubmissionPort,
+            LoadTestCasesForGradingPort loadTestCasesForGradingPort,
             ProblemProgressPort problemProgressPort,
             ProblemSetCompletionEventPort problemSetCompletionEventPort,
-            AnswerGradingService answerGradingService,
+            CodeGradingService codeGradingService,
             SubmissionAttemptPolicy submissionAttemptPolicy,
-            SubmissionScorePolicy submissionScorePolicy,
-            SubmissionAnswerPolicy submissionAnswerPolicy
+            SubmissionCodePolicy submissionCodePolicy
     ) {
         this.submissionCommandPort = submissionCommandPort;
         this.loadProblemForSubmissionPort = loadProblemForSubmissionPort;
+        this.loadTestCasesForGradingPort = loadTestCasesForGradingPort;
         this.problemProgressPort = problemProgressPort;
         this.problemSetCompletionEventPort = problemSetCompletionEventPort;
-        this.answerGradingService = answerGradingService;
+        this.codeGradingService = codeGradingService;
         this.submissionAttemptPolicy = submissionAttemptPolicy;
-        this.submissionScorePolicy = submissionScorePolicy;
-        this.submissionAnswerPolicy = submissionAnswerPolicy;
+        this.submissionCodePolicy = submissionCodePolicy;
     }
 
     @Override
     @Transactional
-    public SubmissionView handle(Long problemId, SubmitAnswerCommand command) {
-        submissionAnswerPolicy.validate(command.submittedAnswer());
+    public SubmissionView handle(Long problemId, SubmitCodeCommand command) {
+        submissionCodePolicy.validate(command.code());
 
         ProblemForSubmission problem = loadProblemForSubmissionPort.loadProblem(problemId);
         Long problemSetId = problem.problemSetId();
@@ -72,14 +69,10 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 previousAttemptCount
         );
 
-        boolean isCorrect = answerGradingService.gradeTextAnswer(
-                problem.answer(),
-                command.submittedAnswer()
-        );
-        int earnedScore = submissionScorePolicy.calculateEarnedScore(
-                isCorrect,
-                problem.score()
-        );
+        var testCases = loadTestCasesForGradingPort.loadActiveTestCases(problemId);
+        var gradingResult = codeGradingService.grade(command.code(), testCases);
+
+        boolean isCorrect = gradingResult.correct();
         int attemptNo = previousAttemptCount + 1;
         int remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
                 problem.attemptLimit(),
@@ -91,14 +84,19 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 isCorrect
         );
 
-        submissionCommandPort.saveTextSubmission(new TextSubmission(
+        Long submissionId = submissionCommandPort.saveCodeSubmission(new CodeSubmission(
                 command.userId(),
                 problem.problemId(),
-                command.submittedAnswer(),
+                command.code(),
                 isCorrect,
-                earnedScore,
-                attemptNo
+                gradingResult.earnedScore(),
+                attemptNo,
+                gradingResult.passedTestCount(),
+                gradingResult.totalTestCount(),
+                gradingResult.executionStatus(),
+                gradingResult.errorMessage()
         ));
+        submissionCommandPort.saveTestResults(submissionId, gradingResult.testResults());
 
         Long nextProblemId = null;
         boolean isProblemSetCompleted = false;
@@ -127,8 +125,14 @@ public class SubmissionService implements SubmissionCommandUseCase {
         }
 
         return new SubmissionView(
+                submissionId,
                 problem.problemId(),
                 isCorrect,
+                gradingResult.earnedScore(),
+                gradingResult.passedTestCount(),
+                gradingResult.totalTestCount(),
+                gradingResult.executionStatus(),
+                gradingResult.errorMessage(),
                 attemptNo,
                 remainingAttemptCount,
                 canRetry,

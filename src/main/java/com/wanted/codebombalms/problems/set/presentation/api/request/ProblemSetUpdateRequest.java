@@ -6,6 +6,7 @@ public record ProblemSetUpdateRequest(
         String title,
         String categoryName,
         String description,
+        String difficulty,
         String dataFileName,
         List<ProblemUpdateRequest> problems
 ) {

@@ -50,7 +50,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 category,
                 registration.title(),
                 registration.description(),
-                "EASY",
+                registration.difficulty(),
                 registration.problems().size(),
                 createdBy
         );
@@ -87,7 +87,8 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
         problemSet.update(
                 category,
                 modification.title(),
-                modification.description()
+                modification.description(),
+                modification.difficulty()
         );
 
         int updatedProblemCount = 0;
