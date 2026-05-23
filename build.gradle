@@ -53,6 +53,9 @@ dependencies {
 
     //챗봇
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    //구글 클라우드
+    implementation 'com.google.cloud:google-cloud-storage:2.68.0'
 }
 
 tasks.named('test') {
