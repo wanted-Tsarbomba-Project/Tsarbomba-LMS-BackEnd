@@ -3,6 +3,7 @@ package com.wanted.codebombalms.domain.course.application.service;
 import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
 import com.wanted.codebombalms.course.application.service.CourseCommandService;
 import com.wanted.codebombalms.course.application.service.CourseQueryService;
@@ -36,6 +37,9 @@ class CourseServiceTest {
     private CourseRepository courseRepository;
 
     @Mock
+    private CourseAuthorPolicy courseAuthorPolicy;
+
+    @Mock
     private CoursePublishPolicy coursePublishPolicy;
 
     @InjectMocks
@@ -57,6 +61,7 @@ class CourseServiceTest {
         assertEquals(10L, result.getInstructorId());
         assertEquals("Java", result.getTitle());
         assertEquals(CourseStatus.DRAFT, result.getStatus());
+        verify(courseAuthorPolicy).validateOperator(command.instructorId());
         verify(courseRepository).save(any(Course.class));
     }
 
