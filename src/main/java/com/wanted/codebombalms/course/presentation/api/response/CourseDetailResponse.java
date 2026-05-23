@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 public record CourseDetailResponse(
         Long courseId,
         Long instructorId,
+        Long courseCategoryId,
+        String courseCategoryName,
         String title,
         String description,
         String thumbnailUrl,
@@ -20,6 +22,8 @@ public record CourseDetailResponse(
         return new CourseDetailResponse(
                 course.getCourseId(),
                 course.getInstructorId(),
+                course.getCourseCategoryId(),
+                course.getCourseCategoryName(),
                 course.getTitle(),
                 course.getDescription(),
                 course.getThumbnailUrl(),

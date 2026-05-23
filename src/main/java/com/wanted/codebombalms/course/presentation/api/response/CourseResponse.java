@@ -6,6 +6,8 @@ import com.wanted.codebombalms.course.domain.model.CourseStatus;
 public record CourseResponse(
         Long courseId,
         Long instructorId,
+        Long courseCategoryId,
+        String courseCategoryName,
         String title,
         String thumbnailUrl,
         CourseStatus status
@@ -15,6 +17,8 @@ public record CourseResponse(
         return new CourseResponse(
                 course.getCourseId(),
                 course.getInstructorId(),
+                course.getCourseCategoryId(),
+                course.getCourseCategoryName(),
                 course.getTitle(),
                 course.getThumbnailUrl(),
                 course.getStatus()

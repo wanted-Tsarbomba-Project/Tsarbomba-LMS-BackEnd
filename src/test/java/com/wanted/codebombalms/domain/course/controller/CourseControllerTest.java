@@ -51,7 +51,7 @@ class CourseControllerTest {
 
     @Test
     void findAllCourses_returnsApiResponse() throws Exception {
-        given(courseQueryUseCase.findAllCourses()).willReturn(List.of(
+        given(courseQueryUseCase.findAllCourses(null)).willReturn(List.of(
                 createCourse(1L, "Java")
         ));
 
@@ -62,6 +62,20 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.message").value(CourseResponseMessage.RETRIEVED))
                 .andExpect(jsonPath("$.data[0].courseId").value(1L))
                 .andExpect(jsonPath("$.data[0].title").value("Java"));
+    }
+
+    @Test
+    void findAllCourses_returnsApiResponseByCategory() throws Exception {
+        given(courseQueryUseCase.findAllCourses(1L)).willReturn(List.of(
+                createCourse(1L, "Java")
+        ));
+
+        mockMvc.perform(get("/api/v1/courses")
+                        .param("courseCategoryId", "1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].courseCategoryId").value(1L))
+                .andExpect(jsonPath("$.data[0].courseCategoryName").value("Python"));
     }
 
     @Test
@@ -80,7 +94,7 @@ class CourseControllerTest {
 
     @Test
     void createCourse_returnsCreatedApiResponse() throws Exception {
-        CourseCreateRequest request = new CourseCreateRequest(10L, "Java", "description", "java.png");
+        CourseCreateRequest request = new CourseCreateRequest(10L, 1L, "Java", "description", "java.png");
         given(courseCommandUseCase.createCourse(any(CreateCourseCommand.class)))
                 .willReturn(createDetailResult(1L, "Java"));
 
@@ -97,7 +111,7 @@ class CourseControllerTest {
     @Test
     void updateCourse_returnsApiResponse() throws Exception {
         Long courseId = 1L;
-        CourseUpdateRequest request = new CourseUpdateRequest("Updated Java", "updated", "updated.png", CourseStatus.ACTIVE);
+        CourseUpdateRequest request = new CourseUpdateRequest(1L, "Updated Java", "updated", "updated.png", CourseStatus.ACTIVE);
         given(courseCommandUseCase.updateCourse(any(UpdateCourseCommand.class)))
                 .willReturn(createDetailResult(courseId, "Updated Java"));
 
@@ -141,6 +155,8 @@ class CourseControllerTest {
         Course course = new Course();
         course.setCourseId(courseId);
         course.setInstructorId(10L);
+        course.setCourseCategoryId(1L);
+        course.setCourseCategoryName("Python");
         course.setTitle(title);
         course.setDescription("description");
         course.setThumbnailUrl("java.png");

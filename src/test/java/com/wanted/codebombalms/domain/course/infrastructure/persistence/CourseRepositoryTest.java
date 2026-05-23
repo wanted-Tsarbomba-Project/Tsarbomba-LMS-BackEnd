@@ -1,9 +1,12 @@
 package com.wanted.codebombalms.domain.course.infrastructure.persistence;
 
 import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseCategoryStatus;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
+import com.wanted.codebombalms.course.infrastructure.persistence.CourseCategoryJpaEntity;
 import com.wanted.codebombalms.course.infrastructure.persistence.CourseRepositoryAdapter;
+import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseCategoryRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,9 @@ class CourseRepositoryTest {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private SpringDataCourseCategoryRepository springDataCourseCategoryRepository;
 
     @Test
     @DisplayName("강좌를 저장하고 courseId로 조회할 수 있다.")
@@ -133,6 +139,33 @@ class CourseRepositoryTest {
         assertTrue(courses.stream().anyMatch(course -> course.getTitle().equals("Java 기초 강좌")));
         assertTrue(courses.stream().anyMatch(course -> course.getTitle().equals("Spring 기초 강좌")));
         assertFalse(courses.stream().anyMatch(course -> course.getTitle().equals("다른 강사의 강좌")));
+    }
+
+    @Test
+    void findByCourseCategoryIdAndStatusAndDeletedAtIsNullReturnsMatchingCourses() {
+        CourseCategoryJpaEntity category = springDataCourseCategoryRepository.save(
+                new CourseCategoryJpaEntity("Python", CourseCategoryStatus.ACTIVE, 1)
+        );
+
+        Course course = createCourse(
+                10L,
+                "Python",
+                "Python course",
+                "python.png",
+                CourseStatus.ACTIVE
+        );
+        course.setCourseCategoryId(category.getCourseCategoryId());
+
+        courseRepository.save(course);
+
+        List<Course> courses = courseRepository.findByCourseCategoryIdAndStatusAndDeletedAtIsNull(
+                category.getCourseCategoryId(),
+                CourseStatus.ACTIVE
+        );
+
+        assertEquals(1, courses.size());
+        assertEquals(category.getCourseCategoryId(), courses.get(0).getCourseCategoryId());
+        assertEquals("Python", courses.get(0).getCourseCategoryName());
     }
 
     private Course createCourse(

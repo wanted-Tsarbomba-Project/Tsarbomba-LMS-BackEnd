@@ -4,6 +4,7 @@ import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
+import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
 import com.wanted.codebombalms.course.application.service.CourseCommandService;
 import com.wanted.codebombalms.course.application.service.CourseQueryService;
@@ -40,6 +41,9 @@ class CourseServiceTest {
     private CourseAuthorPolicy courseAuthorPolicy;
 
     @Mock
+    private CourseCategoryPolicy courseCategoryPolicy;
+
+    @Mock
     private CoursePublishPolicy coursePublishPolicy;
 
     @InjectMocks
@@ -50,7 +54,7 @@ class CourseServiceTest {
 
     @Test
     void createCourse_returnsCourse() {
-        CreateCourseCommand command = new CreateCourseCommand(10L, "Java", "description", "java.png");
+        CreateCourseCommand command = new CreateCourseCommand(10L, 1L, "Java", "description", "java.png");
         Course savedCourse = createCourse(1L, 10L, "Java", "description", "java.png", CourseStatus.DRAFT);
 
         given(courseRepository.save(any(Course.class))).willReturn(savedCourse);
@@ -62,6 +66,7 @@ class CourseServiceTest {
         assertEquals("Java", result.getTitle());
         assertEquals(CourseStatus.DRAFT, result.getStatus());
         verify(courseAuthorPolicy).validateOperator(command.instructorId());
+        verify(courseCategoryPolicy).validateActiveCategory(command.courseCategoryId());
         verify(courseRepository).save(any(Course.class));
     }
 
@@ -72,12 +77,27 @@ class CourseServiceTest {
 
         given(courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)).willReturn(List.of(course1, course2));
 
-        List<Course> results = courseQueryService.findAllCourses();
+        List<Course> results = courseQueryService.findAllCourses(null);
 
         assertEquals(2, results.size());
         assertEquals("Java", results.get(0).getTitle());
         assertEquals("Spring", results.get(1).getTitle());
         verify(courseRepository).findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE);
+    }
+
+    @Test
+    void findAllCourses_returnsActiveCoursesByCategory() {
+        Long courseCategoryId = 1L;
+        Course course = createCourse(1L, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
+
+        given(courseRepository.findByCourseCategoryIdAndStatusAndDeletedAtIsNull(courseCategoryId, CourseStatus.ACTIVE))
+                .willReturn(List.of(course));
+
+        List<Course> results = courseQueryService.findAllCourses(courseCategoryId);
+
+        assertEquals(1, results.size());
+        assertEquals("Java", results.get(0).getTitle());
+        verify(courseRepository).findByCourseCategoryIdAndStatusAndDeletedAtIsNull(courseCategoryId, CourseStatus.ACTIVE);
     }
 
     @Test
@@ -116,6 +136,7 @@ class CourseServiceTest {
         Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
         UpdateCourseCommand command = new UpdateCourseCommand(
                 courseId,
+                1L,
                 "Updated Java",
                 "updated",
                 "updated-java.png",
@@ -130,6 +151,7 @@ class CourseServiceTest {
         assertEquals("Updated Java", result.getTitle());
         assertEquals("updated", result.getDescription());
         assertEquals(CourseStatus.INACTIVE, result.getStatus());
+        verify(courseCategoryPolicy).validateActiveCategory(command.courseCategoryId());
         verify(courseRepository).save(course);
     }
 
@@ -137,7 +159,7 @@ class CourseServiceTest {
     void updateCourse_throwsValidation_whenActivatingDraftDirectly() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.DRAFT);
-        UpdateCourseCommand command = new UpdateCourseCommand(courseId, null, null, null, CourseStatus.ACTIVE);
+        UpdateCourseCommand command = new UpdateCourseCommand(courseId, null, null, null, null, CourseStatus.ACTIVE);
 
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
 
@@ -153,7 +175,7 @@ class CourseServiceTest {
     void updateCourse_throwsValidation_whenDeletingByStatus() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
-        UpdateCourseCommand command = new UpdateCourseCommand(courseId, null, null, null, CourseStatus.DELETED);
+        UpdateCourseCommand command = new UpdateCourseCommand(courseId, null, null, null, null, CourseStatus.DELETED);
 
         given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
 

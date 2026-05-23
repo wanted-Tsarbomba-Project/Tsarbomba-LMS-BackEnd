@@ -3,33 +3,44 @@
 
 ### Test IDs
 @courseId = 101
+@courseCategoryId = 1
 
 
-### 1. Course list
+### 1. Course category list
+GET {{host}}/api/v1/course-categories
+
+
+### 2. Course list
 GET {{host}}/api/v1/courses
 
 
-### 2. Create course
+### 3. Course list by category
+GET {{host}}/api/v1/courses?courseCategoryId={{courseCategoryId}}
+
+
+### 4. Create course
 POST {{host}}/api/v1/courses
 Content-Type: application/json
 
 {
   "instructorId": 1,
+  "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
   "thumbnailUrl": "java.png"
 }
 
 
-### 3. Course detail
+### 5. Course detail
 GET {{host}}/api/v1/courses/{{courseId}}
 
 
-### 4. Update course
+### 6. Update course
 PUT {{host}}/api/v1/courses/{{courseId}}
 Content-Type: application/json
 
 {
+  "courseCategoryId": {{courseCategoryId}},
   "title": "수정된 Java 강좌",
   "description": "수정된 강좌 설명입니다.",
   "thumbnailUrl": "updated-java.png",
@@ -37,13 +48,13 @@ Content-Type: application/json
 }
 
 
-### 5. Publish course
+### 7. Publish course
 PATCH {{host}}/api/v1/courses/{{courseId}}/publish
 
 
-### 6. Delete course
+### 8. Delete course
 DELETE {{host}}/api/v1/courses/{{courseId}}
 
 
-### 7. Check deleted course detail
+### 9. Check deleted course detail
 GET {{host}}/api/v1/courses/{{courseId}}

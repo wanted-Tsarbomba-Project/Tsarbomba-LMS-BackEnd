@@ -14,17 +14,23 @@ import java.util.Optional;
 public class CourseRepositoryAdapter implements CourseRepository {
 
     private final SpringDataCourseRepository springDataCourseRepository;
+    private final SpringDataCourseCategoryRepository springDataCourseCategoryRepository;
 
     @Override
     public Course save(Course course) {
+        CourseCategoryJpaEntity courseCategory = course.getCourseCategoryId() == null
+                ? null
+                : springDataCourseCategoryRepository.findById(course.getCourseCategoryId())
+                .orElseThrow();
+
         CourseJpaEntity entity = course.getCourseId() == null
-                ? CourseJpaEntity.from(course)
+                ? CourseJpaEntity.from(course, courseCategory)
                 : springDataCourseRepository.findById(course.getCourseId())
                 .map(found -> {
-                    found.apply(course);
+                    found.apply(course, courseCategory);
                     return found;
                 })
-                .orElseGet(() -> CourseJpaEntity.from(course));
+                .orElseGet(() -> CourseJpaEntity.from(course, courseCategory));
 
         return springDataCourseRepository.save(entity).toDomain();
     }
@@ -40,6 +46,15 @@ public class CourseRepositoryAdapter implements CourseRepository {
     @Override
     public List<Course> findByStatusAndDeletedAtIsNull(CourseStatus status) {
         return springDataCourseRepository.findByStatusAndDeletedAtIsNull(status)
+                .stream()
+                .map(CourseJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Course> findByCourseCategoryIdAndStatusAndDeletedAtIsNull(Long courseCategoryId, CourseStatus status) {
+        return springDataCourseRepository
+                .findByCourseCategory_CourseCategoryIdAndStatusAndDeletedAtIsNull(courseCategoryId, status)
                 .stream()
                 .map(CourseJpaEntity::toDomain)
                 .toList();
