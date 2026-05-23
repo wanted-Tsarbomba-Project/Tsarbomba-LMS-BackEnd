@@ -68,6 +68,40 @@ public class OperationAlert {
         this.deletedAt = deletedAt;
     }
 
+    // 자동 규칙 탐지 결과를 OPEN 상태의 운영 알림으로 생성한다.
+    public static OperationAlert create(
+            Long operationRuleId,
+            OperationTargetType targetType,
+            Long targetId,
+            BigDecimal detectedValue,
+            BigDecimal thresholdValueSnapshot,
+            Long assigneeId,
+            String reason,
+            String recommendedAction,
+            LocalDateTime detectedAt
+    ) {
+        return new OperationAlert(
+                null,
+                operationRuleId,
+                targetType,
+                targetId,
+                detectedValue,
+                thresholdValueSnapshot,
+                assigneeId,
+                reason,
+                recommendedAction,
+                detectedAt,
+                detectedAt,
+                OperationAlertStatus.OPEN,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
     public static OperationAlert restore(
             Long operationAlertId,
             Long operationRuleId,

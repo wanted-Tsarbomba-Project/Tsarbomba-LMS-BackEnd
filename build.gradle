@@ -58,6 +58,10 @@ dependencies {
     implementation 'com.google.cloud:google-cloud-storage:2.68.0'
 }
 
+//성공한 테스트에서도 System.out이 보이도록 showStandardStreams = true 추가
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+    }
 }
