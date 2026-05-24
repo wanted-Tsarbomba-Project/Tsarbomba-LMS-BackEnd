@@ -1,8 +1,10 @@
 package com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence;
 
 import com.wanted.codebombalms.admin.operation.alert.application.query.GetOperationAlertsQuery;
+import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertDetail;
 import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertListItem;
 import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertQueryRepository;
+import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertRuleInfo;
 import com.wanted.codebombalms.admin.operation.common.application.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -50,6 +53,13 @@ public class OperationAlertQueryAdapter implements OperationAlertQueryRepository
         );
     }
 
+    @Override
+    // 알림과 규칙을 조인해 상세 조회 기본 정보를 가져온다.
+    public Optional<OperationAlertDetail> findAlertDetail(Long operationAlertId) {
+        return springDataRepository.findAlertDetail(operationAlertId)
+                .map(this::toDetail);
+    }
+
     private OperationAlertListItem toListItem(OperationAlertWithRuleProjection projection) {
         return new OperationAlertListItem(
                 projection.operationAlertId(),
@@ -65,6 +75,34 @@ public class OperationAlertQueryAdapter implements OperationAlertQueryRepository
                 projection.recommendedAction(),
                 projection.firstDetectedAt(),
                 projection.lastDetectedAt()
+        );
+    }
+
+    // 상세 조회 Projection을 application 조회 결과로 변환한다.
+    private OperationAlertDetail toDetail(OperationAlertDetailProjection projection) {
+        return new OperationAlertDetail(
+                projection.operationAlertId(),
+                projection.operationRuleId(),
+                projection.targetType(),
+                projection.targetId(),
+                projection.detectedValue(),
+                projection.thresholdValueSnapshot(),
+                projection.severity(),
+                projection.status(),
+                projection.assigneeId(),
+                projection.reason(),
+                projection.recommendedAction(),
+                projection.firstDetectedAt(),
+                projection.lastDetectedAt(),
+                projection.resolvedBy(),
+                projection.resolvedAt(),
+                projection.adminMemo(),
+                projection.createdAt(),
+                projection.updatedAt(),
+                OperationAlertRuleInfo.from(projection.ruleCode(), projection.minSampleCount()),
+                null,
+                null,
+                null
         );
     }
 }

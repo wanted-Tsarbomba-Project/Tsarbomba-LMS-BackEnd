@@ -1,0 +1,67 @@
+@baseUrl = http://localhost:8080
+@operationAlertId = 1
+
+### =========================================================
+### 운영 알림 메모 등록/수정
+### 상세 조회의 alert.adminMemo에 반영됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "담당자에게 강좌 노출 상태 확인 요청"
+}
+
+
+### =========================================================
+### 운영 알림 메모 비우기
+### null 또는 공백 문자열은 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": null
+}
+
+
+### =========================================================
+### 운영 알림 메모 공백으로 비우기
+### 기대 결과: adminMemo가 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "   "
+}
+
+
+### =========================================================
+### 운영 알림 메모 수정 - 없는 알림
+### 기대 결과: OPERATION_ALERT_NOT_FOUND
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/999999/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "존재하지 않는 알림 메모 수정 테스트"
+}
+
+
+### =========================================================
+### 운영 알림 메모 수정 - 길이 초과
+### 기대 결과: INVALID_MEMO_UPDATE_REQUEST
+### adminMemo 최대 길이는 500자
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "500자를 초과하는 메모를 입력하면 INVALID_MEMO_UPDATE_REQUEST가 발생해야 합니다. 실제 테스트 시에는 이 문자열을 500자 넘게 늘려서 요청하세요."
+}

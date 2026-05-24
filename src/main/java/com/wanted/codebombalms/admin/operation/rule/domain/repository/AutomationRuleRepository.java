@@ -15,6 +15,9 @@ public interface AutomationRuleRepository {
 
     List<AutomationRule> findAllActive(OperationTargetType targetType);
 
+    // 스케줄러가 실행할 활성화된 자동 규칙만 조회한다.
+    List<AutomationRule> findEnabled();
+
     boolean existsActiveByRuleCode(OperationRuleCode ruleCode);
 
     List<OperationRuleCode> findActiveRuleCodes();

@@ -3,6 +3,7 @@ package com.wanted.codebombalms.course.application.service;
 import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
@@ -27,6 +28,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private static final Logger log = LoggerFactory.getLogger(CourseCommandService.class);
 
     private final CourseRepository courseRepository;
+    private final CourseAuthorPolicy courseAuthorPolicy;
     private final CoursePublishPolicy coursePublishPolicy;
 
     @LogBusiness
@@ -34,6 +36,8 @@ public class CourseCommandService implements CourseCommandUseCase {
     @Override
     public Course createCourse(CreateCourseCommand command) {
         log.info("[CourseCommandService] create course - title: {}", command.title());
+
+        courseAuthorPolicy.validateOperator(command.instructorId());
 
         Course course = Course.create(
                 command.instructorId(),
