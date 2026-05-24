@@ -222,6 +222,12 @@ public class OperationAlert {
         this.updatedAt = deletedAt;
     }
 
+    // 관리자 메모를 수정하고 수정 시간을 갱신한다.
+    public void updateAdminMemo(String adminMemo, LocalDateTime updatedAt) {
+        this.adminMemo = adminMemo;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getOperationAlertId() {
         return operationAlertId;
     }
