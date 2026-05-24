@@ -2,11 +2,13 @@ package com.wanted.codebombalms.admin.operation.alert.presentation.api;
 
 import com.wanted.codebombalms.admin.operation.alert.application.query.GetOperationAlertsQuery;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.DeleteOperationAlertUseCase;
+import com.wanted.codebombalms.admin.operation.alert.application.usecase.GetOperationAlertDetailUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.GetOperationAlertsUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.UpdateOperationAlertStatusUseCase;
 import com.wanted.codebombalms.admin.operation.alert.domain.model.OperationAlertStatus;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.request.OperationAlertStatusUpdateRequest;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertDeleteResponse;
+import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertDetailResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertListResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertStatusUpdateResponse;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class OperationAlertController {
 
     private final GetOperationAlertsUseCase getOperationAlertsUseCase;
+    private final GetOperationAlertDetailUseCase getOperationAlertDetailUseCase;
     private final UpdateOperationAlertStatusUseCase updateOperationAlertStatusUseCase;
     private final DeleteOperationAlertUseCase deleteOperationAlertUseCase;
 
@@ -43,6 +46,21 @@ public class OperationAlertController {
                 OperationAlertResponseCode.RETRIEVED,
                 OperationAlertResponseMessage.RETRIEVED,
                 OperationAlertListResponse.from(result)
+        ));
+    }
+
+    //알람 상세 조회
+    @GetMapping("/{operationAlertId}")
+    // 알림 ID로 운영 알림 상세 정보를 조회한다.
+    public ResponseEntity<ApiResponse<OperationAlertDetailResponse>> findOperationAlertDetail(
+            @PathVariable Long operationAlertId
+    ) {
+        var result = getOperationAlertDetailUseCase.getAlertDetail(operationAlertId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                OperationAlertResponseCode.RETRIEVED,
+                OperationAlertResponseMessage.RETRIEVED,
+                OperationAlertDetailResponse.from(result)
         ));
     }
 

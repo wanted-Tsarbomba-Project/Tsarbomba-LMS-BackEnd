@@ -19,7 +19,11 @@ public enum OperationAlertErrorCode implements ErrorCode {
 
     // 삭제
     INVALID_DELETE_REQUEST("ADM-ALT-006", "운영 알림 삭제 요청이 올바르지 않습니다."),
-    CANNOT_DELETE_OPEN_ALERT("ADM-ALT-007", "OPEN 상태의 운영 알림은 삭제할 수 없습니다.");
+    CANNOT_DELETE_OPEN_ALERT("ADM-ALT-007", "OPEN 상태의 운영 알림은 삭제할 수 없습니다."),
+
+    // 상세 조회
+    UNSUPPORTED_ALERT_TARGET_TYPE("ADM-ALT-008", "아직 상세 조회를 지원하지 않는 알림 대상입니다."),
+    OPERATION_ALERT_TARGET_NOT_FOUND("ADM-ALT-009", "운영 알림 대상 정보를 찾을 수 없습니다.");
 
     private final String code;
     private final String message;
