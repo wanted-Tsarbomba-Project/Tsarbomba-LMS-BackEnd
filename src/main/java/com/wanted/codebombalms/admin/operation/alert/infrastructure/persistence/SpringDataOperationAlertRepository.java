@@ -53,6 +53,38 @@ public interface SpringDataOperationAlertRepository
             Pageable pageable
     );
 
+    // 알림 ID로 삭제되지 않은 알림과 연결된 자동 규칙 정보를 함께 조회한다.
+    @Query("""
+            select new com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertDetailProjection(
+                oa.operationAlertId,
+                oa.operationRuleId,
+                oa.targetType,
+                oa.targetId,
+                oa.detectedValue,
+                oa.thresholdValueSnapshot,
+                ar.severity,
+                oa.status,
+                oa.assigneeId,
+                oa.reason,
+                oa.recommendedAction,
+                oa.firstDetectedAt,
+                oa.lastDetectedAt,
+                oa.resolvedBy,
+                oa.resolvedAt,
+                oa.adminMemo,
+                oa.createdAt,
+                oa.updatedAt,
+                ar.ruleCode,
+                ar.minSampleCount
+            )
+            from OperationAlertJpaEntity oa
+            join AutomationRuleJpaEntity ar
+                on ar.operationRuleId = oa.operationRuleId
+            where oa.operationAlertId = :operationAlertId
+              and oa.deletedAt is null
+            """)
+    Optional<OperationAlertDetailProjection> findAlertDetail(@Param("operationAlertId") Long operationAlertId);
+
     Optional<OperationAlertJpaEntity> findByOperationAlertIdAndDeletedAtIsNull(Long operationAlertId);
 
     // 같은 규칙과 대상에 대해 삭제되지 않은 특정 상태의 알림을 조회한다.
