@@ -41,6 +41,8 @@ application-*.properties
 application-*.yml
 *.env
 .env*
+/secrets/
+/src/main/resources/gcs/
 
 ### Logs ###
 *.log
