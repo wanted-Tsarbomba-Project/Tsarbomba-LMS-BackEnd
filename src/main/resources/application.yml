@@ -19,3 +19,8 @@ fastapi:
 
 chat:
   max-history-messages: 20
+# 코드 실행기(처음엔 로컬 파이썬으로만)
+code:
+  runner:
+    python-command: python
+    timeout-seconds: 10
