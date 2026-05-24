@@ -54,4 +54,12 @@ public interface SpringDataOperationAlertRepository
     );
 
     Optional<OperationAlertJpaEntity> findByOperationAlertIdAndDeletedAtIsNull(Long operationAlertId);
+
+    // 같은 규칙과 대상에 대해 삭제되지 않은 특정 상태의 알림을 조회한다.
+    Optional<OperationAlertJpaEntity> findByOperationRuleIdAndTargetTypeAndTargetIdAndStatusAndDeletedAtIsNull(
+            Long operationRuleId,
+            OperationTargetType targetType,
+            Long targetId,
+            OperationAlertStatus status
+    );
 }

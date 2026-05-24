@@ -44,6 +44,15 @@ public class AutomationRuleRepositoryAdapter implements AutomationRuleRepository
                 .toList();
     }
 
+    // 스케줄러가 실행할 활성화된 자동 규칙만 조회한다.
+    @Override
+    public List<AutomationRule> findEnabled() {
+        return springDataRepository.findByEnabledTrueOrderByOperationRuleIdAsc()
+                .stream()
+                .map(AutomationRuleMapper::toDomain)
+                .toList();
+    }
+
     @Override
     public boolean existsActiveByRuleCode(OperationRuleCode ruleCode) {
         return springDataRepository.existsByRuleCode(ruleCode);
