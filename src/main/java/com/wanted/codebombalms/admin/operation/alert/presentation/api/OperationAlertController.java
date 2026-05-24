@@ -4,12 +4,15 @@ import com.wanted.codebombalms.admin.operation.alert.application.query.GetOperat
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.DeleteOperationAlertUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.GetOperationAlertDetailUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.GetOperationAlertsUseCase;
+import com.wanted.codebombalms.admin.operation.alert.application.usecase.UpdateOperationAlertMemoUseCase;
 import com.wanted.codebombalms.admin.operation.alert.application.usecase.UpdateOperationAlertStatusUseCase;
 import com.wanted.codebombalms.admin.operation.alert.domain.model.OperationAlertStatus;
+import com.wanted.codebombalms.admin.operation.alert.presentation.api.request.OperationAlertMemoUpdateRequest;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.request.OperationAlertStatusUpdateRequest;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertDeleteResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertDetailResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertListResponse;
+import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertMemoUpdateResponse;
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertStatusUpdateResponse;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -27,6 +30,7 @@ public class OperationAlertController {
     private final GetOperationAlertsUseCase getOperationAlertsUseCase;
     private final GetOperationAlertDetailUseCase getOperationAlertDetailUseCase;
     private final UpdateOperationAlertStatusUseCase updateOperationAlertStatusUseCase;
+    private final UpdateOperationAlertMemoUseCase updateOperationAlertMemoUseCase;
     private final DeleteOperationAlertUseCase deleteOperationAlertUseCase;
 
 
@@ -61,6 +65,24 @@ public class OperationAlertController {
                 OperationAlertResponseCode.RETRIEVED,
                 OperationAlertResponseMessage.RETRIEVED,
                 OperationAlertDetailResponse.from(result)
+        ));
+    }
+
+    //알람 메모 수정
+    @PatchMapping("/{operationAlertId}/memo")
+    // 알림 ID로 운영 알림 관리자 메모를 수정한다.
+    public ResponseEntity<ApiResponse<OperationAlertMemoUpdateResponse>> updateOperationAlertMemo(
+            @PathVariable Long operationAlertId,
+            @RequestBody OperationAlertMemoUpdateRequest request
+    ) {
+        var result = updateOperationAlertMemoUseCase.updateMemo(
+                request.toCommand(operationAlertId)
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(
+                OperationAlertResponseCode.UPDATED,
+                OperationAlertResponseMessage.UPDATED,
+                OperationAlertMemoUpdateResponse.from(result)
         ));
     }
 

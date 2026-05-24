@@ -184,11 +184,43 @@ GET {{baseUrl}}/api/v1/admin/operation-alerts/999999
 
 
 ### =========================================================
-### 운영 알림 상세 조회 - USER 알림
-### 현재 USER 규칙/스케줄러는 login history 도메인 추가 후 구현 예정
-### DB에 USER 알림이 있을 때 기대 결과: UNSUPPORTED_ALERT_TARGET_TYPE
+### 운영 알림 메모 수정
+### 상세 조회의 alert.adminMemo에 반영됨
 ### =========================================================
-GET {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "담당자에게 강좌 노출 상태 확인 요청"
+}
+
+
+### =========================================================
+### 운영 알림 메모 비우기
+### null 또는 공백 문자열은 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": null
+}
+
+
+### =========================================================
+### 운영 알림 메모 수정 - 길이 초과
+### 기대 결과: INVALID_MEMO_UPDATE_REQUEST
+### adminMemo 최대 길이는 500자
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "500자를 초과하는 메모를 입력하면 INVALID_MEMO_UPDATE_REQUEST가 발생해야 합니다. 실제 테스트 시에는 이 문자열을 500자 넘게 늘려서 요청하세요."
+}
 
 
 ### =========================================================
