@@ -67,6 +67,16 @@ public class CourseJpaEntity {
         this.status = status;
     }
 
+    public CourseJpaEntity(
+            Long instructorId,
+            String title,
+            String description,
+            String thumbnailUrl,
+            CourseStatus status
+    ) {
+        this(instructorId, null, title, description, thumbnailUrl, status);
+    }
+
     public static CourseJpaEntity from(Course course, CourseCategoryJpaEntity courseCategory) {
         CourseJpaEntity entity = new CourseJpaEntity(
                 course.getInstructorId(),

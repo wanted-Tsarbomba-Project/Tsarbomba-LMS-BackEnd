@@ -16,4 +16,6 @@ public interface LectureRepository {
     List<Lecture> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
     boolean existsByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
 }

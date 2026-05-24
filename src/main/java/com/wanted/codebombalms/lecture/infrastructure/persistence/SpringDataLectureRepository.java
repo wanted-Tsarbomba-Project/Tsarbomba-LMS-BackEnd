@@ -14,4 +14,6 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
     List<LectureJpaEntity> findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
     boolean existsByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
+
+    boolean existsByCourse_CourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
 }
