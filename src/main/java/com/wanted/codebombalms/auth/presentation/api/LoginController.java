@@ -6,6 +6,7 @@ import com.wanted.codebombalms.auth.presentation.api.dto.request.LoginRequest;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +27,10 @@ public class LoginController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        TokenPair pair = loginUseCase.login(request.toCommand());
+        TokenPair pair = loginUseCase.login(request.toCommand(), httpRequest);
 
         // 쿠키 2개 설정
         response.addCookie(createCookie(
