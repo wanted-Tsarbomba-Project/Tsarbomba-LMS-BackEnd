@@ -35,14 +35,14 @@ public class RefreshToken {
             Long refreshTokenId,
             Long userId,
             String token,
-            LocalDateTime expiresAt,
+            LocalDateTime expiredAt,
             LocalDateTime createdAt
     ) {
         RefreshToken rt = new RefreshToken();
         rt.refreshTokenId = refreshTokenId;
         rt.userId         = userId;
         rt.token          = token;
-        rt.expiredAt      = expiresAt;
+        rt.expiredAt      = expiredAt;
         rt.createdAt      = createdAt;
         return rt;
     }
