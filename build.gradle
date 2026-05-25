@@ -56,6 +56,11 @@ dependencies {
 
     //구글 클라우드
     implementation 'com.google.cloud:google-cloud-storage:2.68.0'
+
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    //mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 //성공한 테스트에서도 System.out이 보이도록 showStandardStreams = true 추가
