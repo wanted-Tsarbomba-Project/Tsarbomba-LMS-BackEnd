@@ -28,12 +28,31 @@ public class CourseQueryService implements CourseQueryUseCase {
     @LogBusiness
     @LogPerformance
     @Override
-    public List<Course> findAllCourses() {
+    public List<Course> findAllCourses(Long courseCategoryId) {
         log.info("[CourseQueryService] find active courses");
 
-        List<Course> courses = courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE);
+        List<Course> courses = courseCategoryId == null
+                ? courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)
+                : courseRepository.findByCourseCategoryIdAndStatusAndDeletedAtIsNull(
+                        courseCategoryId,
+                        CourseStatus.ACTIVE
+                );
 
         log.info("[CourseQueryService] found active courses - count: {}", courses.size());
+
+        return courses;
+    }
+
+    @Override
+    public List<Course> findCoursesByInstructor(Long instructorId) {
+        log.info("[CourseQueryService] find instructor courses - instructorId: {}", instructorId);
+
+        List<Course> courses = courseRepository.findByInstructorIdAndDeletedAtIsNull(instructorId);
+
+        log.info("[CourseQueryService] found instructor courses - instructorId: {}, count: {}",
+                instructorId,
+                courses.size()
+        );
 
         return courses;
     }

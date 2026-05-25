@@ -4,6 +4,8 @@ import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import jakarta.validation.constraints.Size;
 
 public record CourseUpdateRequest(
+        Long courseCategoryId,
+
         @Size(max = 100, message = "강좌 제목은 100자 이하로 입력해야 합니다.")
         String title,
 

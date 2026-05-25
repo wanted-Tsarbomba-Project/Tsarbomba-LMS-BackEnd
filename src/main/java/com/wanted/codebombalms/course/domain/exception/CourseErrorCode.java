@@ -13,7 +13,14 @@ public enum CourseErrorCode implements ErrorCode {
     COURSE_ACTIVE_STATUS_REQUIRES_PUBLISH("CRS-003", "강좌 활성화는 개설 기능을 통해서만 가능합니다."),
     COURSE_NOT_PUBLISHABLE_STATUS("CRS-004", "작성 중인 강좌만 개설할 수 있습니다."),
     COURSE_DELETE_STATUS_REQUIRES_DELETE("CRS-005", "강좌 삭제는 삭제 기능을 통해서만 가능합니다."),
-    COURSE_OPERATOR_REQUIRED("CRS-006", "강좌는 운영자만 생성할 수 있습니다.");
+    COURSE_OPERATOR_REQUIRED("CRS-006", "강좌는 운영자만 생성할 수 있습니다."),
+    COURSE_CATEGORY_REQUIRED("CRS-007", "활성화된 강좌 카테고리를 선택해야 합니다."),
+    COURSE_PROBLEM_SET_REQUIRED("CRS-008", "강좌에 연결할 문제세트가 필요합니다."),
+    COURSE_PROBLEM_STEP_REQUIRED("CRS-009", "강좌 문제 연결 단계 정보가 필요합니다."),
+    COURSE_PROBLEM_SET_NOT_FOUND("CRS-010", "존재하지 않는 문제세트입니다."),
+    COURSE_PROBLEM_NOT_FOUND("CRS-011", "선택한 문제세트에 존재하지 않는 문제입니다."),
+    COURSE_PROBLEM_LECTURE_REQUIRED("CRS-012", "MAIN 문제 단계에는 강의가 필요합니다."),
+    COURSE_PROBLEM_LECTURE_NOT_FOUND("CRS-013", "선택한 강좌에 존재하지 않는 강의입니다.");
 
     private final String code;
     private final String message;

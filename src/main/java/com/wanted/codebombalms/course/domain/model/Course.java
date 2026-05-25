@@ -13,6 +13,8 @@ public class Course {
 
     private Long courseId;
     private Long instructorId;
+    private Long courseCategoryId;
+    private String courseCategoryName;
     private String title;
     private String description;
     private String thumbnailUrl;
@@ -23,12 +25,14 @@ public class Course {
 
     public static Course create(
             Long instructorId,
+            Long courseCategoryId,
             String title,
             String description,
             String thumbnailUrl
     ) {
         Course course = new Course();
         course.instructorId = instructorId;
+        course.courseCategoryId = courseCategoryId;
         course.title = title;
         course.description = description;
         course.thumbnailUrl = thumbnailUrl;
@@ -39,6 +43,8 @@ public class Course {
     public static Course restore(
             Long courseId,
             Long instructorId,
+            Long courseCategoryId,
+            String courseCategoryName,
             String title,
             String description,
             String thumbnailUrl,
@@ -50,6 +56,8 @@ public class Course {
         return new Course(
                 courseId,
                 instructorId,
+                courseCategoryId,
+                courseCategoryName,
                 title,
                 description,
                 thumbnailUrl,
@@ -61,11 +69,15 @@ public class Course {
     }
 
     public void update(
+            Long courseCategoryId,
             String title,
             String description,
             String thumbnailUrl,
             CourseStatus status
     ) {
+        if (courseCategoryId != null) {
+            this.courseCategoryId = courseCategoryId;
+        }
         if (title != null) {
             this.title = title;
         }

@@ -59,4 +59,9 @@ public class LectureRepositoryAdapter implements LectureRepository {
     public boolean existsByCourseIdAndDeletedAtIsNull(Long courseId) {
         return springDataLectureRepository.existsByCourse_CourseIdAndDeletedAtIsNull(courseId);
     }
+
+    @Override
+    public boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId) {
+        return springDataLectureRepository.existsByCourse_CourseIdAndLectureIdAndDeletedAtIsNull(courseId, lectureId);
+    }
 }

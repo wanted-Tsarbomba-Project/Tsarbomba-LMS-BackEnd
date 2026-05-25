@@ -8,6 +8,9 @@ public record CourseCreateRequest(
         @NotNull(message = "강사 ID는 필수입니다.")
         Long instructorId,
 
+        @NotNull(message = "강좌 카테고리는 필수입니다.")
+        Long courseCategoryId,
+
         @NotBlank(message = "강좌 제목은 필수입니다.")
         @Size(max = 100, message = "강좌 제목은 100자 이하로 입력해야 합니다.")
         String title,
