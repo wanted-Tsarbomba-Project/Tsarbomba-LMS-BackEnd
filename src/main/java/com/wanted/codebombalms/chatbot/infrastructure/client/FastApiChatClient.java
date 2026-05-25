@@ -3,6 +3,7 @@ package com.wanted.codebombalms.chatbot.infrastructure.client;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Profile("!mock")
 public class FastApiChatClient implements AiChatClient {
 
     private final WebClient webClient;

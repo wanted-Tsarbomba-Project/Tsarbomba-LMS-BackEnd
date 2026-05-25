@@ -2,7 +2,7 @@ spring:
   application:
     name: Code-Bomba-LMS
   profiles:
-    active: local
+    active: local, mock
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
