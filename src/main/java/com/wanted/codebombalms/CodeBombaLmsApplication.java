@@ -4,9 +4,11 @@ import com.wanted.codebombalms.problems.execution.infrastructure.runner.CodeRunn
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableConfigurationProperties(CodeRunnerProperties.class)
 @SpringBootApplication
+@EnableScheduling
+@EnableConfigurationProperties(CodeRunnerProperties.class)
 public class CodeBombaLmsApplication {
 
     public static void main(String[] args) {

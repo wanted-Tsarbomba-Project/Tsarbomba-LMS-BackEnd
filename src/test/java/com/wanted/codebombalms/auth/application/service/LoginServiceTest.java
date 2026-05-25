@@ -3,7 +3,9 @@ package com.wanted.codebombalms.auth.application.service;
 import com.wanted.codebombalms.auth.application.command.LoginCommand;
 import com.wanted.codebombalms.auth.application.dto.TokenPair;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
+import com.wanted.codebombalms.auth.domain.repository.LoginHistoryRepository;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
@@ -13,6 +15,7 @@ import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,8 +39,10 @@ class LoginServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private LoginHistoryRepository loginHistoryRepository;   // ⭐ 추가
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtTokenProvider jwtTokenProvider;
+    @Mock private HttpServletRequest httpRequest;                  // ⭐ 추가
 
     @InjectMocks
     private LoginService loginService;
@@ -50,7 +55,7 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("정상 로그인 시 TokenPair를 반환하고 새 Refresh Token을 저장한다.")
+    @DisplayName("정상 로그인 시 TokenPair를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
     void 로그인_성공() {
         // given
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
@@ -61,13 +66,14 @@ class LoginServiceTest {
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        TokenPair pair = loginService.login(command);
+        TokenPair pair = loginService.login(command, httpRequest);   // ⭐ httpRequest 전달
 
         // then
         assertEquals("ACCESS_TOKEN", pair.accessToken());
         assertEquals("REFRESH_TOKEN", pair.refreshToken());
         verify(refreshTokenRepository).deleteByUserId(1L);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
+        verify(loginHistoryRepository).save(any(LoginHistory.class));   // ⭐ 추가
     }
 
     @Test
@@ -79,10 +85,11 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command)
+                () -> loginService.login(command, httpRequest)   // ⭐
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
+        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
     }
 
     @Test
@@ -96,27 +103,29 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command)
+                () -> loginService.login(command, httpRequest)   // ⭐
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
+        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
     }
 
     @Test
     @DisplayName("잠긴 계정이면 ForbiddenException(USER_ACCOUNT_LOCKED)을 던진다.")
     void 계정_잠금_예외() {
         // given
-        User user = createUser(1L, "test@example.com", "ENCODED_PW", true);  // isLocked=true
+        User user = createUser(1L, "test@example.com", "ENCODED_PW", true);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
 
         // when & then
         ForbiddenException ex = assertThrows(
                 ForbiddenException.class,
-                () -> loginService.login(command)
+                () -> loginService.login(command, httpRequest)   // ⭐
         );
         assertEquals(UserErrorCode.USER_ACCOUNT_LOCKED, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
+        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
     }
 
     @Test
@@ -131,7 +140,7 @@ class LoginServiceTest {
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        loginService.login(command);
+        loginService.login(command, httpRequest);   // ⭐
 
         // then — 삭제 후 저장 순서 검증
         var inOrder = inOrder(refreshTokenRepository);
@@ -152,13 +161,13 @@ class LoginServiceTest {
                 "010-1234-5678",
                 AuthProvider.LOCAL,
                 null,
-                false,        // emailVerified
+                false,
                 isLocked,
-                null,         // bio
-                null,         // career
+                null,
+                null,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                null          // deletedAt
+                null
         );
     }
 }
