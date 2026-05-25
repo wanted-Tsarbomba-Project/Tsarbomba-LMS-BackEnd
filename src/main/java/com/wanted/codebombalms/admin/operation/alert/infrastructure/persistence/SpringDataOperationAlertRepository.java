@@ -5,9 +5,12 @@ import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTarg
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface SpringDataOperationAlertRepository
@@ -94,4 +97,14 @@ public interface SpringDataOperationAlertRepository
             Long targetId,
             OperationAlertStatus status
     );
+
+    // 처리 완료 시각이 기준 시각보다 오래된 운영 알림을 하드 딜리트한다.
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from OperationAlertJpaEntity oa
+            where oa.resolvedAt is not null
+              and oa.resolvedAt < :threshold
+            """)
+    int hardDeleteByResolvedAtBefore(@Param("threshold") LocalDateTime threshold);
 }

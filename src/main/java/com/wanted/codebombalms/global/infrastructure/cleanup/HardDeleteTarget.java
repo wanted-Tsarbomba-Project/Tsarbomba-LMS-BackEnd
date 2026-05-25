@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.global.infrastructure.cleanup;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAmount;
 
 // 공통 하드 딜리트 실행기가 호출할 도메인별 삭제 대상을 정의한다.
 public interface HardDeleteTarget {
@@ -10,7 +10,7 @@ public interface HardDeleteTarget {
     String targetName();
 
     // 데이터 보존 기간을 반환한다.
-    Duration retention();
+    TemporalAmount retention();
 
     // 기준 시각 이전의 데이터를 하드 딜리트하고 삭제 건수를 반환한다.
     int hardDeleteBefore(LocalDateTime threshold);
