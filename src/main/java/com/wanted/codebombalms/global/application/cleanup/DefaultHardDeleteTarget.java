@@ -1,4 +1,7 @@
-package com.wanted.codebombalms.global.infrastructure.cleanup;
+package com.wanted.codebombalms.global.application.cleanup;
+
+import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteOperation;
+import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteTarget;
 
 import java.time.LocalDateTime;
 import java.time.Period;

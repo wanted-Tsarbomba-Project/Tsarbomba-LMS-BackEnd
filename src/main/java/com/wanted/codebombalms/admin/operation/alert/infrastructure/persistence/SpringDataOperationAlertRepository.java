@@ -98,13 +98,13 @@ public interface SpringDataOperationAlertRepository
             OperationAlertStatus status
     );
 
-    // 처리 완료 시각이 기준 시각보다 오래된 운영 알림을 하드 딜리트한다.
+    // 소프트 딜리트 시각이 기준 시각보다 오래된 운영 알림을 하드 딜리트한다.
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             delete from OperationAlertJpaEntity oa
-            where oa.resolvedAt is not null
-              and oa.resolvedAt < :threshold
+            where oa.deletedAt is not null
+              and oa.deletedAt < :threshold
             """)
-    int hardDeleteByResolvedAtBefore(@Param("threshold") LocalDateTime threshold);
+    int hardDeleteByDeletedAtBefore(@Param("threshold") LocalDateTime threshold);
 }

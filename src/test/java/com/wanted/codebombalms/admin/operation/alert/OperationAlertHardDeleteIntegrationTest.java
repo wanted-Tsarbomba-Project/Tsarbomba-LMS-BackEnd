@@ -4,8 +4,8 @@ import com.wanted.codebombalms.admin.operation.alert.domain.model.OperationAlert
 import com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertJpaEntity;
 import com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.SpringDataOperationAlertRepository;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
-import com.wanted.codebombalms.global.infrastructure.cleanup.HardDeleteExecutor;
-import com.wanted.codebombalms.global.infrastructure.cleanup.HardDeleteTarget;
+import com.wanted.codebombalms.global.application.cleanup.HardDeleteExecutor;
+import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteTarget;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -32,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("운영 알림 하드 딜리트 통합 테스트")
-// resolved_at 기준 6개월 보존 정책으로 운영 알림이 하드 딜리트되는지 검증한다.
+// deleted_at 기준 6개월 보존 정책으로 소프트 딜리트된 운영 알림이 하드 딜리트되는지 검증한다.
 class OperationAlertHardDeleteIntegrationTest {
 
     private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
@@ -52,27 +51,37 @@ class OperationAlertHardDeleteIntegrationTest {
     private EntityManager entityManager;
 
     @Test
-    @DisplayName("resolved_at이 6개월 이전인 운영 알림만 하드 딜리트한다.")
-    void hardDeleteOperationAlertsByResolvedAtBeforeSixMonths() {
+    @DisplayName("deleted_at이 6개월 이전인 운영 알림만 하드 딜리트한다.")
+    void hardDeleteOperationAlertsByDeletedAtBeforeSixMonths() {
         // given
-        OperationAlertJpaEntity oldResolvedAlert = createAlert(
+        OperationAlertJpaEntity oldDeletedAlert = createAlert(
                 1L,
                 OperationAlertStatus.RESOLVED,
+                NOW.minusMonths(8),
                 NOW.minusMonths(6).minusDays(1)
         );
-        OperationAlertJpaEntity recentResolvedAlert = createAlert(
+        OperationAlertJpaEntity recentDeletedAlert = createAlert(
                 2L,
                 OperationAlertStatus.RESOLVED,
+                NOW.minusMonths(8),
                 NOW.minusMonths(6).plusDays(1)
         );
-        OperationAlertJpaEntity openAlert = createAlert(
+        OperationAlertJpaEntity resolvedNotDeletedAlert = createAlert(
                 3L,
+                OperationAlertStatus.RESOLVED,
+                NOW.minusMonths(8),
+                null
+        );
+        OperationAlertJpaEntity openAlert = createAlert(
+                4L,
                 OperationAlertStatus.OPEN,
+                null,
                 null
         );
 
-        entityManager.persist(oldResolvedAlert);
-        entityManager.persist(recentResolvedAlert);
+        entityManager.persist(oldDeletedAlert);
+        entityManager.persist(recentDeletedAlert);
+        entityManager.persist(resolvedNotDeletedAlert);
         entityManager.persist(openAlert);
         entityManager.flush();
         entityManager.clear();
@@ -86,11 +95,13 @@ class OperationAlertHardDeleteIntegrationTest {
         List<OperationAlertJpaEntity> remainingAlerts = operationAlertRepository.findAll();
 
         assertEquals(1, deletedCount);
-        assertEquals(2, remainingAlerts.size());
+        assertEquals(3, remainingAlerts.size());
         assertTrue(remainingAlerts.stream()
-                .noneMatch(alert -> alert.getTargetId().equals(oldResolvedAlert.getTargetId())));
+                .noneMatch(alert -> alert.getTargetId().equals(oldDeletedAlert.getTargetId())));
         assertTrue(remainingAlerts.stream()
-                .anyMatch(alert -> alert.getTargetId().equals(recentResolvedAlert.getTargetId())));
+                .anyMatch(alert -> alert.getTargetId().equals(recentDeletedAlert.getTargetId())));
+        assertTrue(remainingAlerts.stream()
+                .anyMatch(alert -> alert.getTargetId().equals(resolvedNotDeletedAlert.getTargetId())));
         assertTrue(remainingAlerts.stream()
                 .anyMatch(alert -> alert.getTargetId().equals(openAlert.getTargetId())));
     }
@@ -98,7 +109,8 @@ class OperationAlertHardDeleteIntegrationTest {
     private OperationAlertJpaEntity createAlert(
             Long targetId,
             OperationAlertStatus status,
-            LocalDateTime resolvedAt
+            LocalDateTime resolvedAt,
+            LocalDateTime deletedAt
     ) {
         return new OperationAlertJpaEntity(
                 null,
@@ -118,7 +130,7 @@ class OperationAlertHardDeleteIntegrationTest {
                 null,
                 NOW.minusMonths(8),
                 NOW.minusMonths(8),
-                null
+                deletedAt
         );
     }
 

@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.global.infrastructure.cleanup;
+package com.wanted.codebombalms.global.application.cleanup.port;
 
 import java.time.LocalDateTime;
 

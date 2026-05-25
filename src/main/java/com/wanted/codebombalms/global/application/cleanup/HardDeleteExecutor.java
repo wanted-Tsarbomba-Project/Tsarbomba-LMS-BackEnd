@@ -1,5 +1,6 @@
-package com.wanted.codebombalms.global.infrastructure.cleanup;
+package com.wanted.codebombalms.global.application.cleanup;
 
+import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteTarget;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

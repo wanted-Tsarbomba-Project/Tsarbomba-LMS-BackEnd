@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.cleanup;
 
+import com.wanted.codebombalms.global.application.cleanup.HardDeleteExecutor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
