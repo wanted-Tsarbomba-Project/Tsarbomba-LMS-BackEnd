@@ -6,7 +6,9 @@ import java.util.List;
 
 public interface CourseQueryUseCase {
 
-    List<Course> findAllCourses();
+    List<Course> findAllCourses(Long courseCategoryId);
+
+    List<Course> findCoursesByInstructor(Long instructorId);
 
     Course findCourseById(Long courseId);
 }

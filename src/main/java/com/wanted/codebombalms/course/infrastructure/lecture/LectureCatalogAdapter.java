@@ -17,4 +17,9 @@ public class LectureCatalogAdapter implements LectureCatalogPort {
     public boolean existsLectureInCourse(Long courseId) {
         return lectureRepository.existsByCourseIdAndDeletedAtIsNull(courseId);
     }
+
+    @Override
+    public boolean existsLectureInCourse(Long courseId, Long lectureId) {
+        return lectureRepository.existsByCourseIdAndLectureIdAndDeletedAtIsNull(courseId, lectureId);
+    }
 }

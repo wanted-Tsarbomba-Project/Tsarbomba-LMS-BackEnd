@@ -1,16 +1,15 @@
-### Base URL
+### 기본 주소
 @host = http://localhost:8080
 
-### Test IDs
+### 테스트용 ID
 @courseId = 101
 @lectureId = 101
+@courseProblemStepId = 6001
 
-
-### 1. Lecture list by course
+### 1. 특정 강좌의 강의 목록 조회
 GET {{host}}/api/v1/courses/{{courseId}}/lectures
 
-
-### 2. Create lecture
+### 2. 강의 등록
 POST {{host}}/api/v1/courses/{{courseId}}/lectures
 Content-Type: application/json
 
@@ -23,12 +22,10 @@ Content-Type: application/json
   "status": "ACTIVE"
 }
 
-
-### 3. Lecture detail
+### 3. 강의 상세 조회
 GET {{host}}/api/v1/lectures/{{lectureId}}
 
-
-### 4. Update lecture
+### 4. 강의 수정
 PUT {{host}}/api/v1/lectures/{{lectureId}}
 Content-Type: application/json
 
@@ -41,10 +38,27 @@ Content-Type: application/json
   "status": "INACTIVE"
 }
 
-
-### 5. Delete lecture
+### 5. 강의 삭제
 DELETE {{host}}/api/v1/lectures/{{lectureId}}
 
-
-### 6. Check deleted lecture detail
+### 6. 삭제된 강의 상세 조회 확인
 GET {{host}}/api/v1/lectures/{{lectureId}}
+
+### 7. 강의 학습 진행 저장
+PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
+Content-Type: application/json
+
+{
+  "completed": true
+}
+
+### 8. 강의 학습 진행 조회
+GET {{host}}/api/v1/lectures/{{lectureId}}/progress
+
+### 9. 강의 문제 답안 제출
+POST {{host}}/api/v1/lecture-problems/{{courseProblemStepId}}/submissions
+Content-Type: application/json
+
+{
+  "submittedAnswer": "정답"
+}
