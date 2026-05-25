@@ -10,4 +10,6 @@ public interface SpringDataCourseProblemStepRepository extends JpaRepository<Cou
     List<CourseProblemStepJpaEntity> findByCourseProblemSet_CourseProblemSetIdOrderByStepOrderAsc(
             Long courseProblemSetId
     );
+
+    List<CourseProblemStepJpaEntity> findByCourseProblemSet_Course_CourseIdOrderByStepOrderAsc(Long courseId);
 }

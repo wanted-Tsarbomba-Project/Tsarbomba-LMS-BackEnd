@@ -44,6 +44,20 @@ public class CourseQueryService implements CourseQueryUseCase {
     }
 
     @Override
+    public List<Course> findCoursesByInstructor(Long instructorId) {
+        log.info("[CourseQueryService] find instructor courses - instructorId: {}", instructorId);
+
+        List<Course> courses = courseRepository.findByInstructorIdAndDeletedAtIsNull(instructorId);
+
+        log.info("[CourseQueryService] found instructor courses - instructorId: {}, count: {}",
+                instructorId,
+                courses.size()
+        );
+
+        return courses;
+    }
+
+    @Override
     public Course findCourseById(Long courseId) {
         log.info("[CourseQueryService] find active course - courseId: {}", courseId);
 

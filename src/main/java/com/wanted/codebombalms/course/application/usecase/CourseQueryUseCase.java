@@ -8,5 +8,7 @@ public interface CourseQueryUseCase {
 
     List<Course> findAllCourses(Long courseCategoryId);
 
+    List<Course> findCoursesByInstructor(Long instructorId);
+
     Course findCourseById(Long courseId);
 }
