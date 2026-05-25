@@ -11,4 +11,6 @@ public class AuthResponseCode {
     public static final String LOGIN_COMPLETED = "AUTH-LOGIN-COMPLETED";
     public static final String LOGOUT_COMPLETED = "AUTH-LOGOUT-COMPLETED";
     public static final String TOKEN_REISSUED = "AUTH-TOKEN-REISSUED";
+    public static final String EMAIL_VERIFICATION_SENT = "AUTH-EMAIL-VERIFICATION-SENT";
+    public static final String EMAIL_VERIFIED = "AUTH-EMAIL-VERIFIED";
 }
