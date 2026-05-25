@@ -6,6 +6,7 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
+@Tag("smoke")
 public class GcsConnectionSmokeTest {
 
     private static final String PROJECT_ID = "project-9eb65e0d-55b9-4a40-878";
