@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.problems.execution.infrastructure.runner;
 
 import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
+import com.wanted.codebombalms.problems.execution.exception.ProblemCodeExecutionException;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -85,21 +86,10 @@ public class PythonCodeRunnerAdapter implements RunCodePort {
             );
 
         } catch (IOException e) {
-            return new CodeRunResult(
-                    null,
-                    "코드 실행 환경을 준비하지 못했습니다.",
-                    System.currentTimeMillis() - startTime,
-                    false
-            );
+            throw new ProblemCodeExecutionException();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-
-            return new CodeRunResult(
-                    null,
-                    "코드 실행이 중단되었습니다.",
-                    System.currentTimeMillis() - startTime,
-                    false
-            );
+            throw new ProblemCodeExecutionException();
         } finally {
             if (tempFile != null) {
                 try {
