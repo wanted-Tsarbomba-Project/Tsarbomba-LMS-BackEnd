@@ -29,7 +29,7 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     public List<StudentLearningProgress> findStudentProgresses(Long courseId) {
         List<Long> studentIds = learningEnrollmentPort.findActiveStudentIdsByCourse(courseId);
         List<Long> lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
-        List<Long> courseProblemStepIds = learningCourseProblemPort.findCourseProblemStepIdsByCourse(courseId);
+        List<Long> lectureProblemSetIds = learningCourseProblemPort.findLectureProblemSetIdsByCourse(courseId);
 
         return studentIds.stream()
                 .map(studentId -> StudentLearningProgress.of(
@@ -37,11 +37,11 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
                         learningUserPort.findUserName(studentId),
                         lectureProgressRepository.countCompletedByUserIdAndLectureIds(studentId, lectureIds),
                         lectureIds.size(),
-                        lectureProblemProgressRepository.countCompletedByUserIdAndCourseProblemStepIds(
+                        lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
                                 studentId,
-                                courseProblemStepIds
+                                lectureProblemSetIds
                         ),
-                        courseProblemStepIds.size()
+                        lectureProblemSetIds.size()
                 ))
                 .toList();
     }

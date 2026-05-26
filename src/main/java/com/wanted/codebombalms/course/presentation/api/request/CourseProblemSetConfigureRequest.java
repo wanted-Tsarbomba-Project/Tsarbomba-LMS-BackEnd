@@ -21,31 +21,17 @@ public record CourseProblemSetConfigureRequest(
     }
 
     public record ProblemSetRequest(
+            @NotNull Long lectureId,
             @NotNull Long problemSetId,
             @NotNull CourseProblemSetRole role,
-            @NotEmpty List<@Valid ProblemStepRequest> steps
+            @NotNull Integer displayOrder
     ) {
         private ConfigureCourseProblemSetsCommand.ProblemSetCommand toCommand() {
             return new ConfigureCourseProblemSetsCommand.ProblemSetCommand(
+                    lectureId,
                     problemSetId,
                     role,
-                    steps.stream()
-                            .map(ProblemStepRequest::toCommand)
-                            .toList()
-            );
-        }
-    }
-
-    public record ProblemStepRequest(
-            @NotNull Long problemId,
-            Long lectureId,
-            @NotNull Long stepOrder
-    ) {
-        private ConfigureCourseProblemSetsCommand.ProblemStepCommand toCommand() {
-            return new ConfigureCourseProblemSetsCommand.ProblemStepCommand(
-                    problemId,
-                    lectureId,
-                    stepOrder
+                    displayOrder
             );
         }
     }

@@ -5,9 +5,7 @@ import com.wanted.codebombalms.course.application.policy.CourseProblemPolicy;
 import com.wanted.codebombalms.course.application.usecase.CourseProblemCommandUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
-import com.wanted.codebombalms.course.domain.model.CourseProblemStep;
 import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
-import com.wanted.codebombalms.course.domain.repository.CourseProblemStepRepository;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import java.util.List;
@@ -22,7 +20,6 @@ public class CourseProblemCommandService implements CourseProblemCommandUseCase 
 
     private final CourseRepository courseRepository;
     private final CourseProblemSetRepository courseProblemSetRepository;
-    private final CourseProblemStepRepository courseProblemStepRepository;
     private final CourseProblemPolicy courseProblemPolicy;
 
     @Override
@@ -32,27 +29,16 @@ public class CourseProblemCommandService implements CourseProblemCommandUseCase 
 
         courseProblemPolicy.validate(command);
 
-        List<CourseProblemSet> existingProblemSets = courseProblemSetRepository.findByCourseId(command.courseId());
-        existingProblemSets.forEach(problemSet ->
-                courseProblemStepRepository.deleteByCourseProblemSetId(problemSet.getCourseProblemSetId())
-        );
         courseProblemSetRepository.deleteByCourseId(command.courseId());
 
         for (ConfigureCourseProblemSetsCommand.ProblemSetCommand problemSetCommand : command.problemSets()) {
-            CourseProblemSet savedProblemSet = courseProblemSetRepository.save(CourseProblemSet.create(
+            courseProblemSetRepository.save(CourseProblemSet.create(
                     command.courseId(),
+                    problemSetCommand.lectureId(),
                     problemSetCommand.problemSetId(),
-                    problemSetCommand.role()
+                    problemSetCommand.role(),
+                    problemSetCommand.displayOrder()
             ));
-
-            for (ConfigureCourseProblemSetsCommand.ProblemStepCommand stepCommand : problemSetCommand.steps()) {
-                courseProblemStepRepository.save(CourseProblemStep.create(
-                        savedProblemSet.getCourseProblemSetId(),
-                        stepCommand.problemId(),
-                        stepCommand.lectureId(),
-                        stepCommand.stepOrder()
-                ));
-            }
         }
 
         return courseProblemSetRepository.findByCourseId(command.courseId());

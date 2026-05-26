@@ -8,7 +8,7 @@ public interface LectureProblemProgressRepository {
 
     LectureProblemProgress save(LectureProblemProgress lectureProblemProgress);
 
-    Optional<LectureProblemProgress> findByUserIdAndCourseProblemStepId(Long userId, Long courseProblemStepId);
+    Optional<LectureProblemProgress> findByUserIdAndLectureProblemSetId(Long userId, Long lectureProblemSetId);
 
-    long countCompletedByUserIdAndCourseProblemStepIds(Long userId, List<Long> courseProblemStepIds);
+    long countCompletedByUserIdAndLectureProblemSetIds(Long userId, List<Long> lectureProblemSetIds);
 }

@@ -4,7 +4,6 @@
 ### 테스트용 ID
 @courseId = 101
 @lectureId = 101
-@courseProblemStepId = 6001
 
 ### 1. 강의 진행 상태 저장
 PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
@@ -17,13 +16,5 @@ Content-Type: application/json
 ### 2. 내 강의 진행 상태 조회
 GET {{host}}/api/v1/lectures/{{lectureId}}/progress
 
-### 3. 강의 문제 답안 제출
-POST {{host}}/api/v1/lecture-problems/{{courseProblemStepId}}/submissions
-Content-Type: application/json
-
-{
-  "submittedAnswer": "정답"
-}
-
-### 4. 관리자 - 강좌별 학생 학습 현황 조회
+### 3. 관리자 - 강좌별 학생 학습 현황 조회
 GET {{host}}/api/v1/admin/courses/{{courseId}}/students/learning-progress

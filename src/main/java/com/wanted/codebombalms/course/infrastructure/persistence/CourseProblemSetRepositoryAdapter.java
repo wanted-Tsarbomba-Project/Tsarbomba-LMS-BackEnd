@@ -49,6 +49,14 @@ public class CourseProblemSetRepositoryAdapter implements CourseProblemSetReposi
     }
 
     @Override
+    public List<CourseProblemSet> findByLectureId(Long lectureId) {
+        return springDataCourseProblemSetRepository.findByLectureIdOrderByDisplayOrderAsc(lectureId)
+                .stream()
+                .map(CourseProblemSetJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<CourseProblemSet> findById(Long courseProblemSetId) {
         return springDataCourseProblemSetRepository.findById(courseProblemSetId)
                 .map(CourseProblemSetJpaEntity::toDomain);

@@ -4,7 +4,6 @@ import com.wanted.codebombalms.course.application.usecase.CourseProblemCommandUs
 import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
 import com.wanted.codebombalms.course.presentation.api.request.CourseProblemSetConfigureRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseProblemSetResponse;
-import com.wanted.codebombalms.course.presentation.api.response.CourseProblemStepResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,16 +41,16 @@ public class CourseProblemController {
         ));
     }
 
-    @GetMapping("/lectures/{lectureId}/problems")
-    public ResponseEntity<ApiResponse<?>> findProblemsByLecture(@PathVariable Long lectureId) {
-        log.info("[CourseProblemController] find lecture problems - lectureId: {}", lectureId);
+    @GetMapping("/lectures/{lectureId}/problem-sets")
+    public ResponseEntity<ApiResponse<?>> findProblemSetsByLecture(@PathVariable Long lectureId) {
+        log.info("[CourseProblemController] find lecture problem sets - lectureId: {}", lectureId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseProblemQueryUseCase.findProblemsByLecture(lectureId)
+                courseProblemQueryUseCase.findProblemSetsByLecture(lectureId)
                         .stream()
-                        .map(CourseProblemStepResponse::from)
+                        .map(CourseProblemSetResponse::from)
                         .toList()
         ));
     }
