@@ -165,12 +165,12 @@ GET {{baseUrl}}/api/v1/admin/operation-alerts?page=0&size=101
 
 ### =========================================================
 ### 운영 알림 상세 조회
-### COURSE/PROBLEM 알림 상세 조회
+### COURSE/PROBLEM/USER 알림 상세 조회
 ### 응답 data 필드:
 ### alert  - 알림 기본 정보, 상태, 메모, 처리자/처리일시
 ### rule   - 규칙 코드, 라벨, 기준값 라벨/단위, 최소 제출 수
-### target - 강좌 또는 문제/문제세트 정보
-### assignee - 강좌 담당자 또는 문제세트 생성자
+### target - 강좌, 문제/문제세트 또는 학생 정보(USER는 email 포함)
+### assignee - 강좌 담당자 또는 문제세트 생성자(USER는 null)
 ### metric - 화면 표시용 관측값/기준값/단위
 ### =========================================================
 GET {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}

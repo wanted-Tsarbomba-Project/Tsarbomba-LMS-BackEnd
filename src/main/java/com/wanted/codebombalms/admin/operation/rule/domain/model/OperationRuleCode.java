@@ -20,8 +20,8 @@ public enum OperationRuleCode {
     ),
 
     USER_INACTIVE_NO_COURSE(
-            "비활성 미수강 학생",
-            "마지막 로그인 후 기준 일수 이상 지났고 수강 중인 강좌가 없는 학생을 탐지합니다.",
+            "장기 미접속 학생",
+            "마지막 로그인 후 기준 일수 이상 지난 학생을 탐지합니다.",
             OperationTargetType.USER,
             "미로그인 기간",
             "일",
