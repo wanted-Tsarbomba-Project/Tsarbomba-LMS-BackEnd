@@ -6,7 +6,7 @@ public class LectureProblemProgress {
 
     private final Long lectureProblemProgressId;
     private final Long userId;
-    private final Long courseProblemStepId;
+    private final Long lectureProblemSetId;
     private Integer currentProblemNumber;
     private boolean completed;
     private LocalDateTime completedAt;
@@ -16,7 +16,7 @@ public class LectureProblemProgress {
     private LectureProblemProgress(
             Long lectureProblemProgressId,
             Long userId,
-            Long courseProblemStepId,
+            Long lectureProblemSetId,
             Integer currentProblemNumber,
             boolean completed,
             LocalDateTime completedAt,
@@ -25,7 +25,7 @@ public class LectureProblemProgress {
     ) {
         this.lectureProblemProgressId = lectureProblemProgressId;
         this.userId = userId;
-        this.courseProblemStepId = courseProblemStepId;
+        this.lectureProblemSetId = lectureProblemSetId;
         this.currentProblemNumber = currentProblemNumber;
         this.completed = completed;
         this.completedAt = completedAt;
@@ -33,14 +33,14 @@ public class LectureProblemProgress {
         this.updatedAt = updatedAt;
     }
 
-    public static LectureProblemProgress create(Long userId, Long courseProblemStepId) {
-        return new LectureProblemProgress(null, userId, courseProblemStepId, 1, false, null, null, null);
+    public static LectureProblemProgress create(Long userId, Long lectureProblemSetId) {
+        return new LectureProblemProgress(null, userId, lectureProblemSetId, 1, false, null, null, null);
     }
 
     public static LectureProblemProgress restore(
             Long lectureProblemProgressId,
             Long userId,
-            Long courseProblemStepId,
+            Long lectureProblemSetId,
             Integer currentProblemNumber,
             boolean completed,
             LocalDateTime completedAt,
@@ -50,7 +50,7 @@ public class LectureProblemProgress {
         return new LectureProblemProgress(
                 lectureProblemProgressId,
                 userId,
-                courseProblemStepId,
+                lectureProblemSetId,
                 currentProblemNumber,
                 completed,
                 completedAt,
@@ -64,6 +64,15 @@ public class LectureProblemProgress {
         this.completedAt = LocalDateTime.now();
     }
 
+    public void updateProgress(Integer currentProblemNumber, boolean completed) {
+        if (currentProblemNumber != null) {
+            this.currentProblemNumber = currentProblemNumber;
+        }
+        if (completed) {
+            complete();
+        }
+    }
+
     public Long getLectureProblemProgressId() {
         return lectureProblemProgressId;
     }
@@ -72,8 +81,8 @@ public class LectureProblemProgress {
         return userId;
     }
 
-    public Long getCourseProblemStepId() {
-        return courseProblemStepId;
+    public Long getLectureProblemSetId() {
+        return lectureProblemSetId;
     }
 
     public Integer getCurrentProblemNumber() {

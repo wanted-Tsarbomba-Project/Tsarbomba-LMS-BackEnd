@@ -6,6 +6,7 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.port.LectureManagementPort;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
@@ -32,6 +33,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final CourseAuthorPolicy courseAuthorPolicy;
     private final CourseCategoryPolicy courseCategoryPolicy;
     private final CoursePublishPolicy coursePublishPolicy;
+    private final LectureManagementPort lectureManagementPort;
 
     @LogBusiness
     @LogPerformance
@@ -107,6 +109,7 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         course.delete();
         courseRepository.save(course);
+        lectureManagementPort.deleteLecturesByCourseId(courseId);
 
         log.info("[CourseCommandService] deleted course - courseId: {}", courseId);
     }

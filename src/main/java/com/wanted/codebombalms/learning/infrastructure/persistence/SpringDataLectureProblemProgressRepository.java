@@ -6,13 +6,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SpringDataLectureProblemProgressRepository extends JpaRepository<LectureProblemProgressJpaEntity, Long> {
 
-    Optional<LectureProblemProgressJpaEntity> findByUserIdAndCourseProblemStepId(
+    Optional<LectureProblemProgressJpaEntity> findByUserIdAndLectureProblemSetId(
             Long userId,
-            Long courseProblemStepId
+            Long lectureProblemSetId
     );
 
-    long countByUserIdAndCourseProblemStepIdInAndCompletedTrue(
+    long countByUserIdAndLectureProblemSetIdInAndCompletedTrue(
             Long userId,
-            Collection<Long> courseProblemStepIds
+            Collection<Long> lectureProblemSetIds
     );
 }

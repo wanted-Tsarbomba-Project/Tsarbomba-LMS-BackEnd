@@ -30,21 +30,21 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
     }
 
     @Override
-    public Optional<LectureProblemProgress> findByUserIdAndCourseProblemStepId(
+    public Optional<LectureProblemProgress> findByUserIdAndLectureProblemSetId(
             Long userId,
-            Long courseProblemStepId
+            Long lectureProblemSetId
     ) {
         return springDataLectureProblemProgressRepository
-                .findByUserIdAndCourseProblemStepId(userId, courseProblemStepId)
+                .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId)
                 .map(LectureProblemProgressJpaEntity::toDomain);
     }
 
     @Override
-    public long countCompletedByUserIdAndCourseProblemStepIds(Long userId, List<Long> courseProblemStepIds) {
-        if (courseProblemStepIds.isEmpty()) {
+    public long countCompletedByUserIdAndLectureProblemSetIds(Long userId, List<Long> lectureProblemSetIds) {
+        if (lectureProblemSetIds.isEmpty()) {
             return 0;
         }
         return springDataLectureProblemProgressRepository
-                .countByUserIdAndCourseProblemStepIdInAndCompletedTrue(userId, courseProblemStepIds);
+                .countByUserIdAndLectureProblemSetIdInAndCompletedTrue(userId, lectureProblemSetIds);
     }
 }

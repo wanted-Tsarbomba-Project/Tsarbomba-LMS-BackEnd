@@ -6,6 +6,7 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.port.LectureManagementPort;
 import com.wanted.codebombalms.course.application.service.CourseCommandService;
 import com.wanted.codebombalms.course.application.service.CourseQueryService;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
@@ -45,6 +46,9 @@ class CourseServiceTest {
 
     @Mock
     private CoursePublishPolicy coursePublishPolicy;
+
+    @Mock
+    private LectureManagementPort lectureManagementPort;
 
     @InjectMocks
     private CourseCommandService courseCommandService;
@@ -216,6 +220,7 @@ class CourseServiceTest {
         assertEquals(CourseStatus.DELETED, course.getStatus());
         assertNotNull(course.getDeletedAt());
         verify(courseRepository).save(course);
+        verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
     }
 
     @Test

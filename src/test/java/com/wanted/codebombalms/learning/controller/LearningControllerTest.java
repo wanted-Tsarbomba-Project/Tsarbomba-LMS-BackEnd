@@ -1,9 +1,7 @@
 package com.wanted.codebombalms.learning.controller;
 
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
-import com.wanted.codebombalms.learning.application.command.SubmitLectureProblemCommand;
 import com.wanted.codebombalms.learning.application.usecase.AdminLearningProgressQueryUseCase;
-import com.wanted.codebombalms.learning.application.usecase.LectureProblemSubmissionUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProgressCommandUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProgressQueryUseCase;
 import com.wanted.codebombalms.learning.domain.model.LectureProgress;
@@ -16,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +25,6 @@ import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,9 +41,6 @@ class LearningControllerTest {
 
     @MockitoBean
     private LectureProgressQueryUseCase lectureProgressQueryUseCase;
-
-    @MockitoBean
-    private LectureProblemSubmissionUseCase lectureProblemSubmissionUseCase;
 
     @MockitoBean
     private AdminLearningProgressQueryUseCase adminLearningProgressQueryUseCase;
@@ -103,36 +97,6 @@ class LearningControllerTest {
                 .andExpect(jsonPath("$.data.completed").value(false));
     }
 
-    @Test
-    void submitLectureProblemReturnsApiResponse() throws Exception {
-        given(lectureProblemSubmissionUseCase.submit(any(SubmitLectureProblemCommand.class)))
-                .willReturn(new LectureProblemSubmissionUseCase.LectureProblemSubmissionResult(
-                        1L,
-                        6001L,
-                        2004L,
-                        true,
-                        1,
-                        2,
-                        false,
-                        true,
-                        "풀이 설명"
-                ));
-
-        mockMvc.perform(post("/api/v1/lecture-problems/{courseProblemStepId}/submissions", 6001L)
-                        .with(authentication(authenticatedUser(10L)))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "submittedAnswer": "정답"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(LearningResponseCode.SUBMITTED))
-                .andExpect(jsonPath("$.data.lectureProblemSubmissionId").value(1L))
-                .andExpect(jsonPath("$.data.correct").value(true))
-                .andExpect(jsonPath("$.data.attemptNo").value(1));
-
-    }
     @Test
     void findStudentLearningProgressesReturnsApiResponse() throws Exception {
         given(adminLearningProgressQueryUseCase.findStudentProgresses(101L))

@@ -9,16 +9,10 @@ public record ConfigureCourseProblemSetsCommand(
 ) {
 
     public record ProblemSetCommand(
+            Long lectureId,
             Long problemSetId,
             CourseProblemSetRole role,
-            List<ProblemStepCommand> steps
-    ) {
-    }
-
-    public record ProblemStepCommand(
-            Long problemId,
-            Long lectureId,
-            Long stepOrder
+            Integer displayOrder
     ) {
     }
 }
