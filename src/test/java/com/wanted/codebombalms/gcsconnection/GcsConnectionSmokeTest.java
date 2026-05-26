@@ -6,6 +6,8 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -16,22 +18,22 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-class GcsConnectionSmokeTest {
+@Disabled("GCS 연결 스모크 테스트는 로컬/수동 검증용")
+public class GcsConnectionSmokeTest {
 
     private static final String PROJECT_ID = "project-9eb65e0d-55b9-4a40-878";
     private static final String BUCKET_NAME = "codebombalms";
     private static final String TEST_FOLDER = "gcsConnectionTest";
 
     // TODO: 테스트 실행 전에 본인 이름으로 변경하세요. 예: "홍길동"
-    private static final String TESTER_NAME = "이강욱";
+    private static final String TESTER_NAME = "JUNG_HYUN";
 
     private static final Path CREDENTIALS_PATH = Path.of(
             "secrets/gcp-storage-key.json"
     );
 
     @Test
-    void canUploadSmokeTestFileToGcsBucket() throws IOException {
+    public void canUploadSmokeTestFileToGcsBucket() throws IOException {
         assertThat(Files.exists(CREDENTIALS_PATH))
                 .as("GCS credentials file must exist at %s", CREDENTIALS_PATH.toAbsolutePath())
                 .isTrue();
@@ -67,4 +69,3 @@ class GcsConnectionSmokeTest {
         }
     }
 }
-
