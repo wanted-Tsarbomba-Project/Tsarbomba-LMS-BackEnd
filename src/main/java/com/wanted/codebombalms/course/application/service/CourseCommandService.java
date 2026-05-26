@@ -4,6 +4,7 @@ import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
+import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
@@ -29,6 +30,7 @@ public class CourseCommandService implements CourseCommandUseCase {
 
     private final CourseRepository courseRepository;
     private final CourseAuthorPolicy courseAuthorPolicy;
+    private final CourseCategoryPolicy courseCategoryPolicy;
     private final CoursePublishPolicy coursePublishPolicy;
 
     @LogBusiness
@@ -38,9 +40,11 @@ public class CourseCommandService implements CourseCommandUseCase {
         log.info("[CourseCommandService] create course - title: {}", command.title());
 
         courseAuthorPolicy.validateOperator(command.instructorId());
+        courseCategoryPolicy.validateActiveCategory(command.courseCategoryId());
 
         Course course = Course.create(
                 command.instructorId(),
+                command.courseCategoryId(),
                 command.title(),
                 command.description(),
                 command.thumbnailUrl()
@@ -60,8 +64,12 @@ public class CourseCommandService implements CourseCommandUseCase {
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         validateStatusChange(command.status(), course.getStatus());
+        if (command.courseCategoryId() != null) {
+            courseCategoryPolicy.validateActiveCategory(command.courseCategoryId());
+        }
 
         course.update(
+                command.courseCategoryId(),
                 command.title(),
                 command.description(),
                 command.thumbnailUrl(),

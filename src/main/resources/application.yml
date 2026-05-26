@@ -2,7 +2,7 @@ spring:
   application:
     name: Code-Bomba-LMS
   profiles:
-    active: local
+    active: local, mock
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
@@ -38,3 +38,9 @@ gcp:
     bucket: ${GCP_STORAGE_BUCKET:codebombalms}
   credentials:
     location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
+
+# 코드 실행기(처음엔 로컬 파이썬으로만)
+code:
+  runner:
+    python-command: python
+    timeout-seconds: 10

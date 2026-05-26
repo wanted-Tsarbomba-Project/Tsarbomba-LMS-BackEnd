@@ -27,7 +27,7 @@ public class LocalDatasetFileStorage implements StoreDatasetFilePort {
         Files.write(targetPath, command.content());
 
         String fileUrl = "/" + UPLOAD_DIR + "/" + storedFileName;
-        String filePath = "data/" + originalFileName;
+        String filePath = UPLOAD_DIR + "/" + storedFileName;
 
         return StoredDatasetFile.create(
                 originalFileName,

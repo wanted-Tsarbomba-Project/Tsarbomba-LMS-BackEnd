@@ -1,49 +1,101 @@
-### Base URL
+### 기본 주소
 @host = http://localhost:8080
 
-### Test IDs
+### 테스트용 ID
 @courseId = 101
+@courseCategoryId = 1
+@lectureId = 101
+@instructorId = 2
 
+### 1. 강좌 카테고리 목록 조회
+GET {{host}}/api/v1/course-categories
 
-### 1. Course list
+### 2. 강좌 목록 조회
 GET {{host}}/api/v1/courses
 
+### 3. 카테고리별 강좌 목록 조회
+GET {{host}}/api/v1/courses?courseCategoryId={{courseCategoryId}}
 
-### 2. Create course
+### 4. 강좌 등록
 POST {{host}}/api/v1/courses
 Content-Type: application/json
 
 {
   "instructorId": 1,
+  "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
   "thumbnailUrl": "java.png"
 }
 
-
-### 3. Course detail
+### 5. 강좌 상세 조회
 GET {{host}}/api/v1/courses/{{courseId}}
 
-
-### 4. Update course
+### 6. 강좌 수정
 PUT {{host}}/api/v1/courses/{{courseId}}
 Content-Type: application/json
 
 {
+  "courseCategoryId": {{courseCategoryId}},
   "title": "수정된 Java 강좌",
   "description": "수정된 강좌 설명입니다.",
   "thumbnailUrl": "updated-java.png",
   "status": "INACTIVE"
 }
 
-
-### 5. Publish course
+### 7. 강좌 개설
 PATCH {{host}}/api/v1/courses/{{courseId}}/publish
 
-
-### 6. Delete course
+### 8. 강좌 삭제
 DELETE {{host}}/api/v1/courses/{{courseId}}
 
-
-### 7. Check deleted course detail
+### 9. 삭제된 강좌 상세 조회 확인
 GET {{host}}/api/v1/courses/{{courseId}}
+
+### 10. 강좌에 연결된 문제세트 목록 조회
+GET {{host}}/api/v1/courses/{{courseId}}/problem-sets
+
+### 11. 강의에 연결된 문제 목록 조회
+GET {{host}}/api/v1/lectures/{{lectureId}}/problems
+
+### 12. 강좌 문제세트와 문제 연결 저장
+PUT {{host}}/api/v1/courses/{{courseId}}/problem-sets
+Content-Type: application/json
+
+{
+  "problemSets": [
+    {
+      "problemSetId": 2002,
+      "role": "MAIN",
+      "steps": [
+        {
+          "problemId": 2004,
+          "lectureId": 101,
+          "stepOrder": 1
+        },
+        {
+          "problemId": 2005,
+          "lectureId": 102,
+          "stepOrder": 2
+        }
+      ]
+    },
+    {
+      "problemSetId": 2003,
+      "role": "FINAL",
+      "steps": [
+        {
+          "problemId": 2007,
+          "lectureId": null,
+          "stepOrder": 1
+        }
+      ]
+    }
+  ]
+}
+
+### 13. 강좌별 학생 학습 현황 목록 조회
+GET {{host}}/api/v1/admin/courses/{{courseId}}/students/learning-progress
+
+### 14. 강사별 강좌 목록 조회
+GET {{host}}/api/v1/instructors/{{instructorId}}/courses

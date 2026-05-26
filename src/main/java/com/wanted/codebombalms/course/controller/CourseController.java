@@ -29,13 +29,15 @@ public class CourseController {
     private final CourseQueryUseCase courseQueryUseCase;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> findAllCourses() {
+    public ResponseEntity<ApiResponse<?>> findAllCourses(
+            @RequestParam(required = false) Long courseCategoryId
+    ) {
         log.info("[CourseController] find courses");
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseQueryUseCase.findAllCourses()
+                courseQueryUseCase.findAllCourses(courseCategoryId)
                         .stream()
                         .map(CourseResponse::from)
                         .toList()
@@ -63,6 +65,7 @@ public class CourseController {
                         CourseResponseMessage.CREATED,
                         CourseDetailResponse.from(courseCommandUseCase.createCourse(new CreateCourseCommand(
                                 request.instructorId(),
+                                request.courseCategoryId(),
                                 request.title(),
                                 request.description(),
                                 request.thumbnailUrl()
@@ -82,6 +85,7 @@ public class CourseController {
                 CourseResponseMessage.UPDATED,
                 CourseDetailResponse.from(courseCommandUseCase.updateCourse(new UpdateCourseCommand(
                         courseId,
+                        request.courseCategoryId(),
                         request.title(),
                         request.description(),
                         request.thumbnailUrl(),
