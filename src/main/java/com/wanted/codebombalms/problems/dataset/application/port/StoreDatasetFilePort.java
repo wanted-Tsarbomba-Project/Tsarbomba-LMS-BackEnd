@@ -8,4 +8,6 @@ import java.io.IOException;
 public interface StoreDatasetFilePort {
 
     StoredDatasetFile store(UploadProblemDatasetCommand command) throws IOException;
+
+    void delete(String filePath);
 }

@@ -37,7 +37,7 @@ public class ProblemDatasetPersistenceAdapter implements ProblemDatasetRepositor
                 problem.getProblemType(),
                 dataset.getDatasetId(),
                 connectedProblemId,
-                dataset.getFilePath()
+                dataset.getFileUrl()
         );
     }
 
@@ -54,7 +54,7 @@ public class ProblemDatasetPersistenceAdapter implements ProblemDatasetRepositor
         return ProblemDatasetConnection.connect(
                 problem.getProblemId(),
                 dataset.getDatasetId(),
-                dataset.getFilePath()
+                dataset.getFileUrl()
         );
     }
 

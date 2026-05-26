@@ -43,7 +43,7 @@ public class ProblemDatasetCommandService implements
         return new ConnectProblemDatasetView(
                 connection.getProblemId(),
                 connection.getDatasetId(),
-                startCode(connection.getFilePath())
+                startCode(connection.getFileUrl())
         );
     }
 
@@ -52,8 +52,10 @@ public class ProblemDatasetCommandService implements
     public UploadProblemDatasetView handle(UploadProblemDatasetCommand command) {
         validationPolicy.validate(command);
 
+        StoredDatasetFile storedFile = null;
+
         try {
-            StoredDatasetFile storedFile = storeDatasetFilePort.store(command);
+            storedFile = storeDatasetFilePort.store(command);
             ProblemDataset dataset = problemDatasetRepository.saveUploadedDataset(storedFile);
 
             return new UploadProblemDatasetView(
@@ -65,13 +67,17 @@ public class ProblemDatasetCommandService implements
                     dataset.getStatus()
             );
         } catch (Exception e) {
+            if (storedFile != null) {
+                storeDatasetFilePort.delete(storedFile.getFilePath());
+            }
+
             log.warn("Dataset upload failed. originalFileName={}", command.originalFileName(), e);
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
         }
     }
 
-    private String startCode(String filePath) {
+    private String startCode(String fileUrl) {
         return "import pandas as pd\n\n"
-                + "df = pd.read_csv(\"" + filePath + "\")";
+                + "df = pd.read_csv(\"" + fileUrl + "\")";
     }
 }

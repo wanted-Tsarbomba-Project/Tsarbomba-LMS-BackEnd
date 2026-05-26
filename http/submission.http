@@ -136,7 +136,7 @@ Content-Type: application/json
 }
 
 ### 12. 코드 실행 실패 예시 - 연결된 데이터셋 없음
-# 사전 조건:
+# 사전 조건:s
 # - codeProblemWithoutDatasetId를 실제 존재하는 CODE 문제 ID로 바꾸세요.
 # - 해당 문제에는 ACTIVE problem_dataset이 없어야 합니다.
 # 기대 결과:
