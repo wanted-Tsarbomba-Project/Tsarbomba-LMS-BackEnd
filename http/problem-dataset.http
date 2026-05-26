@@ -1,103 +1,98 @@
 @baseUrl = http://localhost:8080
+@datasetId = 3008
 @problemId = 3001
-@connectedDatasetId = 3001
-@textProblemId = 2001
-@notFoundProblemId = 999999
 @notFoundDatasetId = 999999
-@problemSetId = 3001
-@userId = 3
+@notFoundProblemId = 999999
 
-### 1. 데이터셋 업로드 성공
-# 기대 결과:
-# - 201 Created
-# - data.datasetId가 반환됩니다.
-# - problem_id는 NULL로 저장됩니다.
+# =====================================================
+# GCS 데이터셋 업로드 확인
+# =====================================================
+
+### 1. 데이터셋 업로드 성공 - GCS 저장 확인
+# 확인할 것:
+# - 응답 fileUrl이 https://storage.googleapis.com/codebombalms/problem_dataset/... 형태인지 확인
+# - 응답 filePath가 problem_dataset/... 형태인지 확인
+# - GCS 콘솔 codebombalms > problem_dataset 폴더에 파일이 생겼는지 확인
+# - DB problem_dataset 테이블에 original_file_name, stored_file_name, file_url, file_path가 저장됐는지 확인
 POST {{baseUrl}}/api/v1/problem-datasets
 Accept: application/json
-Content-Type: multipart/form-data; boundary=datasetBoundary
+Content-Type: multipart/form-data; boundary=boundary
 
---datasetBoundary
+--boundary
 Content-Disposition: form-data; name="datasetFile"; filename="employee_performance.csv"
 Content-Type: text/csv
 
-employee_id,department,performance_score
-1,Sales,90
-2,HR,85
---datasetBoundary--
-
-> {%
-    client.global.set("uploadedDatasetId", response.body.data.datasetId);
-%}
+< ../uploads/datasets/employee_performance_202605.csv
+--boundary--
 
 
-### 2. 데이터셋 업로드 실패 - CSV가 아닌 파일
+### 2. 데이터셋 업로드 실패 - 빈 파일
+# 빈 CSV 파일이 있으면 경로를 맞춰 테스트하세요.
 # 기대 결과:
-# - 400 PROBLEM_DATASET_INVALID_FILE
+# - 400 Bad Request
+# - PROBLEM_DATASET_INVALID_FILE
 POST {{baseUrl}}/api/v1/problem-datasets
 Accept: application/json
-Content-Type: multipart/form-data; boundary=invalidDatasetBoundary
+Content-Type: multipart/form-data; boundary=boundary
 
---invalidDatasetBoundary
-Content-Disposition: form-data; name="datasetFile"; filename="employee_performance.txt"
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="empty.csv"
+Content-Type: text/csv
+
+< ../uploads/datasets/empty.csv
+--boundary--
+
+
+### 3. 데이터셋 업로드 실패 - CSV가 아닌 파일
+# 기대 결과:
+# - 400 Bad Request
+# - PROBLEM_DATASET_INVALID_FILE
+POST {{baseUrl}}/api/v1/problem-datasets
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="not_csv.txt"
 Content-Type: text/plain
 
-not,csv,file
---invalidDatasetBoundary--
+< ../uploads/datasets/not_csv.txt
+--boundary--
 
 
-### 3. 문제-데이터셋 연결 성공 - 1번에서 업로드한 데이터셋 사용
+# =====================================================
+# 데이터셋 연결 확인
+# =====================================================
+
+### 4. 문제-데이터셋 연결 성공
 # 사전 조건:
-# - 1번 요청을 먼저 실행해야 합니다.
-# 기대 결과:
-# - 201 Created
+# - problemId = 3001 문제가 존재해야 합니다.
+# - datasetId는 업로드 성공 응답의 datasetId로 바꿔서 실행하세요.
 POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
 Accept: application/json
 Content-Type: application/json
 
 {
-  "datasetId": {{uploadedDatasetId}}
+  "datasetId": {{datasetId}}
 }
 
 
-### 4. 문제-데이터셋 중복 연결 실패
-# 사전 조건:
-# - 더미데이터 기준 dataset_id = 3001은 이미 problem_id = 3001에 연결되어 있습니다.
+### 5. 문제-데이터셋 연결 실패 - 존재하지 않는 문제
 # 기대 결과:
-# - 409 PROBLEM_DATASET_ALREADY_CONNECTED
-POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
-Accept: application/json
-Content-Type: application/json
-
-{
-  "datasetId": {{connectedDatasetId}}
-}
-
-
-### 5. 문제 세트 진입 시 startCode 확인
-# 사전 조건:
-# - problem_set_id = 3001은 CODE 문제 세트입니다.
-# - 현재 문제에 ACTIVE 데이터셋이 연결되어 있으면 problem.startCode가 내려와야 합니다.
-# 기대 결과:
-# - problem.startCode = import pandas as pd\n\ndf = pd.read_csv("data/employee_performance.csv")
-GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
-Accept: application/json
-
-
-### 6. 존재하지 않는 문제 실패
-# 기대 결과:
-# - 404 PROBLEM_NOT_FOUND
+# - 404 Not Found
+# - PROBLEM_NOT_FOUND
 POST {{baseUrl}}/api/v1/problems/{{notFoundProblemId}}/datasets
 Accept: application/json
 Content-Type: application/json
 
 {
-  "datasetId": {{connectedDatasetId}}
+  "datasetId": {{datasetId}}
 }
 
 
-### 7. 존재하지 않는 데이터셋 실패
+### 6. 문제-데이터셋 연결 실패 - 존재하지 않는 데이터셋
 # 기대 결과:
-# - 404 PROBLEM_DATASET_NOT_FOUND
+# - 404 Not Found
+# - PROBLEM_DATASET_NOT_FOUND
 POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
 Accept: application/json
 Content-Type: application/json
@@ -107,27 +102,40 @@ Content-Type: application/json
 }
 
 
-### 8. 코드 문제가 아닌 문제에 데이터셋 연결 실패
-# 사전 조건:
-# - 1번 요청으로 업로드한 미연결 datasetId를 사용합니다.
-# - problem_id = 2001 문제는 TEXT 타입입니다.
+### 7. 문제-데이터셋 연결 실패 - 이미 연결된 데이터셋
+# 4번을 성공시킨 뒤 같은 요청을 다시 실행하세요.
 # 기대 결과:
-# - 400 PROBLEM_DATASET_INVALID_PROBLEM_TYPE
-POST {{baseUrl}}/api/v1/problems/{{textProblemId}}/datasets
-Accept: application/json
-Content-Type: application/json
-
-{
-  "datasetId": {{uploadedDatasetId}}
-}
-
-
-### 9. datasetId 누락 실패
-# 기대 결과:
-# - 400 VALIDATION_FAILED
+# - 409 Conflict
+# - PROBLEM_DATASET_ALREADY_CONNECTED
 POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
 Accept: application/json
 Content-Type: application/json
 
 {
+  "datasetId": {{datasetId}}
+}
+
+
+### =====================================================
+### 코드 문제 상세 / 시작 코드 확인
+### =====================================================
+
+### 8. 문제 세트 진입 시 시작 코드 확인
+# 확인할 것:
+# - data.problem.startCode에 pd.read_csv("problem_dataset/...") 또는 관련 경로가 내려오는지 확인
+# - data.problem.point가 내려오는지 확인
+GET {{baseUrl}}/api/v1/problem-sets/3001?userId=3
+Accept: application/json
+
+
+### 9. 코드 실행 요청 - GCS 업로드 파일 경로 기반
+# 주의:
+# - 현재 버킷은 비공개이므로 fileUrl을 pandas가 바로 읽는 방식은 실패할 수 있습니다.
+# - 현재 로컬 실행기는 filePath를 직접 읽는 구조일 수 있으니, 이 요청은 실행 환경 정책에 맞춰 조정하세요.
+POST {{baseUrl}}/api/v1/code-problems/3001/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\n\ndf = pd.read_csv(\"problem_dataset/employee_performance_202605.csv\")\nresult = df.shape\nprint(result)"
 }

@@ -8,6 +8,7 @@ import com.google.cloud.storage.StorageOptions;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Primary
 @Component
+@Slf4j
 public class GcsDatasetFileStorage implements StoreDatasetFilePort {
 
     private static final String CSV_CONTENT_TYPE = "text/csv";
@@ -64,6 +66,21 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
                 .setCredentials(loadCredentials())
                 .build()
                 .getService();
+    }
+
+    @Override
+    public void delete(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            return;
+        }
+
+        try {
+            createStorage().delete(
+                    BlobId.of(properties.getStorage().getBucket(), filePath)
+            );
+        } catch (Exception e) {
+            log.warn("GCS에서 파일 삭제를 실패했습니다. filePath={}", filePath, e);
+        }
     }
 
     private GoogleCredentials loadCredentials() throws IOException {
