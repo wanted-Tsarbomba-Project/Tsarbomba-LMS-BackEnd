@@ -224,7 +224,6 @@ class OperationRuleSchedulerIntegrationTest {
                 problem,
                 "answer",
                 correct,
-                correct ? 10 : 0,
                 attemptNo
         );
     }

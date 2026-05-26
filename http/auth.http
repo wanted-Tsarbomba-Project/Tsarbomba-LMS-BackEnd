@@ -134,7 +134,7 @@ POST http://localhost:8080/api/v1/auth/email/send
 Content-Type: application/json
 
 {
-  "email": "dkdlwkr207@gmail.com"
+  "email": "qowjdgus0629@g.eulji.ac.kr"
 }
 
 ### 19. 이메일 인증 코드 발송 — 이미 가입된 이메일 (1번에서 가입한 이메일)
@@ -176,8 +176,8 @@ POST http://localhost:8080/api/v1/auth/email/verify
 Content-Type: application/json
 
 {
-  "email": "dkdlwkr207@gmail.com",
-  "code": "581329"
+  "email": "qowjdgus0629@g.eulji.ac.kr",
+  "code": "111700"
 }
 
 ### 24. 회원가입 — 이메일 미인증 상태
@@ -198,7 +198,7 @@ POST http://localhost:8080/api/v1/auth/signup
 Content-Type: application/json
 
 {
-  "email": "dkdlwkr207@gmail.com",
+  "email": "qowjdgus0629@g.eulji.ac.kr",
   "password": "Test1234!",
   "passwordConfirm": "Test1234!",
   "name": "홍길동",
