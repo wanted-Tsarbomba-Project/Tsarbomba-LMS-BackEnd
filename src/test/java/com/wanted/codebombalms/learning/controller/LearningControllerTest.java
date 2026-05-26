@@ -111,7 +111,6 @@ class LearningControllerTest {
                         6001L,
                         2004L,
                         true,
-                        10,
                         1,
                         2,
                         false,
@@ -131,9 +130,9 @@ class LearningControllerTest {
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.SUBMITTED))
                 .andExpect(jsonPath("$.data.lectureProblemSubmissionId").value(1L))
                 .andExpect(jsonPath("$.data.correct").value(true))
-                .andExpect(jsonPath("$.data.score").value(10));
-    }
+                .andExpect(jsonPath("$.data.attemptNo").value(1));
 
+    }
     @Test
     void findStudentLearningProgressesReturnsApiResponse() throws Exception {
         given(adminLearningProgressQueryUseCase.findStudentProgresses(101L))

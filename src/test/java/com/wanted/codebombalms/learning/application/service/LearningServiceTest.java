@@ -146,7 +146,6 @@ class LearningServiceTest {
                         problemId,
                         "정답",
                         "풀이 설명",
-                        10,
                         3,
                         true
                 ));
@@ -159,7 +158,6 @@ class LearningServiceTest {
                         problemId,
                         "정답",
                         true,
-                        10,
                         1,
                         LocalDateTime.now()
                 ));
@@ -174,7 +172,6 @@ class LearningServiceTest {
 
         assertEquals(1L, result.lectureProblemSubmissionId());
         assertTrue(result.correct());
-        assertEquals(10, result.score());
         assertEquals(1, result.attemptNo());
         assertEquals(2, result.remainingAttemptCount());
         assertFalse(result.canRetry());
@@ -201,7 +198,6 @@ class LearningServiceTest {
                         problemId,
                         "정답",
                         "풀이 설명",
-                        10,
                         3,
                         true
                 ));
@@ -215,7 +211,6 @@ class LearningServiceTest {
                         "오답",
                         false,
                         0,
-                        2,
                         LocalDateTime.now()
                 ));
         given(lectureProblemProgressRepository.findByUserIdAndCourseProblemStepId(userId, courseProblemStepId))
@@ -228,7 +223,6 @@ class LearningServiceTest {
         );
 
         assertFalse(result.correct());
-        assertEquals(0, result.score());
         assertEquals(2, result.attemptNo());
         assertEquals(1, result.remainingAttemptCount());
         assertTrue(result.canRetry());
