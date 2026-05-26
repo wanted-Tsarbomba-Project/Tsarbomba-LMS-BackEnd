@@ -1,6 +1,9 @@
 package com.wanted.codebombalms.admin.operation.automation;
 
 import com.wanted.codebombalms.admin.operation.alert.domain.model.OperationAlertStatus;
+import com.wanted.codebombalms.admin.operation.alert.application.port.OperationAlertTargetDetailPort;
+import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertRuleInfo;
+import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertTargetDetail;
 import com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertJpaEntity;
 import com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.SpringDataOperationAlertRepository;
 import com.wanted.codebombalms.admin.operation.automation.application.usecase.RunOperationRuleUseCase;
@@ -59,10 +62,13 @@ class OperationRuleSchedulerIntegrationTest {
     private EntityManager entityManager;
 
     @Autowired
+    private OperationAlertTargetDetailPort operationAlertTargetDetailPort;
+
+    @Autowired
     private MutableClock mutableClock;
 
     @Test
-    @DisplayName("08시 59분에는 알림이 없고 09시 규칙 실행 후 강좌/문제 알림이 생성된다.")
+    @DisplayName("08시 59분에는 알림이 없고 09시 규칙 실행 후 강좌/학생/문제 알림이 생성된다.")
     void operationRuleSchedulerCreatesAlertsAtNine() {
         // given
         LocalDateTime beforeScheduleTime = LocalDateTime.of(2026, 5, 24, 8, 59);
@@ -71,6 +77,8 @@ class OperationRuleSchedulerIntegrationTest {
 
         seedRules();
         seedCourseForLowEnrollmentAlert();
+        CourseJpaEntity enrolledCourse = seedCourseForEnrollment();
+        seedInactiveStudentWithActiveEnrollment(enrolledCourse.getCourseId());
         seedProblemForHighWrongRateAlert();
         entityManager.flush();
         entityManager.clear();
@@ -78,9 +86,11 @@ class OperationRuleSchedulerIntegrationTest {
         // 1. 등록된 규칙 조회
         List<AutomationRule> registeredRules = automationRuleRepository.findAllActive(null);
         printRules(registeredRules);
-        assertEquals(2, registeredRules.size());
+        assertEquals(3, registeredRules.size());
         assertTrue(registeredRules.stream()
                 .anyMatch(rule -> rule.getRuleCode() == OperationRuleCode.COURSE_LOW_ENROLLMENT));
+        assertTrue(registeredRules.stream()
+                .anyMatch(rule -> rule.getRuleCode() == OperationRuleCode.USER_INACTIVE_NO_COURSE));
         assertTrue(registeredRules.stream()
                 .anyMatch(rule -> rule.getRuleCode() == OperationRuleCode.PROBLEM_HIGH_WRONG_RATE));
 
@@ -101,19 +111,27 @@ class OperationRuleSchedulerIntegrationTest {
                 .toList();
         printAlerts("09:00 after scheduler", alertsAfterScheduleTime);
 
-        assertEquals(2, alertsAfterScheduleTime.size());
+        assertEquals(3, alertsAfterScheduleTime.size());
         assertCreatedAlert(
-                alertsAfterScheduleTime.get(0),
+                findAlert(alertsAfterScheduleTime, OperationTargetType.COURSE),
                 OperationTargetType.COURSE,
                 BigDecimal.ZERO,
                 scheduleTime
         );
+        OperationAlertJpaEntity userAlert = findAlert(alertsAfterScheduleTime, OperationTargetType.USER);
         assertCreatedAlert(
-                alertsAfterScheduleTime.get(1),
+                userAlert,
+                OperationTargetType.USER,
+                BigDecimal.valueOf(20),
+                scheduleTime
+        );
+        assertCreatedAlert(
+                findAlert(alertsAfterScheduleTime, OperationTargetType.PROBLEM),
                 OperationTargetType.PROBLEM,
                 BigDecimal.valueOf(66.67),
                 scheduleTime
         );
+        assertUserTargetDetail(userAlert);
     }
 
     private void printRules(List<AutomationRule> rules) {
@@ -171,16 +189,113 @@ class OperationRuleSchedulerIntegrationTest {
                 OperationSeverity.HIGH,
                 true
         ));
+        automationRuleRepository.save(AutomationRule.create(
+                1L,
+                OperationRuleCode.USER_INACTIVE_NO_COURSE,
+                BigDecimal.valueOf(10),
+                null,
+                OperationSeverity.MEDIUM,
+                true
+        ));
     }
 
-    private void seedCourseForLowEnrollmentAlert() {
-        entityManager.persist(new CourseJpaEntity(
+    private CourseJpaEntity seedCourseForLowEnrollmentAlert() {
+        CourseJpaEntity course = new CourseJpaEntity(
                 10L,
                 "수강생이 없는 운영 점검 강좌",
                 "운영 자동 알림 테스트용 강좌입니다.",
                 "course.png",
                 CourseStatus.ACTIVE
-        ));
+        );
+        entityManager.persist(course);
+        entityManager.flush();
+
+        return course;
+    }
+
+    private CourseJpaEntity seedCourseForEnrollment() {
+        CourseJpaEntity course = new CourseJpaEntity(
+                10L,
+                "학생이 수강 중인 강좌",
+                "미수강 조건 제거 검증용 강좌입니다.",
+                "enrolled-course.png",
+                CourseStatus.ACTIVE
+        );
+        entityManager.persist(course);
+        entityManager.flush();
+
+        return course;
+    }
+
+    private void seedInactiveStudentWithActiveEnrollment(Long courseId) {
+        entityManager.createNativeQuery("""
+                        insert into users (
+                            user_id,
+                            role,
+                            email,
+                            password,
+                            name,
+                            nickname,
+                            provider,
+                            email_verified,
+                            is_locked,
+                            created_at,
+                            updated_at
+                        )
+                        values (
+                            100,
+                            'STUDENT',
+                            'inactive-student@test.com',
+                            'encoded',
+                            '장기미접속 학생',
+                            'inactive',
+                            'LOCAL',
+                            true,
+                            false,
+                            '2026-05-01 00:00:00',
+                            '2026-05-01 00:00:00'
+                        )
+                        """)
+                .executeUpdate();
+        entityManager.createNativeQuery("""
+                        insert into login_history (
+                            user_id,
+                            ip_address,
+                            user_agent,
+                            device_fp,
+                            country,
+                            city,
+                            is_suspicious,
+                            created_at
+                        )
+                        values (
+                            100,
+                            '127.0.0.1',
+                            'test-agent',
+                            'device',
+                            'KR',
+                            'Seoul',
+                            false,
+                            '2026-05-04 09:00:00'
+                        )
+                        """)
+                .executeUpdate();
+        entityManager.createNativeQuery("""
+                        insert into enrollment (
+                            user_id,
+                            course_id,
+                            status,
+                            enrolled_at
+                        )
+                        values (
+                            100,
+                            :courseId,
+                            'ACTIVE',
+                            '2026-05-05 09:00:00'
+                        )
+                        """)
+                .setParameter("courseId", courseId)
+                .executeUpdate();
     }
 
     private void seedProblemForHighWrongRateAlert() {
@@ -239,6 +354,30 @@ class OperationRuleSchedulerIntegrationTest {
         assertEquals(0, detectedValue.compareTo(alert.getDetectedValue()));
         assertEquals(detectedAt, alert.getFirstDetectedAt());
         assertEquals(detectedAt, alert.getLastDetectedAt());
+    }
+
+    private OperationAlertJpaEntity findAlert(
+            List<OperationAlertJpaEntity> alerts,
+            OperationTargetType targetType
+    ) {
+        return alerts.stream()
+                .filter(alert -> alert.getTargetType() == targetType)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private void assertUserTargetDetail(OperationAlertJpaEntity userAlert) {
+        OperationAlertTargetDetail targetDetail = operationAlertTargetDetailPort.loadTargetDetail(
+                userAlert.getTargetType(),
+                userAlert.getTargetId(),
+                userAlert.getDetectedValue(),
+                userAlert.getThresholdValueSnapshot(),
+                OperationAlertRuleInfo.from(OperationRuleCode.USER_INACTIVE_NO_COURSE, null)
+        );
+
+        assertEquals("장기미접속 학생", targetDetail.target().title());
+        assertEquals("inactive", targetDetail.target().nickname());
+        assertEquals("inactive-student@test.com", targetDetail.target().email());
     }
 
     @TestConfiguration

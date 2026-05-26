@@ -122,13 +122,15 @@ public class OperationAlertDetailResponse {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    // 알림 대상인 강좌 또는 문제 정보를 응답에 담는다.
+    // 알림 대상인 강좌, 문제 또는 사용자 정보를 응답에 담는다.
     public static class TargetInfo {
 
         private OperationTargetType targetType;
         private Long targetId;
         private String title;
         private String status;
+        private String nickname;
+        private String email;
         private Long courseId;
         private String courseTitle;
         private Long problemSetId;
@@ -141,6 +143,8 @@ public class OperationAlertDetailResponse {
                     target.targetId(),
                     target.title(),
                     target.status(),
+                    target.nickname(),
+                    target.email(),
                     target.courseId(),
                     target.courseTitle(),
                     target.problemSetId(),

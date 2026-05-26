@@ -9,7 +9,6 @@ import com.wanted.codebombalms.admin.operation.alert.application.query.Operation
 import com.wanted.codebombalms.admin.operation.alert.domain.exception.OperationAlertErrorCode;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,13 +19,13 @@ import java.math.BigDecimal;
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-// COURSE와 PROBLEM 알림 대상의 상세 정보와 담당자 정보를 조회한다.
+// COURSE, PROBLEM, USER 알림 대상의 상세 정보와 담당자 정보를 조회한다.
 public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDetailPort {
 
     private final EntityManager entityManager;
 
     @Override
-    // 대상 타입에 따라 강좌 또는 문제 상세 조회로 분기한다.
+    // 대상 타입에 따라 강좌, 문제 또는 사용자 상세 조회로 분기한다.
     public OperationAlertTargetDetail loadTargetDetail(
             OperationTargetType targetType,
             Long targetId,
@@ -37,7 +36,7 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
         return switch (targetType) {
             case COURSE -> loadCourseDetail(targetId, detectedValue, thresholdValue, rule);
             case PROBLEM -> loadProblemDetail(targetId, detectedValue, thresholdValue, rule);
-            case USER -> throw new ValidationException(OperationAlertErrorCode.UNSUPPORTED_ALERT_TARGET_TYPE);
+            case USER -> loadUserDetail(targetId, detectedValue, thresholdValue, rule);
         };
     }
 
@@ -74,6 +73,8 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
                 (Long) row[0],
                 (String) row[1],
                 toStringOrNull(row[2]),
+                null,
+                null,
                 (Long) row[0],
                 (String) row[1],
                 null,
@@ -124,6 +125,8 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
                 (String) row[2],
                 null,
                 null,
+                null,
+                null,
                 (Long) row[3],
                 (String) row[4]
         );
@@ -131,6 +134,49 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
         return new OperationAlertTargetDetail(
                 target,
                 toAssignee(row, 5),
+                toMetric(rule, detectedValue, thresholdValue)
+        );
+    }
+
+    // 사용자 알림의 사용자 연락 정보를 조회한다.
+    private OperationAlertTargetDetail loadUserDetail(
+            Long userId,
+            BigDecimal detectedValue,
+            BigDecimal thresholdValue,
+            OperationAlertRuleInfo rule
+    ) {
+        Object[] row = entityManager.createQuery("""
+                        select u.userId,
+                               u.name,
+                               u.nickname,
+                               u.email,
+                               u.role,
+                               u.isLocked
+                        from UserJpaEntity u
+                        where u.userId = :userId
+                          and u.deletedAt is null
+                        """, Object[].class)
+                .setParameter("userId", userId)
+                .getResultStream()
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException(OperationAlertErrorCode.OPERATION_ALERT_TARGET_NOT_FOUND));
+
+        OperationAlertTargetInfo target = new OperationAlertTargetInfo(
+                OperationTargetType.USER,
+                (Long) row[0],
+                (String) row[1],
+                toUserStatus(row[4], row[5]),
+                (String) row[2],
+                (String) row[3],
+                null,
+                null,
+                null,
+                null
+        );
+
+        return new OperationAlertTargetDetail(
+                target,
+                null,
                 toMetric(rule, detectedValue, thresholdValue)
         );
     }
@@ -171,5 +217,13 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
     // enum을 포함한 nullable 값을 응답용 문자열로 변환한다.
     private String toStringOrNull(Object value) {
         return value == null ? null : value.toString();
+    }
+
+    private String toUserStatus(Object role, Object locked) {
+        if (Boolean.TRUE.equals(locked)) {
+            return "LOCKED";
+        }
+
+        return toStringOrNull(role);
     }
 }
