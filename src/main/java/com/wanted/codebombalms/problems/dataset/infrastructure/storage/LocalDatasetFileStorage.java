@@ -3,6 +3,7 @@ package com.wanted.codebombalms.problems.dataset.infrastructure.storage;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.util.UUID;
 
 @Component
+@Slf4j
 public class LocalDatasetFileStorage implements StoreDatasetFilePort {
 
     private static final String UPLOAD_DIR = "uploads/datasets";
@@ -36,5 +38,17 @@ public class LocalDatasetFileStorage implements StoreDatasetFilePort {
                 filePath,
                 command.fileSize()
         );
+    }
+
+    @Override
+    public void delete(String filePath) {
+        if(filePath == null || filePath.isBlank()) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(Path.of(filePath));
+        } catch (IOException e) {
+            log.warn("로컬 데이터 세트 삭제를 실패했습니다. filePath={}", filePath, e);
+        }
     }
 }
