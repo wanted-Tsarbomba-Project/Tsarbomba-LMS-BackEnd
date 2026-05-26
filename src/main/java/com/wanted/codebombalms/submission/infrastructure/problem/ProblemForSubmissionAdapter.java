@@ -24,9 +24,7 @@ public class ProblemForSubmissionAdapter implements LoadProblemForSubmissionPort
                 problem.problemSetId(),
                 problem.problemOrder(),
                 problem.answer(),
-                problem.explanation(),
-                problem.score(),
-                problem.attemptLimit(),
+                problem.explanation(),                problem.attemptLimit(),
                 problem.retriable()
         );
     }

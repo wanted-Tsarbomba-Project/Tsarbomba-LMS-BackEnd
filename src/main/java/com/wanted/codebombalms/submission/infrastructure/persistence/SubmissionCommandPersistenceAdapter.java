@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.submission.infrastructure.persistence;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
@@ -8,7 +9,6 @@ import com.wanted.codebombalms.problems.testcase.infrastructure.persistence.Spri
 import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
 import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
 import com.wanted.codebombalms.submission.domain.model.SubmissionTestResult;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -48,7 +48,6 @@ public class SubmissionCommandPersistenceAdapter implements SubmissionCommandPor
                 problem,
                 submission.submittedCode(),
                 submission.correct(),
-                submission.earnedScore(),
                 submission.attemptNo(),
                 submission.passedTestCount(),
                 submission.totalTestCount(),
@@ -84,8 +83,7 @@ public class SubmissionCommandPersistenceAdapter implements SubmissionCommandPor
                 testResult.passed(),
                 testResult.actualOutput(),
                 testResult.errorMessage(),
-                testResult.executionTimeMs(),
-                testResult.score()
+                testResult.executionTimeMs()
         );
     }
 }

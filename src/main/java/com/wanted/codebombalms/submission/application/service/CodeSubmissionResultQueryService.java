@@ -25,7 +25,6 @@ public class CodeSubmissionResultQueryService implements CodeSubmissionResultQue
                 result.submissionId(),
                 result.problemId(),
                 result.correct(),
-                result.earnedScore(),
                 result.passedTestCount(),
                 result.totalTestCount(),
                 result.executionStatus(),
@@ -46,8 +45,7 @@ public class CodeSubmissionResultQueryService implements CodeSubmissionResultQue
                     true,
                     null,
                     null,
-                    null,
-                    result.score()
+                    null
             );
         }
 
@@ -57,8 +55,7 @@ public class CodeSubmissionResultQueryService implements CodeSubmissionResultQue
                 false,
                 result.actualOutput(),
                 result.errorMessage(),
-                result.executionTimeMs(),
-                result.score()
+                result.executionTimeMs()
         );
     }
 }

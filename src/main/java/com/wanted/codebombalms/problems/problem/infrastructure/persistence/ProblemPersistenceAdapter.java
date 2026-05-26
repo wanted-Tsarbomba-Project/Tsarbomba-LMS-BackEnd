@@ -2,11 +2,11 @@ package com.wanted.codebombalms.problems.problem.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.problem.domain.model.Problem;
 import com.wanted.codebombalms.problems.problem.domain.repository.ProblemRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -75,7 +75,7 @@ public class ProblemPersistenceAdapter implements ProblemRepository {
                 entity.getProblemType(),
                 entity.getAnswer(),
                 entity.getExplanation(),
-                entity.getScore(),
+                entity.getPoint(),
                 entity.getAttemptLimit(),
                 entity.getRetriable()
         );

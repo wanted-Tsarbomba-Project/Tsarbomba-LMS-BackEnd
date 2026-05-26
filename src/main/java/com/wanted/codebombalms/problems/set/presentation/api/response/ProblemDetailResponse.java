@@ -8,6 +8,7 @@ public record ProblemDetailResponse(
         String title,
         String content,
         String problemType,
+        Integer point,
         String startCode
 ) {
     public ProblemDetailResponse(ProblemDetailView problem) {
@@ -17,6 +18,7 @@ public record ProblemDetailResponse(
                 problem.title(),
                 problem.content(),
                 problem.problemType(),
+                problem.point(),
                 problem.startCode()
         );
     }

@@ -1,31 +1,30 @@
 @baseUrl = http://localhost:8080
-@categoryId = 2001
-@problemSetId = 2001
+@categoryId = 3001
+@problemSetId = 3001
 @userId = 3
 @accessToken = PUT_REAL_ACCESS_TOKEN_HERE
 
-@updateProblemSetId = 2001
-@updateProblemId = 2001
+@updateProblemSetId = 3001
+@updateProblemId = 3001
 @updateHintId = 2001
 
 # =====================================================
 # 문제 세트 조회
 # =====================================================
 
-### 1. 문제 세트 목록 조회 - 분야별 문제 세트 조회
+### 1. 문제 세트 목록 조회
 # 기대 결과:
 # - 200 OK
-# - categoryId에 속한 ACTIVE 문제 세트만 조회됩니다.
-# - 응답에 difficulty 값이 포함됩니다.
+# - categoryId에 속한 ACTIVE 문제 세트 목록이 조회됩니다.
 GET {{baseUrl}}/api/v1/problem-sets?categoryId={{categoryId}}
 Accept: application/json
 
 
-### 2. 문제 세트 상세 진입 - 현재 풀 문제 조회
+### 2. 문제 세트 진입 및 현재 문제 조회 - point 확인
 # 기대 결과:
 # - 200 OK
-# - 사용자의 progress 기준으로 현재 문제를 조회합니다.
-# - 정답은 응답에 포함되지 않습니다.
+# - data.problem.point 값이 내려오면 point 응답 확인 성공입니다.
+# - 정답(answer)은 응답에 포함되면 안 됩니다.
 GET {{baseUrl}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
 Accept: application/json
 
@@ -34,119 +33,99 @@ Accept: application/json
 # 문제 세트 등록
 # =====================================================
 
-### 3. 문제 세트 등록 성공 - 기존 카테고리 사용
+### 3. 문제 세트 등록 성공 - point 저장 확인용
 # 기대 결과:
 # - 201 Created
-# - problem_set.difficulty = EASY
-# - problem_set 1건, problem 2건, problem_hint 2건이 저장됩니다.
+# - problem_set 1개, problem 2개, problem_hint 2개가 생성됩니다.
+# - 각 problem의 point가 DB에 저장됩니다.
 POST {{baseUrl}}/api/v1/problems
 Accept: application/json
 Content-Type: application/json
 Cookie: accessToken={{accessToken}}
 
 {
-  "title": "고객 분석 기초 문제 세트",
-  "categoryName": "비즈니스 기초",
+  "title": "pandas point 확인 문제 세트",
+  "categoryName": "Python 데이터 분석",
+  "description": "문제별 point가 저장되는지 확인하는 코드 실행형 문제 세트입니다.",
   "difficulty": "EASY",
-  "description": "고객 세그먼트와 재방문 지표를 이해하는 문제 세트입니다.",
-  "dataFileName": "customer_analysis.csv",
+  "dataFileName": "employee_performance_202605.csv",
   "problems": [
     {
-      "title": "고객 세그먼트 목적",
-      "content": "고객 세그먼트를 나누는 이유를 한 문장으로 작성하세요.",
+      "title": "행과 열 개수 확인",
+      "content": "employee_performance.csv 파일을 읽고 DataFrame의 행과 열 개수를 result에 담으세요.",
       "point": 10,
-      "startCode": null,
-      "answer": "고객 특성에 맞는 서비스를 제공하기 위해",
-      "hint": "모든 고객이 같은 문제를 가진 것은 아닙니다.",
-      "explanation": "고객 세그먼트는 고객을 특성별로 나누어 적절한 서비스 전략을 세우기 위해 사용합니다."
+      "startCode": "import pandas as pd\n\ndf = pd.read_csv(\"uploads/datasets/employee_performance_202605.csv\")",
+      "answer": "result = df.shape",
+      "hint": "DataFrame의 shape 속성을 사용해보세요.",
+      "explanation": "df.shape는 (행 개수, 열 개수) 형태의 튜플을 반환합니다."
     },
     {
-      "title": "재방문 지표",
-      "content": "사용자가 서비스를 다시 이용하는지 확인하는 대표 지표를 작성하세요.",
-      "point": 10,
-      "startCode": null,
-      "answer": "재방문율",
-      "hint": "사용자가 다시 돌아오는지를 보는 지표입니다.",
-      "explanation": "재방문율은 사용자가 서비스를 다시 이용하는지 확인할 수 있는 지표입니다."
+      "title": "평균 점수 계산",
+      "content": "performance_score 컬럼의 평균값을 result에 담으세요.",
+      "point": 20,
+      "startCode": "import pandas as pd\n\ndf = pd.read_csv(\"uploads/datasets/employee_performance_202605.csv\")",
+      "answer": "result = df[\"performance_score\"].mean()",
+      "hint": "Series의 mean() 메서드를 사용해보세요.",
+      "explanation": "df[\"performance_score\"].mean()은 performance_score 컬럼의 평균을 계산합니다."
     }
   ]
 }
 
 
-### 4. 문제 세트 등록 성공 - 새 카테고리 자동 생성
+### 4. 문제 세트 등록 실패 - point 누락
 # 기대 결과:
-# - 201 Created
-# - categoryName이 없으면 새 ACTIVE 카테고리가 생성됩니다.
-# - problem_set.difficulty = MEDIUM
+# - 400 Bad Request
+# - PROBLEM_INVALID_INPUT 계열 응답
 POST {{baseUrl}}/api/v1/problems
 Accept: application/json
 Content-Type: application/json
 Cookie: accessToken={{accessToken}}
 
 {
-  "title": "M2 코드 실행 준비 문제 세트",
-  "categoryName": "Python 실습 테스트",
-  "difficulty": "MEDIUM",
-  "description": "M2 코드 실행형 문제를 고려한 테스트 문제 세트입니다.",
-  "dataFileName": "employee_performance.csv",
-  "problems": [
-    {
-      "title": "DataFrame 행과 열 개수 확인",
-      "content": "pandas DataFrame의 행과 열 개수를 확인할 때 사용하는 속성을 작성하세요.",
-      "point": 15,
-      "startCode": "df = pd.read_csv(\"data/employee_performance.csv\")",
-      "answer": "shape",
-      "hint": "행과 열 개수를 튜플 형태로 알려주는 속성입니다.",
-      "explanation": "shape는 DataFrame의 행 수와 열 수를 튜플 형태로 반환합니다."
-    }
-  ]
-}
-
-
-### 5. 문제 세트 등록 실패 - 잘못된 난이도
-# 기대 결과:
-# - 400 PROBLEM_INVALID_INPUT
-# - difficulty는 EASY, MEDIUM, HARD 중 하나여야 합니다.
-POST {{baseUrl}}/api/v1/problems
-Accept: application/json
-Content-Type: application/json
-Cookie: accessToken={{accessToken}}
-
-{
-  "title": "잘못된 난이도 문제 세트",
-  "categoryName": "비즈니스 기초",
-  "difficulty": "상",
-  "description": "난이도 검증 실패를 확인하는 요청입니다.",
-  "dataFileName": null,
-  "problems": [
-    {
-      "title": "난이도 검증 문제",
-      "content": "난이도 값이 잘못되면 실패해야 합니다.",
-      "point": 10,
-      "startCode": null,
-      "answer": "EASY",
-      "hint": "허용 값은 EASY, MEDIUM, HARD입니다.",
-      "explanation": "표시값 상/중/하는 프론트에서 EASY/MEDIUM/HARD로 변환해 보내야 합니다."
-    }
-  ]
-}
-
-
-### 6. 문제 세트 등록 실패 - 소문제 없음
-# 기대 결과:
-# - 400 PROBLEM_REQUIRED
-POST {{baseUrl}}/api/v1/problems
-Accept: application/json
-Content-Type: application/json
-Cookie: accessToken={{accessToken}}
-
-{
-  "title": "소문제 없는 문제 세트",
-  "categoryName": "비즈니스 기초",
+  "title": "point 누락 테스트",
+  "categoryName": "Python 데이터 분석",
+  "description": "point 필수 검증 확인용 요청입니다.",
   "difficulty": "EASY",
-  "description": "소문제가 없으므로 실패해야 하는 요청입니다.",
-  "dataFileName": null,
-  "problems": []
+  "dataFileName": "employee_performance_202605.csv",
+  "problems": [
+    {
+      "title": "point 없는 문제",
+      "content": "point가 없으면 등록되지 않아야 합니다.",
+      "startCode": null,
+      "answer": "result = 1",
+      "hint": "point를 넣어야 합니다.",
+      "explanation": "문제 보상값이 없으면 운영 화면과 결과 계산 기준이 흐려집니다."
+    }
+  ]
+}
+
+
+### 5. 문제 세트 등록 실패 - point가 0 이하
+# 기대 결과:
+# - 400 Bad Request
+# - point는 양수여야 합니다.
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+Cookie: accessToken={{accessToken}}
+
+{
+  "title": "point 0 테스트",
+  "categoryName": "Python 데이터 분석",
+  "description": "point 양수 검증 확인용 요청입니다.",
+  "difficulty": "EASY",
+  "dataFileName": "employee_performance_202605.csv",
+  "problems": [
+    {
+      "title": "point 0 문제",
+      "content": "point가 0이면 등록되지 않아야 합니다.",
+      "point": 0,
+      "startCode": null,
+      "answer": "result = 1",
+      "hint": "point는 1 이상이어야 합니다.",
+      "explanation": "포인트 보상값은 양수로 관리합니다."
+    }
+  ]
 }
 
 
@@ -154,93 +133,32 @@ Cookie: accessToken={{accessToken}}
 # 문제 세트 수정
 # =====================================================
 
-### 7. 문제 세트 수정 성공 - 난이도 수정 포함
+### 6. 문제 세트 수정 성공 - point 수정 포함
 # 기대 결과:
 # - 200 OK
-# - problem_set.difficulty = HARD
-# - 기존 problem과 hint가 함께 수정됩니다.
+# - 기존 문제의 point도 함께 수정됩니다.
 PUT {{baseUrl}}/api/v1/problems/{{updateProblemSetId}}
 Accept: application/json
 Content-Type: application/json
 Cookie: accessToken={{accessToken}}
 
 {
-  "title": "비즈니스 모델 이해 입문 - 수정",
-  "categoryName": "비즈니스 기초",
-  "difficulty": "HARD",
-  "description": "고객 세그먼트와 수익 모델을 다시 평가하는 수정용 문제 세트입니다.",
-  "dataFileName": "business_basic.csv",
+  "title": "pandas 기초 분석 문제 세트 수정",
+  "categoryName": "Python 데이터 분석",
+  "description": "문제 point 수정까지 확인하는 요청입니다.",
+  "difficulty": "MEDIUM",
+  "dataFileName": "employee_performance_202605.csv",
   "problems": [
     {
       "problemId": {{updateProblemId}},
-      "title": "고객 세그먼트 식별 - 수정",
-      "content": "서비스 설계에서 고객 세그먼트를 나누는 이유를 정확히 작성하세요.",
-      "point": 20,
-      "startCode": null,
-      "answer": "고객 특성에 맞는 서비스를 제공하기 위해",
+      "title": "데이터 행과 열 개수 확인 수정",
+      "content": "CSV 파일을 읽고 DataFrame의 행과 열 개수를 result에 담으세요.",
+      "point": 15,
+      "startCode": "import pandas as pd\n\ndf = pd.read_csv(\"uploads/datasets/employee_performance_202605.csv\")",
+      "answer": "result = df.shape",
       "hintId": {{updateHintId}},
-      "hint": "고객마다 필요한 서비스와 메시지가 다를 수 있습니다.",
-      "explanation": "고객 세그먼트는 고객의 특성에 맞는 서비스 전략을 세우기 위해 사용합니다."
-    }
-  ]
-}
-
-
-### 8. 문제 세트 수정 실패 - 잘못된 난이도
-# 기대 결과:
-# - 400 PROBLEM_INVALID_INPUT
-PUT {{baseUrl}}/api/v1/problems/{{updateProblemSetId}}
-Accept: application/json
-Content-Type: application/json
-Cookie: accessToken={{accessToken}}
-
-{
-  "title": "잘못된 난이도 수정 요청",
-  "categoryName": "비즈니스 기초",
-  "difficulty": "어려움",
-  "description": "난이도 값이 잘못되었으므로 실패해야 합니다.",
-  "dataFileName": null,
-  "problems": [
-    {
-      "problemId": {{updateProblemId}},
-      "title": "난이도 수정 검증",
-      "content": "난이도 값이 잘못되면 실패해야 합니다.",
-      "point": 10,
-      "startCode": null,
-      "answer": "HARD",
-      "hintId": null,
-      "hint": "허용 값은 EASY, MEDIUM, HARD입니다.",
-      "explanation": "프론트 표시값은 백엔드 코드값으로 변환해야 합니다."
-    }
-  ]
-}
-
-
-### 9. 문제 세트 수정 실패 - 존재하지 않는 문제 세트
-# 기대 결과:
-# - 404 PROBLEM_SET_NOT_FOUND
-PUT {{baseUrl}}/api/v1/problems/999999
-Accept: application/json
-Content-Type: application/json
-Cookie: accessToken={{accessToken}}
-
-{
-  "title": "존재하지 않는 문제 세트 수정",
-  "categoryName": "비즈니스 기초",
-  "difficulty": "EASY",
-  "description": "실패해야 하는 요청입니다.",
-  "dataFileName": null,
-  "problems": [
-    {
-      "problemId": null,
-      "title": "소문제",
-      "content": "내용",
-      "point": 10,
-      "startCode": null,
-      "answer": "정답",
-      "hintId": null,
-      "hint": "힌트",
-      "explanation": "해설"
+      "hint": "df.shape를 사용하세요.",
+      "explanation": "shape 속성은 행과 열 개수를 튜플로 반환합니다."
     }
   ]
 }
@@ -250,36 +168,20 @@ Cookie: accessToken={{accessToken}}
 # 문제 세트 삭제 / 비활성화
 # =====================================================
 
-### 10. 문제 세트 삭제 성공 - 제출 기록 없는 문제 세트 비활성화
+### 7. 문제 세트 비활성화
 # 기대 결과:
 # - 200 OK
 # - problem_set.status = INACTIVE
 # - 연결된 problem.status = INACTIVE
-DELETE {{baseUrl}}/api/v1/problems/2003
+DELETE {{baseUrl}}/api/v1/problems/{{problemSetId}}
 Accept: application/json
 Cookie: accessToken={{accessToken}}
 
 
-### 11. 문제 세트 삭제 실패 - 제출 기록 존재
-# 기대 결과:
-# - 409 PROBLEM_HAS_SUBMISSION
-DELETE {{baseUrl}}/api/v1/problems/2001
-Accept: application/json
-Cookie: accessToken={{accessToken}}
-
-
-### 12. 문제 세트 강제 삭제 성공 - 제출 기록이 있어도 비활성화
+### 8. 제출 기록이 있어도 강제 비활성화
 # 기대 결과:
 # - 200 OK
-# - force=true이면 제출 기록이 있어도 problem_set과 problem이 INACTIVE 처리됩니다.
-DELETE {{baseUrl}}/api/v1/problems/2001?force=true
-Accept: application/json
-Cookie: accessToken={{accessToken}}
-
-
-### 13. 문제 세트 삭제 실패 - 존재하지 않는 문제 세트
-# 기대 결과:
-# - 404 PROBLEM_SET_NOT_FOUND
-DELETE {{baseUrl}}/api/v1/problems/999999
+# - force=true이면 제출 기록이 있어도 비활성화합니다.
+DELETE {{baseUrl}}/api/v1/problems/{{problemSetId}}?force=true
 Accept: application/json
 Cookie: accessToken={{accessToken}}

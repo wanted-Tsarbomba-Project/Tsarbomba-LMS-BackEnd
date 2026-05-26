@@ -20,7 +20,6 @@ public class CodeGradingService {
                     false,
                     0,
                     0,
-                    0,
                     GRADING_FAILED,
                     "채점 기준 테스트케이스가 없습니다.",
                     List.of()
@@ -34,8 +33,7 @@ public class CodeGradingService {
                             false,
                             null,
                             "result 변수가 정의되지 않았습니다.",
-                            MOCK_EXECUTION_TIME_MS,
-                            0
+                            MOCK_EXECUTION_TIME_MS
                     ))
                     .toList();
 
@@ -43,24 +41,19 @@ public class CodeGradingService {
                     false,
                     0,
                     testCases.size(),
-                    0,
                     WRONG_ANSWER,
                     "result 변수가 정의되지 않았습니다.",
                     failedResults
             );
         }
 
-        int earnedScore = testCases.stream()
-                .mapToInt(testCase -> testCase.score() == null ? 0 : testCase.score())
-                .sum();
         List<SubmissionTestResult> passedResults = testCases.stream()
                 .map(testCase -> new SubmissionTestResult(
                         testCase.testCaseId(),
                         true,
                         testCase.expectedResult(),
                         null,
-                        MOCK_EXECUTION_TIME_MS,
-                        testCase.score() == null ? 0 : testCase.score()
+                        MOCK_EXECUTION_TIME_MS
                 ))
                 .toList();
 
@@ -68,7 +61,6 @@ public class CodeGradingService {
                 true,
                 testCases.size(),
                 testCases.size(),
-                earnedScore,
                 SUCCESS,
                 null,
                 passedResults
@@ -79,7 +71,6 @@ public class CodeGradingService {
             Boolean correct,
             Integer passedTestCount,
             Integer totalTestCount,
-            Integer earnedScore,
             String executionStatus,
             String errorMessage,
             List<SubmissionTestResult> testResults

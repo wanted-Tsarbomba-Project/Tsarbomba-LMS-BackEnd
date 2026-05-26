@@ -11,7 +11,6 @@ public interface LectureProblemSubmissionUseCase {
             Long courseProblemStepId,
             Long problemId,
             boolean correct,
-            int score,
             int attemptNo,
             int remainingAttemptCount,
             boolean canRetry,

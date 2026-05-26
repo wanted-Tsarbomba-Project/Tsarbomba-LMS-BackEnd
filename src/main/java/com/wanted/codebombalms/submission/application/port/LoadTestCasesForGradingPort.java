@@ -10,7 +10,6 @@ public interface LoadTestCasesForGradingPort {
             Long testCaseId,
             String testCode,
             String expectedResult,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs
     ) {

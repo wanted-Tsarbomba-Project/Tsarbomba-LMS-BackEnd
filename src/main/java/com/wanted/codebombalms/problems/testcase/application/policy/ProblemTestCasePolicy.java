@@ -23,10 +23,8 @@ public class ProblemTestCasePolicy {
         this.problemTestCaseRepository = problemTestCaseRepository;
     }
 
-    public void validateCreatable(Long problemId, Integer testCaseScore) {
-        var problem = validateCodeProblem(problemId);
-
-        validateSameScore(problem.score(), testCaseScore);
+    public void validateCreatable(Long problemId) {
+        validateCodeProblem(problemId);
 
         if (problemTestCaseRepository.existsActiveByProblemId(problemId)) {
             throw new ConflictException(ProblemErrorCode.PROBLEM_TEST_CASE_ALREADY_EXISTS);
@@ -37,25 +35,15 @@ public class ProblemTestCasePolicy {
         validateCodeProblem(problemId);
     }
 
-    public void validateUpdatable(Long problemId, Integer testCaseScore) {
-        var problem = validateCodeProblem(problemId);
-
-        validateSameScore(problem.score(), testCaseScore);
+    public void validateUpdatable(Long problemId) {
+        validateCodeProblem(problemId);
     }
 
-    private LoadTestCaseProblemPort.TestCaseProblemView validateCodeProblem(Long problemId) {
+    private void validateCodeProblem(Long problemId) {
         var problem = loadTestCaseProblemPort.loadByProblemId(problemId);
 
         if (!CODE_PROBLEM_TYPE.equals(problem.problemType())) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE);
-        }
-
-        return problem;
-    }
-
-    private void validateSameScore(Integer problemScore, Integer testCaseScore) {
-        if (testCaseScore == null || !testCaseScore.equals(problemScore)) {
-            throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
         }
     }
 }

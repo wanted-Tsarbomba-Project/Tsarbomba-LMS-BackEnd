@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,9 +34,6 @@ public class LectureProblemSubmissionJpaEntity {
     @Column(name = "is_correct")
     private Boolean correct;
 
-    @Column(name = "score")
-    private Integer score;
-
     @Column(name = "attempt_no")
     private Integer attemptNo;
 
@@ -53,7 +51,6 @@ public class LectureProblemSubmissionJpaEntity {
         entity.problemId = submission.problemId();
         entity.submittedAnswer = submission.submittedAnswer();
         entity.correct = submission.correct();
-        entity.score = submission.score();
         entity.attemptNo = submission.attemptNo();
         entity.submittedAt = submission.submittedAt();
         return entity;
@@ -67,7 +64,6 @@ public class LectureProblemSubmissionJpaEntity {
                 problemId,
                 submittedAnswer,
                 correct,
-                score,
                 attemptNo,
                 submittedAt
         );

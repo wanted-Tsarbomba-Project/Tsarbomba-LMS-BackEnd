@@ -1,11 +1,11 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
-import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemForEntryPort;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +42,8 @@ public class ProblemForEntryPersistenceAdapter implements LoadProblemForEntryPor
                 problem.getProblemOrder(),
                 problem.getTitle(),
                 problem.getContent(),
-                problem.getProblemType()
+                problem.getProblemType(),
+                problem.getPoint()
         );
     }
 }

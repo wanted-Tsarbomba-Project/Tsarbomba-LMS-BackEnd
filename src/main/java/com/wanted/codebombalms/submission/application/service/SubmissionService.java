@@ -1,8 +1,8 @@
 package com.wanted.codebombalms.submission.application.service;
 
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
-import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
 import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
+import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort.ProblemForSubmission;
 import com.wanted.codebombalms.submission.application.port.LoadTestCasesForGradingPort;
@@ -25,7 +25,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
     private final CodeGradingService codeGradingService;
     private final SubmissionAttemptPolicy submissionAttemptPolicy;
     private final SubmissionCodePolicy submissionCodePolicy;
-
 
     public SubmissionService(
             SubmissionCommandPort submissionCommandPort,
@@ -89,7 +88,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 problem.problemId(),
                 command.code(),
                 isCorrect,
-                gradingResult.earnedScore(),
                 attemptNo,
                 gradingResult.passedTestCount(),
                 gradingResult.totalTestCount(),
@@ -108,19 +106,10 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
             if (nextProblemId == null) {
                 isProblemSetCompleted = true;
-                problemProgressPort.completeProblemSet(
-                        command.userId(),
-                        problemSetId
-                );
-                problemSetCompletionEventPort.publishCompleted(
-                        command.userId(),
-                        problemSetId
-                );
+                problemProgressPort.completeProblemSet(command.userId(), problemSetId);
+                problemSetCompletionEventPort.publishCompleted(command.userId(), problemSetId);
             } else {
-                problemProgressPort.openNextProblem(
-                        command.userId(),
-                        problemSetId
-                );
+                problemProgressPort.openNextProblem(command.userId(), problemSetId);
             }
         }
 
@@ -128,7 +117,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 submissionId,
                 problem.problemId(),
                 isCorrect,
-                gradingResult.earnedScore(),
                 gradingResult.passedTestCount(),
                 gradingResult.totalTestCount(),
                 gradingResult.executionStatus(),

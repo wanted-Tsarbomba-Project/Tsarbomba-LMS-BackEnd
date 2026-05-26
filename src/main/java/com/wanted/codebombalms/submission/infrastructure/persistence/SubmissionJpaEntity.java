@@ -36,9 +36,6 @@ public class SubmissionJpaEntity {
     private Boolean isCorrect;
 
     @Column(nullable = false)
-    private Integer earnedScore;
-
-    @Column(nullable = false)
     private Integer attemptNo;
 
     @Column(nullable = false)
@@ -63,7 +60,6 @@ public class SubmissionJpaEntity {
             ProblemJpaEntity problem,
             String submittedAnswer,
             Boolean isCorrect,
-            Integer earnedScore,
             Integer attemptNo
     ) {
         this.userId = userId;
@@ -71,7 +67,6 @@ public class SubmissionJpaEntity {
         this.submittedAnswer = submittedAnswer;
         this.submittedCode = null;
         this.isCorrect = isCorrect;
-        this.earnedScore = earnedScore;
         this.attemptNo = attemptNo;
         this.passedTestCount = 0;
         this.totalTestCount = 0;
@@ -85,7 +80,6 @@ public class SubmissionJpaEntity {
             ProblemJpaEntity problem,
             String submittedCode,
             Boolean isCorrect,
-            Integer earnedScore,
             Integer attemptNo,
             Integer passedTestCount,
             Integer totalTestCount,
@@ -97,7 +91,6 @@ public class SubmissionJpaEntity {
         this.submittedAnswer = null;
         this.submittedCode = submittedCode;
         this.isCorrect = isCorrect;
-        this.earnedScore = earnedScore;
         this.attemptNo = attemptNo;
         this.passedTestCount = passedTestCount;
         this.totalTestCount = totalTestCount;
@@ -128,10 +121,6 @@ public class SubmissionJpaEntity {
 
     public Boolean getCorrect() {
         return isCorrect;
-    }
-
-    public Integer getEarnedScore() {
-        return earnedScore;
     }
 
     public Integer getAttemptNo() {

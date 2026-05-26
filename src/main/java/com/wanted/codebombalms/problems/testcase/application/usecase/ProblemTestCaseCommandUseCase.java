@@ -17,11 +17,9 @@ public interface ProblemTestCaseCommandUseCase {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs,
             String status
     ) {
     }
 }
-

@@ -8,7 +8,6 @@ public interface LearningProblemPort {
             Long problemId,
             String answer,
             String explanation,
-            int score,
             Integer attemptLimit,
             Boolean retriable
     ) {

@@ -1,147 +1,130 @@
 @baseUrl = http://localhost:8080
-@codeProblemId = 3001
-@textProblemId = 2005
-@notFoundProblemId = 999999
+@problemId = 3001
 @testCaseId = 3001
+@notFoundProblemId = 999999
 @notFoundTestCaseId = 999999
+@accessToken = PUT_REAL_ACCESS_TOKEN_HERE
 
-### 1. 테스트케이스 목록 조회 성공
+# =====================================================
+# 테스트케이스 관리
+# =====================================================
+
+### 1. 테스트케이스 등록 성공
 # 기대 결과:
-# - 200 OK
-# - ACTIVE 테스트케이스가 testOrder 순서대로 조회됩니다.
-GET {{baseUrl}}/api/v1/problems/{{codeProblemId}}/test-cases
-Accept: application/json
-
-
-### 2. 테스트케이스 등록 실패 - 이미 등록된 테스트케이스 존재
-# 기대 결과:
-# - 409 PROBLEM_TEST_CASE_ALREADY_EXISTS
-POST {{baseUrl}}/api/v1/problems/{{codeProblemId}}/test-cases
+# - 201 Created
+# - score 없이 채점 코드, 기대 결과, 순서, 히든 여부, 제한 시간이 저장됩니다.
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/test-cases
 Accept: application/json
 Content-Type: application/json
+Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
   "expectedResult": "df.shape",
   "testOrder": 1,
-  "score": 10,
-  "isHidden": true,
+  "isHidden": false,
   "timeoutMs": 3000
 }
+
+
+### 2. 테스트케이스 목록 조회
+# 기대 결과:
+# - 200 OK
+# - 해당 problemId에 연결된 ACTIVE 테스트케이스 목록이 조회됩니다.
+GET {{baseUrl}}/api/v1/problems/{{problemId}}/test-cases
+Accept: application/json
+Cookie: accessToken={{accessToken}}
 
 
 ### 3. 테스트케이스 수정 성공
 # 기대 결과:
 # - 200 OK
-# - data.isHidden 값이 false로 변경됩니다.
+# - 테스트 코드, 기대 결과, 순서, 히든 여부, 제한 시간이 수정됩니다.
 PUT {{baseUrl}}/api/v1/test-cases/{{testCaseId}}
 Accept: application/json
 Content-Type: application/json
+Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert isinstance(result, tuple)",
   "expectedResult": "tuple",
-  "testOrder": 1,
-  "score": 10,
-  "isHidden": false,
-  "timeoutMs": 3000
-}
-
-
-### 4. 테스트케이스 삭제 성공
-# 기대 결과:
-# - 200 OK
-# - 실제 삭제가 아니라 data.status 값이 INACTIVE로 변경됩니다.
-DELETE {{baseUrl}}/api/v1/test-cases/{{testCaseId}}
-Accept: application/json
-
-
-### 5. 기존 테스트케이스 삭제 후 새 테스트케이스 등록 성공
-# 기대 결과:
-# - 먼저 4번 요청을 실행해야 합니다.
-# - 201 Created
-# - data.testCaseId 값이 반환됩니다.
-POST {{baseUrl}}/api/v1/problems/{{codeProblemId}}/test-cases
-Accept: application/json
-Content-Type: application/json
-
-{
-  "testCode": "assert result == df.shape",
-  "expectedResult": "df.shape",
-  "testOrder": 1,
-  "score": 10,
+  "testOrder": 2,
   "isHidden": true,
   "timeoutMs": 3000
 }
 
-> {%
-    client.global.set("createdTestCaseId", response.body.data.testCaseId);
-%}
 
-
-### 6. 테스트케이스 등록 실패 - 존재하지 않는 문제
+### 4. 테스트케이스 삭제 / 비활성화
 # 기대 결과:
-# - 404 PROBLEM_NOT_FOUND
+# - 200 OK
+# - 실제 삭제가 아니라 status = INACTIVE로 변경됩니다.
+DELETE {{baseUrl}}/api/v1/test-cases/{{testCaseId}}
+Accept: application/json
+Cookie: accessToken={{accessToken}}
+
+
+# =====================================================
+# 테스트케이스 예외 확인
+# =====================================================
+
+### 5. 테스트케이스 등록 실패 - 존재하지 않는 문제
+# 기대 결과:
+# - 404 Not Found
+# - PROBLEM_NOT_FOUND
 POST {{baseUrl}}/api/v1/problems/{{notFoundProblemId}}/test-cases
 Accept: application/json
 Content-Type: application/json
+Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
   "expectedResult": "df.shape",
   "testOrder": 1,
-  "score": 10,
   "isHidden": false,
   "timeoutMs": 3000
 }
 
 
-### 7. 테스트케이스 등록 실패 - TEXT 문제에는 테스트케이스 등록 불가
+### 6. 테스트케이스 등록 실패 - 테스트 코드 누락
 # 기대 결과:
-# - 400 PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE
-POST {{baseUrl}}/api/v1/problems/{{textProblemId}}/test-cases
+# - 400 Bad Request
+# - PROBLEM_TESTCASE_INVALID_INPUT
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/test-cases
 Accept: application/json
 Content-Type: application/json
-
-{
-  "testCode": "assert result == df.shape",
-  "expectedResult": "df.shape",
-  "testOrder": 1,
-  "score": 10,
-  "isHidden": false,
-  "timeoutMs": 3000
-}
-
-
-### 8. 테스트케이스 등록 실패 - 잘못된 입력값
-# 기대 결과:
-# - 400 PROBLEM_TEST_CASE_INVALID_INPUT
-POST {{baseUrl}}/api/v1/problems/{{codeProblemId}}/test-cases
-Accept: application/json
-Content-Type: application/json
+Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "",
   "expectedResult": "df.shape",
-  "testOrder": 0,
-  "score": 10,
+  "testOrder": 1,
   "isHidden": false,
   "timeoutMs": 3000
 }
 
 
-### 9. 테스트케이스 수정 실패 - 존재하지 않는 테스트케이스
+### 7. 테스트케이스 수정 실패 - 존재하지 않는 테스트케이스
 # 기대 결과:
-# - 404 PROBLEM_TEST_CASE_NOT_FOUND
+# - 404 Not Found
+# - PROBLEM_TESTCASE_NOT_FOUND
 PUT {{baseUrl}}/api/v1/test-cases/{{notFoundTestCaseId}}
 Accept: application/json
 Content-Type: application/json
+Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
   "expectedResult": "df.shape",
   "testOrder": 1,
-  "score": 10,
   "isHidden": false,
   "timeoutMs": 3000
 }
+
+
+### 8. 테스트케이스 삭제 실패 - 존재하지 않는 테스트케이스
+# 기대 결과:
+# - 404 Not Found
+# - PROBLEM_TESTCASE_NOT_FOUND
+DELETE {{baseUrl}}/api/v1/test-cases/{{notFoundTestCaseId}}
+Accept: application/json
+Cookie: accessToken={{accessToken}}

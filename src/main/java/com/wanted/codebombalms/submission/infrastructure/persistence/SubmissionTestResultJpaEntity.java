@@ -41,9 +41,6 @@ public class SubmissionTestResultJpaEntity {
     private Integer executionTimeMs;
 
     @Column(nullable = false)
-    private Integer score;
-
-    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     protected SubmissionTestResultJpaEntity() {
@@ -55,8 +52,7 @@ public class SubmissionTestResultJpaEntity {
             Boolean passed,
             String actualOutput,
             String errorMessage,
-            Integer executionTimeMs,
-            Integer score
+            Integer executionTimeMs
     ) {
         this.submission = submission;
         this.testCase = testCase;
@@ -64,7 +60,6 @@ public class SubmissionTestResultJpaEntity {
         this.actualOutput = actualOutput;
         this.errorMessage = errorMessage;
         this.executionTimeMs = executionTimeMs;
-        this.score = score;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -94,10 +89,6 @@ public class SubmissionTestResultJpaEntity {
 
     public Integer getExecutionTimeMs() {
         return executionTimeMs;
-    }
-
-    public Integer getScore() {
-        return score;
     }
 
     public LocalDateTime getCreatedAt() {

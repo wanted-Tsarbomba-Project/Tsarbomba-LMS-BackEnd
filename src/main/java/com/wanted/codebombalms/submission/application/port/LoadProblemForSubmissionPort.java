@@ -14,7 +14,6 @@ public interface LoadProblemForSubmissionPort {
             Integer problemOrder,
             String answer,
             String explanation,
-            int score,
             Integer attemptLimit,
             Boolean retriable
     ) {

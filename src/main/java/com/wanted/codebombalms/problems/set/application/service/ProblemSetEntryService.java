@@ -63,6 +63,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                 problem.getTitle(),
                 problem.getContent(),
                 problem.getProblemType(),
+                problem.getPoint(),
                 problem.getStartCode()
         );
     }

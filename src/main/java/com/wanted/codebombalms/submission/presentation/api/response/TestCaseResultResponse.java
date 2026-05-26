@@ -8,8 +8,7 @@ public record TestCaseResultResponse(
         Boolean isHidden,
         String actualOutput,
         String errorMessage,
-        Integer executionTimeMs,
-        Integer score
+        Integer executionTimeMs
 ) {
 
     public TestCaseResultResponse(TestCaseResultView result) {
@@ -19,8 +18,7 @@ public record TestCaseResultResponse(
                 result.hidden(),
                 result.actualOutput(),
                 result.errorMessage(),
-                result.executionTimeMs(),
-                result.score()
+                result.executionTimeMs()
         );
     }
 }

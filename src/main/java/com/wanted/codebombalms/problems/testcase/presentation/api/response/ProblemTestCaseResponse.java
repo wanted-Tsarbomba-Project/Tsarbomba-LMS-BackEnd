@@ -8,7 +8,6 @@ public record ProblemTestCaseResponse(
         String testCode,
         String expectedResult,
         Integer testOrder,
-        Integer score,
         Boolean isHidden,
         Integer timeoutMs,
         String status
@@ -21,7 +20,6 @@ public record ProblemTestCaseResponse(
                 view.testCode(),
                 view.expectedResult(),
                 view.testOrder(),
-                view.score(),
                 view.hidden(),
                 view.timeoutMs(),
                 view.status()

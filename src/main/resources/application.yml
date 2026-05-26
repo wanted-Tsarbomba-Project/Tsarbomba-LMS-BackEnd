@@ -13,7 +13,6 @@ jwt:
   expiration: 3600000
 
 
-#챗봇설정
 fastapi:
   url: http://localhost:8000
 
@@ -24,10 +23,11 @@ gcp:
   project-id: ${GCP_PROJECT_ID:project-9eb65e0d-55b9-4a40-878}
   storage:
     bucket: ${GCP_STORAGE_BUCKET:codebombalms}
+    dataset-prefix: ${GCP_STORAGE_DATASET_PREFIX:problem_dataset}
   credentials:
     location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
 
-# 코드 실행기(처음엔 로컬 파이썬으로만)
+#로컬 코드 실행기
 code:
   runner:
     python-command: python

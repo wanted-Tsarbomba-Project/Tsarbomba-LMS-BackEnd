@@ -17,7 +17,6 @@ public interface CodeSubmissionListQueryUseCase {
             Long submissionId,
             Long problemId,
             Boolean correct,
-            Integer earnedScore,
             Integer passedTestCount,
             Integer totalTestCount,
             String executionStatus,

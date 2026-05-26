@@ -46,9 +46,7 @@ public class ProblemTestCaseController {
                 problemId,
                 request.testCode(),
                 request.expectedResult(),
-                request.testOrder(),
-                request.score(),
-                request.isHidden(),
+                request.testOrder(),                request.isHidden(),
                 request.timeoutMs()
         ));
 
@@ -85,9 +83,7 @@ public class ProblemTestCaseController {
                 testCaseId,
                 request.testCode(),
                 request.expectedResult(),
-                request.testOrder(),
-                request.score(),
-                request.isHidden(),
+                request.testOrder(),                request.isHidden(),
                 request.timeoutMs()
         ));
 

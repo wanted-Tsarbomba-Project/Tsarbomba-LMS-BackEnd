@@ -38,7 +38,6 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
                 submission.getSubmissionId(),
                 submission.getProblem().getProblemId(),
                 submission.getCorrect(),
-                submission.getEarnedScore(),
                 submission.getPassedTestCount(),
                 submission.getTotalTestCount(),
                 submission.getExecutionStatus(),
@@ -55,8 +54,7 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
                 result.getTestCase().getHidden(),
                 result.getActualOutput(),
                 result.getErrorMessage(),
-                result.getExecutionTimeMs(),
-                result.getScore()
+                result.getExecutionTimeMs()
         );
     }
 }

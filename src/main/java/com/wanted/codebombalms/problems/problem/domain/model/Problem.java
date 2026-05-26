@@ -10,7 +10,7 @@ public class Problem {
     private final String problemType;
     private final String answer;
     private final String explanation;
-    private final Integer score;
+    private final Integer point;
     private final Integer attemptLimit;
     private final Boolean retriable;
 
@@ -23,7 +23,7 @@ public class Problem {
             String problemType,
             String answer,
             String explanation,
-            Integer score,
+            Integer point,
             Integer attemptLimit,
             Boolean retriable
     ) {
@@ -35,7 +35,7 @@ public class Problem {
         this.problemType = problemType;
         this.answer = answer;
         this.explanation = explanation;
-        this.score = score;
+        this.point = point;
         this.attemptLimit = attemptLimit;
         this.retriable = retriable;
     }
@@ -49,7 +49,7 @@ public class Problem {
             String problemType,
             String answer,
             String explanation,
-            Integer score,
+            Integer point,
             Integer attemptLimit,
             Boolean retriable
     ) {
@@ -62,7 +62,7 @@ public class Problem {
                 problemType,
                 answer,
                 explanation,
-                score,
+                point,
                 attemptLimit,
                 retriable
         );
@@ -100,8 +100,8 @@ public class Problem {
         return explanation;
     }
 
-    public Integer getScore() {
-        return score;
+    public Integer getPoint() {
+        return point;
     }
 
     public Integer getAttemptLimit() {

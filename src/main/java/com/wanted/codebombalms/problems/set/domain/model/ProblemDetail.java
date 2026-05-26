@@ -7,6 +7,7 @@ public class ProblemDetail {
     private final String title;
     private final String content;
     private final String problemType;
+    private final Integer point;
     private final String startCode;
 
     private ProblemDetail(
@@ -15,6 +16,7 @@ public class ProblemDetail {
             String title,
             String content,
             String problemType,
+            Integer point,
             String startCode
     ) {
         this.problemId = problemId;
@@ -22,6 +24,7 @@ public class ProblemDetail {
         this.title = title;
         this.content = content;
         this.problemType = problemType;
+        this.point = point;
         this.startCode = startCode;
     }
 
@@ -30,13 +33,14 @@ public class ProblemDetail {
             Integer problemNumber,
             String title,
             String content,
-            String problemType
+            String problemType,
+            Integer point
     ) {
-        return new ProblemDetail(problemId, problemNumber, title, content, problemType, null);
+        return new ProblemDetail(problemId, problemNumber, title, content, problemType, point, null);
     }
 
     public ProblemDetail withStartCode(String startCode) {
-        return new ProblemDetail(problemId, problemNumber, title, content, problemType, startCode);
+        return new ProblemDetail(problemId, problemNumber, title, content, problemType, point, startCode);
     }
 
     public Long getProblemId() {
@@ -57,6 +61,10 @@ public class ProblemDetail {
 
     public String getProblemType() {
         return problemType;
+    }
+
+    public Integer getPoint() {
+        return point;
     }
 
     public String getStartCode() {

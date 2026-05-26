@@ -22,6 +22,7 @@ public interface EnterProblemSetUseCase {
             String title,
             String content,
             String problemType,
+            Integer point,
             String startCode
     ) {
     }

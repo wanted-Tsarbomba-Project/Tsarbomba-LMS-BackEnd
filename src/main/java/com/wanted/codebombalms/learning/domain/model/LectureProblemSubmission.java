@@ -9,7 +9,6 @@ public record LectureProblemSubmission(
         Long problemId,
         String submittedAnswer,
         Boolean correct,
-        Integer score,
         Integer attemptNo,
         LocalDateTime submittedAt
 ) {
@@ -20,7 +19,6 @@ public record LectureProblemSubmission(
             Long problemId,
             String submittedAnswer,
             boolean correct,
-            Integer score,
             Integer attemptNo
     ) {
         return new LectureProblemSubmission(
@@ -30,7 +28,6 @@ public record LectureProblemSubmission(
                 problemId,
                 submittedAnswer,
                 correct,
-                score,
                 attemptNo,
                 LocalDateTime.now()
         );

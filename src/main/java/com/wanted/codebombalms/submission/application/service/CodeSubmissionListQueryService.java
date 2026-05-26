@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.submission.application.service;
 
-import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
 import com.wanted.codebombalms.submission.application.port.SubmissionListQueryPort;
 import com.wanted.codebombalms.submission.application.usecase.CodeSubmissionListQueryUseCase;
@@ -58,7 +58,6 @@ public class CodeSubmissionListQueryService implements CodeSubmissionListQueryUs
                 item.submissionId(),
                 item.problemId(),
                 item.correct(),
-                item.earnedScore(),
                 item.passedTestCount(),
                 item.totalTestCount(),
                 item.executionStatus(),

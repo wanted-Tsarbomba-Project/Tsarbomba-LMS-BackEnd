@@ -1,13 +1,14 @@
 package com.wanted.codebombalms.problems.problem.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.problem.domain.model.Problem;
 import com.wanted.codebombalms.problems.problem.domain.repository.ProblemRepository;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProblemQueryService {
@@ -50,7 +51,6 @@ public class ProblemQueryService {
                 problem.getProblemOrder(),
                 problem.getAnswer(),
                 problem.getExplanation(),
-                problem.getScore(),
                 problem.getAttemptLimit(),
                 problem.getRetriable()
         );
@@ -88,6 +88,7 @@ public class ProblemQueryService {
                 problem.getTitle(),
                 problem.getContent(),
                 problem.getProblemType(),
+                problem.getPoint(),
                 null
         );
     }
@@ -98,6 +99,7 @@ public class ProblemQueryService {
             String title,
             String content,
             String problemType,
+            Integer point,
             String startCode
     ) {
         public ProblemView withStartCode(String startCode) {
@@ -107,6 +109,7 @@ public class ProblemQueryService {
                     title,
                     content,
                     problemType,
+                    point,
                     startCode
             );
         }
@@ -118,7 +121,6 @@ public class ProblemQueryService {
             Integer problemOrder,
             String answer,
             String explanation,
-            int score,
             Integer attemptLimit,
             Boolean retriable
     ) {
