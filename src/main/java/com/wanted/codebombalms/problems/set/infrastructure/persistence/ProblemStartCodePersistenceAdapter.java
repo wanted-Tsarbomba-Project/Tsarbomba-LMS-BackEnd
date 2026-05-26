@@ -17,7 +17,7 @@ public class ProblemStartCodePersistenceAdapter implements LoadProblemStartCodeP
     public String loadStartCode(Long problemId) {
         return problemDatasetRepository.findFirstByProblem_ProblemIdAndStatus(problemId, ACTIVE_STATUS)
                 .map(dataset -> "import pandas as pd\n\n"
-                        + "df = pd.read_csv(\"" + dataset.getFilePath() + "\")")
+                        + "df = pd.read_csv(\"" + dataset.getFileUrl() + "\")")
                 .orElse(null);
     }
 }
