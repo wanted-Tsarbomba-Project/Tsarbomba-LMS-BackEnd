@@ -13,16 +13,17 @@ public enum ProblemErrorCode implements ErrorCode {
     ACCESS_DENIED("PRB-PBL-002", "문제 접근 권한이 없습니다."),
     PROBLEM_NOT_UNLOCKED("PRB-PBL-003", "이전 문제를 먼저 풀어야 합니다."),
     PROBLEM_HAS_SUBMISSION("PRB-PBL-004", "제출 기록이 존재합니다."),
-    PROBLEM_NOT_IN_SET("PRB-PBL-005", "해당 문제 세트에 속한 소문제가 아닙니다."),
+    PROBLEM_NOT_IN_SET("PRB-PBL-005", "해당 문제 세트에 속한 문제가 아닙니다."),
     PROBLEM_TITLE_REQUIRED("PRB-PBL-006", "소문제 제목은 필수입니다."),
     PROBLEM_CONTENT_REQUIRED("PRB-PBL-007", "소문제 내용은 필수입니다."),
     PROBLEM_ANSWER_REQUIRED("PRB-PBL-008", "소문제 정답은 필수입니다."),
     PROBLEM_REQUIRED("PRB-PBL-009", "소문제는 1개 이상 필요합니다."),
+    PROBLEM_POINT_REQUIRED("PRB-PBL-010", "문제 포인트는 1 이상이어야 합니다."),
 
     // 문제 세트 (PRB-SET)
     PROBLEM_SET_NOT_FOUND("PRB-SET-001", "문제 세트를 찾을 수 없습니다."),
     ATTEMPT_LIMIT_EXCEEDED("PRB-SET-002", "제출 가능 횟수를 초과했습니다."),
-    ALREADY_COMPLETED("PRB-SET-003", "이미 완료된 문제 세트입니다."),
+    ALREADY_COMPLETED("PRB-SET-003", "이미 완료한 문제 세트입니다."),
     PROBLEM_SET_NOT_COMPLETED("PRB-SET-004", "문제 세트를 끝까지 풀지 않았습니다."),
     NO_CURRENT_PROBLEM("PRB-SET-005", "현재 풀 문제가 없습니다."),
     PROBLEM_SET_TITLE_REQUIRED("PRB-SET-006", "문제 세트 제목은 필수입니다."),
@@ -43,7 +44,7 @@ public enum ProblemErrorCode implements ErrorCode {
     PROBLEM_DATASET_INVALID_FILE("PRB-DAT-004", "CSV 파일만 업로드할 수 있습니다."),
     PROBLEM_DATASET_UPLOAD_FAILED("PRB-DAT-005", "데이터셋 업로드에 실패했습니다."),
 
-    // 테스트 코드 (PRB-TC)
+    // 테스트케이스 (PRB-TC)
     PROBLEM_TEST_CASE_NOT_FOUND("PRB-TC-001", "테스트케이스를 찾을 수 없습니다."),
     PROBLEM_TEST_CASE_INVALID_INPUT("PRB-TC-002", "테스트케이스 입력값이 올바르지 않습니다."),
     PROBLEM_TEST_CASE_ALREADY_EXISTS("PRB-TC-003", "이미 등록된 테스트케이스가 있습니다."),
@@ -53,8 +54,8 @@ public enum ProblemErrorCode implements ErrorCode {
     PROBLEM_CODE_INVALID_INPUT("PRB-EXE-001", "코드 값이 비어 있습니다."),
     PROBLEM_CODE_EXECUTION_FAILED("PRB-EXE-002", "코드 실행에 실패했습니다."),
 
-    // 난이도 코드
-    PROBLEM_INVALID_INPUT("PRB-INP-001", "문제 난이도 값이 올바르지 않습니다."),
+    // 입력값
+    PROBLEM_INVALID_INPUT("PRB-INP-001", "문제 입력값이 올바르지 않습니다."),
 
     // 공통 (PRB)
     INVALID_INPUT("PRB-001", "필수값이 누락되었습니다."),

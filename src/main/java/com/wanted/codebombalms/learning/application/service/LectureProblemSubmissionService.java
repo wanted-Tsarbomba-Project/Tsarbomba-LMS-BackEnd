@@ -50,9 +50,7 @@ public class LectureProblemSubmissionService implements LectureProblemSubmission
         );
 
         boolean correct = answerGradingService.gradeTextAnswer(problem.answer(), command.submittedAnswer());
-        int attemptNo = previousAttemptCount + 1;
-        int score = correct ? problem.score() : 0;
-        int remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
+        int attemptNo = previousAttemptCount + 1;        int remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
                 problem.attemptLimit(),
                 attemptNo
         );
@@ -64,9 +62,7 @@ public class LectureProblemSubmissionService implements LectureProblemSubmission
                         command.courseProblemStepId(),
                         problem.problemId(),
                         command.submittedAnswer(),
-                        correct,
-                        score,
-                        attemptNo
+                        correct,                        attemptNo
                 )
         );
 
@@ -82,9 +78,7 @@ public class LectureProblemSubmissionService implements LectureProblemSubmission
                 savedSubmission.lectureProblemSubmissionId(),
                 command.courseProblemStepId(),
                 problem.problemId(),
-                correct,
-                score,
-                attemptNo,
+                correct,                attemptNo,
                 remainingAttemptCount,
                 canRetry,
                 progress.isCompleted(),

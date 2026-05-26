@@ -1,7 +1,8 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
-import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryJpaEntity;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
+import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryJpaEntity;
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryMapper;
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.SpringDataProblemCategoryRepository;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
@@ -17,7 +18,6 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemSetModificationR
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistration;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistrationResult;
 import com.wanted.codebombalms.problems.set.domain.repository.ProblemSetManagementRepository;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -152,7 +152,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 command.content(),
                 command.answer(),
                 command.explanation(),
-                score(command.point()),
+                command.point(),
                 problemOrder
         );
     }
@@ -168,7 +168,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 command.content(),
                 command.answer(),
                 command.explanation(),
-                score(command.point()),
+                command.point(),
                 problemOrder
         );
     }
@@ -191,7 +191,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 command.content(),
                 command.answer(),
                 command.explanation(),
-                score(command.point())
+                command.point()
         );
 
         return problem;
@@ -220,9 +220,5 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
 
         hint.update(command.hint());
-    }
-
-    private int score(Integer point) {
-        return point == null ? 0 : point;
     }
 }

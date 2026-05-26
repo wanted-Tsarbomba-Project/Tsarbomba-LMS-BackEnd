@@ -37,7 +37,6 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
                     testCase.getTestCode(),
                     testCase.getExpectedResult(),
                     testCase.getTestOrder(),
-                    testCase.getScore(),
                     testCase.getHidden(),
                     testCase.getTimeoutMs()
             )));
@@ -48,7 +47,6 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
                 testCase.getTestCode(),
                 testCase.getExpectedResult(),
                 testCase.getTestOrder(),
-                testCase.getScore(),
                 testCase.getHidden(),
                 testCase.getTimeoutMs()
         );
@@ -88,8 +86,7 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
 
         return new LoadTestCaseProblemPort.TestCaseProblemView(
                 problem.getProblemId(),
-                problem.getProblemType(),
-                problem.getScore()
+                problem.getProblemType()
         );
     }
 
@@ -110,7 +107,6 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
                 entity.getTestCode(),
                 entity.getExpectedResult(),
                 entity.getTestOrder(),
-                entity.getScore(),
                 entity.getHidden(),
                 entity.getTimeoutMs(),
                 entity.getStatus()

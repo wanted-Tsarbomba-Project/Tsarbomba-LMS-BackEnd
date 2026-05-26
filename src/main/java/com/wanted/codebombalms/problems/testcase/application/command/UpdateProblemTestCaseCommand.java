@@ -5,7 +5,6 @@ public record UpdateProblemTestCaseCommand(
         String testCode,
         String expectedResult,
         Integer testOrder,
-        Integer score,
         Boolean hidden,
         Integer timeoutMs
 ) {

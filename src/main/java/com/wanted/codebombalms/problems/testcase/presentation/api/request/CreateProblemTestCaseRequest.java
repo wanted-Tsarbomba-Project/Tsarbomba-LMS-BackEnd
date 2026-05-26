@@ -4,7 +4,6 @@ public record CreateProblemTestCaseRequest(
         String testCode,
         String expectedResult,
         Integer testOrder,
-        Integer score,
         Boolean isHidden,
         Integer timeoutMs
 ) {

@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.problems.testcase.application.service;
 
-
 import com.wanted.codebombalms.problems.testcase.application.command.CreateProblemTestCaseCommand;
 import com.wanted.codebombalms.problems.testcase.application.command.UpdateProblemTestCaseCommand;
 import com.wanted.codebombalms.problems.testcase.application.policy.ProblemTestCasePolicy;
@@ -27,14 +26,13 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
     @Override
     @Transactional
     public TestCaseView handle(CreateProblemTestCaseCommand command) {
-        problemTestCasePolicy.validateCreatable(command.problemId(),command.score());
+        problemTestCasePolicy.validateCreatable(command.problemId());
 
         ProblemTestCase testCase = ProblemTestCase.create(
                 command.problemId(),
                 command.testCode(),
                 command.expectedResult(),
                 command.testOrder(),
-                command.score(),
                 command.hidden(),
                 command.timeoutMs()
         );
@@ -44,13 +42,10 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
 
     @Override
     @Transactional
-    public ProblemTestCaseCommandUseCase.TestCaseView handle(UpdateProblemTestCaseCommand command) {
+    public TestCaseView handle(UpdateProblemTestCaseCommand command) {
         ProblemTestCase existingTestCase = problemTestCaseRepository.findActiveById(command.testCaseId());
 
-        problemTestCasePolicy.validateUpdatable(
-                existingTestCase.getProblemId(),
-                command.score()
-        );
+        problemTestCasePolicy.validateUpdatable(existingTestCase.getProblemId());
 
         ProblemTestCase updatedTestCase = ProblemTestCase.restore(
                 existingTestCase.getTestCaseId(),
@@ -58,7 +53,6 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
                 command.testCode(),
                 command.expectedResult(),
                 command.testOrder(),
-                command.score(),
                 command.hidden(),
                 command.timeoutMs(),
                 existingTestCase.getStatus()
@@ -69,23 +63,20 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
 
     @Override
     @Transactional
-    public ProblemTestCaseCommandUseCase.TestCaseView delete(Long testCaseId) {
+    public TestCaseView delete(Long testCaseId) {
         return toView(problemTestCaseRepository.deactivate(testCaseId));
     }
 
-    private ProblemTestCaseCommandUseCase.TestCaseView toView(ProblemTestCase testCase) {
-        return new ProblemTestCaseCommandUseCase.TestCaseView(
+    private TestCaseView toView(ProblemTestCase testCase) {
+        return new TestCaseView(
                 testCase.getTestCaseId(),
                 testCase.getProblemId(),
                 testCase.getTestCode(),
                 testCase.getExpectedResult(),
                 testCase.getTestOrder(),
-                testCase.getScore(),
                 testCase.getHidden(),
                 testCase.getTimeoutMs(),
                 testCase.getStatus()
         );
     }
-
-
 }

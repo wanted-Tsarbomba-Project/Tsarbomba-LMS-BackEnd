@@ -22,7 +22,9 @@ public enum UserErrorCode implements ErrorCode {
 
     // 계정 상태
     USER_ACCOUNT_LOCKED("USR-007", "잠긴 계정입니다."),
-    USER_SOCIAL_ACCOUNT_NO_PASSWORD("USR-008", "소셜 가입 계정은 비밀번호 재설정을 사용할 수 없습니다.");
+    USER_SOCIAL_ACCOUNT_NO_PASSWORD("USR-008", "소셜 가입 계정은 비밀번호 재설정을 사용할 수 없습니다."),
+    // 이메일 인증
+    USER_EMAIL_NOT_VERIFIED("USR-009", "이메일 인증이 완료되지 않았습니다.");
 
     private final String code;
     private final String message;

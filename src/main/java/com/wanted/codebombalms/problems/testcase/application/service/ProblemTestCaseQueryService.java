@@ -43,7 +43,6 @@ public class ProblemTestCaseQueryService implements ProblemTestCaseQueryUseCase 
                 testCase.getTestCode(),
                 testCase.getExpectedResult(),
                 testCase.getTestOrder(),
-                testCase.getScore(),
                 testCase.getHidden(),
                 testCase.getTimeoutMs(),
                 testCase.getStatus()

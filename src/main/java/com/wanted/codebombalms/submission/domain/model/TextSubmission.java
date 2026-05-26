@@ -5,7 +5,6 @@ public record TextSubmission(
         Long problemId,
         String submittedAnswer,
         Boolean correct,
-        Integer earnedScore,
         Integer attemptNo
 ) {
 }

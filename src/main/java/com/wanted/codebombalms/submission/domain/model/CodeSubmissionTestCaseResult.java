@@ -6,7 +6,6 @@ public record CodeSubmissionTestCaseResult(
         Boolean hidden,
         String actualOutput,
         String errorMessage,
-        Integer executionTimeMs,
-        Integer score
+        Integer executionTimeMs
 ) {
 }

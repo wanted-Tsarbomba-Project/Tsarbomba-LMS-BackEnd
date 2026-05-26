@@ -5,7 +5,6 @@ public record SubmissionTestResult(
         Boolean passed,
         String actualOutput,
         String errorMessage,
-        Integer executionTimeMs,
-        Integer score
+        Integer executionTimeMs
 ) {
 }

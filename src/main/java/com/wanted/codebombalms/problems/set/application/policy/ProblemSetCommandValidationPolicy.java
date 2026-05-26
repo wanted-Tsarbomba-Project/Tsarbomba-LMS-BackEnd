@@ -1,14 +1,12 @@
 package com.wanted.codebombalms.problems.set.application.policy;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.set.application.command.ProblemCreateCommand;
 import com.wanted.codebombalms.problems.set.application.command.ProblemUpdateCommand;
 import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.command.UpdateProblemSetCommand;
-import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class ProblemSetCommandValidationPolicy {
@@ -32,12 +30,14 @@ public class ProblemSetCommandValidationPolicy {
         requireNotBlank(command.title(), ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         requireNotBlank(command.content(), ProblemErrorCode.PROBLEM_CONTENT_REQUIRED);
         requireNotBlank(command.answer(), ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
+        requirePositivePoint(command.point());
     }
 
     private void validate(ProblemUpdateCommand command) {
         requireNotBlank(command.title(), ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         requireNotBlank(command.content(), ProblemErrorCode.PROBLEM_CONTENT_REQUIRED);
         requireNotBlank(command.answer(), ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
+        requirePositivePoint(command.point());
     }
 
     private void validateProblemSet(
@@ -51,6 +51,7 @@ public class ProblemSetCommandValidationPolicy {
         validateDifficulty(difficulty);
         requireNotEmpty(problems, ProblemErrorCode.PROBLEM_REQUIRED);
     }
+
     private void validateDifficulty(String difficulty) {
         if (difficulty == null || difficulty.isBlank()) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
@@ -62,6 +63,13 @@ public class ProblemSetCommandValidationPolicy {
             throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
         }
     }
+
+    private void requirePositivePoint(Integer point) {
+        if (point == null || point <= 0) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_POINT_REQUIRED);
+        }
+    }
+
     private void requireNotBlank(String value, ProblemErrorCode errorCode) {
         if (value == null || value.isBlank()) {
             throw new ValidationException(errorCode);

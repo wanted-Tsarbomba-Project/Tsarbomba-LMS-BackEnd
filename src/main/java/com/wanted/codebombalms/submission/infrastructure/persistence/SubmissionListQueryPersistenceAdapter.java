@@ -38,7 +38,6 @@ public class SubmissionListQueryPersistenceAdapter implements SubmissionListQuer
                 submission.getSubmissionId(),
                 submission.getProblem().getProblemId(),
                 submission.getCorrect(),
-                submission.getEarnedScore(),
                 submission.getPassedTestCount(),
                 submission.getTotalTestCount(),
                 submission.getExecutionStatus(),

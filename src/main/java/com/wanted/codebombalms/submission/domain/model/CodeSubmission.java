@@ -5,7 +5,6 @@ public record CodeSubmission(
         Long problemId,
         String submittedCode,
         Boolean correct,
-        Integer earnedScore,
         Integer attemptNo,
         Integer passedTestCount,
         Integer totalTestCount,

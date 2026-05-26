@@ -13,7 +13,6 @@ public class ProblemTestCase {
     private final String testCode;
     private final String expectedResult;
     private final Integer testOrder;
-    private final Integer score;
     private final Boolean hidden;
     private final Integer timeoutMs;
     private final String status;
@@ -24,19 +23,17 @@ public class ProblemTestCase {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs,
             String status
     ) {
-        validate(problemId, testCode, testOrder, score, hidden, status);
+        validate(problemId, testCode, testOrder, hidden, status);
 
         this.testCaseId = testCaseId;
         this.problemId = problemId;
         this.testCode = testCode;
         this.expectedResult = expectedResult;
         this.testOrder = testOrder;
-        this.score = score;
         this.hidden = hidden;
         this.timeoutMs = timeoutMs == null ? DEFAULT_TIMEOUT_MS : timeoutMs;
         this.status = status;
@@ -47,7 +44,6 @@ public class ProblemTestCase {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs
     ) {
@@ -57,7 +53,6 @@ public class ProblemTestCase {
                 testCode,
                 expectedResult,
                 testOrder,
-                score,
                 hidden,
                 timeoutMs,
                 ACTIVE
@@ -70,7 +65,6 @@ public class ProblemTestCase {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs,
             String status
@@ -81,7 +75,6 @@ public class ProblemTestCase {
                 testCode,
                 expectedResult,
                 testOrder,
-                score,
                 hidden,
                 timeoutMs,
                 status
@@ -92,7 +85,6 @@ public class ProblemTestCase {
             Long problemId,
             String testCode,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             String status
     ) {
@@ -103,9 +95,6 @@ public class ProblemTestCase {
             throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
         }
         if (testOrder == null || testOrder < 1) {
-            throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
-        }
-        if (score == null || score < 0) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
         }
         if (hidden == null) {
@@ -134,10 +123,6 @@ public class ProblemTestCase {
 
     public Integer getTestOrder() {
         return testOrder;
-    }
-
-    public Integer getScore() {
-        return score;
     }
 
     public Boolean getHidden() {

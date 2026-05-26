@@ -34,9 +34,6 @@ public class ProblemTestCaseJpaEntity {
     @Column(nullable = false)
     private Integer testOrder;
 
-    @Column(nullable = false)
-    private Integer score;
-
     @Column(name = "is_hidden", nullable = false)
     private Boolean hidden;
 
@@ -60,7 +57,6 @@ public class ProblemTestCaseJpaEntity {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs
     ) {
@@ -69,7 +65,6 @@ public class ProblemTestCaseJpaEntity {
         testCase.testCode = testCode;
         testCase.expectedResult = expectedResult;
         testCase.testOrder = testOrder;
-        testCase.score = score;
         testCase.hidden = hidden;
         testCase.timeoutMs = timeoutMs;
         testCase.status = "ACTIVE";
@@ -82,14 +77,12 @@ public class ProblemTestCaseJpaEntity {
             String testCode,
             String expectedResult,
             Integer testOrder,
-            Integer score,
             Boolean hidden,
             Integer timeoutMs
     ) {
         this.testCode = testCode;
         this.expectedResult = expectedResult;
         this.testOrder = testOrder;
-        this.score = score;
         this.hidden = hidden;
         this.timeoutMs = timeoutMs;
         this.updatedAt = LocalDateTime.now();
@@ -118,10 +111,6 @@ public class ProblemTestCaseJpaEntity {
 
     public Integer getTestOrder() {
         return testOrder;
-    }
-
-    public Integer getScore() {
-        return score;
     }
 
     public Boolean getHidden() {

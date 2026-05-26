@@ -7,7 +7,6 @@ public record CodeSubmissionResult(
         Long submissionId,
         Long problemId,
         Boolean correct,
-        Integer earnedScore,
         Integer passedTestCount,
         Integer totalTestCount,
         String executionStatus,

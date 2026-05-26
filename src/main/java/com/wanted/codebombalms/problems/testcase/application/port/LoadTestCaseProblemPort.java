@@ -6,8 +6,7 @@ public interface LoadTestCaseProblemPort {
 
     record TestCaseProblemView(
             Long problemId,
-            String problemType,
-            Integer score
+            String problemType
     ) {
     }
 }

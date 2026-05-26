@@ -39,7 +39,7 @@ public class ProblemJpaEntity {
     private String explanation;
 
     @Column(nullable = false)
-    private int score;
+    private Integer point;
 
     private Integer attemptLimit;
 
@@ -59,7 +59,7 @@ public class ProblemJpaEntity {
             String content,
             String answer,
             String explanation,
-            int score,
+            Integer point,
             Integer problemOrder
     ) {
         this.problemSet = problemSet;
@@ -69,7 +69,7 @@ public class ProblemJpaEntity {
         this.difficulty = "EASY";
         this.answer = answer;
         this.explanation = explanation;
-        this.score = score;
+        this.point = point == null ? 0 : point;
         this.attemptLimit = 3;
         this.isRetriable = true;
         this.status = "ACTIVE";
@@ -81,13 +81,13 @@ public class ProblemJpaEntity {
             String content,
             String answer,
             String explanation,
-            int score
+            Integer point
     ) {
         this.title = title;
         this.content = content;
         this.answer = answer;
         this.explanation = explanation;
-        this.score = score;
+        this.point = point == null ? 0 : point;
     }
 
     public void deactivate() {
@@ -126,8 +126,8 @@ public class ProblemJpaEntity {
         return explanation;
     }
 
-    public int getScore() {
-        return score;
+    public Integer getPoint() {
+        return point;
     }
 
     public Integer getAttemptLimit() {

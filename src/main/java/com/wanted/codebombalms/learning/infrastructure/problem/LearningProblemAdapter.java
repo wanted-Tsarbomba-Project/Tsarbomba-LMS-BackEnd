@@ -20,7 +20,6 @@ public class LearningProblemAdapter implements LearningProblemPort {
                 problem.problemId(),
                 problem.answer(),
                 problem.explanation(),
-                problem.score(),
                 problem.attemptLimit(),
                 problem.retriable()
         );
