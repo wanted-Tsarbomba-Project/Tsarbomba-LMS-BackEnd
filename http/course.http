@@ -21,7 +21,7 @@ POST {{host}}/api/v1/courses
 Content-Type: application/json
 
 {
-  "instructorId": 1,
+  "instructorId": {{instructorId}},
   "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
@@ -55,41 +55,26 @@ GET {{host}}/api/v1/courses/{{courseId}}
 ### 10. 강좌에 연결된 문제세트 목록 조회
 GET {{host}}/api/v1/courses/{{courseId}}/problem-sets
 
-### 11. 강의에 연결된 문제 목록 조회
-GET {{host}}/api/v1/lectures/{{lectureId}}/problems
+### 11. 강의에 연결된 문제세트 목록 조회
+GET {{host}}/api/v1/lectures/{{lectureId}}/problem-sets
 
-### 12. 강좌 문제세트와 문제 연결 저장
+### 12. 강좌/강의 문제세트 연결 저장
 PUT {{host}}/api/v1/courses/{{courseId}}/problem-sets
 Content-Type: application/json
 
 {
   "problemSets": [
     {
+      "lectureId": 101,
       "problemSetId": 2002,
       "role": "MAIN",
-      "steps": [
-        {
-          "problemId": 2004,
-          "lectureId": 101,
-          "stepOrder": 1
-        },
-        {
-          "problemId": 2005,
-          "lectureId": 102,
-          "stepOrder": 2
-        }
-      ]
+      "displayOrder": 1
     },
     {
+      "lectureId": 103,
       "problemSetId": 2003,
       "role": "FINAL",
-      "steps": [
-        {
-          "problemId": 2007,
-          "lectureId": null,
-          "stepOrder": 1
-        }
-      ]
+      "displayOrder": 1
     }
   ]
 }

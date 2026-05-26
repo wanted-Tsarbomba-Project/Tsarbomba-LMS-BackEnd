@@ -9,4 +9,6 @@ public interface SpringDataCourseProblemSetRepository extends JpaRepository<Cour
     List<CourseProblemSetJpaEntity> findByCourse_CourseId(Long courseId);
 
     List<CourseProblemSetJpaEntity> findByCourse_CourseIdAndRole(Long courseId, CourseProblemSetRole role);
+
+    List<CourseProblemSetJpaEntity> findByLectureIdOrderByDisplayOrderAsc(Long lectureId);
 }

@@ -21,8 +21,8 @@ public class LectureProblemProgressJpaEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "course_problem_step_id", nullable = false)
-    private Long courseProblemStepId;
+    @Column(name = "lecture_problem_set_id", nullable = false)
+    private Long lectureProblemSetId;
 
     @Column(name = "current_problem_number", nullable = false)
     private Integer currentProblemNumber;
@@ -46,7 +46,7 @@ public class LectureProblemProgressJpaEntity {
         LectureProblemProgressJpaEntity entity = new LectureProblemProgressJpaEntity();
         entity.lectureProblemProgressId = progress.getLectureProblemProgressId();
         entity.userId = progress.getUserId();
-        entity.courseProblemStepId = progress.getCourseProblemStepId();
+        entity.lectureProblemSetId = progress.getLectureProblemSetId();
         entity.currentProblemNumber = progress.getCurrentProblemNumber();
         entity.completed = progress.isCompleted();
         entity.completedAt = progress.getCompletedAt();
@@ -65,7 +65,7 @@ public class LectureProblemProgressJpaEntity {
         return LectureProblemProgress.restore(
                 lectureProblemProgressId,
                 userId,
-                courseProblemStepId,
+                lectureProblemSetId,
                 currentProblemNumber,
                 completed,
                 completedAt,

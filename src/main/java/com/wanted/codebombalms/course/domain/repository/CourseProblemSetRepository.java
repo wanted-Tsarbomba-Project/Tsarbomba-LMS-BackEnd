@@ -13,6 +13,8 @@ public interface CourseProblemSetRepository {
 
     List<CourseProblemSet> findByCourseIdAndRole(Long courseId, CourseProblemSetRole role);
 
+    List<CourseProblemSet> findByLectureId(Long lectureId);
+
     Optional<CourseProblemSet> findById(Long courseProblemSetId);
 
     void deleteByCourseId(Long courseId);

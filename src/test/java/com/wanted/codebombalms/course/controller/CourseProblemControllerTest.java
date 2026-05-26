@@ -7,7 +7,6 @@ import com.wanted.codebombalms.course.controller.CourseProblemController;
 import com.wanted.codebombalms.course.controller.CourseResponseCode;
 import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
 import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
-import com.wanted.codebombalms.course.domain.model.CourseProblemStep;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,8 +41,8 @@ class CourseProblemControllerTest {
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
         given(courseProblemQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
-                CourseProblemSet.restore(6001L, 101L, 2002L, CourseProblemSetRole.MAIN),
-                CourseProblemSet.restore(6002L, 101L, 2003L, CourseProblemSetRole.FINAL)
+                CourseProblemSet.restore(6001L, 101L, 1001L, 2002L, CourseProblemSetRole.MAIN, 1),
+                CourseProblemSet.restore(6002L, 101L, 1003L, 2003L, CourseProblemSetRole.FINAL, 1)
         ));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/problem-sets", 101L)
@@ -56,17 +55,17 @@ class CourseProblemControllerTest {
     }
 
     @Test
-    void findProblemsByLectureReturnsApiResponse() throws Exception {
-        given(courseProblemQueryUseCase.findProblemsByLecture(101L)).willReturn(List.of(
-                CourseProblemStep.restore(6001L, 6001L, 2004L, 101L, 1L)
+    void findProblemSetsByLectureReturnsApiResponse() throws Exception {
+        given(courseProblemQueryUseCase.findProblemSetsByLecture(101L)).willReturn(List.of(
+                CourseProblemSet.restore(6001L, 101L, 101L, 2002L, CourseProblemSetRole.MAIN, 1)
         ));
 
-        mockMvc.perform(get("/api/v1/lectures/{lectureId}/problems", 101L)
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/problem-sets", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseProblemStepId").value(6001L))
-                .andExpect(jsonPath("$.data[0].problemId").value(2004L))
+                .andExpect(jsonPath("$.data[0].courseProblemSetId").value(6001L))
+                .andExpect(jsonPath("$.data[0].problemSetId").value(2002L))
                 .andExpect(jsonPath("$.data[0].lectureId").value(101L));
     }
 
@@ -74,26 +73,24 @@ class CourseProblemControllerTest {
     void configureProblemSetsReturnsApiResponse() throws Exception {
         given(courseProblemCommandUseCase.configureProblemSets(any(ConfigureCourseProblemSetsCommand.class)))
                 .willReturn(List.of(
-                        CourseProblemSet.restore(6001L, 101L, 2002L, CourseProblemSetRole.MAIN),
-                        CourseProblemSet.restore(6002L, 101L, 2003L, CourseProblemSetRole.FINAL)
+                        CourseProblemSet.restore(6001L, 101L, 101L, 2002L, CourseProblemSetRole.MAIN, 1),
+                        CourseProblemSet.restore(6002L, 101L, 103L, 2003L, CourseProblemSetRole.FINAL, 1)
                 ));
 
         String request = """
                 {
                   "problemSets": [
                     {
+                      "lectureId": 101,
                       "problemSetId": 2002,
                       "role": "MAIN",
-                      "steps": [
-                        { "problemId": 2004, "lectureId": 101, "stepOrder": 1 }
-                      ]
+                      "displayOrder": 1
                     },
                     {
+                      "lectureId": 103,
                       "problemSetId": 2003,
                       "role": "FINAL",
-                      "steps": [
-                        { "problemId": 2007, "lectureId": null, "stepOrder": 1 }
-                      ]
+                      "displayOrder": 1
                     }
                   ]
                 }
