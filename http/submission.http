@@ -1,9 +1,17 @@
 @baseUrl = http://localhost:8080
 @userId = 3
 @codeProblemId = 3001
+@submissionId = 3007
+@employeeDatasetPath = uploads/datasets/2558e005-e7ff-4919-a8a6-0fdb32f096ea_employee_performance.csv
+
+# 데이터셋 미연결 검증용
+# 주의: 이 값은 "존재하는 CODE 문제"이면서 problem_dataset이 연결되지 않은 problemId로 바꿔서 실행하세요.
+# 존재하지 않는 문제 ID를 넣으면 PROBLEM_NOT_FOUND가 먼저 반환됩니다.
+@codeProblemWithoutDatasetId = 3999
 
 ### 1. 코드 답안 제출 성공 예시
 # 사전 조건:
+# - codeProblemId 문제는 ACTIVE CODE 문제여야 합니다.
 # - codeProblemId 문제에 ACTIVE 테스트케이스가 1개 이상 있어야 합니다.
 # - userId의 진행 상태가 해당 문제를 풀 수 있는 상태여야 합니다.
 # - 현재 임시 채점기는 코드에 result 변수가 있으면 통과로 판단합니다.
@@ -13,7 +21,7 @@ Content-Type: application/json
 
 {
   "userId": {{userId}},
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"data/employee_performance.csv\")\nresult = df.shape"
+  "code": "result = 1 + 2"
 }
 
 ### 2. 코드 답안 제출 실패 예시 - result 변수 없음
@@ -23,10 +31,11 @@ Content-Type: application/json
 
 {
   "userId": {{userId}},
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"data/employee_performance.csv\")\nprint(df.shape)"
+  "code": "print(1 + 2)"
 }
 
 ### 3. 코드 답안 제출 실패 예시 - 빈 코드
+# 기대 결과: 400 / PROBLEM_CODE_INVALID_INPUT 또는 제출 정책의 입력값 오류
 POST {{baseUrl}}/api/v1/problems/{{codeProblemId}}/submissions
 Accept: application/json
 Content-Type: application/json
@@ -38,9 +47,7 @@ Content-Type: application/json
 
 ### 4. 코드 채점 결과 조회
 # 사전 조건:
-# - 1번 또는 2번 요청으로 생성된 submissionId를 아래 값에 넣어주세요.
-@submissionId = 3007
-
+# - 1번 또는 2번 요청으로 생성된 submissionId를 위 변수에 넣어주세요.
 GET {{baseUrl}}/api/v1/code-submissions/{{submissionId}}
 Accept: application/json
 
@@ -48,21 +55,104 @@ Accept: application/json
 GET {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/submissions?page=1&size=10
 Accept: application/json
 
-### 6. 코드 실행 성공 예시
-# 제출 저장 없이 실행 결과만 확인합니다.
+### 6. 코드 실행 성공 예시 - 단순 결과 출력
+# 기대 결과:
+# - 200 OK
+# - data.output = "3"
+# - data.isSuccess = true
 POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
 Accept: application/json
 Content-Type: application/json
 
 {
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"data/employee_performance.csv\")\nresult = df.shape"
+  "code": "result = 1 + 2"
 }
 
 ### 7. 코드 실행 실패 예시 - result 변수 없음
+# 사용자 코드 실패는 서버 장애가 아니므로 200 OK + isSuccess=false로 내려옵니다.
+# 기대 결과:
+# - 200 OK
+# - data.isSuccess = false
+# - data.errorMessage에 NameError 또는 result 관련 오류 포함
 POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
 Accept: application/json
 Content-Type: application/json
 
 {
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"data/employee_performance.csv\")\nprint(df.shape)"
+  "code": "print(1 + 2)"
 }
+
+### 8. 코드 실행 실패 예시 - 빈 코드
+# 기대 결과:
+# - 400
+# - errorCode/code = PRB-EXE-001 또는 PROBLEM_CODE_INVALID_INPUT에 해당하는 코드
+POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": ""
+}
+
+### 9. 코드 실행 예시 - pandas 설치 확인
+# 기대 결과:
+# - 200 OK
+# - pandas가 설치되어 있으면 data.output에 pandas 버전 출력
+POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\nresult = pd.__version__"
+}
+
+### 10. 코드 실행 예시 - 실제 업로드 CSV 파일 읽기
+# 사전 조건:
+# - pandas 설치 필요
+# - employeeDatasetPath 파일이 실제 uploads/datasets 폴더에 있어야 합니다.
+# 기대 결과:
+# - 200 OK
+# - data.output = "(행수, 열수)" 형태
+POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\ndf = pd.read_csv(\"{{employeeDatasetPath}}\")\nresult = df.shape"
+}
+
+### 11. 코드 실행 실패 예시 - CSV 파일 경로 없음
+# 사용자 코드의 FileNotFoundError는 서버 장애가 아니므로 200 OK + isSuccess=false로 내려옵니다.
+# 기대 결과:
+# - 200 OK
+# - data.isSuccess = false
+# - data.errorMessage에 FileNotFoundError 포함
+POST {{baseUrl}}/api/v1/code-problems/{{codeProblemId}}/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\ndf = pd.read_csv(\"uploads/datasets/not-found.csv\")\nresult = df.shape"
+}
+
+### 12. 코드 실행 실패 예시 - 연결된 데이터셋 없음
+# 사전 조건:
+# - codeProblemWithoutDatasetId를 실제 존재하는 CODE 문제 ID로 바꾸세요.
+# - 해당 문제에는 ACTIVE problem_dataset이 없어야 합니다.
+# 기대 결과:
+# - 404
+# - errorCode/code = PRB-DAT-001 또는 PROBLEM_DATASET_NOT_FOUND에 해당하는 코드
+POST {{baseUrl}}/api/v1/code-problems/{{codeProblemWithoutDatasetId}}/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "result = 1 + 2"
+}
+
+### 13. 코드 실행 서버 오류 검증 안내
+# PROBLEM_CODE_EXECUTION_FAILED는 사용자 코드 실패가 아니라 서버 실행기 자체 실패일 때 발생합니다.
+# 예: application.yml의 code.runner.python-command를 존재하지 않는 명령어로 바꾼 뒤 6번 실행
+# 기대 결과:
+# - 500
+# - errorCode/code = PRB-EXE-002 또는 PROBLEM_CODE_EXECUTION_FAILED에 해당하는 코드

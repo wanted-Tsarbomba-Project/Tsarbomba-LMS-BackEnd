@@ -6,7 +6,10 @@ public interface LoadCodeProblemPort {
 
     record CodeProblemForExecution(
             Long problemId,
-            String problemType
+            String problemType,
+            Long datasetId,
+            String datasetFileName,
+            String datasetPath
     ) {
     }
 }
