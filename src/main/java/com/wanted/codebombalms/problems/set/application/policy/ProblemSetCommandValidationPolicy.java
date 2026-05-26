@@ -66,7 +66,7 @@ public class ProblemSetCommandValidationPolicy {
 
     private void requirePositivePoint(Integer point) {
         if (point == null || point <= 0) {
-            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+            throw new ValidationException(ProblemErrorCode.PROBLEM_POINT_REQUIRED);
         }
     }
 
