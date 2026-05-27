@@ -1,10 +1,13 @@
 package com.wanted.codebombalms.user.infrastructure.persistence;
 
 import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -50,5 +53,18 @@ public class UserRepositoryAdapter implements UserRepository {
         }
 
         return springDataUserRepository.save(entity).toDomain();
+    }
+
+    @Override
+    public List<User> findAllByRole(UserRole role, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return springDataUserRepository.findAllByRoleOrderByCreatedAtDesc(role, pageable).stream()
+                .map(UserJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countByRole(UserRole role) {
+        return springDataUserRepository.countByRole(role);
     }
 }
