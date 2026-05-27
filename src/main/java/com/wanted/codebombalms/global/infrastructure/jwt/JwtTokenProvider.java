@@ -34,9 +34,10 @@ public class JwtTokenProvider {
         this.refreshExpiration = refreshExpiration;
     }
 
-    public String generateAccessToken(Long userId, UserRole role) {
+    public String generateAccessToken(Long userId,String nickname, UserRole role) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("nickname", nickname)
                 .claim("role", role.name())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))

@@ -50,7 +50,7 @@ public class TokenReissueService implements TokenReissueUseCase {
         }
 
         // 5. 새 토큰 발급
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getRole());
+        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(),user.getRole());
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
 
         // 6. RTR — 기존 RT 삭제 + 새 RT 저장 (1회용)
