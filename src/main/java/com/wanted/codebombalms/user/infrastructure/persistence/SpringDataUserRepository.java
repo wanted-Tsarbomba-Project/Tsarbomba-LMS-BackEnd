@@ -1,7 +1,10 @@
 package com.wanted.codebombalms.user.infrastructure.persistence;
 
+import com.wanted.codebombalms.user.domain.model.UserRole;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, Long> {
@@ -13,4 +16,8 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
     boolean existsByEmail(String email);
 
     boolean existsByNickname(String nickname);
+
+    List<UserJpaEntity> findAllByRoleOrderByCreatedAtDesc(UserRole role, Pageable pageable);
+
+    long countByRole(UserRole role);
 }
