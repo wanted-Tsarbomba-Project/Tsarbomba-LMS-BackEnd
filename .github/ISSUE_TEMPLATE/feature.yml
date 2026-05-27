@@ -9,13 +9,17 @@ body:
     validations:
       required: true
 
-  - type: input
-    id: module
-    attributes:
-      label: 어떤 패키지와 클래스에서 어떤 작업을 했는지 작성해주세요.
-      placeholder: "module/feature"
-    validations:
-      required: true     
+  - type: textarea
+  id: work-package
+  attributes:
+    label: 어떤 패키지와 클래스에서 어떤 작업을 했는지 작성해주세요.
+    description: 작업 예정 패키지와 작업 내용을 작성해주세요.
+    placeholder: |
+      - `codebombalms/lecture`: 강의 관련 작업 예정
+      - `codebombalms/course`: 강좌 관련 작업 예정
+      - `codebombalms/learning`: 학습 관련 작업 예정
+  validations:
+    required: true
 
   - type: textarea
     id: checklist
