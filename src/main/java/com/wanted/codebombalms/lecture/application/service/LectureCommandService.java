@@ -10,6 +10,7 @@ import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         Course course = courseCatalogPort.findCourse(command.courseId());
         lectureCreationPolicy.validate(course);
+        validateLectureOrder(command.courseId(), null, command.lectureOrder());
 
         Lecture lecture = Lecture.create(
                 course,
@@ -59,6 +61,11 @@ public class LectureCommandService implements LectureCommandUseCase {
         if (command.status() == LectureStatus.DELETED) {
             throw new ValidationException(LectureErrorCode.LECTURE_DELETE_STATUS_REQUIRES_DELETE);
         }
+        validateLectureOrder(
+                lecture.getCourse().getCourseId(),
+                lecture.getLectureId(),
+                command.lectureOrder()
+        );
 
         lecture.update(
                 command.title(),
@@ -81,5 +88,20 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         lecture.delete();
         lectureRepository.save(lecture);
+    }
+
+    private void validateLectureOrder(Long courseId, Long lectureId, Integer lectureOrder) {
+        if (lectureOrder == null) {
+            return;
+        }
+
+        boolean duplicated = lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
+                .stream()
+                .filter(lecture -> lectureId == null || !lecture.getLectureId().equals(lectureId))
+                .anyMatch(lecture -> lecture.getLectureOrder().equals(lectureOrder));
+
+        if (duplicated) {
+            throw new ConflictException(LectureErrorCode.LECTURE_ORDER_DUPLICATED);
+        }
     }
 }

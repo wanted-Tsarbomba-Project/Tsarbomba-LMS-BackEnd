@@ -1,20 +1,68 @@
-### 기본 주소
+﻿### 기본 주소
 @host = http://localhost:8080
 
 ### 테스트용 ID
-@courseId = 101
-@lectureId = 101
+@courseId = 1
+@lectureId = 2
+@lectureProblemSetId = 2
+@problemSetId = 2
+@problemId = 4
+@userId = 3
 
 ### 1. 강의 진행 상태 저장
 PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
 Content-Type: application/json
 
 {
+  "userId": {{userId}},
   "completed": true
 }
 
-### 2. 내 강의 진행 상태 조회
-GET {{host}}/api/v1/lectures/{{lectureId}}/progress
+### 2. 강의 진행 상태 조회
+GET {{host}}/api/v1/lectures/{{lectureId}}/progress?userId={{userId}}
 
-### 3. 관리자 - 강좌별 학생 학습 현황 조회
-GET {{host}}/api/v1/admin/courses/{{courseId}}/students/learning-progress
+### 3. 강좌별 학습 현황 목록 조회
+GET {{host}}/api/v1/courses/learning-progress
+
+### 4. 강좌 학습 현황 상세 조회
+GET {{host}}/api/v1/courses/{{courseId}}/learning-progress
+
+### 5. 수강생 학습 현황 목록 조회
+GET {{host}}/api/v1/courses/{{courseId}}/users/learning-progress
+
+### 6. 수강생 학습 현황 상세 조회
+GET {{host}}/api/v1/courses/{{courseId}}/users/{{userId}}/learning-progress
+
+### 7. 강의별 학습 현황 조회
+GET {{host}}/api/v1/courses/{{courseId}}/lectures/learning-progress
+
+### 8. 강의 문제 풀이 통계 조회
+GET {{host}}/api/v1/lectures/{{lectureId}}/problems/statistics
+
+### 9. 전체 학습 현황 조회
+GET {{host}}/api/v1/learning-progress/summary
+
+### 10. 문제세트 입장
+GET {{host}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
+
+### 11. 문제세트 진행 상태 조회
+GET {{host}}/api/v1/problem-sets/{{problemSetId}}/progress?userId={{userId}}
+
+### 12. 강의 문제세트 진행 상태 저장
+PATCH {{host}}/api/v1/lecture-problem-sets/{{lectureProblemSetId}}/progress
+Content-Type: application/json
+
+{
+  "userId": {{userId}},
+  "currentProblemNumber": 2,
+  "completed": false
+}
+
+### 13. 강의 문제 제출
+POST {{host}}/api/v1/lecture-problem-sets/{{lectureProblemSetId}}/problems/{{problemId}}/submissions
+Content-Type: application/json
+
+{
+  "userId": {{userId}},
+  "code": "result = 1"
+}

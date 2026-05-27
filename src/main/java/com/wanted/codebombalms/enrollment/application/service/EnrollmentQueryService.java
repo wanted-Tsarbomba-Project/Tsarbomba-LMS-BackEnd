@@ -27,4 +27,11 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
 
         return enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
     }
+
+    @Override
+    public List<Enrollment> findAllActiveEnrollments() {
+        log.info("[EnrollmentQueryService] find all active enrollments");
+
+        return enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE);
+    }
 }

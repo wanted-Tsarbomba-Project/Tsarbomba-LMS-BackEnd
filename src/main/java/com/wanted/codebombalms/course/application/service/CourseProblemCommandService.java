@@ -29,10 +29,18 @@ public class CourseProblemCommandService implements CourseProblemCommandUseCase 
 
         courseProblemPolicy.validate(command);
 
-        courseProblemSetRepository.deleteByCourseId(command.courseId());
+        List<CourseProblemSet> existingProblemSets = courseProblemSetRepository.findByCourseId(command.courseId());
 
         for (ConfigureCourseProblemSetsCommand.ProblemSetCommand problemSetCommand : command.problemSets()) {
-            courseProblemSetRepository.save(CourseProblemSet.create(
+            Long existingId = existingProblemSets.stream()
+                    .filter(problemSet -> problemSet.getLectureId().equals(problemSetCommand.lectureId()))
+                    .filter(problemSet -> problemSet.getProblemSetId().equals(problemSetCommand.problemSetId()))
+                    .map(CourseProblemSet::getCourseProblemSetId)
+                    .findFirst()
+                    .orElse(null);
+
+            courseProblemSetRepository.save(CourseProblemSet.restore(
+                    existingId,
                     command.courseId(),
                     problemSetCommand.lectureId(),
                     problemSetCommand.problemSetId(),

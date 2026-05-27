@@ -9,4 +9,6 @@ public interface SpringDataLectureProgressRepository extends JpaRepository<Lectu
     Optional<LectureProgressJpaEntity> findByUserIdAndLectureId(Long userId, Long lectureId);
 
     long countByUserIdAndLectureIdInAndCompletedTrue(Long userId, Collection<Long> lectureIds);
+
+    long countByLectureIdAndCompletedTrue(Long lectureId);
 }

@@ -45,7 +45,7 @@ public class EnrollmentController {
                 ));
     }
 
-    @GetMapping("/students/{userId}/enrollments")
+    @GetMapping("/users/{userId}/enrollments")
     public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long userId) {
         log.info("[EnrollmentController] find my courses - userId: {}", userId);
 
@@ -62,7 +62,24 @@ public class EnrollmentController {
         ));
     }
 
-    @DeleteMapping("/students/{userId}/enrollments/{enrollmentId}")
+    @GetMapping("/enrollments")
+    public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
+        log.info("[EnrollmentController] find all active enrollments");
+
+        return ResponseEntity.ok(ApiResponse.success(
+                EnrollmentResponseCode.RETRIEVED,
+                EnrollmentResponseMessage.RETRIEVED,
+                enrollmentQueryUseCase.findAllActiveEnrollments()
+                        .stream()
+                        .map(enrollment -> MyCourseResponse.from(
+                                enrollment,
+                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        ))
+                        .toList()
+        ));
+    }
+
+    @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long userId,
             @PathVariable Long enrollmentId

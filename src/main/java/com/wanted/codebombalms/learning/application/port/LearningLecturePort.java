@@ -6,5 +6,9 @@ public interface LearningLecturePort {
 
     boolean existsLecture(Long lectureId);
 
+    Long findCourseIdByLecture(Long lectureId);
+
     List<Long> findLectureIdsByCourse(Long courseId);
+
+    List<LearningLecture> findLecturesByCourse(Long courseId);
 }

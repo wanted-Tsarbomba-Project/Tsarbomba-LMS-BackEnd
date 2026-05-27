@@ -8,9 +8,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum LearningErrorCode implements ErrorCode {
 
-    LECTURE_NOT_FOUND("LRN-001", "존재하지 않는 강의입니다."),
-    COURSE_PROBLEM_STEP_NOT_FOUND("LRN-002", "존재하지 않는 강의 문제 단계입니다."),
-    LEARNING_PROGRESS_NOT_FOUND("LRN-003", "학습 진행 기록이 존재하지 않습니다.");
+    LECTURE_NOT_FOUND("LRN-001", "Lecture was not found."),
+    COURSE_PROBLEM_STEP_NOT_FOUND("LRN-002", "Course problem step was not found."),
+    LEARNING_PROGRESS_NOT_FOUND("LRN-003", "Learning progress was not found."),
+    COURSE_NOT_FOUND("LRN-004", "Course was not found."),
+    LECTURE_PROBLEM_SET_NOT_FOUND("LRN-005", "Lecture problem set was not found."),
+    PROBLEM_NOT_IN_LECTURE_PROBLEM_SET("LRN-006", "Problem does not belong to the lecture problem set.");
 
     private final String code;
     private final String message;

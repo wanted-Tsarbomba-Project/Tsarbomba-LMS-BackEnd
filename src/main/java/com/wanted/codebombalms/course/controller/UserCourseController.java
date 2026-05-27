@@ -13,22 +13,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/instructors")
+@RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
-public class InstructorCourseController {
+public class UserCourseController {
 
-    private static final Logger log = LoggerFactory.getLogger(InstructorCourseController.class);
+    private static final Logger log = LoggerFactory.getLogger(UserCourseController.class);
 
     private final CourseQueryUseCase courseQueryUseCase;
 
-    @GetMapping("/{instructorId}/courses")
-    public ResponseEntity<ApiResponse<?>> findCoursesByInstructor(@PathVariable Long instructorId) {
-        log.info("[InstructorCourseController] find instructor courses - instructorId: {}", instructorId);
+    @GetMapping("/{userId}/courses")
+    public ResponseEntity<ApiResponse<?>> findCoursesByInstructor(@PathVariable Long userId) {
+        log.info("[InstructorCourseController] find instructor courses - userId: {}", userId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseQueryUseCase.findCoursesByInstructor(instructorId)
+                courseQueryUseCase.findCoursesByInstructor(userId)
                         .stream()
                         .map(CourseResponse::from)
                         .toList()
