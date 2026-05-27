@@ -16,6 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -43,20 +47,24 @@ public class AutomationRuleCommandService implements CreateAutomationRuleUseCase
         return automationRuleRepository.save(automationRule);
     }
 
-    //UpdateAutomationRuleUseCase의 구현체, id로 기존 규칙을 찾고, 없으면 404를 던진다.
+    //UpdateAutomationRuleUseCase의 구현체, 수정 요청된 규칙만 저장한다.
     @Override
-    public AutomationRule update(UpdateAutomationRuleCommand command) {
+    public List<AutomationRule> update(UpdateAutomationRuleCommand command) {
         validateUpdateCommand(command);
 
-        AutomationRule automationRule = automationRuleRepository.findById(command.operationRuleId())
-                .orElseThrow(() -> new NotFoundException(AutomationRuleErrorCode.AUTOMATION_RULE_NOT_FOUND));
+        return command.rules().stream()
+                .map(rule -> {
+                    AutomationRule automationRule = automationRuleRepository.findById(rule.operationRuleId())
+                            .orElseThrow(() -> new NotFoundException(AutomationRuleErrorCode.AUTOMATION_RULE_NOT_FOUND));
 
-        AutomationRule updatedRule = automationRule.updateThreshold(
-                command.thresholdValue(),
-                command.minSampleCount()
-        );
+                    AutomationRule updatedRule = automationRule.updateThreshold(
+                            rule.thresholdValue(),
+                            rule.minSampleCount()
+                    );
 
-        return automationRuleRepository.save(updatedRule);
+                    return automationRuleRepository.save(updatedRule);
+                })
+                .toList();
     }
 
     //enabled 변경 usecase를 구현
@@ -79,8 +87,17 @@ public class AutomationRuleCommandService implements CreateAutomationRuleUseCase
     }
 
     private void validateUpdateCommand(UpdateAutomationRuleCommand command) {
-        if (command == null || command.operationRuleId() == null) {
+        if (command == null || command.rules() == null || command.rules().isEmpty()) {
             throw new ValidationException(AutomationRuleErrorCode.INVALID_UPDATE_REQUEST);
+        }
+
+        Set<Long> ruleIds = new HashSet<>();
+        for (UpdateAutomationRuleCommand.Item rule : command.rules()) {
+            if (rule == null
+                    || rule.operationRuleId() == null
+                    || !ruleIds.add(rule.operationRuleId())) {
+                throw new ValidationException(AutomationRuleErrorCode.INVALID_UPDATE_REQUEST);
+            }
         }
     }
 

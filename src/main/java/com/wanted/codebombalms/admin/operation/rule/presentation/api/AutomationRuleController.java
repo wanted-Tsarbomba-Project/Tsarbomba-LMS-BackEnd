@@ -79,15 +79,15 @@ public class AutomationRuleController {
         ));
     }
 
-    // 규칙 threshold 수정
-    @PatchMapping("/{automationRuleId}")
-    public ResponseEntity<ApiResponse<AutomationRuleResponse>> updateAutomationRule(
-            @PathVariable Long automationRuleId,
+    // 규칙 threshold 일괄 수정
+    @PatchMapping
+    public ResponseEntity<ApiResponse<List<AutomationRuleResponse>>> updateAutomationRule(
             @RequestBody AutomationRuleUpdateRequest request
     ) {
-        AutomationRuleResponse response = AutomationRuleResponse.from(
-                updateAutomationRuleUseCase.update(request.toCommand(automationRuleId))
-        );
+        List<AutomationRuleResponse> response = updateAutomationRuleUseCase.update(request.toCommand())
+                .stream()
+                .map(AutomationRuleResponse::from)
+                .toList();
 
         return ResponseEntity.ok(ApiResponse.success(
                 AutomationRuleResponseCode.UPDATED,
