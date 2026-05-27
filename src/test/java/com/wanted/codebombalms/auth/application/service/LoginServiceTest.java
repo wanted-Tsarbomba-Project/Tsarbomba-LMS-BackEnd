@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.command.LoginCommand;
-import com.wanted.codebombalms.auth.application.dto.TokenPair;
+import com.wanted.codebombalms.auth.application.dto.LoginResult;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
@@ -55,21 +55,23 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("정상 로그인 시 TokenPair를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
+    @DisplayName("정상 로그인 시 LoginResult(토큰 2개 + 닉네임)를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
     void 로그인_성공() {
         // given
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        TokenPair pair = loginService.login(command, httpRequest);
+        LoginResult result = loginService.login(command, httpRequest);
 
         // then
-        assertEquals("ACCESS_TOKEN", pair.accessToken());
-        assertEquals("REFRESH_TOKEN", pair.refreshToken());
+        assertEquals("ACCESS_TOKEN", result.accessToken());
+        assertEquals("REFRESH_TOKEN", result.refreshToken());
+        assertEquals("길동이", result.nickname());
         verify(refreshTokenRepository).deleteByUserId(1L);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
         verify(loginHistoryRepository).save(any(LoginHistory.class));
@@ -134,7 +136,8 @@ class LoginServiceTest {
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when

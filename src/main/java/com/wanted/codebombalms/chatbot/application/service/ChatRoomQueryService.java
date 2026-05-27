@@ -30,7 +30,8 @@ public class ChatRoomQueryService implements ChatRoomQueryUseCase {
         return new ChatRoomResult(
                 chatRoom.getId(),
                 chatRoom.getProblemSetId(),
-                null,
+                chatRoom.getProblemId(),
+                chatRoom.getTitle(),
                 chatRoom.getCreatedAt(),
                 chatRoom.getUpdatedAt()
         );

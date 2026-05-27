@@ -21,9 +21,6 @@ public interface ChatRoomRepository {
                 .orElseThrow(() -> new NotFoundException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
     }
 
-    // userId + problemSetId로 기존 채팅방 조회 (중복 생성 방지용)
-    Optional<ChatRoom> findByUserIdAndProblemSetId(Long userId, Long problemSetId);
-
     // userId로 채팅방 목록 조회
     List<ChatRoom> findByUserId(Long userId);
 

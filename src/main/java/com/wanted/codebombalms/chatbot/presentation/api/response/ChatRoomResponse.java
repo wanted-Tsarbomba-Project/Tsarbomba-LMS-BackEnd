@@ -7,6 +7,8 @@ import java.time.Instant;
 public record ChatRoomResponse(
         Long roomId,
         Long problemSetId,
+        Long problemId,
+        String title,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -14,6 +16,8 @@ public record ChatRoomResponse(
         return new ChatRoomResponse(
                 result.roomId(),
                 result.problemSetId(),
+                result.problemId(),
+                result.title(),
                 result.createdAt(),
                 result.updatedAt()
         );

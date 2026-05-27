@@ -16,6 +16,8 @@ import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.O
 import com.wanted.codebombalms.admin.operation.alert.presentation.api.response.OperationAlertStatusUpdateResponse;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -35,6 +37,11 @@ public class OperationAlertController {
 
 
     //알람 목록 조회
+    @Operation(summary = "운영 알림 목록 조회")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-002: 페이지 요청 값이 올바르지 않습니다.")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<OperationAlertListResponse>> findOperationAlerts(
             @RequestParam(required = false) OperationTargetType targetType,
@@ -54,6 +61,12 @@ public class OperationAlertController {
     }
 
     //알람 상세 조회
+    @Operation(summary = "운영 알림 상세 조회")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ALT-003: 운영 알림을 찾을 수 없습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ALT-009: 운영 알림 대상 정보를 찾을 수 없습니다.")
+    })
     @GetMapping("/{operationAlertId}")
     // 알림 ID로 운영 알림 상세 정보를 조회한다.
     public ResponseEntity<ApiResponse<OperationAlertDetailResponse>> findOperationAlertDetail(
@@ -69,6 +82,12 @@ public class OperationAlertController {
     }
 
     //알람 메모 수정
+    @Operation(summary = "운영 알림 메모 수정")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-010: 운영 알림 메모 수정 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ALT-003: 운영 알림을 찾을 수 없습니다.")
+    })
     @PatchMapping("/{operationAlertId}/memo")
     // 알림 ID로 운영 알림 관리자 메모를 수정한다.
     public ResponseEntity<ApiResponse<OperationAlertMemoUpdateResponse>> updateOperationAlertMemo(
@@ -87,6 +106,13 @@ public class OperationAlertController {
     }
 
     //알람 상태 변경
+    @Operation(summary = "운영 알림 상태 변경")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-004: 운영 알림 상태 변경 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-005: 이미 처리된 운영 알림입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ALT-003: 운영 알림을 찾을 수 없습니다.")
+    })
     @PatchMapping("/{operationAlertId}/status")
     public ResponseEntity<ApiResponse<OperationAlertStatusUpdateResponse>> updateOperationAlertStatus(
             @PathVariable Long operationAlertId,
@@ -105,6 +131,13 @@ public class OperationAlertController {
     }
 
     //알람 삭제
+    @Operation(summary = "운영 알림 삭제")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-006: 운영 알림 삭제 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ALT-007: OPEN 상태의 운영 알림은 삭제할 수 없습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ALT-003: 운영 알림을 찾을 수 없습니다.")
+    })
     @DeleteMapping("/{operationAlertId}")
     public ResponseEntity<ApiResponse<OperationAlertDeleteResponse>> deleteOperationAlert(
             @PathVariable Long operationAlertId

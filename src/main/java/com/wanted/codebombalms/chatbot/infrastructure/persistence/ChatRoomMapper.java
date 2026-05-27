@@ -11,6 +11,8 @@ public class ChatRoomMapper {
                 entity.getId(),
                 entity.getUserId(),
                 entity.getProblemSetId(),
+                entity.getProblemId(),
+                entity.getTitle(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
@@ -21,6 +23,8 @@ public class ChatRoomMapper {
                 domain.getId(),
                 domain.getUserId(),
                 domain.getProblemSetId(),
+                domain.getProblemId(),
+                domain.getTitle(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt()
         );
