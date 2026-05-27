@@ -11,4 +11,6 @@ public interface LectureProgressRepository {
     Optional<LectureProgress> findByUserIdAndLectureId(Long userId, Long lectureId);
 
     long countCompletedByUserIdAndLectureIds(Long userId, List<Long> lectureIds);
+
+    long countCompletedByLectureId(Long lectureId);
 }

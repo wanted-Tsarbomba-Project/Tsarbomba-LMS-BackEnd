@@ -15,4 +15,6 @@ public interface SpringDataLectureProblemProgressRepository extends JpaRepositor
             Long userId,
             Collection<Long> lectureProblemSetIds
     );
+
+    long countByLectureProblemSetIdInAndCompletedTrue(Collection<Long> lectureProblemSetIds);
 }

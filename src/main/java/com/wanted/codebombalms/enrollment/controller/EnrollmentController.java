@@ -62,6 +62,23 @@ public class EnrollmentController {
         ));
     }
 
+    @GetMapping("/enrollments")
+    public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
+        log.info("[EnrollmentController] find all active enrollments");
+
+        return ResponseEntity.ok(ApiResponse.success(
+                EnrollmentResponseCode.RETRIEVED,
+                EnrollmentResponseMessage.RETRIEVED,
+                enrollmentQueryUseCase.findAllActiveEnrollments()
+                        .stream()
+                        .map(enrollment -> MyCourseResponse.from(
+                                enrollment,
+                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        ))
+                        .toList()
+        ));
+    }
+
     @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long userId,

@@ -86,6 +86,22 @@ class EnrollmentControllerTest {
     }
 
     @Test
+    void findAllEnrollments_returnsApiResponse() throws Exception {
+        Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findAllActiveEnrollments()).willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+    }
+
+    @Test
     void cancelEnrollment_returnsNoContent() throws Exception {
         Long studentId = 10L;
         Long enrollmentId = 1L;

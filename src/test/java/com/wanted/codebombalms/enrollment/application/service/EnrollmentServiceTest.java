@@ -98,6 +98,19 @@ class EnrollmentServiceTest {
     }
 
     @Test
+    void findAllActiveEnrollments_returnsActiveEnrollments() {
+        Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE)).willReturn(List.of(enrollment));
+
+        List<Enrollment> results = enrollmentQueryService.findAllActiveEnrollments();
+
+        assertEquals(1, results.size());
+        assertEquals(EnrollmentStatus.ACTIVE, results.get(0).getStatus());
+        verify(enrollmentRepository).findByStatus(EnrollmentStatus.ACTIVE);
+    }
+
+    @Test
     void cancelEnrollment_cancelsEnrollment() {
         Long userId = 10L;
         Long enrollmentId = 1L;
