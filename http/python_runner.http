@@ -1,0 +1,31 @@
+### 파이썬 테스트
+POST http://localhost:8081/execute
+Content-Type: application/json
+
+{
+  "code": "print('hello')"
+}
+
+###
+POST http://localhost:8081/execute
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/8220751d-1dd0-44e9-a9f4-5b84fbf56c84_employee_performance.csv\")\nprint(df.shape)"
+}
+
+### hello 테스트
+POST https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute
+Content-Type: application/json
+
+{
+  "code": "print('hello from cloud run')"
+}
+
+### 판다스 확인
+POST https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/8220751d-1dd0-44e9-a9f4-5b84fbf56c84_employee_performance.csv\")\nprint(df.shape)"
+}

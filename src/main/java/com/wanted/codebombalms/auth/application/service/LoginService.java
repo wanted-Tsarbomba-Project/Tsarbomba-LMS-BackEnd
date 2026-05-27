@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.command.LoginCommand;
-import com.wanted.codebombalms.auth.application.dto.TokenPair;
+import com.wanted.codebombalms.auth.application.dto.LoginResult;
 import com.wanted.codebombalms.auth.application.usecase.LoginUseCase;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
@@ -32,7 +32,7 @@ public class LoginService implements LoginUseCase {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public TokenPair login(LoginCommand command, HttpServletRequest request) {
+    public LoginResult login(LoginCommand command, HttpServletRequest request) {
 
         // 1. 이메일로 회원 조회
         User user = userRepository.findByEmail(command.email())
@@ -52,7 +52,7 @@ public class LoginService implements LoginUseCase {
         refreshTokenRepository.deleteByUserId(user.getUserId());
 
         // 5. 토큰 발급
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getRole());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(), user.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
 
         // 6. RT 저장
@@ -73,7 +73,7 @@ public class LoginService implements LoginUseCase {
                 )
         );
 
-        return new TokenPair(accessToken, refreshToken);
+        return new LoginResult(accessToken, refreshToken, user.getNickname());
     }
 
     /** 프록시 환경(X-Forwarded-For) 고려한 클라이언트 IP 추출 */

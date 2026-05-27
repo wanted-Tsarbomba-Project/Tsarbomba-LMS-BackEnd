@@ -1,58 +1,58 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnection;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionRequest;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionTarget;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
-import com.wanted.codebombalms.problems.dataset.domain.repository.ProblemDatasetRepository;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
+import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
+import com.wanted.codebombalms.problems.set.infrastructure.persistence.SpringDataProblemSetRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ProblemDatasetPersistenceAdapter implements ProblemDatasetRepository {
+public class ProblemDatasetPersistenceAdapter implements
+        ProblemDatasetPersistencePort {
 
-    private final SpringDataProblemRepository problemRepository;
+    private final SpringDataProblemSetRepository problemSetRepository;
     private final SpringDataProblemDatasetRepository problemDatasetRepository;
 
     @Override
     public ProblemDatasetConnectionTarget loadConnectionTarget(ProblemDatasetConnectionRequest request) {
-        ProblemJpaEntity problem = problemRepository.findById(request.getProblemId())
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+        ProblemSetJpaEntity problemSet = problemSetRepository.findById(request.getProblemSetId())
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         ProblemDatasetJpaEntity dataset = problemDatasetRepository.findById(request.getDatasetId())
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_DATASET_NOT_FOUND));
 
-        Long connectedProblemId = dataset.getProblem() == null
+        Long connectedProblemSetId = dataset.getProblemSet() == null
                 ? null
-                : dataset.getProblem().getProblemId();
+                : dataset.getProblemSet().getProblemSetId();
 
         return new ProblemDatasetConnectionTarget(
-                problem.getProblemId(),
-                problem.getProblemType(),
+                problemSet.getProblemSetId(),
                 dataset.getDatasetId(),
-                connectedProblemId,
+                connectedProblemSetId,
                 dataset.getFileUrl()
         );
     }
 
     @Override
     public ProblemDatasetConnection connectDataset(ProblemDatasetConnectionRequest request) {
-        ProblemJpaEntity problem = problemRepository.findById(request.getProblemId())
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+        ProblemSetJpaEntity problemSet = problemSetRepository.findById(request.getProblemSetId())
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
 
         ProblemDatasetJpaEntity dataset = problemDatasetRepository.findById(request.getDatasetId())
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_DATASET_NOT_FOUND));
 
-        dataset.connectProblem(problem);
+        dataset.connectProblemSet(problemSet);
 
         return ProblemDatasetConnection.connect(
-                problem.getProblemId(),
+                problemSet.getProblemSetId(),
                 dataset.getDatasetId(),
                 dataset.getFileUrl()
         );

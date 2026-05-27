@@ -7,7 +7,7 @@ public interface ConnectProblemDatasetUseCase {
     ConnectProblemDatasetView handle(ConnectProblemDatasetCommand command);
 
     record ConnectProblemDatasetView(
-            Long problemId,
+            Long problemSetId,
             Long datasetId,
             String startCode
     ) {

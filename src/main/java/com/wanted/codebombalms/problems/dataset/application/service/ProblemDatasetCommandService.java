@@ -1,19 +1,18 @@
 package com.wanted.codebombalms.problems.dataset.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.dataset.application.command.ConnectProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
-import com.wanted.codebombalms.problems.dataset.application.policy.ProblemDatasetConnectionPolicy;
-import com.wanted.codebombalms.problems.dataset.application.policy.ProblemDatasetFileValidationPolicy;
+import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
 import com.wanted.codebombalms.problems.dataset.application.usecase.ConnectProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnection;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionRequest;
+import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionTarget;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
-import com.wanted.codebombalms.problems.dataset.domain.repository.ProblemDatasetRepository;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,22 +25,23 @@ public class ProblemDatasetCommandService implements
         ConnectProblemDatasetUseCase,
         UploadProblemDatasetUseCase {
 
-    private final ProblemDatasetFileValidationPolicy validationPolicy;
-    private final ProblemDatasetConnectionPolicy connectionPolicy;
     private final StoreDatasetFilePort storeDatasetFilePort;
-    private final ProblemDatasetRepository problemDatasetRepository;
+    private final ProblemDatasetPersistencePort problemDatasetPersistencePort;
 
     @Override
     @Transactional
     public ConnectProblemDatasetView handle(ConnectProblemDatasetCommand command) {
         ProblemDatasetConnectionRequest request =
-                ProblemDatasetConnectionRequest.of(command.problemId(), command.datasetId());
+                ProblemDatasetConnectionRequest.of(command.problemSetId(), command.datasetId());
 
-        connectionPolicy.validate(problemDatasetRepository.loadConnectionTarget(request));
-        ProblemDatasetConnection connection = problemDatasetRepository.connectDataset(request);
+        ProblemDatasetConnectionTarget target = problemDatasetPersistencePort.loadConnectionTarget(request);
+        target.validateConnectable();
+
+        ProblemDatasetConnection connection =
+                problemDatasetPersistencePort.connectDataset(request);
 
         return new ConnectProblemDatasetView(
-                connection.getProblemId(),
+                connection.getProblemSetId(),
                 connection.getDatasetId(),
                 startCode(connection.getFileUrl())
         );
@@ -50,13 +50,14 @@ public class ProblemDatasetCommandService implements
     @Override
     @Transactional
     public UploadProblemDatasetView handle(UploadProblemDatasetCommand command) {
-        validationPolicy.validate(command);
+        validateUploadFile(command);
 
         StoredDatasetFile storedFile = null;
 
         try {
             storedFile = storeDatasetFilePort.store(command);
-            ProblemDataset dataset = problemDatasetRepository.saveUploadedDataset(storedFile);
+            ProblemDataset dataset =
+                    problemDatasetPersistencePort.saveUploadedDataset(storedFile);
 
             return new UploadProblemDatasetView(
                     dataset.getDatasetId(),
@@ -73,6 +74,18 @@ public class ProblemDatasetCommandService implements
 
             log.warn("Dataset upload failed. originalFileName={}", command.originalFileName(), e);
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
+        }
+    }
+
+    private void validateUploadFile(UploadProblemDatasetCommand command) {
+        if (command == null || command.content() == null || command.content().length == 0) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
+        }
+
+        String originalFileName = command.originalFileName();
+
+        if (originalFileName == null || !originalFileName.toLowerCase().endsWith(".csv")) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
         }
     }
 

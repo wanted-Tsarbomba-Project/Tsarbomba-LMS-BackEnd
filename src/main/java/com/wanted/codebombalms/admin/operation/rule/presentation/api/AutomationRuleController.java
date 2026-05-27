@@ -12,6 +12,8 @@ import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.Aut
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleOptionsResponse;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,10 @@ public class AutomationRuleController {
     private final UpdateAutomationRuleEnabledUseCase updateAutomationRuleEnabledUseCase;
 
     //규칙 목록 조회
+    @Operation(summary = "자동화 규칙 목록 조회")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping
     public ResponseEntity<ApiResponse<List<AutomationRuleResponse>>> findAutomationRules(
             @RequestParam(required = false) OperationTargetType targetType
@@ -49,6 +55,10 @@ public class AutomationRuleController {
     }
 
     //규칙 옵션 조회
+    @Operation(summary = "자동화 규칙 옵션 조회")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+    })
     @GetMapping("/options")
     public ResponseEntity<ApiResponse<AutomationRuleOptionsResponse>> findAutomationRuleOptions() {
         AutomationRuleOptionsResponse response = AutomationRuleOptionsResponse.from(
@@ -63,6 +73,14 @@ public class AutomationRuleController {
     }
 
     // 규칙 등록
+    @Operation(summary = "자동화 규칙 등록")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-001: 자동화 규칙 등록 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-002: 임계값이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-003: 최소 표본 수가 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "ADM-ARL-004: 이미 등록된 자동화 규칙입니다.")
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<AutomationRuleResponse>> createAutomationRule(
             @AuthenticationPrincipal Long createdBy,
@@ -79,15 +97,23 @@ public class AutomationRuleController {
         ));
     }
 
-    // 규칙 threshold 수정
-    @PatchMapping("/{automationRuleId}")
-    public ResponseEntity<ApiResponse<AutomationRuleResponse>> updateAutomationRule(
-            @PathVariable Long automationRuleId,
+    // 규칙 threshold 일괄 수정
+    @Operation(summary = "자동화 규칙 threshold 일괄 수정")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-005: 자동화 규칙 수정 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-002: 임계값이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-003: 최소 표본 수가 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ARL-006: 자동화 규칙을 찾을 수 없습니다.")
+    })
+    @PatchMapping
+    public ResponseEntity<ApiResponse<List<AutomationRuleResponse>>> updateAutomationRule(
             @RequestBody AutomationRuleUpdateRequest request
     ) {
-        AutomationRuleResponse response = AutomationRuleResponse.from(
-                updateAutomationRuleUseCase.update(request.toCommand(automationRuleId))
-        );
+        List<AutomationRuleResponse> response = updateAutomationRuleUseCase.update(request.toCommand())
+                .stream()
+                .map(AutomationRuleResponse::from)
+                .toList();
 
         return ResponseEntity.ok(ApiResponse.success(
                 AutomationRuleResponseCode.UPDATED,
@@ -97,6 +123,12 @@ public class AutomationRuleController {
     }
 
     // 규칙 활성화 상태 수정
+    @Operation(summary = "자동화 규칙 활성화 상태 수정")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-007: 자동화 규칙 활성화 상태 변경 요청이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "ADM-ARL-006: 자동화 규칙을 찾을 수 없습니다.")
+    })
     @PatchMapping("/{automationRuleId}/enabled")
     public ResponseEntity<ApiResponse<AutomationRuleResponse>> updateAutomationRuleEnabled(
             @PathVariable Long automationRuleId,

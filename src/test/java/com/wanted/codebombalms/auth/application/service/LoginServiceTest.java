@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.command.LoginCommand;
-import com.wanted.codebombalms.auth.application.dto.TokenPair;
+import com.wanted.codebombalms.auth.application.dto.LoginResult;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
@@ -39,10 +39,10 @@ class LoginServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
-    @Mock private LoginHistoryRepository loginHistoryRepository;   // ⭐ 추가
+    @Mock private LoginHistoryRepository loginHistoryRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtTokenProvider jwtTokenProvider;
-    @Mock private HttpServletRequest httpRequest;                  // ⭐ 추가
+    @Mock private HttpServletRequest httpRequest;
 
     @InjectMocks
     private LoginService loginService;
@@ -55,25 +55,26 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("정상 로그인 시 TokenPair를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
+    @DisplayName("정상 로그인 시 LoginResult(토큰 2개 + 닉네임)를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
     void 로그인_성공() {
         // given
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(1L, UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        TokenPair pair = loginService.login(command, httpRequest);   // ⭐ httpRequest 전달
+        LoginResult result = loginService.login(command, httpRequest);
 
         // then
-        assertEquals("ACCESS_TOKEN", pair.accessToken());
-        assertEquals("REFRESH_TOKEN", pair.refreshToken());
+        assertEquals("ACCESS_TOKEN", result.accessToken());
+        assertEquals("REFRESH_TOKEN", result.refreshToken());
+        assertEquals("길동이", result.nickname());
         verify(refreshTokenRepository).deleteByUserId(1L);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
-        verify(loginHistoryRepository).save(any(LoginHistory.class));   // ⭐ 추가
+        verify(loginHistoryRepository).save(any(LoginHistory.class));
     }
 
     @Test
@@ -85,11 +86,11 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command, httpRequest)   // ⭐
+                () -> loginService.login(command, httpRequest)
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
-        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
+        verify(loginHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -103,11 +104,11 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command, httpRequest)   // ⭐
+                () -> loginService.login(command, httpRequest)
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
-        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
+        verify(loginHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -121,11 +122,11 @@ class LoginServiceTest {
         // when & then
         ForbiddenException ex = assertThrows(
                 ForbiddenException.class,
-                () -> loginService.login(command, httpRequest)   // ⭐
+                () -> loginService.login(command, httpRequest)
         );
         assertEquals(UserErrorCode.USER_ACCOUNT_LOCKED, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
-        verify(loginHistoryRepository, never()).save(any());            // ⭐ 추가
+        verify(loginHistoryRepository, never()).save(any());
     }
 
     @Test
@@ -135,12 +136,12 @@ class LoginServiceTest {
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
-        given(jwtTokenProvider.generateAccessToken(1L, UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        loginService.login(command, httpRequest);   // ⭐
+        loginService.login(command, httpRequest);
 
         // then — 삭제 후 저장 순서 검증
         var inOrder = inOrder(refreshTokenRepository);

@@ -28,12 +28,6 @@ public class ChatRoomRepositoryAdapter implements ChatRoomRepository {
     }
 
     @Override
-    public Optional<ChatRoom> findByUserIdAndProblemSetId(Long userId, Long problemSetId) {
-        return springDataRepository.findByUserIdAndProblemSetId(userId, problemSetId)
-                .map(ChatRoomMapper::toDomain);
-    }
-
-    @Override
     public List<ChatRoom> findByUserId(Long userId) {
         return springDataRepository.findByUserIdOrderByUpdatedAtDesc(userId)
                 .stream()

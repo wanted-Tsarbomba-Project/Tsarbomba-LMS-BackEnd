@@ -44,12 +44,8 @@ gcp:
   credentials:
     location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
 
-#로컬 코드 실행기
-code:
-  runner:
-    python-command: python
-    timeout-seconds: 10
+code-runner:
+  type: cloud-run
+  cloud-run:
+    endpoint: ${CODE_RUNNER_CLOUD_RUN_ENDPOINT:https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute}
 
-springdoc:
-  swagger-ui:
-    with-credentials: true
