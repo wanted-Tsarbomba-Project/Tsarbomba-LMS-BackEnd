@@ -1,18 +1,23 @@
 package com.wanted.codebombalms.submission.application.service;
 
+import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
 import com.wanted.codebombalms.submission.application.port.LoadTestCasesForGradingPort.TestCaseForGrading;
 import com.wanted.codebombalms.submission.domain.model.SubmissionTestResult;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CodeGradingService {
 
     private static final String SUCCESS = "SUCCESS";
     private static final String WRONG_ANSWER = "WRONG_ANSWER";
     private static final String GRADING_FAILED = "GRADING_FAILED";
-    private static final int MOCK_EXECUTION_TIME_MS = 1;
+
+    private final RunCodePort runCodePort;
 
     public CodeGradingResult grade(String code, List<TestCaseForGrading> testCases) {
         if (testCases == null || testCases.isEmpty()) {
@@ -26,45 +31,58 @@ public class CodeGradingService {
             );
         }
 
-        if (!code.contains("result")) {
-            List<SubmissionTestResult> failedResults = testCases.stream()
-                    .map(testCase -> new SubmissionTestResult(
-                            testCase.testCaseId(),
-                            false,
-                            null,
-                            "result 변수가 정의되지 않았습니다.",
-                            MOCK_EXECUTION_TIME_MS
-                    ))
-                    .toList();
+        List<SubmissionTestResult> testResults = new ArrayList<>();
+        int passedCount = 0;
 
-            return new CodeGradingResult(
-                    false,
-                    0,
-                    testCases.size(),
-                    WRONG_ANSWER,
-                    "result 변수가 정의되지 않았습니다.",
-                    failedResults
-            );
+        for (TestCaseForGrading testCase : testCases) {
+            String gradingCode = buildGradingCode(code, testCase.testCode());
+
+            RunCodePort.CodeRunResult runResult = runCodePort.run(gradingCode);
+            boolean passed = Boolean.TRUE.equals(runResult.success());
+
+            if (passed) {
+                passedCount++;
+            }
+
+            testResults.add(new SubmissionTestResult(
+                    testCase.testCaseId(),
+                    passed,
+                    runResult.output(),
+                    runResult.errorMessage(),
+                    toIntegerExecutionTime(runResult.executionTimeMs())
+            ));
         }
 
-        List<SubmissionTestResult> passedResults = testCases.stream()
-                .map(testCase -> new SubmissionTestResult(
-                        testCase.testCaseId(),
-                        true,
-                        testCase.expectedResult(),
-                        null,
-                        MOCK_EXECUTION_TIME_MS
-                ))
-                .toList();
+        int totalCount = testCases.size();
+        boolean correct = passedCount == totalCount;
 
         return new CodeGradingResult(
-                true,
-                testCases.size(),
-                testCases.size(),
-                SUCCESS,
-                null,
-                passedResults
+                correct,
+                passedCount,
+                totalCount,
+                correct ? SUCCESS : WRONG_ANSWER,
+                correct ? null : (totalCount - passedCount) + "개의 테스트케이스를 통과하지 못했습니다.",
+                testResults
         );
+    }
+
+    private String buildGradingCode(String userCode, String testCode) {
+        return userCode
+                + System.lineSeparator()
+                + System.lineSeparator()
+                + testCode;
+    }
+
+    private Integer toIntegerExecutionTime(Long executionTimeMs) {
+        if (executionTimeMs == null) {
+            return null;
+        }
+
+        if (executionTimeMs > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+
+        return executionTimeMs.intValue();
     }
 
     public record CodeGradingResult(
