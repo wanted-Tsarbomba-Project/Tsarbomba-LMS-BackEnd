@@ -2,10 +2,10 @@ package com.wanted.codebombalms.problems.progress.presentation;
 
 import com.wanted.codebombalms.problems.progress.application.query.GetProblemProgressQuery;
 import com.wanted.codebombalms.problems.progress.application.usecase.GetProblemProgressUseCase;
-import com.wanted.codebombalms.problems.progress.presentation.api.response.ProblemProgressResponse;
+import com.wanted.codebombalms.problems.progress.presentation.response.ProblemProgressResponse;
 import com.wanted.codebombalms.problems.set.application.query.EnterProblemSetQuery;
 import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase;
-import com.wanted.codebombalms.problems.set.presentation.api.response.ProblemSetEnterResponse;
+import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetEnterResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

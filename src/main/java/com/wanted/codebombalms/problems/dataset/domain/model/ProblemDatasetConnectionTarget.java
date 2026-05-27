@@ -1,18 +1,22 @@
 package com.wanted.codebombalms.problems.dataset.domain.model;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+
 public record ProblemDatasetConnectionTarget(
-        Long problemId,
-        String problemType,
+        Long problemSetId,
         Long datasetId,
-        Long connectedProblemId,
-        String filePath
+        Long connectedProblemSetId,
+        String fileUrl
 ) {
 
-    public boolean isAlreadyConnected() {
-        return connectedProblemId != null;
+    public void validateConnectable() {
+        if (isAlreadyConnected()) {
+            throw new ConflictException(ProblemErrorCode.PROBLEM_DATASET_ALREADY_CONNECTED);
+        }
     }
 
-    public boolean isCodeProblem() {
-        return "CODE".equals(problemType);
+    public boolean isAlreadyConnected() {
+        return connectedProblemSetId != null;
     }
 }
