@@ -49,3 +49,7 @@ code:
   runner:
     python-command: python
     timeout-seconds: 10
+
+springdoc:
+  swagger-ui:
+    with-credentials: true

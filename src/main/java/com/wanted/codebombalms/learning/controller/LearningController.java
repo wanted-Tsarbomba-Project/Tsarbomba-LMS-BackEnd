@@ -74,12 +74,14 @@ public class LearningController {
     @GetMapping("/lectures/{lectureId}/progress")
     public ResponseEntity<ApiResponse<LectureProgressResponse>> findLectureProgress(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long lectureId
+            @PathVariable Long lectureId,
+            @RequestParam(required = false) Long requestUserId
     ) {
+        Long requesterId = userId != null ? userId : requestUserId;
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
                 LearningResponseMessage.RETRIEVED,
-                LectureProgressResponse.from(lectureProgressQueryUseCase.findProgress(userId, lectureId))
+                LectureProgressResponse.from(lectureProgressQueryUseCase.findProgress(requesterId, lectureId))
         ));
     }
 
