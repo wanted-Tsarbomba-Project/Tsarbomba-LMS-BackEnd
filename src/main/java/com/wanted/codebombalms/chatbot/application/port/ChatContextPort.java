@@ -19,6 +19,9 @@ public interface ChatContextPort {
     // problemId로 데이터셋 정보 조회
     DatasetInfo findDataset(Long problemId);
 
+    // userId + problemSetId로 현재 풀고있는 문제 정보 조회
+    CurrentProblemInfo findCurrentProblemInfo(Long userId, Long problemSetId);
+
     record ProblemSetInfo(
             String title,
             String description,
@@ -51,4 +54,6 @@ public interface ChatContextPort {
             String fileName,
             String fileUrl
     ) {}
+
+    record CurrentProblemInfo(Long problemId, String problemSetTitle, String problemTitle) {}
 }

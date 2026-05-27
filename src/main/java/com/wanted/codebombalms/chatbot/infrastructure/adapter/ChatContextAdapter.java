@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -79,5 +78,22 @@ public class ChatContextAdapter implements ChatContextPort {
                         e.getFileUrl()
                 ))
                 .orElse(null);
+    }
+
+    @Override
+    public CurrentProblemInfo findCurrentProblemInfo(Long userId, Long problemSetId) {
+        int currentProblemNumber = progressRepository
+                .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
+                .map(e -> e.getCurrentProblemNumber())
+                .orElse(1);
+
+        String problemSetTitle = problemSetRepository.findById(problemSetId)
+                .map(e -> e.getTitle())
+                .orElse(null);
+
+        return problemRepository
+                .findByProblemSet_ProblemSetIdAndProblemOrderAndStatus(problemSetId, currentProblemNumber, "ACTIVE")
+                .map(e -> new CurrentProblemInfo(e.getProblemId(), problemSetTitle, e.getTitle()))
+                .orElse(new CurrentProblemInfo(null, problemSetTitle, null));
     }
 }

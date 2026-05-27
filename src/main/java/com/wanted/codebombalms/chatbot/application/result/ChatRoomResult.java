@@ -5,7 +5,8 @@ import java.time.Instant;
 public record ChatRoomResult(
         Long roomId,
         Long problemSetId,
-        String problemSetTitle,
+        Long problemId,
+        String title,
         Instant createdAt,
         Instant updatedAt
 ) {}

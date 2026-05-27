@@ -35,4 +35,9 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
                 .map(ChatMessageMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void deleteByRoomId(Long roomId) {
+        springDataRepository.deleteByRoomId(roomId);
+    }
 }

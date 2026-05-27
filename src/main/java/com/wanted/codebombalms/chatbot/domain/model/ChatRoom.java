@@ -10,23 +10,29 @@ public class ChatRoom {
     private final Long id;
     private final Long userId;
     private final Long problemSetId;
+    private final Long problemId;
+    private final String title;
     private Instant createdAt;
     private Instant updatedAt;
 
-    private ChatRoom(Long id, Long userId, Long problemSetId, Instant createdAt, Instant updatedAt) {
+    private ChatRoom(Long id, Long userId, Long problemSetId, Long problemId, String title,
+                     Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.userId = userId;
         this.problemSetId = problemSetId;
+        this.problemId = problemId;
+        this.title = title;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public static ChatRoom create(Long userId, Long problemSetId) {
-        return new ChatRoom(null, userId, problemSetId, null, null);
+    public static ChatRoom create(Long userId, Long problemSetId, Long problemId, String title) {
+        return new ChatRoom(null, userId, problemSetId, problemId, title, null, null);
     }
 
-    public static ChatRoom restore(Long id, Long userId, Long problemSetId, Instant createdAt, Instant updatedAt) {
-        return new ChatRoom(id, userId, problemSetId, createdAt, updatedAt);
+    public static ChatRoom restore(Long id, Long userId, Long problemSetId, Long problemId, String title,
+                                   Instant createdAt, Instant updatedAt) {
+        return new ChatRoom(id, userId, problemSetId, problemId, title, createdAt, updatedAt);
     }
 
     public void verifyOwner(Long requestUserId) {
@@ -42,6 +48,8 @@ public class ChatRoom {
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
     public Long getProblemSetId() { return problemSetId; }
+    public Long getProblemId() { return problemId; }
+    public String getTitle() { return title; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

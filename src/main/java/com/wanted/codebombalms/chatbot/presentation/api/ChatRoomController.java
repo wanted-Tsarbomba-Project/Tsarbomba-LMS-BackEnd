@@ -28,7 +28,7 @@ public class ChatRoomController {
     private final ChatRoomQueryUseCase chatRoomQueryUseCase;
     private final ChatMessageCommandUseCase chatMessageCommandUseCase;
 
-    @Operation(summary = "채팅방 생성", description = "기존 방 있으면 200 / 새 방이면 201 | 에러: CHT-002 권한없음")
+    @Operation(summary = "채팅방 생성", description = "항상 새 방 생성 201 | 에러: CHT-002 권한없음")
     @PostMapping
     public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(
             @AuthenticationPrincipal Long userId,
@@ -36,25 +36,12 @@ public class ChatRoomController {
     ) {
         CreateChatRoomCommand command = new CreateChatRoomCommand(userId, request.problemSetId());
         ChatRoomResult result = chatRoomCommandUseCase.create(command);
-
         ChatRoomResponse response = ChatRoomResponse.from(result);
 
-        boolean isNew = result.updatedAt() == null;
-
-        if (isNew) {
-            return ResponseEntity.status(201).body(
-                    ApiResponse.created(
-                            ChatResponseCode.ROOM_CREATED,
-                            ChatResponseMessage.ROOM_CREATED,
-                            response
-                    )
-            );
-        }
-
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        ChatResponseCode.ROOM_RETRIEVED,
-                        ChatResponseMessage.ROOM_RETRIEVED,
+        return ResponseEntity.status(201).body(
+                ApiResponse.created(
+                        ChatResponseCode.ROOM_CREATED,
+                        ChatResponseMessage.ROOM_CREATED,
                         response
                 )
         );
@@ -79,7 +66,6 @@ public class ChatRoomController {
         );
     }
 
-
     @Operation(summary = "메시지 전송", description = "유저 메시지 저장 + FastAPI 호출 + AI 응답 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음, CHT-003 AI 응답 실패")
     @PostMapping("/{roomId}/messages")
     public ResponseEntity<ApiResponse<AiChatResponse>> sendMessage(
@@ -90,7 +76,6 @@ public class ChatRoomController {
         SendMessageCommand command = new SendMessageCommand(
                 userId,
                 roomId,
-                request.problemId(),
                 request.userMessage()
         );
 
@@ -104,7 +89,6 @@ public class ChatRoomController {
                 )
         );
     }
-
 
     @Operation(summary = "채팅방 삭제", description = "204 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음")
     @DeleteMapping("/{roomId}")
