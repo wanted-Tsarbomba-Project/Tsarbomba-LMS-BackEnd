@@ -5,13 +5,13 @@ import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 
 public class ProblemDatasetConnection {
 
-    private final Long problemId;
+    private final Long problemSetId;
     private final Long datasetId;
     private final String fileUrl;
 
-    private ProblemDatasetConnection(Long problemId, Long datasetId, String fileUrl) {
-        if (problemId == null) {
-            throw new ValidationException(ProblemErrorCode.PROBLEM_NOT_FOUND);
+    private ProblemDatasetConnection(Long problemSetId, Long datasetId, String fileUrl) {
+        if (problemSetId == null) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND);
         }
         if (datasetId == null) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_NOT_FOUND);
@@ -20,17 +20,17 @@ public class ProblemDatasetConnection {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
         }
 
-        this.problemId = problemId;
+        this.problemSetId = problemSetId;
         this.datasetId = datasetId;
         this.fileUrl = fileUrl;
     }
 
-    public static ProblemDatasetConnection connect(Long problemId, Long datasetId, String filePath) {
-        return new ProblemDatasetConnection(problemId, datasetId, filePath);
+    public static ProblemDatasetConnection connect(Long problemSetId, Long datasetId, String fileUrl) {
+        return new ProblemDatasetConnection(problemSetId, datasetId, fileUrl);
     }
 
-    public Long getProblemId() {
-        return problemId;
+    public Long getProblemSetId() {
+        return problemSetId;
     }
 
     public Long getDatasetId() {

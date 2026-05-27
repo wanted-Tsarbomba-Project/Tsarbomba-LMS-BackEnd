@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.presentation.api;
+package com.wanted.codebombalms.problems.dataset.presentation;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -8,9 +8,9 @@ import com.wanted.codebombalms.problems.dataset.application.command.ConnectProbl
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.usecase.ConnectProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
-import com.wanted.codebombalms.problems.dataset.presentation.api.request.ProblemDatasetConnectRequest;
-import com.wanted.codebombalms.problems.dataset.presentation.api.response.ProblemDatasetConnectResponse;
-import com.wanted.codebombalms.problems.dataset.presentation.api.response.ProblemDatasetUploadResponse;
+import com.wanted.codebombalms.problems.dataset.presentation.request.ProblemDatasetConnectRequest;
+import com.wanted.codebombalms.problems.dataset.presentation.response.ProblemDatasetConnectResponse;
+import com.wanted.codebombalms.problems.dataset.presentation.response.ProblemDatasetUploadResponse;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -179,13 +179,13 @@ public class ProblemDatasetController {
                     )
             )
     })
-    @PostMapping("/api/v1/problems/{problemId}/datasets")
+    @PostMapping("/api/v1/problem-sets/{problemSetId}/datasets")
     public ResponseEntity<ApiResponse<ProblemDatasetConnectResponse>> connectDataset(
             @Parameter(description = "데이터셋을 연결할 코드 문제 ID", example = "3001")
-            @PathVariable Long problemId,
+            @PathVariable Long problemSetId,
             @Valid @RequestBody ProblemDatasetConnectRequest request
     ) {
-        var command = new ConnectProblemDatasetCommand(problemId, request.datasetId());
+        var command = new ConnectProblemDatasetCommand(problemSetId, request.datasetId());
         var response = new ProblemDatasetConnectResponse(
                 connectProblemDatasetUseCase.handle(command)
         );

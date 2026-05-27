@@ -4,8 +4,6 @@ import com.wanted.codebombalms.problems.category.application.usecase.GetProblemC
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ProblemCategoryResponse(
-        @Schema(description = "문제 카테고리 ID", example = "3001")
-        Long categoryId,
 
         @Schema(description = "문제 카테고리명", example = "Python 데이터 분석")
         String categoryName,
@@ -15,7 +13,6 @@ public record ProblemCategoryResponse(
 ) {
     public ProblemCategoryResponse(ProblemCategoryView category) {
         this(
-                category.categoryId(),
                 category.categoryName(),
                 category.description()
         );

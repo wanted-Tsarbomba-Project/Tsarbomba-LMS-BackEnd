@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.problems.problem.presentation;
 
 import com.wanted.codebombalms.problems.category.application.usecase.GetProblemCategoriesUseCase;
-import com.wanted.codebombalms.problems.category.presentation.response.ProblemCategoryResponse;
+import com.wanted.codebombalms.problems.category.application.usecase.GetProblemCategoriesUseCase.ProblemCategoryView;
 import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase;
 import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetListResponse;
@@ -30,10 +30,7 @@ public class ProblemController {
             @RequestParam(required = false) Long categoryId,
             Model model
     ) {
-        List<ProblemCategoryResponse> categories = getProblemCategoriesUseCase.handle()
-                .stream()
-                .map(ProblemCategoryResponse::new)
-                .toList();
+        List<ProblemCategoryView> categories = getProblemCategoriesUseCase.handle();
 
         Long selectedCategoryId = categoryId;
 

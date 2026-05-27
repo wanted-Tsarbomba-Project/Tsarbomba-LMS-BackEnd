@@ -72,7 +72,11 @@ public class ChatContextAdapter implements ChatContextPort {
 
     @Override
     public DatasetInfo findDataset(Long problemId) {
-        return datasetRepository.findFirstByProblem_ProblemIdAndStatus(problemId, "ACTIVE")
+        return problemRepository.findById(problemId)
+                .flatMap(problem -> datasetRepository.findFirstByProblemSet_ProblemSetIdAndStatus(
+                        problem.getProblemSet().getProblemSetId(),
+                        "ACTIVE"
+                ))
                 .map(e -> new DatasetInfo(
                         e.getOriginalFileName(),
                         e.getFileUrl()

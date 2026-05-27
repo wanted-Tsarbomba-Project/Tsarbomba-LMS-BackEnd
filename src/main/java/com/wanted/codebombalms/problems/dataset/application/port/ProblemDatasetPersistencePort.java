@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.domain.repository;
+package com.wanted.codebombalms.problems.dataset.application.port;
 
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnection;
@@ -6,7 +6,7 @@ import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConne
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDatasetConnectionTarget;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 
-public interface ProblemDatasetRepository {
+public interface ProblemDatasetPersistencePort {
 
     ProblemDatasetConnectionTarget loadConnectionTarget(ProblemDatasetConnectionRequest request);
 

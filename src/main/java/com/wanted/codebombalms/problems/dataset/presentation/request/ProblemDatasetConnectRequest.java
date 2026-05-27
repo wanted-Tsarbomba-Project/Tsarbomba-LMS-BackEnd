@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.presentation.api.request;
+package com.wanted.codebombalms.problems.dataset.presentation.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;

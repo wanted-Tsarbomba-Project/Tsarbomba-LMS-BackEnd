@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.persistence;
 
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
+import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,8 +39,8 @@ public class ProblemDatasetJpaEntity {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "problem_id", nullable = true)
-    private ProblemJpaEntity problem;
+    @JoinColumn(name = "problem_set_id")
+    private ProblemSetJpaEntity problemSet;
 
     protected ProblemDatasetJpaEntity() {
     }
@@ -64,8 +64,8 @@ public class ProblemDatasetJpaEntity {
         return dataset;
     }
 
-    public void connectProblem(ProblemJpaEntity problem) {
-        this.problem = problem;
+    public void connectProblemSet(ProblemSetJpaEntity problemSet) {
+        this.problemSet = problemSet;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -73,8 +73,8 @@ public class ProblemDatasetJpaEntity {
         return datasetId;
     }
 
-    public ProblemJpaEntity getProblem() {
-        return problem;
+    public ProblemSetJpaEntity getProblemSet() {
+        return problemSet;
     }
 
     public String getOriginalFileName() {

@@ -49,12 +49,10 @@ public class ProblemCategoryController {
                                               "message": "요청이 성공적으로 처리되었습니다.",
                                               "data": [
                                                 {
-                                                  "categoryId": 3001,
                                                   "categoryName": "Python 데이터 분석",
                                                   "description": "Python과 pandas를 활용한 코드 실행형 문제 분야입니다."
                                                 },
                                                 {
-                                                  "categoryId": 3002,
                                                   "categoryName": "SQL 기초",
                                                   "description": "SELECT, WHERE, GROUP BY를 연습하는 문제 분야입니다."
                                                 }

@@ -18,7 +18,7 @@ public class CodeProblemForExecutionAdapter implements LoadCodeProblemPort {
     public CodeProblemForExecution loadCodeProblem(Long problemId) {
         var problem = problemQueryService.findProblem(problemId);
         var dataset = datasetRepository
-                .findFirstByProblem_ProblemIdAndStatusOrderByDatasetIdDesc(problemId, ACTIVE)
+                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problem.getProblemSetId(), ACTIVE)
                 .orElse(null);
 
         return new CodeProblemForExecution(

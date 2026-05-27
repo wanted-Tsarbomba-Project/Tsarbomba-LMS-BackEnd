@@ -1,11 +1,11 @@
-package com.wanted.codebombalms.problems.dataset.presentation.api.response;
+package com.wanted.codebombalms.problems.dataset.presentation.response;
 
 import com.wanted.codebombalms.problems.dataset.application.usecase.ConnectProblemDatasetUseCase.ConnectProblemDatasetView;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ProblemDatasetConnectResponse(
         @Schema(description = "데이터셋이 연결된 문제 ID", example = "3001")
-        Long problemId,
+        Long problemSetId,
 
         @Schema(description = "연결된 데이터셋 ID", example = "3001")
         Long datasetId,
@@ -22,7 +22,7 @@ public record ProblemDatasetConnectResponse(
 ) {
     public ProblemDatasetConnectResponse(ConnectProblemDatasetView result) {
         this(
-                result.problemId(),
+                result.problemSetId(),
                 result.datasetId(),
                 result.startCode()
         );

@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.presentation.api.response;
+package com.wanted.codebombalms.problems.dataset.presentation.response;
 
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase.UploadProblemDatasetView;
 import io.swagger.v3.oas.annotations.media.Schema;
