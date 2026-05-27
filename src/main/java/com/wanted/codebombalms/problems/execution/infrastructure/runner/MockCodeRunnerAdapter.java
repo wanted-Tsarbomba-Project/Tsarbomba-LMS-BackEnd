@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "code-runner.type", havingValue = "mock")
+@ConditionalOnProperty(name = "code-runner.type", havingValue = "mock", matchIfMissing = true)
 public class MockCodeRunnerAdapter implements RunCodePort {
 
     private static final long MOCK_EXECUTION_TIME_MS = 1L;
