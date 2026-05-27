@@ -15,5 +15,6 @@ public interface ChatMessageRepository {
     // roomId 기준 최근 limit개 메시지 조회 (대화 히스토리용)
     List<ChatMessage> findRecentByRoomId(Long roomId, int limit);
 
-
+    // roomId로 메시지 전체 삭제
+    void deleteByRoomId(Long roomId);
 }

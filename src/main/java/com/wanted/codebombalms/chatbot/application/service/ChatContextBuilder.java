@@ -31,10 +31,10 @@ public class ChatContextBuilder {
             sessionProgressInfo = chatContextPort.findSessionProgress(chatRoom.getProblemSetId());
         }
 
-        if (command.problemId() != null) {
-            problemInfo = chatContextPort.findProblem(command.problemId());
-            submissionInfo = chatContextPort.findLatestSubmission(command.userId(), command.problemId());
-            datasetInfo = chatContextPort.findDataset(command.problemId());
+        if (chatRoom.getProblemId() != null) {
+            problemInfo = chatContextPort.findProblem(chatRoom.getProblemId());
+            submissionInfo = chatContextPort.findLatestSubmission(command.userId(), chatRoom.getProblemId());
+            datasetInfo = chatContextPort.findDataset(chatRoom.getProblemId());
         }
 
         var conversationHistory = chatMessageRepository.findRecentByRoomId(
@@ -46,7 +46,7 @@ public class ChatContextBuilder {
                 command.roomId(),
                 command.userMessage(),
                 chatRoom.getProblemSetId(),
-                command.problemId(),
+                chatRoom.getProblemId(),
                 problemSetInfo,
                 problemInfo,
                 submissionInfo,
