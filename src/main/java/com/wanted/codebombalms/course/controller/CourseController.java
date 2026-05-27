@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/courses")
+@RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class CourseController {
 
@@ -28,11 +28,23 @@ public class CourseController {
     private final CourseCommandUseCase courseCommandUseCase;
     private final CourseQueryUseCase courseQueryUseCase;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<?>> findAllCourses(
-            @RequestParam(required = false) Long courseCategoryId
-    ) {
+    @GetMapping("/courses")
+    public ResponseEntity<ApiResponse<?>> findAllCourses() {
         log.info("[CourseController] find courses");
+
+        return ResponseEntity.ok(ApiResponse.success(
+                CourseResponseCode.RETRIEVED,
+                CourseResponseMessage.RETRIEVED,
+                courseQueryUseCase.findAllCourses(null)
+                        .stream()
+                        .map(CourseResponse::from)
+                        .toList()
+        ));
+    }
+
+    @GetMapping("/course-categories/{courseCategoryId}/courses")
+    public ResponseEntity<ApiResponse<?>> findCoursesByCategory(@PathVariable Long courseCategoryId) {
+        log.info("[CourseController] find courses - courseCategoryId: {}", courseCategoryId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
@@ -44,7 +56,7 @@ public class CourseController {
         ));
     }
 
-    @GetMapping("/{courseId}")
+    @GetMapping("/courses/{courseId}")
     public ResponseEntity<ApiResponse<?>> findCourseById(@PathVariable Long courseId) {
         log.info("[CourseController] find course - courseId: {}", courseId);
 
@@ -55,7 +67,7 @@ public class CourseController {
         ));
     }
 
-    @PostMapping
+    @PostMapping("/courses")
     public ResponseEntity<ApiResponse<?>> createCourse(@Valid @RequestBody CourseCreateRequest request) {
         log.info("[CourseController] create course - title: {}", request.title());
 
@@ -73,7 +85,7 @@ public class CourseController {
                 ));
     }
 
-    @PutMapping("/{courseId}")
+    @PutMapping("/courses/{courseId}")
     public ResponseEntity<ApiResponse<?>> updateCourse(
             @PathVariable Long courseId,
             @Valid @RequestBody CourseUpdateRequest request
@@ -94,7 +106,7 @@ public class CourseController {
         ));
     }
 
-    @PatchMapping("/{courseId}/publish")
+    @PatchMapping("/courses/{courseId}/publish")
     public ResponseEntity<ApiResponse<?>> publishCourse(@PathVariable Long courseId) {
         log.info("[CourseController] publish course - courseId: {}", courseId);
 
@@ -105,7 +117,7 @@ public class CourseController {
         ));
     }
 
-    @DeleteMapping("/{courseId}")
+    @DeleteMapping("/courses/{courseId}")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long courseId) {
         log.info("[CourseController] delete course - courseId: {}", courseId);
 

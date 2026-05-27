@@ -62,7 +62,7 @@ public class LearningController {
         ));
     }
 
-    @GetMapping("/admin/courses/{courseId}/students/learning-progress")
+    @GetMapping("/courses/{courseId}/learning-progress")
     public ResponseEntity<ApiResponse<List<StudentLearningProgressResponse>>> findStudentLearningProgresses(
             @PathVariable Long courseId
     ) {

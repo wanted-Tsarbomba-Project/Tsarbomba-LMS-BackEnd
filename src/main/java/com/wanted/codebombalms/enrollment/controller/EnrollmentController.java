@@ -45,7 +45,7 @@ public class EnrollmentController {
                 ));
     }
 
-    @GetMapping("/students/{userId}/enrollments")
+    @GetMapping("/users/{userId}/enrollments")
     public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long userId) {
         log.info("[EnrollmentController] find my courses - userId: {}", userId);
 
@@ -62,7 +62,7 @@ public class EnrollmentController {
         ));
     }
 
-    @DeleteMapping("/students/{userId}/enrollments/{enrollmentId}")
+    @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long userId,
             @PathVariable Long enrollmentId

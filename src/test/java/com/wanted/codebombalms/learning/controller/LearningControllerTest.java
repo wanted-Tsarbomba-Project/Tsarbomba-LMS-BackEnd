@@ -109,7 +109,7 @@ class LearningControllerTest {
                         3L
                 )));
 
-        mockMvc.perform(get("/api/v1/admin/courses/{courseId}/students/learning-progress", 101L)
+        mockMvc.perform(get("/api/v1/courses/{courseId}/learning-progress", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))

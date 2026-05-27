@@ -1,11 +1,11 @@
-### 기본 주소
+﻿### 기본 주소
 @host = http://localhost:8080
 
 ### 테스트용 ID
 @courseId = 101
 @courseCategoryId = 1
 @lectureId = 101
-@instructorId = 2
+@userId = 2
 
 ### 1. 강좌 카테고리 목록 조회
 GET {{host}}/api/v1/course-categories
@@ -14,14 +14,14 @@ GET {{host}}/api/v1/course-categories
 GET {{host}}/api/v1/courses
 
 ### 3. 카테고리별 강좌 목록 조회
-GET {{host}}/api/v1/courses?courseCategoryId={{courseCategoryId}}
+GET {{host}}/api/v1/course-categories/{{courseCategoryId}}/courses
 
 ### 4. 강좌 등록
 POST {{host}}/api/v1/courses
 Content-Type: application/json
 
 {
-  "instructorId": {{instructorId}},
+  "instructorId": {{userId}},
   "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
@@ -43,7 +43,7 @@ Content-Type: application/json
   "status": "INACTIVE"
 }
 
-### 7. 강좌 개설
+### 7. 강좌 공개
 PATCH {{host}}/api/v1/courses/{{courseId}}/publish
 
 ### 8. 강좌 삭제
@@ -52,13 +52,13 @@ DELETE {{host}}/api/v1/courses/{{courseId}}
 ### 9. 삭제된 강좌 상세 조회 확인
 GET {{host}}/api/v1/courses/{{courseId}}
 
-### 10. 강좌에 연결된 문제세트 목록 조회
+### 10. 강좌에 연결된 문제 세트 목록 조회
 GET {{host}}/api/v1/courses/{{courseId}}/problem-sets
 
-### 11. 강의에 연결된 문제세트 목록 조회
+### 11. 강의에 연결된 문제 세트 목록 조회
 GET {{host}}/api/v1/lectures/{{lectureId}}/problem-sets
 
-### 12. 강좌/강의 문제세트 연결 저장
+### 12. 강좌/강의 문제 세트 연결 저장
 PUT {{host}}/api/v1/courses/{{courseId}}/problem-sets
 Content-Type: application/json
 
@@ -79,8 +79,8 @@ Content-Type: application/json
   ]
 }
 
-### 13. 강좌별 학생 학습 현황 목록 조회
-GET {{host}}/api/v1/admin/courses/{{courseId}}/students/learning-progress
+### 13. 강좌별 학습 현황 목록 조회
+GET {{host}}/api/v1/courses/{{courseId}}/learning-progress
 
-### 14. 강사별 강좌 목록 조회
-GET {{host}}/api/v1/instructors/{{instructorId}}/courses
+### 14. 사용자별 강좌 목록 조회
+GET {{host}}/api/v1/users/{{userId}}/courses

@@ -1,4 +1,4 @@
-### 기본 주소
+﻿### 기본 주소
 @host = http://localhost:8080
 
 ### 테스트용 ID
@@ -13,8 +13,8 @@ Content-Type: application/json
   "completed": true
 }
 
-### 2. 내 강의 진행 상태 조회
+### 2. 강의 진행 상태 조회
 GET {{host}}/api/v1/lectures/{{lectureId}}/progress
 
-### 3. 관리자 - 강좌별 학생 학습 현황 조회
-GET {{host}}/api/v1/admin/courses/{{courseId}}/students/learning-progress
+### 3. 강좌별 학습 현황 조회
+GET {{host}}/api/v1/courses/{{courseId}}/learning-progress

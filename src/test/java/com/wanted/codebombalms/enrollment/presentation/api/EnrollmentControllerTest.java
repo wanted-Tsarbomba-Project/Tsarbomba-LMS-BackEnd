@@ -76,7 +76,7 @@ class EnrollmentControllerTest {
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
-        mockMvc.perform(get("/api/v1/students/{studentId}/enrollments", studentId)
+        mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
@@ -90,7 +90,7 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Long enrollmentId = 1L;
 
-        mockMvc.perform(delete("/api/v1/students/{studentId}/enrollments/{enrollmentId}", studentId, enrollmentId))
+        mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId))
                 .andExpect(status().isNoContent());
 
         verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
