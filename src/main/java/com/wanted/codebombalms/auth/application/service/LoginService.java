@@ -52,7 +52,7 @@ public class LoginService implements LoginUseCase {
         refreshTokenRepository.deleteByUserId(user.getUserId());
 
         // 5. 토큰 발급
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getRole());
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(), user.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
 
         // 6. RT 저장
