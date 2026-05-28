@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.problems.progress.presentation;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
@@ -13,9 +15,9 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "문제 진행 상태", description = "학생의 문제 세트 풀이 진행률, 현재 풀어야 할 문제, 문제별 열림 상태 조회 API")
@@ -100,9 +102,12 @@ public class ProgressApiController {
             @Parameter(description = "진행 상태를 조회할 문제 세트 ID", example = "3001")
             @PathVariable Long problemSetId,
 
-            @Parameter(description = "진행 상태를 조회할 학생 ID", example = "3")
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ) {
+        if (userId == null) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REQUIRED);
+        }
+
         var query = new GetProblemProgressQuery(problemSetId, userId);
 
         var response = new ProblemProgressResponse(

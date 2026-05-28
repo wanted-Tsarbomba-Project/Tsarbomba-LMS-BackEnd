@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
@@ -53,6 +54,12 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
                     dataset.getFileUrl(),
                     startCode(dataset.getFileUrl())
             );
+        } catch (DomainException e) {
+            if (storedFile != null) {
+                storeDatasetFilePort.delete(storedFile.getFilePath());
+            }
+
+            throw e;
         } catch (Exception e) {
             if (storedFile != null) {
                 storeDatasetFilePort.delete(storedFile.getFilePath());

@@ -27,13 +27,6 @@ public class ProblemQueryService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
-    public ProblemView findCurrentProblem(Long problemSetId, Integer currentProblemNumber) {
-        return problemRepository
-                .findActiveProblemByProblemSetAndOrder(problemSetId, currentProblemNumber)
-                .map(this::toView)
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.NO_CURRENT_PROBLEM));
-    }
 
     @Transactional(readOnly = true)
     public Problem findProblem(Long problemId) {
@@ -51,16 +44,12 @@ public class ProblemQueryService {
                 problem.getProblemOrder(),
                 problem.getAnswer(),
                 problem.getExplanation(),
+                problem.getPoint(),
                 problem.getAttemptLimit(),
                 problem.getRetriable()
         );
     }
 
-    @Transactional(readOnly = true)
-    public Problem findProblem(Long problemSetId, Long problemId) {
-        return problemRepository.findByProblemSetAndProblemId(problemSetId, problemId)
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
-    }
 
     @Transactional(readOnly = true)
     public Optional<Long> findProblemIdByProblemSetAndOrder(Long problemSetId, Integer problemOrder) {
@@ -69,10 +58,6 @@ public class ProblemQueryService {
                 .map(Problem::getProblemId);
     }
 
-    @Transactional(readOnly = true)
-    public List<Problem> findActiveProblemsByProblemSet(Long problemSetId) {
-        return problemRepository.findActiveProblemsByProblemSet(problemSetId);
-    }
 
     @Transactional(readOnly = true)
     public Optional<ProblemView> findLastProblem(Long problemSetId) {
@@ -121,6 +106,7 @@ public class ProblemQueryService {
             Integer problemOrder,
             String answer,
             String explanation,
+            Integer point,
             Integer attemptLimit,
             Boolean retriable
     ) {

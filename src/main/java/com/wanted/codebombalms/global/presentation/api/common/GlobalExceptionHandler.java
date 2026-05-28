@@ -14,6 +14,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.Arrays;
 
@@ -30,6 +35,35 @@ public class GlobalExceptionHandler {
         log.warn("[{}] {} - path: {}", e.getHttpStatus(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(e.getHttpStatus())
                 .body(ApiErrorResponse.of(e.getHttpStatus(), e.getErrorCode(), request.getRequestURI()));
+    }
+    @ExceptionHandler({
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class,
+            MissingServletRequestPartException.class,
+            MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class,
+            HttpMediaTypeNotSupportedException.class
+    })
+    public ResponseEntity<ApiErrorResponse> handleBadRequestException(
+            Exception e,
+            HttpServletRequest request
+    ) {
+        log.warn("[400] 잘못된 요청 - path: {}, message: {}",
+                request.getRequestURI(),
+                e.getMessage()
+        );
+
+        String message = isDev()
+                ? e.getMessage()
+                : "요청 형식이 올바르지 않습니다.";
+
+        return ResponseEntity.badRequest()
+                .body(ApiErrorResponse.of(
+                        400,
+                        "COMMON-BAD-REQUEST",
+                        message,
+                        request.getRequestURI()
+                ));
     }
 
     @ExceptionHandler(Exception.class)

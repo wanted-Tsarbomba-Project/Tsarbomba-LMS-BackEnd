@@ -19,7 +19,10 @@ public interface SubmissionCommandUseCase {
             Boolean canRetry,
             Long nextProblemId,
             Boolean problemSetCompleted,
+            Integer earnedPoint,
+            Boolean pointGranted,
             String explanation
+
     ) {
     }
 }
