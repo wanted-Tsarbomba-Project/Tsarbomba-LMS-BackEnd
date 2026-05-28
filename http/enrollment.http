@@ -2,9 +2,9 @@
 @host = http://localhost:8080
 
 ### 테스트용 ID
-@courseId = 2
+@courseId = 101
 @userId = 3
-@enrollmentId = 1
+@enrollmentId = 101
 
 ### 1. 수강 신청
 POST {{host}}/api/v1/courses/{{courseId}}/enrollments
@@ -31,10 +31,10 @@ GET {{host}}/api/v1/users/{{userId}}/enrollments
 GET {{host}}/api/v1/enrollments
 
 ### 5. 수강 신청 취소 - learning.http 실행 전에는 실행하지 말 것
-# DELETE {{host}}/api/v1/users/{{userId}}/enrollments/{{enrollmentId}}
+ DELETE {{host}}/api/v1/users/{{userId}}/enrollments/{{enrollmentId}}
 
 ### 6. 수강 취소 후 사용자 수강 강좌 목록 조회 - 수강 취소 후 별도 실행
-# GET {{host}}/api/v1/users/{{userId}}/enrollments
+ GET {{host}}/api/v1/users/{{userId}}/enrollments
 
 ### 7. 이미 취소한 수강 신청 재취소 확인 - 수강 취소 후 별도 실행
-# DELETE {{host}}/api/v1/users/{{userId}}/enrollments/{{enrollmentId}}
+ DELETE {{host}}/api/v1/users/{{userId}}/enrollments/{{enrollmentId}}

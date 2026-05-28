@@ -2,11 +2,11 @@
 @host = http://localhost:8080
 
 ### 테스트용 ID
-@courseId = 1
-@lectureId = 2
-@lectureProblemSetId = 2
-@problemSetId = 2
-@problemId = 4
+@courseId = 101
+@lectureId = 102
+@lectureProblemSetId = 102
+@problemSetId = 2002
+@problemId = 2004
 @userId = 3
 
 ### 1. 강의 진행 상태 저장
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ### 2. 강의 진행 상태 조회
-GET {{host}}/api/v1/lectures/{{lectureId}}/progress?userId={{userId}}
+GET {{host}}/api/v1/lectures/{{lectureId}}/progress?requestUserId={{userId}}
 
 ### 3. 강좌별 학습 현황 목록 조회
 GET {{host}}/api/v1/courses/learning-progress
@@ -42,11 +42,11 @@ GET {{host}}/api/v1/lectures/{{lectureId}}/problems/statistics
 ### 9. 전체 학습 현황 조회
 GET {{host}}/api/v1/learning-progress/summary
 
-### 10. 문제세트 입장
-GET {{host}}/api/v1/problem-sets/{{problemSetId}}?userId={{userId}}
+### 10. 강의 문제세트 입장
+GET {{host}}/api/v1/lecture-problem-sets/{{lectureProblemSetId}}?userId={{userId}}
 
-### 11. 문제세트 진행 상태 조회
-GET {{host}}/api/v1/problem-sets/{{problemSetId}}/progress?userId={{userId}}
+### 11. 강의 문제세트 진행 상태 조회
+GET {{host}}/api/v1/lecture-problem-sets/{{lectureProblemSetId}}/progress?userId={{userId}}
 
 ### 12. 강의 문제세트 진행 상태 저장
 PATCH {{host}}/api/v1/lecture-problem-sets/{{lectureProblemSetId}}/progress

@@ -14,6 +14,8 @@ public interface SpringDataEnrollmentRepository extends JpaRepository<Enrollment
             EnrollmentStatus status
     );
 
+    boolean existsByCourse_CourseIdAndUserId(Long courseId, Long userId);
+
     List<EnrollmentJpaEntity> findByUserIdAndStatus(Long userId, EnrollmentStatus status);
 
     List<EnrollmentJpaEntity> findByCourse_CourseIdAndStatus(Long courseId, EnrollmentStatus status);

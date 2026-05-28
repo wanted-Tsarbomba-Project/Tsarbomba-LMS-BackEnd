@@ -41,6 +41,11 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
+    public boolean existsByCourseIdAndUserId(Long courseId, Long userId) {
+        return springDataEnrollmentRepository.existsByCourse_CourseIdAndUserId(courseId, userId);
+    }
+
+    @Override
     public List<Enrollment> findByUserIdAndStatus(Long userId, EnrollmentStatus status) {
         return springDataEnrollmentRepository.findByUserIdAndStatus(userId, status)
                 .stream()

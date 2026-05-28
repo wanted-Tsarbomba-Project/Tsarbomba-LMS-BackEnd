@@ -66,10 +66,26 @@ class EnrollmentRepositoryTest {
     }
 
     @Test
-    void findByUserIdAndStatusReturnsOnlyMatchingStatus() {
+    void existsByCourseIdAndUserIdReturnsTrueForCanceledEnrollment() {
         Course course = courseRepository.save(createCourse());
-        Enrollment activeEnrollment = Enrollment.create(10L, course.getCourseId());
-        Enrollment canceledEnrollment = Enrollment.create(10L, course.getCourseId());
+        Enrollment enrollment = Enrollment.create(10L, course.getCourseId());
+        enrollment.cancel();
+        enrollmentRepository.save(enrollment);
+
+        boolean exists = enrollmentRepository.existsByCourseIdAndUserId(
+                course.getCourseId(),
+                10L
+        );
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void findByUserIdAndStatusReturnsOnlyMatchingStatus() {
+        Course activeCourse = courseRepository.save(createCourse());
+        Course canceledCourse = courseRepository.save(createCourse());
+        Enrollment activeEnrollment = Enrollment.create(10L, activeCourse.getCourseId());
+        Enrollment canceledEnrollment = Enrollment.create(10L, canceledCourse.getCourseId());
         canceledEnrollment.cancel();
 
         enrollmentRepository.save(activeEnrollment);
