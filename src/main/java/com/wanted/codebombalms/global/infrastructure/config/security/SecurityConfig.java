@@ -44,19 +44,19 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 추가
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // 인증 불필요
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/users/find-email").permitAll()
-                        // course 및 lecture 테스트
+                        // 강의/코스 브라우징
                         .requestMatchers("/api/v1/courses/**").permitAll()
                         .requestMatchers("/api/v1/lectures/**").permitAll()
-                        // 관리자 전용
-                        .requestMatchers("/api/v1/admin/**").permitAll()
+                        // 운영/관리자 전용 (권한 경계 확정 전까지 둘 다 허용)
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR")
                         // 그 외 모두 인증 필요
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtTokenProvider),
