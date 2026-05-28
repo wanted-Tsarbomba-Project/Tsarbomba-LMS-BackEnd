@@ -9,11 +9,8 @@ public record ChatContext(
         Long userId,
         Long roomId,
         String userMessage,
-        Long problemSetId,
-        Long problemId,
         ChatContextPort.ProblemSetInfo problemSetInfo,
-        ChatContextPort.ProblemInfo problemInfo,
-        ChatContextPort.SubmissionInfo submissionInfo,
+        List<ChatContextPort.ProblemInfo> problemInfos,
         ChatContextPort.SessionProgressInfo sessionProgressInfo,
         ChatContextPort.DatasetInfo datasetInfo,
         List<ChatMessage> conversationHistory

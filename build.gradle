@@ -67,6 +67,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
 }
 
 //성공한 테스트에서도 System.out이 보이도록 showStandardStreams = true 추가
@@ -75,4 +77,6 @@ tasks.named('test') {
     testLogging {
         showStandardStreams = true
     }
+
+
 }

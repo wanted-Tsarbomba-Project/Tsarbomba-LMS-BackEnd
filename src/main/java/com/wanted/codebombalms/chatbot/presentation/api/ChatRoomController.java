@@ -34,7 +34,11 @@ public class ChatRoomController {
             @AuthenticationPrincipal Long userId,
             @RequestBody ChatRoomCreateRequest request
     ) {
-        CreateChatRoomCommand command = new CreateChatRoomCommand(userId, request.problemSetId());
+        CreateChatRoomCommand command = new CreateChatRoomCommand(
+                userId,
+                request.problemSetId(),
+                request.problemId()
+        );
         ChatRoomResult result = chatRoomCommandUseCase.create(command);
         ChatRoomResponse response = ChatRoomResponse.from(result);
 
