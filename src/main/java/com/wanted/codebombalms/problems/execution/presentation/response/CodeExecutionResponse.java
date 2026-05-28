@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.execution.presentation.api.response;
+package com.wanted.codebombalms.problems.execution.presentation.response;
 
 import com.wanted.codebombalms.problems.execution.application.usecase.CodeExecutionUseCase.CodeExecutionView;
 import io.swagger.v3.oas.annotations.media.Schema;

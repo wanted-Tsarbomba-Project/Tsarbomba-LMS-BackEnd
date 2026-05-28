@@ -1,11 +1,11 @@
-package com.wanted.codebombalms.problems.execution.presentation.api;
+package com.wanted.codebombalms.problems.execution.presentation;
 
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.problems.execution.application.command.ExecuteCodeCommand;
 import com.wanted.codebombalms.problems.execution.application.usecase.CodeExecutionUseCase;
-import com.wanted.codebombalms.problems.execution.presentation.api.request.CodeExecutionRequest;
-import com.wanted.codebombalms.problems.execution.presentation.api.response.CodeExecutionResponse;
+import com.wanted.codebombalms.problems.execution.presentation.request.CodeExecutionRequest;
+import com.wanted.codebombalms.problems.execution.presentation.response.CodeExecutionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
