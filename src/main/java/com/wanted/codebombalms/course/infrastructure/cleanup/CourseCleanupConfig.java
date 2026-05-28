@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.course.infrastructure.cleanup;
 
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseProblemSetRepository;
 import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
 import com.wanted.codebombalms.global.application.cleanup.DefaultHardDeleteTarget;
 import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteTarget;
@@ -11,18 +10,6 @@ import org.springframework.core.annotation.Order;
 
 @Configuration
 public class CourseCleanupConfig {
-
-    @Bean
-    @Order(10)
-    public HardDeleteTarget courseProblemSetHardDeleteTarget(
-            SpringDataCourseProblemSetRepository repository
-    ) {
-        return new DefaultHardDeleteTarget(
-                "course-problem-set",
-                Period.ofMonths(6),
-                repository::hardDeleteByDeletedAtBefore
-        );
-    }
 
     @Bean
     @Order(30)

@@ -2,7 +2,6 @@ package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
-import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
@@ -43,9 +42,6 @@ class LectureServiceTest {
 
     @Mock
     private LectureCreationPolicy lectureCreationPolicy;
-
-    @Mock
-    private CourseProblemSetRepository courseProblemSetRepository;
 
     @InjectMocks
     private LectureCommandService lectureCommandService;
@@ -163,7 +159,6 @@ class LectureServiceTest {
         assertEquals(LectureStatus.DELETED, lecture.getStatus());
         assertNotNull(lecture.getDeletedAt());
         verify(lectureRepository).save(lecture);
-        verify(courseProblemSetRepository).deleteByLectureId(lectureId);
     }
 
     private Course createCourse(Long courseId, Long instructorId, String title) {
