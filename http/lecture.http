@@ -47,7 +47,7 @@ Content-Type: application/json
 }
 
 ### 6. 강의 학습 진행 조회
-GET {{host}}/api/v1/lectures/{{lectureId}}/progress?userId=3
+GET {{host}}/api/v1/lectures/{{lectureId}}/progress?requestUserId=3
 
 ### 7. 강의 삭제 - learning.http 실행 전에는 실행하지 말 것
 # DELETE {{host}}/api/v1/lectures/{{lectureId}}
