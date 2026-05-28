@@ -20,17 +20,28 @@ public class RankingQueryAdapter implements RankingQueryPort {
     @Override
     public List<RankingItem> findTotalPointRankings() {
         String sql = """
+            select
+                dense_rank() over (order by up.total_point desc) as ranking,
+                u.user_id,
+                u.name,
+                u.nickname,
+                null as badge_image_url,
+                coalesce(weekly.weekly_point, 0) as weekly_point,
+                up.total_point
+            from user_point up
+            join users u on u.user_id = up.user_id
+            left join (
                 select
-                    dense_rank() over (order by up.total_point desc) as ranking,
-                    u.user_id,
-                    u.nickname,
-                    up.total_point
-                from user_point up
-                join users u on u.user_id = up.user_id
-                where u.deleted_at is null
-                  and u.role = 'STUDENT'
-                order by ranking asc, u.user_id asc
-                """;
+                    ph.user_id,
+                    sum(ph.point) as weekly_point
+                from point_history ph
+                where ph.created_at >= date_sub(now(), interval 7 day)
+                group by ph.user_id
+            ) weekly on weekly.user_id = u.user_id
+            where u.deleted_at is null
+              and u.role = 'STUDENT'
+            order by ranking asc, u.user_id asc
+            """;
 
         return entityManager.createNativeQuery(sql)
                 .getResultList()
@@ -42,19 +53,28 @@ public class RankingQueryAdapter implements RankingQueryPort {
     @Override
     public List<RankingItem> findWeeklyPointRankings(LocalDateTime from) {
         String sql = """
+            select
+                dense_rank() over (order by weekly.weekly_point desc) as ranking,
+                u.user_id,
+                u.name,
+                u.nickname,
+                null as badge_image_url,
+                weekly.weekly_point,
+                coalesce(up.total_point, 0) as total_point
+            from (
                 select
-                    dense_rank() over (order by sum(ph.point) desc) as ranking,
-                    u.user_id,
-                    u.nickname,
-                    sum(ph.point) as total_point
+                    ph.user_id,
+                    sum(ph.point) as weekly_point
                 from point_history ph
-                join users u on u.user_id = ph.user_id
                 where ph.created_at >= :from
-                  and u.deleted_at is null
-                  and u.role = 'STUDENT'
-                group by u.user_id, u.nickname
-                order by ranking asc, u.user_id asc
-                """;
+                group by ph.user_id
+            ) weekly
+            join users u on u.user_id = weekly.user_id
+            left join user_point up on up.user_id = u.user_id
+            where u.deleted_at is null
+              and u.role = 'STUDENT'
+            order by ranking asc, u.user_id asc
+            """;
 
         return entityManager.createNativeQuery(sql)
                 .setParameter("from", from)
@@ -67,20 +87,31 @@ public class RankingQueryAdapter implements RankingQueryPort {
     @Override
     public Optional<RankingItem> findMyTotalPointRanking(Long userId) {
         String sql = """
-                select *
-                from (
+            select *
+            from (
+                select
+                    dense_rank() over (order by up.total_point desc) as ranking,
+                    u.user_id,
+                    u.name,
+                    u.nickname,
+                    null as badge_image_url,
+                    coalesce(weekly.weekly_point, 0) as weekly_point,
+                    up.total_point
+                from user_point up
+                join users u on u.user_id = up.user_id
+                left join (
                     select
-                        dense_rank() over (order by up.total_point desc) as ranking,
-                        u.user_id,
-                        u.nickname,
-                        up.total_point
-                    from user_point up
-                    join users u on u.user_id = up.user_id
-                    where u.deleted_at is null
-                      and u.role = 'STUDENT'
-                ) ranked
-                where ranked.user_id = :userId
-                """;
+                        ph.user_id,
+                        sum(ph.point) as weekly_point
+                    from point_history ph
+                    where ph.created_at >= date_sub(now(), interval 7 day)
+                    group by ph.user_id
+                ) weekly on weekly.user_id = u.user_id
+                where u.deleted_at is null
+                  and u.role = 'STUDENT'
+            ) ranked
+            where ranked.user_id = :userId
+            """;
 
         Query query = entityManager.createNativeQuery(sql)
                 .setParameter("userId", userId);
@@ -99,7 +130,10 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 ((Number) row[0]).intValue(),
                 ((Number) row[1]).longValue(),
                 (String) row[2],
-                ((Number) row[3]).intValue()
+                (String) row[3],
+                (String) row[4],
+                ((Number) row[5]).intValue(),
+                ((Number) row[6]).intValue()
         );
     }
 }

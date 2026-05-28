@@ -11,18 +11,30 @@ public record MyRankingResponse(
         @Schema(description = "내 회원 ID", example = "3")
         Long userId,
 
+        @Schema(description = "내 이름", example = "김학생")
+        String name,
+
         @Schema(description = "내 닉네임", example = "user01")
         String nickname,
 
+        @Schema(description = "내 뱃지 이미지 URL. 뱃지 기능 구현 전에는 null입니다.", nullable = true)
+        String badgeImageUrl,
+
+        @Schema(description = "내 주간 포인트", example = "30")
+        Integer weeklyPoint,
+
         @Schema(description = "내 누적 포인트", example = "120")
-        Integer point
+        Integer totalPoint
 ) {
     public static MyRankingResponse from(RankingItem item) {
         return new MyRankingResponse(
                 item.rank(),
                 item.userId(),
+                item.name(),
                 item.nickname(),
-                item.point()
+                item.badgeImageUrl(),
+                item.weeklyPoint(),
+                item.totalPoint()
         );
     }
 }
