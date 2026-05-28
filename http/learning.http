@@ -2,11 +2,11 @@
 @host = http://localhost:8080
 
 ### 테스트용 ID
-@courseId = 1
-@lectureId = 2
-@lectureProblemSetId = 2
-@problemSetId = 2
-@problemId = 4
+@courseId = 101
+@lectureId = 102
+@lectureProblemSetId = 102
+@problemSetId = 2002
+@problemId = 2004
 @userId = 3
 
 ### 1. 강의 진행 상태 저장
