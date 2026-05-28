@@ -64,7 +64,7 @@ public class ChatContextAdapter implements ChatContextPort {
     public DatasetInfo findDataset(Long problemSetId) {
         return datasetRepository
                 .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
-                .map(e -> new DatasetInfo(null))
+                .map(e -> new DatasetInfo(e.getMetadata()))
                 .orElse(null);
     }
 }

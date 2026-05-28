@@ -8,6 +8,11 @@ import com.wanted.codebombalms.chatbot.presentation.api.request.ChatRoomCreateRe
 import com.wanted.codebombalms.chatbot.presentation.api.response.ChatRoomResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +24,7 @@ import com.wanted.codebombalms.chatbot.presentation.api.response.AiChatResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Tag(name = "Chatbot - 채팅방", description = "AI 채팅방 생성/조회/삭제 및 메시지 전송 API")
 @RestController
 @RequestMapping("/api/v1/chat")
 @RequiredArgsConstructor
@@ -28,7 +34,57 @@ public class ChatRoomController {
     private final ChatRoomQueryUseCase chatRoomQueryUseCase;
     private final ChatMessageCommandUseCase chatMessageCommandUseCase;
 
-    @Operation(summary = "채팅방 생성", description = "항상 새 방 생성 201 | 에러: CHT-002 권한없음")
+    @Operation(
+            summary = "채팅방 생성",
+            description = "항상 새 방 생성. 동일 문제에 대해 기존 방이 있어도 새로 생성됩니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "채팅방 생성 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "생성 성공",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 201,
+                                              "code": "CHT-001",
+                                              "message": "채팅방이 생성되었습니다.",
+                                              "data": {
+                                                "roomId": 1,
+                                                "problemSetId": 10,
+                                                "problemId": 100,
+                                                "title": "문제 100 채팅방",
+                                                "createdAt": "2026-05-28T12:00:00Z",
+                                                "updatedAt": "2026-05-28T12:00:00Z"
+                                              }
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "CHT-002 - 권한 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "권한 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 401,
+                                              "code": "CHT-002",
+                                              "message": "채팅방에 접근 권한이 없습니다.",
+                                              "path": "/api/v1/chat"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(
             @AuthenticationPrincipal Long userId,
@@ -51,7 +107,59 @@ public class ChatRoomController {
         );
     }
 
-    @Operation(summary = "채팅방 목록 조회", description = "userId 기준 채팅방 목록 최신순 반환 | 200")
+    @Operation(
+            summary = "채팅방 목록 조회",
+            description = "로그인한 사용자의 채팅방 목록을 최신순으로 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "채팅방 목록 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "목록 조회 성공",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 200,
+                                              "code": "CHT-002",
+                                              "message": "채팅방 목록을 조회했습니다.",
+                                              "data": [
+                                                {
+                                                  "roomId": 1,
+                                                  "problemSetId": 10,
+                                                  "problemId": 100,
+                                                  "title": "문제 100 채팅방",
+                                                  "createdAt": "2026-05-28T12:00:00Z",
+                                                  "updatedAt": "2026-05-28T12:00:00Z"
+                                                }
+                                              ]
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "CHT-002 - 권한 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "권한 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 401,
+                                              "code": "CHT-002",
+                                              "message": "채팅방에 접근 권한이 없습니다.",
+                                              "path": "/api/v1/chat/list"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
     @GetMapping("/list")
     public ResponseEntity<ApiResponse<List<ChatRoomResponse>>> listChatRooms(
             @AuthenticationPrincipal Long userId
@@ -70,9 +178,93 @@ public class ChatRoomController {
         );
     }
 
-    @Operation(summary = "메시지 전송", description = "유저 메시지 저장 + FastAPI 호출 + AI 응답 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음, CHT-003 AI 응답 실패")
+    @Operation(
+            summary = "메시지 전송",
+            description = "유저 메시지를 저장하고 FastAPI를 호출해 AI 응답을 반환합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "메시지 전송 및 AI 응답 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "AI 응답 성공",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 200,
+                                              "code": "CHT-003",
+                                              "message": "메시지가 전송되었습니다.",
+                                              "data": {
+                                                "answer": "힌트: 배열의 합을 구할 때는 누적합을 활용해보세요."
+                                              }
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "CHT-002 - 권한 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "권한 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 401,
+                                              "code": "CHT-002",
+                                              "message": "채팅방에 접근 권한이 없습니다.",
+                                              "path": "/api/v1/chat/1/messages"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "CHT-001 - 채팅방 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "채팅방 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 404,
+                                              "code": "CHT-001",
+                                              "message": "채팅방을 찾을 수 없습니다.",
+                                              "path": "/api/v1/chat/9999/messages"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "CHT-003 - AI 응답 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "AI 응답 실패",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 500,
+                                              "code": "CHT-003",
+                                              "message": "AI 응답에 실패했습니다.",
+                                              "path": "/api/v1/chat/1/messages"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
     @PostMapping("/{roomId}/messages")
     public ResponseEntity<ApiResponse<AiChatResponse>> sendMessage(
+            @Parameter(description = "메시지를 전송할 채팅방 ID", example = "1")
             @PathVariable Long roomId,
             @AuthenticationPrincipal Long userId,
             @RequestBody ChatMessageRequest request
@@ -94,9 +286,57 @@ public class ChatRoomController {
         );
     }
 
-    @Operation(summary = "채팅방 삭제", description = "204 반환 | 에러: CHT-001 채팅방 없음, CHT-002 권한없음")
+    @Operation(
+            summary = "채팅방 삭제",
+            description = "채팅방과 포함된 모든 메시지를 삭제합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "204",
+                    description = "채팅방 삭제 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "CHT-002 - 권한 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "권한 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 401,
+                                              "code": "CHT-002",
+                                              "message": "채팅방에 접근 권한이 없습니다.",
+                                              "path": "/api/v1/chat/1"
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "CHT-001 - 채팅방 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "채팅방 없음",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-05-28T12:00:00",
+                                              "status": 404,
+                                              "code": "CHT-001",
+                                              "message": "채팅방을 찾을 수 없습니다.",
+                                              "path": "/api/v1/chat/9999"
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
     @DeleteMapping("/{roomId}")
     public ResponseEntity<Void> deleteChatRoom(
+            @Parameter(description = "삭제할 채팅방 ID", example = "1")
             @PathVariable Long roomId,
             @AuthenticationPrincipal Long userId
     ) {
