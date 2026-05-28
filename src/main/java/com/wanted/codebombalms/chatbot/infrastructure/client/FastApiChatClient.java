@@ -3,14 +3,19 @@ package com.wanted.codebombalms.chatbot.infrastructure.client;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
 import com.wanted.codebombalms.chatbot.application.port.ChatContextPort;
+import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Profile("!mock")
@@ -22,14 +27,22 @@ public class FastApiChatClient implements AiChatClient {
     public AiChatClientResponse call(ChatContext context) {
         FastApiChatRequest request = toRequest(context);
 
-        FastApiChatResponse response = webClient.post()
-                .uri("/chat")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(FastApiChatResponse.class)
-                .block();
+        try {
+            FastApiChatResponse response = webClient.post()
+                    .uri("/chat")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(FastApiChatResponse.class)
+                    .block();
 
-        return toClientResponse(response);
+            return toClientResponse(response);
+        } catch (WebClientResponseException e) {
+            log.error("FastAPI 호출 실패 - status: {}, body: {}", e.getStatusCode(), e.getResponseBodyAsString());
+            throw new ExternalServiceException(ChatErrorCode.AI_RESPONSE_FAILED);
+        } catch (Exception e) {
+            log.error("FastAPI 호출 중 예외 발생", e);
+            throw new ExternalServiceException(ChatErrorCode.AI_RESPONSE_FAILED);
+        }
     }
 
     private FastApiChatRequest toRequest(ChatContext context) {
