@@ -29,6 +29,10 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
 
+app:
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+
 
 fastapi:
   url: http://localhost:8000

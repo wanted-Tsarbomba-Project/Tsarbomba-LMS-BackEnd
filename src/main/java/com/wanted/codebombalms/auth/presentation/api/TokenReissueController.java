@@ -3,6 +3,7 @@ package com.wanted.codebombalms.auth.presentation.api;
 import com.wanted.codebombalms.auth.application.dto.TokenPair;
 import com.wanted.codebombalms.auth.application.usecase.TokenReissueUseCase;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.auth.presentation.api.support.AuthCookieFactory;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @Tag(name = "Auth - 인증", description = "회원가입 / 로그인 / 토큰 관리 (담당: 김동현)")
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -25,6 +27,7 @@ public class TokenReissueController {
 
     private final TokenReissueUseCase tokenReissueUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthCookieFactory authCookieFactory;
 
     @Operation(
             summary = "토큰 재발급 (RTR)",
@@ -45,12 +48,12 @@ public class TokenReissueController {
         TokenPair pair = tokenReissueUseCase.reissue(refreshToken);
 
         // 3. 새 쿠키 2개 발급 (기존 쿠키 덮어쓰기)
-        response.addCookie(createCookie(
+        response.addCookie(authCookieFactory.create(
                 "accessToken",
                 pair.accessToken(),
                 (int) (jwtTokenProvider.getAccessExpiration() / 1000)
         ));
-        response.addCookie(createCookie(
+        response.addCookie(authCookieFactory.create(
                 "refreshToken",
                 pair.refreshToken(),
                 (int) (jwtTokenProvider.getRefreshExpiration() / 1000)
@@ -72,13 +75,4 @@ public class TokenReissueController {
         return java.util.Optional.empty();
     }
 
-    private Cookie createCookie(String name, String value, int maxAgeSeconds) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeSeconds);
-        cookie.setAttribute("SameSite", "Lax");
-        return cookie;
-    }
 }

@@ -4,11 +4,11 @@ import com.wanted.codebombalms.auth.application.dto.LoginResult;
 import com.wanted.codebombalms.auth.application.usecase.LoginUseCase;
 import com.wanted.codebombalms.auth.presentation.api.dto.request.LoginRequest;
 import com.wanted.codebombalms.auth.presentation.api.dto.response.LoginResponse;
+import com.wanted.codebombalms.auth.presentation.api.support.AuthCookieFactory;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,6 +27,7 @@ public class LoginController {
 
     private final LoginUseCase loginUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthCookieFactory authCookieFactory;
 
     @Operation(
             summary = "로그인",
@@ -44,12 +45,12 @@ public class LoginController {
         LoginResult result = loginUseCase.login(request.toCommand(), httpRequest);
 
         // 쿠키 2개 설정 (토큰은 body 노출 X — HttpOnly 쿠키로만)
-        response.addCookie(createCookie(
+        response.addCookie(authCookieFactory.create(
                 "accessToken",
                 result.accessToken(),
                 (int) (jwtTokenProvider.getAccessExpiration() / 1000)
         ));
-        response.addCookie(createCookie(
+        response.addCookie(authCookieFactory.create(
                 "refreshToken",
                 result.refreshToken(),
                 (int) (jwtTokenProvider.getRefreshExpiration() / 1000)
@@ -60,15 +61,5 @@ public class LoginController {
                 AuthResponseMessage.LOGIN_COMPLETED,
                 LoginResponse.from(result)
         ));
-    }
-
-    private Cookie createCookie(String name, String value, int maxAgeSeconds) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);   // 운영 배포 시 true 로
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAgeSeconds);
-        cookie.setAttribute("SameSite", "Lax");
-        return cookie;
     }
 }
