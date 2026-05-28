@@ -2,12 +2,10 @@ package com.wanted.codebombalms.admin.operation.automation.infrastructure.schedu
 
 import com.wanted.codebombalms.admin.operation.automation.application.usecase.RunOperationRuleUseCase;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-@EnableScheduling
 @RequiredArgsConstructor
 // 매일 오전 9시에 운영 자동 규칙 실행 유스케이스를 호출한다.
 public class OperationRuleScheduler {
