@@ -17,7 +17,7 @@ Content-Type: application/json
   "description": "Java 기본 문법을 학습하는 강의입니다.",
   "videoUrl": "java-1.mp4",
   "thumbnailUrl": "java-1.png",
-  "lectureOrder": 4,
+  "lectureOrder":6,
   "status": "ACTIVE"
 }
 

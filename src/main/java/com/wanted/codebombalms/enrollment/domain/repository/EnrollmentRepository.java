@@ -12,6 +12,8 @@ public interface EnrollmentRepository {
 
     boolean existsByCourseIdAndUserIdAndStatus(Long courseId, Long userId, EnrollmentStatus status);
 
+    boolean existsByCourseIdAndUserId(Long courseId, Long userId);
+
     List<Enrollment> findByUserIdAndStatus(Long userId, EnrollmentStatus status);
 
     Optional<Enrollment> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status);

@@ -14,7 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @ToString
-@Table(name = "enrollment")
+@Table(
+        name = "enrollment",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_enrollment_user_course",
+                columnNames = {"user_id", "course_id"}
+        )
+)
 public class EnrollmentJpaEntity {
 
     @Id
