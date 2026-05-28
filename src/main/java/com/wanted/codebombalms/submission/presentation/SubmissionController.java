@@ -44,41 +44,50 @@ public class SubmissionController {
 
     @Operation(
             summary = "코드 답안 제출 및 채점",
-            description = "학생이 작성한 코드를 제출하면 테스트케이스를 실행하고 통과 여부를 기준으로 정답 여부와 점수를 계산합니다."
+            description = """
+                학생이 작성한 코드 답안을 제출하면 테스트케이스를 실행하고 통과 여부를 기준으로 정답 여부를 계산합니다.
+
+                정답인 경우 문제에 설정된 point 값을 기준으로 포인트 지급 이벤트를 발행합니다.
+                포인트 지급은 제출 트랜잭션 커밋 이후 AFTER_COMMIT 이벤트 리스너에서 후속 처리됩니다.
+
+                응답의 earnedPoint는 정답 제출 시 지급 요청된 포인트 값입니다.
+                pointGranted는 포인트 지급 이벤트가 발행되었는지 여부를 의미합니다.
+                실제 누적 포인트 반영은 이벤트 처리 후 user_point와 point_history에서 확인할 수 있습니다.
+                """
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
-                    description = "제출 및 채점 성공",
+                    description = "제출 및 채점 성공. 정답이면 포인트 지급 이벤트가 발행됩니다.",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
-                                    name = "정답 제출 성공",
+                                    name = "정답 제출 성공 및 포인트 지급 요청",
                                     value = """
-                                            {
-                                              "timestamp": "2026-05-27T12:00:00",
-                                              "status": 200,
-                                              "code": "COMMON-SUCCESS",
-                                              "message": "요청이 성공적으로 처리되었습니다.",
-                                              "data": {
-                                                "submissionId": 3001,
-                                                "problemId": 3001,
-                                                "isCorrect": true,
-                                                "passedTestCount": 2,
-                                                "totalTestCount": 2,
-                                                "executionStatus": "SUCCESS",
-                                                "errorMessage": null,
-                                                "attemptNo": 1,
-                                                "remainingAttemptCount": 2,
-                                                "canRetry": true,
-                                                "nextProblemId": 3002,
-                                                "isProblemSetCompleted": false,
-                                                "earnedPoint": 10,
-                                                 "pointGranted": true,
-                                                "explanation": null
-                                              }
-                                            }
-                                            """
+                                {
+                                  "timestamp": "2026-05-27T12:00:00",
+                                  "status": 200,
+                                  "code": "COMMON-SUCCESS",
+                                  "message": "요청이 성공적으로 처리되었습니다.",
+                                  "data": {
+                                    "submissionId": 3001,
+                                    "problemId": 3001,
+                                    "isCorrect": true,
+                                    "passedTestCount": 2,
+                                    "totalTestCount": 2,
+                                    "executionStatus": "SUCCESS",
+                                    "errorMessage": null,
+                                    "attemptNo": 1,
+                                    "remainingAttemptCount": 2,
+                                    "canRetry": true,
+                                    "nextProblemId": 3002,
+                                    "isProblemSetCompleted": false,
+                                    "earnedPoint": 10,
+                                    "pointGranted": true,
+                                    "explanation": null
+                                  }
+                                }
+                                """
                             )
                     )
             ),

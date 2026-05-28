@@ -220,6 +220,8 @@ class LearningControllerTest {
                 false,
                 3002L,
                 false,
+                10,
+                true,
                 "explanation"
         ));
 
