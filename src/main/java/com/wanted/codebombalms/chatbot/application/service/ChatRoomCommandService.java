@@ -22,19 +22,13 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
 
     @Override
     public ChatRoomResult create(CreateChatRoomCommand command) {
-        ChatContextPort.CurrentProblemInfo info =
-                chatContextPort.findCurrentProblemInfo(command.userId(), command.problemSetId());
+        ChatContextPort.ProblemSetInfo problemSetInfo =
+                chatContextPort.findProblemSet(command.problemSetId());
 
-        String title = buildTitle(info);
-        ChatRoom newRoom = ChatRoom.create(command.userId(), command.problemSetId(), info.problemId(), title);
+        String title = problemSetInfo != null ? problemSetInfo.title() : "";
+        ChatRoom newRoom = ChatRoom.create(command.userId(), command.problemSetId(), command.problemId(), title);
         ChatRoom saved = chatRoomRepository.save(newRoom);
         return toResult(saved);
-    }
-
-    private String buildTitle(ChatContextPort.CurrentProblemInfo info) {
-        String setTitle = info.problemSetTitle() != null ? info.problemSetTitle() : "";
-        String problemTitle = info.problemTitle() != null ? info.problemTitle() : "";
-        return setTitle + " - " + problemTitle;
     }
 
     private ChatRoomResult toResult(ChatRoom chatRoom) {
