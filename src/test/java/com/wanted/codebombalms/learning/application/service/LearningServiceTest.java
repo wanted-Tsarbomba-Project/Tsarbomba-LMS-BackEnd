@@ -118,7 +118,7 @@ class LearningServiceTest {
 
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
-        given(learningCourseProblemPort.findLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
         given(learningUserPort.findUserName(userId)).willReturn("학생");
         given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
         given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
@@ -149,7 +149,7 @@ class LearningServiceTest {
         given(learningCoursePort.findActiveCourse(courseId)).willReturn(new LearningCourse(courseId, "Java"));
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
-        given(learningCourseProblemPort.findLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
         given(learningUserPort.findUserName(userId)).willReturn("?숈깮");
         given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
         given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
@@ -211,7 +211,7 @@ class LearningServiceTest {
         given(learningCoursePort.findActiveCourses()).willReturn(List.of(new LearningCourse(courseId, "Java")));
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
-        given(learningCourseProblemPort.findLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
         given(learningUserPort.findUserName(userId)).willReturn("?숈깮");
         given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
         given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(

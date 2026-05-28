@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,18 +31,17 @@ public class EnrollmentController {
     private final CourseCatalogPort courseCatalogPort;
 
     @PostMapping("/courses/{courseId}/enrollments")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<?>> createEnrollment(
             @PathVariable Long courseId,
-            @Valid @RequestBody EnrollCourseRequest request
+            @AuthenticationPrincipal Long userId
     ) {
-        log.info("[EnrollmentController] create enrollment - courseId: {}, userId: {}", courseId, request.userId());
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(
                         EnrollmentResponseCode.CREATED,
                         EnrollmentResponseMessage.CREATED,
                         EnrollCourseResponse.from(enrollmentCommandUseCase.createEnrollment(
-                                new EnrollCourseCommand(request.userId(), courseId)
+                                new EnrollCourseCommand(userId, courseId)
                         ))
                 ));
     }
