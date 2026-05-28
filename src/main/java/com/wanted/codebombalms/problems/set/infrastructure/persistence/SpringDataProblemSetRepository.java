@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -136,4 +137,6 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             where ps.problemSetId in :problemSetIds
             """)
     int deleteProblemSetsByIds(@Param("problemSetIds") List<Long> problemSetIds);
+
+    List<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(String status);
 }

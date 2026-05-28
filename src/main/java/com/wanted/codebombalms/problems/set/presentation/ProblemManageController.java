@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -82,6 +83,7 @@ public class ProblemManageController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUT-003 - 인증 토큰 만료"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PRB-CAT-001 - 문제 카테고리를 찾을 수 없음")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/api/v1/problems")
     public ResponseEntity<ApiResponse<ProblemSetCreateResponse>> createProblem(
             @RequestBody ProblemSetCreateRequest request
@@ -107,6 +109,7 @@ public class ProblemManageController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUT-003 - 인증 토큰 만료"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PRB-SET-001 또는 PRB-PBL-001 - 문제 세트 또는 소문제를 찾을 수 없음")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PutMapping("/api/v1/problems/{problemSetId}")
     public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSet(
             @Parameter(description = "수정할 문제 세트 ID", example = "3001")
@@ -133,6 +136,7 @@ public class ProblemManageController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "PRB-SET-001 - 문제 세트를 찾을 수 없음"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "PRB-PBL-004 - 제출 기록이 존재하여 삭제 불가")
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @DeleteMapping("/api/v1/problems/{problemSetId}")
     public ResponseEntity<ApiResponse<ProblemSetDeleteResponse>> deleteProblemSet(
             @Parameter(description = "삭제할 문제 세트 ID", example = "3001")
@@ -293,6 +297,7 @@ public class ProblemManageController {
                     )
             )
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping(
             value = "/api/v1/problems/with-dataset",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE

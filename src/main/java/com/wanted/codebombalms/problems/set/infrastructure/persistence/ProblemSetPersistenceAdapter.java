@@ -24,4 +24,13 @@ public class ProblemSetPersistenceAdapter implements LoadProblemSetPort {
                 .toList();
     }
 
+    @Override
+    public List<ProblemSetSummary> loadActiveProblemSets() {
+        var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc("ACTIVE");
+
+        return IntStream.range(0, problemSets.size())
+                .mapToObj(index -> ProblemSetMapper.toSummary(problemSets.get(index), index + 1))
+                .toList();
+    }
+
 }

@@ -118,7 +118,7 @@ public class ProblemSetController {
     @GetMapping("/api/v1/problem-sets")
     public ResponseEntity<ApiResponse<List<ProblemSetListResponse>>> findProblemSets(
             @Parameter(description = "조회할 문제 카테고리 ID", example = "3001")
-            @RequestParam Long categoryId
+            @RequestParam(required = false) Long categoryId
     ) {
         var query = new GetProblemSetsQuery(categoryId);
         var response = getProblemSetsUseCase.handle(query)
