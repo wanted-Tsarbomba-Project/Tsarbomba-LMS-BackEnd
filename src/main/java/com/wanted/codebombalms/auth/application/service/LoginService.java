@@ -73,7 +73,7 @@ public class LoginService implements LoginUseCase {
                 )
         );
 
-        return new LoginResult(accessToken, refreshToken, user.getNickname());
+        return new LoginResult(accessToken, refreshToken, user.getNickname(), user.getRole());
     }
 
     /** 프록시 환경(X-Forwarded-For) 고려한 클라이언트 IP 추출 */
