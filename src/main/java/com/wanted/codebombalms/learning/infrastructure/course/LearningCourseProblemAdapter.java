@@ -18,7 +18,10 @@ public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
 
     @Override
     public List<Long> findMainLectureProblemSetIdsByCourse(Long courseId) {
-        return courseProblemSetRepository.findByCourse_CourseIdAndRole(courseId, CourseProblemSetRole.MAIN)
+        return courseProblemSetRepository.findByCourse_CourseIdAndRoleAndDeletedAtIsNull(
+                        courseId,
+                        CourseProblemSetRole.MAIN
+                )
                 .stream()
                 .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
                 .toList();
@@ -26,7 +29,7 @@ public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
 
     @Override
     public List<Long> findLectureProblemSetIdsByLecture(Long lectureId) {
-        return courseProblemSetRepository.findByLectureIdOrderByDisplayOrderAsc(lectureId)
+        return courseProblemSetRepository.findByLectureIdAndDeletedAtIsNullOrderByDisplayOrderAsc(lectureId)
                 .stream()
                 .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
                 .toList();

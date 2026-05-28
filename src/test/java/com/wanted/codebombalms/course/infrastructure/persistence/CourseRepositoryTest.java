@@ -2,17 +2,33 @@ package com.wanted.codebombalms.course.infrastructure.persistence;
 
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseCategoryStatus;
+import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
+import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseCategoryJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseRepositoryAdapter;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseCategoryRepository;
+import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
+import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
+import com.wanted.codebombalms.enrollment.infrastructure.persistence.EnrollmentRepositoryAdapter;
+import com.wanted.codebombalms.enrollment.infrastructure.persistence.SpringDataEnrollmentRepository;
+import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
+import com.wanted.codebombalms.learning.domain.model.LectureProgress;
+import com.wanted.codebombalms.learning.infrastructure.persistence.LectureProblemProgressJpaEntity;
+import com.wanted.codebombalms.learning.infrastructure.persistence.LectureProgressJpaEntity;
+import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLectureProblemProgressRepository;
+import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLectureProgressRepository;
+import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.lecture.infrastructure.persistence.LectureRepositoryAdapter;
+import com.wanted.codebombalms.lecture.infrastructure.persistence.SpringDataLectureRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +37,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
-@Import(CourseRepositoryAdapter.class)
+@Import({
+        CourseRepositoryAdapter.class,
+        LectureRepositoryAdapter.class,
+        CourseProblemSetRepositoryAdapter.class,
+        EnrollmentRepositoryAdapter.class
+})
 @DisplayName("CourseRepository 테스트")
 class CourseRepositoryTest {
 
@@ -30,6 +51,30 @@ class CourseRepositoryTest {
 
     @Autowired
     private SpringDataCourseCategoryRepository springDataCourseCategoryRepository;
+
+    @Autowired
+    private SpringDataCourseRepository springDataCourseRepository;
+
+    @Autowired
+    private LectureRepository lectureRepository;
+
+    @Autowired
+    private SpringDataLectureRepository springDataLectureRepository;
+
+    @Autowired
+    private CourseProblemSetRepository courseProblemSetRepository;
+
+    @Autowired
+    private SpringDataEnrollmentRepository springDataEnrollmentRepository;
+
+    @Autowired
+    private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private SpringDataLectureProgressRepository lectureProgressRepository;
+
+    @Autowired
+    private SpringDataLectureProblemProgressRepository lectureProblemProgressRepository;
 
     @Test
     @DisplayName("강좌를 저장하고 courseId로 조회할 수 있다.")
@@ -166,6 +211,46 @@ class CourseRepositoryTest {
         assertEquals(1, courses.size());
         assertEquals(category.getCourseCategoryId(), courses.get(0).getCourseCategoryId());
         assertEquals("Python", courses.get(0).getCourseCategoryName());
+    }
+
+    @Test
+    void hardDeleteByDeletedAtBefore_deletesOldSoftDeletedCourseWithDependentsOnly() {
+        LocalDateTime threshold = LocalDateTime.of(2026, 5, 1, 0, 0);
+        Course oldDeletedCourse = createCourse(10L, "Old Deleted", "description", "old.png", CourseStatus.DELETED);
+        oldDeletedCourse.setDeletedAt(threshold.minusDays(1));
+        Course recentDeletedCourse = createCourse(10L, "Recent Deleted", "description", "recent.png", CourseStatus.DELETED);
+        recentDeletedCourse.setDeletedAt(threshold.plusDays(1));
+        Course activeCourse = createCourse(10L, "Active", "description", "active.png", CourseStatus.ACTIVE);
+
+        oldDeletedCourse = courseRepository.save(oldDeletedCourse);
+        recentDeletedCourse = courseRepository.save(recentDeletedCourse);
+        activeCourse = courseRepository.save(activeCourse);
+
+        Lecture oldLecture = lectureRepository.save(
+                Lecture.create(oldDeletedCourse, "Old Lecture", "description", "old.mp4", "old.png", 1, LectureStatus.DELETED)
+        );
+        CourseProblemSet oldProblemSet = courseProblemSetRepository.save(
+                CourseProblemSet.create(oldDeletedCourse.getCourseId(), oldLecture.getLectureId(), 2002L, CourseProblemSetRole.MAIN, 1)
+        );
+        enrollmentRepository.save(Enrollment.create(1L, oldDeletedCourse.getCourseId()));
+        lectureProgressRepository.save(LectureProgressJpaEntity.from(
+                LectureProgress.create(1L, oldLecture.getLectureId())
+        ));
+        lectureProblemProgressRepository.save(LectureProblemProgressJpaEntity.from(
+                LectureProblemProgress.create(1L, oldProblemSet.getCourseProblemSetId())
+        ));
+
+        int deletedCount = springDataCourseRepository.hardDeleteByDeletedAtBefore(threshold);
+
+        assertEquals(1, deletedCount);
+        assertFalse(springDataCourseRepository.findById(oldDeletedCourse.getCourseId()).isPresent());
+        assertTrue(springDataCourseRepository.findById(recentDeletedCourse.getCourseId()).isPresent());
+        assertTrue(springDataCourseRepository.findById(activeCourse.getCourseId()).isPresent());
+        assertFalse(springDataLectureRepository.findById(oldLecture.getLectureId()).isPresent());
+        assertEquals(0, courseProblemSetRepository.findByCourseId(oldDeletedCourse.getCourseId()).size());
+        assertEquals(0, springDataEnrollmentRepository.findAll().size());
+        assertEquals(0, lectureProgressRepository.findAll().size());
+        assertEquals(0, lectureProblemProgressRepository.findAll().size());
     }
 
     private Course createCourse(
