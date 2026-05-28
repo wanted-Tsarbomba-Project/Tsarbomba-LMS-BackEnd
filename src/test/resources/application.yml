@@ -1,51 +1,36 @@
 spring:
-  application:
-    name: Code-Bomba-LMS
-  profiles:
-    active: local, mock
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+
+  sql:
+    init:
+      mode: never
+
+  mail:
+    host: localhost
+    port: 25
+    username: test@test.com
+    password: test
 
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-
-  mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-            required: true
+      host: localhost
+      port: 6379
 
 jwt:
-  secret: ${JWT_SECRET}
-
+  secret: ${JWT_SECRET:MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=}
+  access-expiration: 3600000
+  refresh-expiration: 1209600000
 
 fastapi:
   url: http://localhost:8000
 
 chat:
   max-history-messages: 20
-
-gcp:
-  project-id: ${GCP_PROJECT_ID:project-9eb65e0d-55b9-4a40-878}
-  storage:
-    bucket: ${GCP_STORAGE_BUCKET:codebombalms}
-    dataset-prefix: ${GCP_STORAGE_DATASET_PREFIX:problem_dataset}
-  credentials:
-    location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
-
-code-runner:
-  type: cloud-run
-  cloud-run:
-    endpoint: ${CODE_RUNNER_CLOUD_RUN_ENDPOINT:https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute}
-
