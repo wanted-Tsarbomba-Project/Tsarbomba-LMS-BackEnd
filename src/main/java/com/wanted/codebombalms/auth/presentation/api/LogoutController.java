@@ -4,7 +4,7 @@ import com.wanted.codebombalms.auth.application.usecase.LogoutUseCase;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
+import com.wanted.codebombalms.auth.presentation.api.support.AuthCookieFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class LogoutController {
 
     private final LogoutUseCase logoutUseCase;
+    private final AuthCookieFactory authCookieFactory;
+
 
     @Operation(
             summary = "로그아웃",
@@ -38,22 +40,12 @@ public class LogoutController {
         logoutUseCase.logout(userId);
 
         // 2. 쿠키 만료
-        response.addCookie(createExpiredCookie("accessToken"));
-        response.addCookie(createExpiredCookie("refreshToken"));
+        response.addCookie(authCookieFactory.expired("accessToken"));
+        response.addCookie(authCookieFactory.expired("refreshToken"));
 
         return ResponseEntity.ok(ApiResponse.success(
                 AuthResponseCode.LOGOUT_COMPLETED,
                 AuthResponseMessage.LOGOUT_COMPLETED
         ));
-    }
-
-    private Cookie createExpiredCookie(String name) {
-        Cookie cookie = new Cookie(name, "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);   // ← 즉시 만료
-        cookie.setAttribute("SameSite", "Lax");
-        return cookie;
     }
 }
