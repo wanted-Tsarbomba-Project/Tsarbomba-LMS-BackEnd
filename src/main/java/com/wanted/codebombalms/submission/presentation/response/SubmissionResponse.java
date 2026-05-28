@@ -3,6 +3,7 @@ package com.wanted.codebombalms.submission.presentation.response;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase.SubmissionView;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "코드 문제 제출 결과 응답")
 public record SubmissionResponse(
         @Schema(description = "생성된 제출 ID", example = "3001")
         Long submissionId,
@@ -34,19 +35,19 @@ public record SubmissionResponse(
         @Schema(description = "다시 제출할 수 있는지 여부", example = "true")
         Boolean canRetry,
 
-        @Schema(description = "정답 시 다음으로 풀 수 있는 문제 ID. 다음 문제가 없으면 null", example = "3002", nullable = true)
+        @Schema(description = "정답 후 다음으로 풀 수 있는 문제 ID. 다음 문제가 없으면 null", example = "3002", nullable = true)
         Long nextProblemId,
 
         @Schema(description = "문제 세트 완료 여부", example = "false")
         Boolean isProblemSetCompleted,
 
-        @Schema(description = "이번 제출로 지급된 포인트. 오답이거나 이미 지급된 문제면 0입니다.", example = "10")
+        @Schema(description = "이번 제출로 지급 요청된 포인트. 오답이거나 이미 지급된 문제면 0입니다.", example = "10")
         Integer earnedPoint,
 
-        @Schema(description = "이번 제출에서 포인트가 실제로 지급되었는지 여부입니다.", example = "true")
+        @Schema(description = "이번 제출에서 포인트 지급 이벤트가 발행되었는지 여부입니다.", example = "true")
         Boolean pointGranted,
 
-        @Schema(description = "문제 해설. 정답 또는 문제 세트 완료 시 표시할 수 있습니다.", example = "df.shape는 (행 개수, 열 개수) 튜플을 반환합니다.", nullable = true)
+        @Schema(description = "문제 해설. 정답 또는 문제 세트 완료 시 표시될 수 있습니다.", example = "df.shape는 (행 개수, 열 개수) 튜플을 반환합니다.", nullable = true)
         String explanation
 ) {
 
