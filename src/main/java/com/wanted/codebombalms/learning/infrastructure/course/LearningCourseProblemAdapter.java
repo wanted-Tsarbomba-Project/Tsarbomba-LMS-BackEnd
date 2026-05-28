@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.learning.infrastructure.course;
 
+import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
 import com.wanted.codebombalms.course.infrastructure.persistence.CourseProblemSetJpaEntity;
 import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseProblemSetRepository;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
@@ -16,8 +17,8 @@ public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
     private final SpringDataCourseProblemSetRepository courseProblemSetRepository;
 
     @Override
-    public List<Long> findLectureProblemSetIdsByCourse(Long courseId) {
-        return courseProblemSetRepository.findByCourse_CourseId(courseId)
+    public List<Long> findMainLectureProblemSetIdsByCourse(Long courseId) {
+        return courseProblemSetRepository.findByCourse_CourseIdAndRole(courseId, CourseProblemSetRole.MAIN)
                 .stream()
                 .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
                 .toList();

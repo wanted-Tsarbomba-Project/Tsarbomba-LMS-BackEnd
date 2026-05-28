@@ -124,7 +124,7 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
 
     private StudentLearningProgress buildStudentProgress(Long courseId, Long studentId) {
         List<Long> lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
-        List<Long> lectureProblemSetIds = learningCourseProblemPort.findLectureProblemSetIdsByCourse(courseId);
+        List<Long> lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
 
         return StudentLearningProgress.of(
                 studentId,
