@@ -73,6 +73,13 @@ public class LectureProblemProgress {
         }
     }
 
+    public void completeAt(Integer currentProblemNumber) {
+        if (currentProblemNumber != null) {
+            this.currentProblemNumber = currentProblemNumber;
+        }
+        complete();
+    }
+
     public Long getLectureProblemProgressId() {
         return lectureProblemProgressId;
     }

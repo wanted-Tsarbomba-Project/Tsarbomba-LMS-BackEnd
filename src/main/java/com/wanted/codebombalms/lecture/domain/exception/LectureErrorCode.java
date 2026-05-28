@@ -8,8 +8,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum LectureErrorCode implements ErrorCode {
 
-    LECTURE_NOT_FOUND("LCT-001", "존재하지 않는 강의입니다."),
-    LECTURE_DELETE_STATUS_REQUIRES_DELETE("LCT-002", "강의 삭제는 삭제 기능을 통해서만 가능합니다.");
+    LECTURE_NOT_FOUND("LCT-001", "Lecture was not found."),
+    LECTURE_DELETE_STATUS_REQUIRES_DELETE("LCT-002", "Use the delete API to delete a lecture."),
+    LECTURE_ORDER_DUPLICATED("LCT-003", "A lecture with the same order already exists.");
 
     private final String code;
     private final String message;

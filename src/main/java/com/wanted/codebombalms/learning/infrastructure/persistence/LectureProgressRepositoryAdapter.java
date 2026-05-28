@@ -40,4 +40,9 @@ public class LectureProgressRepositoryAdapter implements LectureProgressReposito
         }
         return springDataLectureProgressRepository.countByUserIdAndLectureIdInAndCompletedTrue(userId, lectureIds);
     }
+
+    @Override
+    public long countCompletedByLectureId(Long lectureId) {
+        return springDataLectureProgressRepository.countByLectureIdAndCompletedTrue(lectureId);
+    }
 }

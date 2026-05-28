@@ -7,4 +7,6 @@ import java.util.List;
 public interface EnrollmentQueryUseCase {
 
     List<Enrollment> findMyCourses(Long userId);
+
+    List<Enrollment> findAllActiveEnrollments();
 }

@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(InstructorCourseController.class)
+@WebMvcTest(UserCourseController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("InstructorCourseController web test")
 class InstructorCourseControllerTest {
@@ -38,7 +38,7 @@ class InstructorCourseControllerTest {
                 createCourse(2L, instructorId, "Spring")
         ));
 
-        mockMvc.perform(get("/api/v1/instructors/{instructorId}/courses", instructorId)
+        mockMvc.perform(get("/api/v1/users/{userId}/courses", instructorId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))

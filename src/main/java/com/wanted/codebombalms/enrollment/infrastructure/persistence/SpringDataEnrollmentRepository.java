@@ -18,6 +18,8 @@ public interface SpringDataEnrollmentRepository extends JpaRepository<Enrollment
 
     List<EnrollmentJpaEntity> findByCourse_CourseIdAndStatus(Long courseId, EnrollmentStatus status);
 
+    List<EnrollmentJpaEntity> findByStatus(EnrollmentStatus status);
+
     Optional<EnrollmentJpaEntity> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status);
 
     Optional<EnrollmentJpaEntity> findByEnrollmentIdAndUserIdAndStatus(

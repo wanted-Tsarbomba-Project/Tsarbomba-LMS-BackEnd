@@ -47,4 +47,13 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
         return springDataLectureProblemProgressRepository
                 .countByUserIdAndLectureProblemSetIdInAndCompletedTrue(userId, lectureProblemSetIds);
     }
+
+    @Override
+    public long countCompletedByLectureProblemSetIds(List<Long> lectureProblemSetIds) {
+        if (lectureProblemSetIds.isEmpty()) {
+            return 0;
+        }
+        return springDataLectureProblemProgressRepository
+                .countByLectureProblemSetIdInAndCompletedTrue(lectureProblemSetIds);
+    }
 }

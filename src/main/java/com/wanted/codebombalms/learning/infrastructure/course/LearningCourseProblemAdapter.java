@@ -22,4 +22,12 @@ public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
                 .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
                 .toList();
     }
+
+    @Override
+    public List<Long> findLectureProblemSetIdsByLecture(Long lectureId) {
+        return courseProblemSetRepository.findByLectureIdOrderByDisplayOrderAsc(lectureId)
+                .stream()
+                .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
+                .toList();
+    }
 }

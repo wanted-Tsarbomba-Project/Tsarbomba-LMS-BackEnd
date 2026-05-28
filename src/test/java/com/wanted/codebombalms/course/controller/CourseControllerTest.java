@@ -70,8 +70,7 @@ class CourseControllerTest {
                 createCourse(1L, "Java")
         ));
 
-        mockMvc.perform(get("/api/v1/courses")
-                        .param("courseCategoryId", "1")
+        mockMvc.perform(get("/api/v1/course-categories/{courseCategoryId}/courses", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].courseCategoryId").value(1L))
