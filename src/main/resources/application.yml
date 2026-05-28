@@ -48,6 +48,7 @@ gcp:
   credentials:
     location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
 
+
 code-runner:
   type: cloud-run
   cloud-run:
