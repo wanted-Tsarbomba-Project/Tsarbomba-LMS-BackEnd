@@ -31,6 +31,9 @@ public class ProblemDatasetJpaEntity {
 
     private Long fileSize;
 
+    @Column(name = "meta_data", columnDefinition = "TEXT")
+    private String metadata;
+
     @Column(nullable = false)
     private String status;
 
@@ -95,5 +98,8 @@ public class ProblemDatasetJpaEntity {
 
     public String getStatus() {
         return status;
+    }
+    public String getMetadata() {
+        return metadata;
     }
 }

@@ -48,6 +48,8 @@ public class ProblemSetJpaEntity {
 
     private LocalDateTime createdAt;
 
+    private LocalDateTime deletedAt;
+
     protected ProblemSetJpaEntity() {
     }
 
@@ -89,6 +91,7 @@ public class ProblemSetJpaEntity {
 
     public void deactivate() {
         this.status = "INACTIVE";
+        this.deletedAt = LocalDateTime.now();
     }
 
     public Long getProblemSetId() {
@@ -137,5 +140,9 @@ public class ProblemSetJpaEntity {
 
     public Long getCreatedBy() {
         return createdBy;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
     }
 }

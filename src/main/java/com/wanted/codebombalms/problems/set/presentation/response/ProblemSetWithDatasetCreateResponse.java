@@ -1,0 +1,33 @@
+package com.wanted.codebombalms.problems.set.presentation.response;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+public record ProblemSetWithDatasetCreateResponse(
+        @Schema(description = "생성된 문제 세트 ID", example = "3001")
+        Long problemSetId,
+
+        @Schema(description = "문제 세트에 연결된 데이터셋 ID", example = "5001")
+        Long datasetId,
+
+        @Schema(description = "문제 세트 제목", example = "pandas 기초 분석 문제 세트")
+        String title,
+
+        @Schema(description = "카테고리명", example = "Python 데이터 분석")
+        String categoryName,
+
+        @Schema(description = "전체 소문제 수", example = "1")
+        Integer totalProblemCount,
+
+        @Schema(description = "생성된 소문제 수", example = "1")
+        Integer createdProblemCount,
+
+        @Schema(description = "업로드한 원본 CSV 파일명", example = "employee_performance.csv")
+        String datasetFileName,
+
+        @Schema(description = "GCS에 저장된 CSV 파일 URL", example = "https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv")
+        String datasetUrl,
+
+        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드", example = "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv\")")
+        String startCode
+) {
+}

@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.execution.presentation.api.request;
+package com.wanted.codebombalms.problems.execution.presentation.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

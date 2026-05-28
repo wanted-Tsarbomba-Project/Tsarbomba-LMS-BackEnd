@@ -5,7 +5,7 @@
 @notFoundDatasetId = 999999
 @notFoundProblemId = 999999
 @employeeDatasetUrl =https://storage.googleapis.com/codebombalms/problem_dataset/28679fde-6075-4c2e-a3f0-190fa3d80db7_employee_performance.csv
-@datasetFilePath = ../uploads/datasets/employee_performance_202605.csv
+@datasetFilePath = ../uploads/datasets/employee_performance_20265.csv
 
 # =====================================================
 # 문제 데이터셋 업로드 / 연결 / 실행 확인
