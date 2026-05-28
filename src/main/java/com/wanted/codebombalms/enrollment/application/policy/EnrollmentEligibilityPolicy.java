@@ -26,7 +26,11 @@ public class EnrollmentEligibilityPolicy {
             throw new ValidationException(EnrollmentErrorCode.COURSE_NOT_ENROLLABLE);
         }
 
-        if (enrollmentRepository.existsByCourseIdAndUserId(course.courseId(), userId)) {
+        if (enrollmentRepository.existsByCourseIdAndUserIdAndStatus(
+                course.courseId(),
+                userId,
+                EnrollmentStatus.ACTIVE
+        )) {
             throw new ConflictException(EnrollmentErrorCode.DUPLICATE_ENROLLMENT);
         }
     }

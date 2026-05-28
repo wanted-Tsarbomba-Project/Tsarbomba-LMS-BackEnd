@@ -41,4 +41,10 @@ public class Enrollment {
         this.status = EnrollmentStatus.CANCELED;
         this.canceledAt = LocalDateTime.now();
     }
+
+    public void reactivate() {
+        this.status = EnrollmentStatus.ACTIVE;
+        this.enrolledAt = LocalDateTime.now();
+        this.canceledAt = null;
+    }
 }

@@ -5,19 +5,16 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CourseCreateRequest(
-        @NotNull(message = "강사 ID는 필수입니다.")
-        Long instructorId,
-
-        @NotNull(message = "강좌 카테고리는 필수입니다.")
+        @NotNull(message = "Course category ID is required.")
         Long courseCategoryId,
 
-        @NotBlank(message = "강좌 제목은 필수입니다.")
-        @Size(max = 100, message = "강좌 제목은 100자 이하로 입력해야 합니다.")
+        @NotBlank(message = "Course title is required.")
+        @Size(max = 100, message = "Course title must be 100 characters or fewer.")
         String title,
 
         String description,
 
-        @Size(max = 500, message = "썸네일 URL은 500자 이하로 입력해야 합니다.")
+        @Size(max = 500, message = "Thumbnail URL must be 500 characters or fewer.")
         String thumbnailUrl
 ) {
 }
