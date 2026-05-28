@@ -72,6 +72,7 @@ public class EnrollmentJpaEntity {
         this.userId = enrollment.getUserId();
         this.course = course;
         this.status = enrollment.getStatus();
+        this.enrolledAt = enrollment.getEnrolledAt();
         this.canceledAt = enrollment.getCanceledAt();
     }
 

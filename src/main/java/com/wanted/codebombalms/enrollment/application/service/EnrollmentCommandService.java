@@ -38,10 +38,19 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
         CoursePublicationStatus course = courseCatalogPort.getPublicationStatus(command.courseId());
         enrollmentEligibilityPolicy.validate(command.userId(), course);
 
-        return enrollmentRepository.save(Enrollment.create(
-                command.userId(),
-                course.courseId()
-        ));
+        return enrollmentRepository.findByCourseIdAndUserIdAndStatus(
+                        course.courseId(),
+                        command.userId(),
+                        EnrollmentStatus.CANCELED
+                )
+                .map(enrollment -> {
+                    enrollment.reactivate();
+                    return enrollmentRepository.save(enrollment);
+                })
+                .orElseGet(() -> enrollmentRepository.save(Enrollment.create(
+                        command.userId(),
+                        course.courseId()
+                )));
     }
 
     @Override

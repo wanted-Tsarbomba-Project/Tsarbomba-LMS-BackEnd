@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -90,7 +92,11 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "CRS-006: 강좌는 운영자만 생성 가능 / CRS-007: 활성화된 강좌 카테고리 필요")
     })
     @PostMapping("/courses")
-    public ResponseEntity<ApiResponse<?>> createCourse(@Valid @RequestBody CourseCreateRequest request) {
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<ApiResponse<?>> createCourse(
+            @AuthenticationPrincipal Long instructorId,
+            @Valid @RequestBody CourseCreateRequest request
+    ) {
         log.info("[CourseController] create course - title: {}", request.title());
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -98,7 +104,7 @@ public class CourseController {
                         CourseResponseCode.CREATED,
                         CourseResponseMessage.CREATED,
                         CourseDetailResponse.from(courseCommandUseCase.createCourse(new CreateCourseCommand(
-                                request.instructorId(),
+                                instructorId,
                                 request.courseCategoryId(),
                                 request.title(),
                                 request.description(),
