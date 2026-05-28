@@ -12,7 +12,6 @@ import com.wanted.codebombalms.course.application.service.CourseQueryService;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -50,9 +49,6 @@ class CourseServiceTest {
 
     @Mock
     private LectureManagementPort lectureManagementPort;
-
-    @Mock
-    private CourseProblemSetRepository courseProblemSetRepository;
 
     @InjectMocks
     private CourseCommandService courseCommandService;
@@ -225,7 +221,6 @@ class CourseServiceTest {
         assertNotNull(course.getDeletedAt());
         verify(courseRepository).save(course);
         verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
-        verify(courseProblemSetRepository).deleteByCourseId(courseId);
     }
 
     @Test

@@ -16,8 +16,4 @@ public interface CourseProblemSetRepository {
     List<CourseProblemSet> findByLectureId(Long lectureId);
 
     Optional<CourseProblemSet> findById(Long courseProblemSetId);
-
-    void deleteByCourseId(Long courseId);
-
-    void deleteByLectureId(Long lectureId);
 }
