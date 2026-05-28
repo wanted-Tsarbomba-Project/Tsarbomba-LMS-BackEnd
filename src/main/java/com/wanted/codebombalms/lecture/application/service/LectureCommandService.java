@@ -1,7 +1,6 @@
 package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.course.domain.model.Course;
-import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
@@ -30,7 +29,6 @@ public class LectureCommandService implements LectureCommandUseCase {
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
     private final LectureCreationPolicy lectureCreationPolicy;
-    private final CourseProblemSetRepository courseProblemSetRepository;
 
     @Override
     public Lecture createLecture(CreateLectureCommand command) {
@@ -90,7 +88,6 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         lecture.delete();
         lectureRepository.save(lecture);
-        courseProblemSetRepository.deleteByLectureId(lectureId);
     }
 
     private void validateLectureOrder(Long courseId, Long lectureId, Integer lectureOrder) {

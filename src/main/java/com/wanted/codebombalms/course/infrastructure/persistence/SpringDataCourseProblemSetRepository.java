@@ -1,60 +1,72 @@
 package com.wanted.codebombalms.course.infrastructure.persistence;
 
 import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 public interface SpringDataCourseProblemSetRepository extends JpaRepository<CourseProblemSetJpaEntity, Long> {
 
-    List<CourseProblemSetJpaEntity> findByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
-
-    List<CourseProblemSetJpaEntity> findByCourse_CourseIdAndRoleAndDeletedAtIsNull(
-            Long courseId,
-            CourseProblemSetRole role
-    );
-
-    List<CourseProblemSetJpaEntity> findByLectureIdAndDeletedAtIsNullOrderByDisplayOrderAsc(Long lectureId);
-
-    Optional<CourseProblemSetJpaEntity> findByCourseProblemSetIdAndDeletedAtIsNull(Long courseProblemSetId);
-
-    @Transactional
-    default int hardDeleteByDeletedAtBefore(LocalDateTime threshold) {
-        List<Long> lectureProblemSetIds = findHardDeleteTargetIds(threshold);
-        if (lectureProblemSetIds.isEmpty()) {
-            return 0;
-        }
-
-        deleteLectureProblemProgressesByLectureProblemSetIds(lectureProblemSetIds);
-        return deleteLectureProblemSetsByIds(lectureProblemSetIds);
-    }
-
     @Query("""
-            select cps.courseProblemSetId
+            select cps
             from CourseProblemSetJpaEntity cps
-            where cps.deletedAt is not null
-              and cps.deletedAt < :threshold
+            where cps.course.courseId = :courseId
+              and cps.course.deletedAt is null
+              and exists (
+                  select l.lectureId
+                  from LectureJpaEntity l
+                  where l.lectureId = cps.lectureId
+                    and l.deletedAt is null
+              )
             """)
-    List<Long> findHardDeleteTargetIds(@Param("threshold") LocalDateTime threshold);
+    List<CourseProblemSetJpaEntity> findActiveByCourseId(@Param("courseId") Long courseId);
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from LectureProblemProgressJpaEntity p
-            where p.lectureProblemSetId in :lectureProblemSetIds
+            select cps
+            from CourseProblemSetJpaEntity cps
+            where cps.course.courseId = :courseId
+              and cps.role = :role
+              and cps.course.deletedAt is null
+              and exists (
+                  select l.lectureId
+                  from LectureJpaEntity l
+                  where l.lectureId = cps.lectureId
+                    and l.deletedAt is null
+              )
             """)
-    int deleteLectureProblemProgressesByLectureProblemSetIds(
-            @Param("lectureProblemSetIds") List<Long> lectureProblemSetIds
+    List<CourseProblemSetJpaEntity> findActiveByCourseIdAndRole(
+            @Param("courseId") Long courseId,
+            @Param("role") CourseProblemSetRole role
     );
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from CourseProblemSetJpaEntity cps
-            where cps.courseProblemSetId in :lectureProblemSetIds
+            select cps
+            from CourseProblemSetJpaEntity cps
+            where cps.lectureId = :lectureId
+              and cps.course.deletedAt is null
+              and exists (
+                  select l.lectureId
+                  from LectureJpaEntity l
+                  where l.lectureId = cps.lectureId
+                    and l.deletedAt is null
+              )
+            order by cps.displayOrder asc
             """)
-    int deleteLectureProblemSetsByIds(@Param("lectureProblemSetIds") List<Long> lectureProblemSetIds);
+    List<CourseProblemSetJpaEntity> findActiveByLectureIdOrderByDisplayOrderAsc(@Param("lectureId") Long lectureId);
+
+    @Query("""
+            select cps
+            from CourseProblemSetJpaEntity cps
+            where cps.courseProblemSetId = :courseProblemSetId
+              and cps.course.deletedAt is null
+              and exists (
+                  select l.lectureId
+                  from LectureJpaEntity l
+                  where l.lectureId = cps.lectureId
+                    and l.deletedAt is null
+              )
+            """)
+    Optional<CourseProblemSetJpaEntity> findActiveById(@Param("courseProblemSetId") Long courseProblemSetId);
 }
