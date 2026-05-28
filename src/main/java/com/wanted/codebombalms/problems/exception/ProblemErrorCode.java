@@ -39,7 +39,7 @@ public enum ProblemErrorCode implements ErrorCode {
 
     // 데이터셋 (PRB-DAT)
     PROBLEM_DATASET_NOT_FOUND("PRB-DAT-001", "데이터셋을 찾을 수 없습니다."),
-    PROBLEM_DATASET_ALREADY_CONNECTED("PRB-DAT-002", "이미 문제에 연결된 데이터셋입니다."),
+    PROBLEM_DATASET_ALREADY_CONNECTED("PRB-DAT-002", "이미 문제 세트에 연결된 데이터셋입니다."),
     PROBLEM_DATASET_INVALID_PROBLEM_TYPE("PRB-DAT-003", "코드 실행형 문제에만 데이터셋을 연결할 수 있습니다."),
     PROBLEM_DATASET_INVALID_FILE("PRB-DAT-004", "CSV 파일만 업로드할 수 있습니다."),
     PROBLEM_DATASET_UPLOAD_FAILED("PRB-DAT-005", "데이터셋 업로드에 실패했습니다."),
@@ -59,7 +59,10 @@ public enum ProblemErrorCode implements ErrorCode {
 
     // 공통 (PRB)
     INVALID_INPUT("PRB-001", "필수값이 누락되었습니다."),
-    SERVER_ERROR("PRB-002", "문제 도메인 처리 중 서버 오류가 발생했습니다.");
+    SERVER_ERROR("PRB-002", "문제 도메인 처리 중 서버 오류가 발생했습니다."),
+
+    // 데이터셋 (PRB-DAT)
+    PROBLEM_SET_DATASET_CONNECTION_FAILED("PRB-DAT-006", "문제 세트와 데이터셋 연결에 실패했습니다.");
 
     private final String code;
     private final String message;

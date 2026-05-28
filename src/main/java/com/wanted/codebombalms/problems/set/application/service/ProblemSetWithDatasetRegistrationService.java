@@ -1,56 +1,68 @@
-package com.wanted.codebombalms.problems.dataset.application.service;
+package com.wanted.codebombalms.problems.set.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
-import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
+import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetUseCase;
+import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetWithDatasetUseCase;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
-public class ProblemDatasetCommandService implements UploadProblemDatasetUseCase {
+public class ProblemSetWithDatasetRegistrationService implements RegisterProblemSetWithDatasetUseCase {
 
+    private final RegisterProblemSetUseCase registerProblemSetUseCase;
     private final StoreDatasetFilePort storeDatasetFilePort;
     private final ProblemDatasetPersistencePort problemDatasetPersistencePort;
 
     @Override
     @Transactional
-    public UploadProblemDatasetView handle(UploadProblemDatasetCommand command) {
-        validateUploadFile(command);
+    public ProblemSetWithDatasetCreateView handle(
+            RegisterProblemSetCommand problemSetCommand,
+            UploadProblemDatasetCommand datasetCommand
+    ) {
+        validateDatasetFile(datasetCommand);
+
+        var problemSet = registerProblemSetUseCase.handle(problemSetCommand);
 
         StoredDatasetFile storedFile = null;
 
         try {
-            storedFile = storeDatasetFilePort.store(command);
-            ProblemDataset dataset = problemDatasetPersistencePort.saveUploadedDataset(storedFile);
+            storedFile = storeDatasetFilePort.store(datasetCommand);
 
-            return new UploadProblemDatasetView(
+            ProblemDataset dataset = problemDatasetPersistencePort.saveUploadedDataset(
+                    problemSet.problemSetId(),
+                    storedFile
+            );
+
+            return new ProblemSetWithDatasetCreateView(
+                    problemSet.problemSetId(),
                     dataset.getDatasetId(),
+                    problemSet.title(),
+                    problemSet.categoryName(),
+                    problemSet.totalProblemCount(),
+                    problemSet.createdProblemCount(),
                     dataset.getOriginalFileName(),
-                    dataset.getStoredFileName(),
                     dataset.getFileUrl(),
-                    dataset.getFilePath(),
-                    dataset.getStatus()
+                    startCode(dataset.getFileUrl())
             );
         } catch (Exception e) {
             if (storedFile != null) {
                 storeDatasetFilePort.delete(storedFile.getFilePath());
             }
 
-            log.warn("Dataset upload failed. originalFileName={}", command.originalFileName(), e);
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
         }
     }
 
-    private void validateUploadFile(UploadProblemDatasetCommand command) {
+    private void validateDatasetFile(UploadProblemDatasetCommand command) {
         if (command == null || command.content() == null || command.content().length == 0) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
         }
@@ -60,5 +72,10 @@ public class ProblemDatasetCommandService implements UploadProblemDatasetUseCase
         if (originalFileName == null || !originalFileName.toLowerCase().endsWith(".csv")) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
         }
+    }
+
+    private String startCode(String fileUrl) {
+        return "import pandas as pd\n\n"
+                + "df = pd.read_csv(\"" + fileUrl + "\")";
     }
 }
