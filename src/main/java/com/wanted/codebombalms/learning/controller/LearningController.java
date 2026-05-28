@@ -21,8 +21,8 @@ import com.wanted.codebombalms.learning.presentation.api.response.LectureProblem
 import com.wanted.codebombalms.learning.presentation.api.response.LectureProgressResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.StudentLearningProgressResponse;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
-import com.wanted.codebombalms.submission.presentation.api.request.SubmissionRequest;
-import com.wanted.codebombalms.submission.presentation.api.response.SubmissionResponse;
+import com.wanted.codebombalms.submission.presentation.request.SubmissionRequest;
+import com.wanted.codebombalms.submission.presentation.response.SubmissionResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;

@@ -91,7 +91,6 @@ public class User {
         return user;
     }
 
-    // ===== 도메인 행위 =====
     public void softDelete() { this.deletedAt = LocalDateTime.now(); }
     public void lock()       { this.isLocked = true; }
     public void unlock()     { this.isLocked = false; }

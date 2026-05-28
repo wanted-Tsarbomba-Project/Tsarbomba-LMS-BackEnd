@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "문제 세트 결과", description = "학생의 문제 세트 풀이 완료 여부, 정답률, 문제별 제출 결과 조회 API")
@@ -124,9 +126,12 @@ public class ResultController {
             @Parameter(description = "결과를 조회할 문제 세트 ID", example = "3001")
             @PathVariable Long problemSetId,
 
-            @Parameter(description = "결과를 조회할 학생 ID", example = "3")
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ) {
+        if (userId == null) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REQUIRED);
+        }
+
         var query = new GetProblemSetResultQuery(problemSetId, userId);
 
         var response = new ProblemSetResultResponse(

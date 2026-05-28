@@ -17,17 +17,23 @@ public class SubmissionAttemptPolicy {
         }
     }
 
-    public int calculateRemainingAttemptCount(Integer attemptLimit, int attemptNo) {
+    public Integer calculateRemainingAttemptCount(Integer attemptLimit, int attemptNo) {
         if (attemptLimit == null) {
-            return 0;
+            return null;
         }
 
         return Math.max(attemptLimit - attemptNo, 0);
     }
 
-    public boolean canRetry(Boolean isRetriable, int remainingAttemptCount, boolean isCorrect) {
-        return !isCorrect
-                && Boolean.TRUE.equals(isRetriable)
-                && remainingAttemptCount > 0;
+    public boolean canRetry(Boolean isRetriable, Integer remainingAttemptCount, boolean isCorrect) {
+        if (isCorrect) {
+            return false;
+        }
+
+        if (!Boolean.TRUE.equals(isRetriable)) {
+            return false;
+        }
+
+        return remainingAttemptCount == null || remainingAttemptCount > 0;
     }
 }

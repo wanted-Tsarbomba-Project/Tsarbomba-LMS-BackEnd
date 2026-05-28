@@ -62,6 +62,7 @@ public class UserJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String career;
 
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

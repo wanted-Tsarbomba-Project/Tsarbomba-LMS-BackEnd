@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Transactional
 @Repository
 @RequiredArgsConstructor
 public class ProblemHintPersistenceAdapter implements LoadProblemHintPort {

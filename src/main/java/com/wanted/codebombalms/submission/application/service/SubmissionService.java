@@ -1,5 +1,5 @@
 package com.wanted.codebombalms.submission.application.service;
-
+import com.wanted.codebombalms.submission.application.port.ProblemSolvedEventPort;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
 import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
@@ -11,10 +11,12 @@ import com.wanted.codebombalms.submission.application.port.ProblemSetCompletionE
 import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
 import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class SubmissionService implements SubmissionCommandUseCase {
 
     private final SubmissionCommandPort submissionCommandPort;
@@ -25,26 +27,8 @@ public class SubmissionService implements SubmissionCommandUseCase {
     private final CodeGradingService codeGradingService;
     private final SubmissionAttemptPolicy submissionAttemptPolicy;
     private final SubmissionCodePolicy submissionCodePolicy;
+    private final ProblemSolvedEventPort problemSolvedEventPort;
 
-    public SubmissionService(
-            SubmissionCommandPort submissionCommandPort,
-            LoadProblemForSubmissionPort loadProblemForSubmissionPort,
-            LoadTestCasesForGradingPort loadTestCasesForGradingPort,
-            ProblemProgressPort problemProgressPort,
-            ProblemSetCompletionEventPort problemSetCompletionEventPort,
-            CodeGradingService codeGradingService,
-            SubmissionAttemptPolicy submissionAttemptPolicy,
-            SubmissionCodePolicy submissionCodePolicy
-    ) {
-        this.submissionCommandPort = submissionCommandPort;
-        this.loadProblemForSubmissionPort = loadProblemForSubmissionPort;
-        this.loadTestCasesForGradingPort = loadTestCasesForGradingPort;
-        this.problemProgressPort = problemProgressPort;
-        this.problemSetCompletionEventPort = problemSetCompletionEventPort;
-        this.codeGradingService = codeGradingService;
-        this.submissionAttemptPolicy = submissionAttemptPolicy;
-        this.submissionCodePolicy = submissionCodePolicy;
-    }
 
     @Override
     @Transactional
@@ -73,7 +57,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
         boolean isCorrect = gradingResult.correct();
         int attemptNo = previousAttemptCount + 1;
-        int remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
+        Integer remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
                 problem.attemptLimit(),
                 attemptNo
         );
@@ -99,7 +83,20 @@ public class SubmissionService implements SubmissionCommandUseCase {
         Long nextProblemId = null;
         boolean isProblemSetCompleted = false;
 
+        int earnedPoint = 0;
+        boolean pointGranted = false;
+
         if (isCorrect) {
+            problemSolvedEventPort.publishSolved(
+                    command.userId(),
+                    problem.problemId(),
+                    submissionId,
+                    problem.point()
+            );
+
+            earnedPoint = problem.point();
+            pointGranted = true;
+
             nextProblemId = loadProblemForSubmissionPort
                     .findNextProblemId(problemSetId, problem.problemOrder() + 1)
                     .orElse(null);
@@ -126,6 +123,8 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 canRetry,
                 nextProblemId,
                 isProblemSetCompleted,
+                earnedPoint,
+                pointGranted,
                 isCorrect ? problem.explanation() : null
         );
     }

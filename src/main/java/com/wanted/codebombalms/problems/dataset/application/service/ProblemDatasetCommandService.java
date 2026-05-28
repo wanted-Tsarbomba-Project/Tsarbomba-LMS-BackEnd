@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.dataset.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
@@ -40,12 +41,18 @@ public class ProblemDatasetCommandService implements UploadProblemDatasetUseCase
                     dataset.getFilePath(),
                     dataset.getStatus()
             );
+        } catch (DomainException e) {
+            if (storedFile != null) {
+                storeDatasetFilePort.delete(storedFile.getFilePath());
+            }
+
+            throw e;
         } catch (Exception e) {
             if (storedFile != null) {
                 storeDatasetFilePort.delete(storedFile.getFilePath());
             }
 
-            log.warn("Dataset upload failed. originalFileName={}", command.originalFileName(), e);
+            log.warn("데이터셋 업로드 실패. originalFileName={}", command.originalFileName(), e);
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
         }
     }
