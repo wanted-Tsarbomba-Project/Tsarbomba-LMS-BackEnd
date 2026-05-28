@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class ChatContextBuilder {
@@ -21,20 +23,18 @@ public class ChatContextBuilder {
 
     public ChatContext build(SendMessageCommand command, ChatRoom chatRoom) {
         ChatContextPort.ProblemSetInfo problemSetInfo = null;
-        ChatContextPort.ProblemInfo problemInfo = null;
-        ChatContextPort.SubmissionInfo submissionInfo = null;
+        List<ChatContextPort.ProblemInfo> problemInfos = List.of();
         ChatContextPort.SessionProgressInfo sessionProgressInfo = null;
         ChatContextPort.DatasetInfo datasetInfo = null;
 
         if (chatRoom.getProblemSetId() != null) {
             problemSetInfo = chatContextPort.findProblemSet(chatRoom.getProblemSetId());
-            sessionProgressInfo = chatContextPort.findSessionProgress(chatRoom.getProblemSetId());
+            problemInfos = chatContextPort.findProblems(chatRoom.getProblemSetId(), command.userId());
+            datasetInfo = chatContextPort.findDataset(chatRoom.getProblemSetId());
         }
 
         if (chatRoom.getProblemId() != null) {
-            problemInfo = chatContextPort.findProblem(chatRoom.getProblemId());
-            submissionInfo = chatContextPort.findLatestSubmission(command.userId(), chatRoom.getProblemId());
-            datasetInfo = chatContextPort.findDataset(chatRoom.getProblemId());
+            sessionProgressInfo = chatContextPort.findSessionProgress(chatRoom.getProblemId());
         }
 
         var conversationHistory = chatMessageRepository.findRecentByRoomId(
@@ -45,11 +45,8 @@ public class ChatContextBuilder {
                 command.userId(),
                 command.roomId(),
                 command.userMessage(),
-                chatRoom.getProblemSetId(),
-                chatRoom.getProblemId(),
                 problemSetInfo,
-                problemInfo,
-                submissionInfo,
+                problemInfos,
                 sessionProgressInfo,
                 datasetInfo,
                 conversationHistory
