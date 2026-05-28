@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -58,13 +60,21 @@ class EnrollmentControllerTest {
                 .willReturn(enrollment);
 
         mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", courseId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"userId\":10,\"courseId\":1}"))
+                        .principal(studentPrincipal(studentId))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value(201))
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.CREATED))
                 .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.CREATED))
                 .andExpect(jsonPath("$.data.enrollmentId").value(1L));
+    }
+
+    private UsernamePasswordAuthenticationToken studentPrincipal(Long userId) {
+        return new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_STUDENT"))
+        );
     }
 
     @Test

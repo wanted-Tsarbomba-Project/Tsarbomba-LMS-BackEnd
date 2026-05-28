@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -93,11 +95,12 @@ class CourseControllerTest {
 
     @Test
     void createCourse_returnsCreatedApiResponse() throws Exception {
-        CourseCreateRequest request = new CourseCreateRequest(10L, 1L, "Java", "description", "java.png");
+        CourseCreateRequest request = new CourseCreateRequest(1L, "Java", "description", "java.png");
         given(courseCommandUseCase.createCourse(any(CreateCourseCommand.class)))
                 .willReturn(createDetailResult(1L, "Java"));
 
         mockMvc.perform(post("/api/v1/courses")
+                        .principal(operatorPrincipal())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -105,6 +108,14 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.CREATED))
                 .andExpect(jsonPath("$.message").value(CourseResponseMessage.CREATED))
                 .andExpect(jsonPath("$.data.courseId").value(1L));
+    }
+
+    private UsernamePasswordAuthenticationToken operatorPrincipal() {
+        return new UsernamePasswordAuthenticationToken(
+                10L,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_OPERATOR"))
+        );
     }
 
     @Test

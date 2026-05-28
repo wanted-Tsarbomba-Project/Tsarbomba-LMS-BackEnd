@@ -4,6 +4,7 @@ import com.wanted.codebombalms.enrollment.application.policy.EnrollmentEligibili
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.application.port.UserCatalogPort;
 import com.wanted.codebombalms.enrollment.domain.exception.EnrollmentErrorCode;
+import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -35,7 +36,7 @@ class EnrollmentEligibilityPolicyTest {
     void validate_passes_whenUserIsActiveStudentAndCourseIsPublished() {
         CoursePublicationStatus course = createCourseStatus(true);
         given(userCatalogPort.isActiveStudent(10L)).willReturn(true);
-        given(enrollmentRepository.existsByCourseIdAndUserId(1L, 10L))
+        given(enrollmentRepository.existsByCourseIdAndUserIdAndStatus(1L, 10L, EnrollmentStatus.ACTIVE))
                 .willReturn(false);
 
         enrollmentEligibilityPolicy.validate(10L, course);
@@ -71,7 +72,7 @@ class EnrollmentEligibilityPolicyTest {
     void validate_throwsConflict_whenActiveEnrollmentAlreadyExists() {
         CoursePublicationStatus course = createCourseStatus(true);
         given(userCatalogPort.isActiveStudent(10L)).willReturn(true);
-        given(enrollmentRepository.existsByCourseIdAndUserId(1L, 10L))
+        given(enrollmentRepository.existsByCourseIdAndUserIdAndStatus(1L, 10L, EnrollmentStatus.ACTIVE))
                 .willReturn(true);
 
         ConflictException exception = assertThrows(

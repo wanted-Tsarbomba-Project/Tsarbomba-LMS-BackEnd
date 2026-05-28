@@ -56,6 +56,11 @@ class EnrollmentServiceTest {
         Enrollment savedEnrollment = createEnrollment(1L, userId, courseId, EnrollmentStatus.ACTIVE);
 
         given(courseCatalogPort.getPublicationStatus(courseId)).willReturn(course);
+        given(enrollmentRepository.findByCourseIdAndUserIdAndStatus(
+                courseId,
+                userId,
+                EnrollmentStatus.CANCELED
+        )).willReturn(Optional.empty());
         given(enrollmentRepository.save(any(Enrollment.class))).willReturn(savedEnrollment);
 
         Enrollment result = enrollmentCommandService.createEnrollment(new EnrollCourseCommand(userId, courseId));
@@ -66,6 +71,32 @@ class EnrollmentServiceTest {
         assertEquals(EnrollmentStatus.ACTIVE, result.getStatus());
         verify(enrollmentEligibilityPolicy).validate(userId, course);
         verify(enrollmentRepository).save(any(Enrollment.class));
+    }
+
+    @Test
+    void createEnrollment_reactivatesCanceledEnrollment() {
+        Long courseId = 1L;
+        Long userId = 10L;
+        CoursePublicationStatus course = createCourseStatus(courseId);
+        Enrollment canceledEnrollment = createEnrollment(1L, userId, courseId, EnrollmentStatus.CANCELED);
+        canceledEnrollment.setCanceledAt(LocalDateTime.now());
+
+        given(courseCatalogPort.getPublicationStatus(courseId)).willReturn(course);
+        given(enrollmentRepository.findByCourseIdAndUserIdAndStatus(
+                courseId,
+                userId,
+                EnrollmentStatus.CANCELED
+        )).willReturn(Optional.of(canceledEnrollment));
+        given(enrollmentRepository.save(canceledEnrollment)).willReturn(canceledEnrollment);
+
+        Enrollment result = enrollmentCommandService.createEnrollment(new EnrollCourseCommand(userId, courseId));
+
+        assertEquals(1L, result.getEnrollmentId());
+        assertEquals(EnrollmentStatus.ACTIVE, result.getStatus());
+        assertNull(result.getCanceledAt());
+        assertNotNull(result.getEnrolledAt());
+        verify(enrollmentEligibilityPolicy).validate(userId, course);
+        verify(enrollmentRepository).save(canceledEnrollment);
     }
 
     @Test
