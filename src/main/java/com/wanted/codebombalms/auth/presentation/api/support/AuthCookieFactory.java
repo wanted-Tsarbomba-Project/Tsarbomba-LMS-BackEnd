@@ -9,7 +9,7 @@ public class AuthCookieFactory {
 
     private final boolean secure;
 
-    public AuthCookieFactory(@Value("${app.cookie.secure}") boolean secure) {
+    public AuthCookieFactory(@Value("${app.cookie.secure:false}") boolean secure) {
         this.secure = secure;
     }
 
