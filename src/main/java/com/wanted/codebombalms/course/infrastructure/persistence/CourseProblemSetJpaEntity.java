@@ -16,6 +16,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @NoArgsConstructor
@@ -44,6 +46,9 @@ public class CourseProblemSetJpaEntity {
     @Column(name = "display_order", nullable = false)
     private Integer displayOrder;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     private CourseProblemSetJpaEntity(
             CourseJpaEntity course,
             Long lectureId,
@@ -67,6 +72,7 @@ public class CourseProblemSetJpaEntity {
                 courseProblemSet.getDisplayOrder()
         );
         entity.courseProblemSetId = courseProblemSet.getCourseProblemSetId();
+        entity.deletedAt = courseProblemSet.getDeletedAt();
         return entity;
     }
 
@@ -76,6 +82,11 @@ public class CourseProblemSetJpaEntity {
         this.problemSetId = courseProblemSet.getProblemSetId();
         this.role = courseProblemSet.getRole();
         this.displayOrder = courseProblemSet.getDisplayOrder();
+        this.deletedAt = courseProblemSet.getDeletedAt();
+    }
+
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
     }
 
     public CourseProblemSet toDomain() {
@@ -85,7 +96,8 @@ public class CourseProblemSetJpaEntity {
                 lectureId,
                 problemSetId,
                 role,
-                displayOrder
+                displayOrder,
+                deletedAt
         );
     }
 }

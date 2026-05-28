@@ -11,6 +11,7 @@ import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -34,6 +35,7 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final CourseCategoryPolicy courseCategoryPolicy;
     private final CoursePublishPolicy coursePublishPolicy;
     private final LectureManagementPort lectureManagementPort;
+    private final CourseProblemSetRepository courseProblemSetRepository;
 
     @LogBusiness
     @LogPerformance
@@ -110,6 +112,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         course.delete();
         courseRepository.save(course);
         lectureManagementPort.deleteLecturesByCourseId(courseId);
+        courseProblemSetRepository.deleteByCourseId(courseId);
 
         log.info("[CourseCommandService] deleted course - courseId: {}", courseId);
     }

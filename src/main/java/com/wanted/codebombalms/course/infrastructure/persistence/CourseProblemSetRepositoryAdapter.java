@@ -34,7 +34,7 @@ public class CourseProblemSetRepositoryAdapter implements CourseProblemSetReposi
 
     @Override
     public List<CourseProblemSet> findByCourseId(Long courseId) {
-        return springDataCourseProblemSetRepository.findByCourse_CourseId(courseId)
+        return springDataCourseProblemSetRepository.findByCourse_CourseIdAndDeletedAtIsNull(courseId)
                 .stream()
                 .map(CourseProblemSetJpaEntity::toDomain)
                 .toList();
@@ -42,7 +42,7 @@ public class CourseProblemSetRepositoryAdapter implements CourseProblemSetReposi
 
     @Override
     public List<CourseProblemSet> findByCourseIdAndRole(Long courseId, CourseProblemSetRole role) {
-        return springDataCourseProblemSetRepository.findByCourse_CourseIdAndRole(courseId, role)
+        return springDataCourseProblemSetRepository.findByCourse_CourseIdAndRoleAndDeletedAtIsNull(courseId, role)
                 .stream()
                 .map(CourseProblemSetJpaEntity::toDomain)
                 .toList();
@@ -50,7 +50,7 @@ public class CourseProblemSetRepositoryAdapter implements CourseProblemSetReposi
 
     @Override
     public List<CourseProblemSet> findByLectureId(Long lectureId) {
-        return springDataCourseProblemSetRepository.findByLectureIdOrderByDisplayOrderAsc(lectureId)
+        return springDataCourseProblemSetRepository.findByLectureIdAndDeletedAtIsNullOrderByDisplayOrderAsc(lectureId)
                 .stream()
                 .map(CourseProblemSetJpaEntity::toDomain)
                 .toList();
@@ -58,14 +58,25 @@ public class CourseProblemSetRepositoryAdapter implements CourseProblemSetReposi
 
     @Override
     public Optional<CourseProblemSet> findById(Long courseProblemSetId) {
-        return springDataCourseProblemSetRepository.findById(courseProblemSetId)
+        return springDataCourseProblemSetRepository.findByCourseProblemSetIdAndDeletedAtIsNull(courseProblemSetId)
                 .map(CourseProblemSetJpaEntity::toDomain);
     }
 
     @Override
     public void deleteByCourseId(Long courseId) {
-        springDataCourseProblemSetRepository.deleteAll(
-                springDataCourseProblemSetRepository.findByCourse_CourseId(courseId)
-        );
+        List<CourseProblemSetJpaEntity> problemSets =
+                springDataCourseProblemSetRepository.findByCourse_CourseIdAndDeletedAtIsNull(courseId);
+
+        problemSets.forEach(CourseProblemSetJpaEntity::delete);
+        springDataCourseProblemSetRepository.saveAll(problemSets);
+    }
+
+    @Override
+    public void deleteByLectureId(Long lectureId) {
+        List<CourseProblemSetJpaEntity> problemSets =
+                springDataCourseProblemSetRepository.findByLectureIdAndDeletedAtIsNullOrderByDisplayOrderAsc(lectureId);
+
+        problemSets.forEach(CourseProblemSetJpaEntity::delete);
+        springDataCourseProblemSetRepository.saveAll(problemSets);
     }
 }
