@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.SpringDataProblemCategoryRepository;
 import com.wanted.codebombalms.problems.set.application.port.CheckProblemSetCategoryPort;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,9 @@ public class ProblemSetCategoryPersistenceAdapter implements CheckProblemSetCate
 
     @Override
     public boolean existsActiveCategory(Long categoryId) {
-        return problemCategoryRepository.existsByCategoryIdAndStatus(categoryId, "ACTIVE");
+        return problemCategoryRepository.existsByCategoryIdAndStatus(
+                categoryId,
+                ProblemCategoryStatus.ACTIVE
+        );
     }
 }

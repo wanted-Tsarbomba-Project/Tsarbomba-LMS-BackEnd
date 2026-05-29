@@ -9,11 +9,12 @@ public record StudentProblemSubmissionResult(
 ) {
     public static StudentProblemSubmissionResult of(
             Long userId,
+            long totalCount,
             List<StudentProblemSubmissionItem> submissions
     ) {
         return new StudentProblemSubmissionResult(
                 userId,
-                submissions.size(),
+                Math.toIntExact(totalCount),
                 submissions
         );
     }

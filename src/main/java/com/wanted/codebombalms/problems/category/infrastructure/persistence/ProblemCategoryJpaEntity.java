@@ -1,14 +1,11 @@
 package com.wanted.codebombalms.problems.category.infrastructure.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "problem_category")
+
 public class ProblemCategoryJpaEntity {
 
     @Id
@@ -20,8 +17,9 @@ public class ProblemCategoryJpaEntity {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ProblemCategoryStatus status;
 
     protected ProblemCategoryJpaEntity() {
     }
@@ -29,7 +27,7 @@ public class ProblemCategoryJpaEntity {
     public ProblemCategoryJpaEntity(String categoryName, String description) {
         this.categoryName = categoryName;
         this.description = description;
-        this.status = "ACTIVE";
+        this.status = ProblemCategoryStatus.ACTIVE;
     }
 
     public Long getCategoryId() {
@@ -44,7 +42,7 @@ public class ProblemCategoryJpaEntity {
         return description;
     }
 
-    public String getStatus() {
+    public ProblemCategoryStatus getStatus() {
         return status;
     }
 }

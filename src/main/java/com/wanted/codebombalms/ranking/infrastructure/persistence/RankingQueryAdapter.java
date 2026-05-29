@@ -18,7 +18,7 @@ public class RankingQueryAdapter implements RankingQueryPort {
     private EntityManager entityManager;
 
     @Override
-    public List<RankingItem> findTotalPointRankings() {
+    public List<RankingItem> findTotalPointRankings(int offset, int size) {
         String sql = """
             select
                 dense_rank() over (order by up.total_point desc) as ranking,
@@ -41,9 +41,12 @@ public class RankingQueryAdapter implements RankingQueryPort {
             where u.deleted_at is null
               and u.role = 'STUDENT'
             order by ranking asc, u.user_id asc
+            limit :size offset :offset
             """;
 
         return entityManager.createNativeQuery(sql)
+                .setParameter("size", size)
+                .setParameter("offset", offset)
                 .getResultList()
                 .stream()
                 .map(row -> toRankingItem((Object[]) row))
@@ -51,7 +54,7 @@ public class RankingQueryAdapter implements RankingQueryPort {
     }
 
     @Override
-    public List<RankingItem> findWeeklyPointRankings(LocalDateTime from) {
+    public List<RankingItem> findWeeklyPointRankings(LocalDateTime from, int offset, int size) {
         String sql = """
             select
                 dense_rank() over (order by weekly.weekly_point desc) as ranking,
@@ -74,10 +77,13 @@ public class RankingQueryAdapter implements RankingQueryPort {
             where u.deleted_at is null
               and u.role = 'STUDENT'
             order by ranking asc, u.user_id asc
+            limit :size offset :offset
             """;
 
         return entityManager.createNativeQuery(sql)
                 .setParameter("from", from)
+                .setParameter("size", size)
+                .setParameter("offset", offset)
                 .getResultList()
                 .stream()
                 .map(row -> toRankingItem((Object[]) row))

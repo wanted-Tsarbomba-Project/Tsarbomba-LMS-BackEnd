@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -157,7 +158,7 @@ public class ProblemTestCaseController {
     public ResponseEntity<ApiResponse<ProblemTestCaseResponse>> createTestCase(
             @Parameter(description = "테스트케이스를 등록할 코드 문제 ID", example = "3001")
             @PathVariable Long problemId,
-            @RequestBody CreateProblemTestCaseRequest request
+            @Valid @RequestBody CreateProblemTestCaseRequest request
     ) {
         var view = commandUseCase.handle(new CreateProblemTestCaseCommand(
                 problemId,
@@ -339,7 +340,7 @@ public class ProblemTestCaseController {
     public ResponseEntity<ApiResponse<ProblemTestCaseResponse>> updateTestCase(
             @Parameter(description = "수정할 테스트케이스 ID", example = "3001")
             @PathVariable Long testCaseId,
-            @RequestBody UpdateProblemTestCaseRequest request
+            @Valid @RequestBody UpdateProblemTestCaseRequest request
     ) {
         var view = commandUseCase.handle(new UpdateProblemTestCaseCommand(
                 testCaseId,

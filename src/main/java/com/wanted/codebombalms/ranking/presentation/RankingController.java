@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "포인트 랭킹", description = "학생들의 누적 포인트와 주간 포인트 기준 랭킹 조회 API")
@@ -38,8 +39,11 @@ public class RankingController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<RankingListResponse>> getTotalPointRankings() {
-        var result = rankingQueryUseCase.getTotalPointRankings();
+    public ResponseEntity<ApiResponse<RankingListResponse>> getTotalPointRankings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ){
+        var result = rankingQueryUseCase.getTotalPointRankings(page, size);
 
         return ResponseEntity.ok(ApiResponse.success(
                 ApiResponseCode.SUCCESS,
@@ -62,8 +66,11 @@ public class RankingController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류")
     })
     @GetMapping("/weekly")
-    public ResponseEntity<ApiResponse<RankingListResponse>> getWeeklyPointRankings() {
-        var result = rankingQueryUseCase.getWeeklyPointRankings();
+    public ResponseEntity<ApiResponse<RankingListResponse>> getWeeklyPointRankings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        var result = rankingQueryUseCase.getWeeklyPointRankings(page, size);
 
         return ResponseEntity.ok(ApiResponse.success(
                 ApiResponseCode.SUCCESS,

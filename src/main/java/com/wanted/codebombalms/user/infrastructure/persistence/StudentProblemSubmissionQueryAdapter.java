@@ -73,10 +73,32 @@ public class StudentProblemSubmissionQueryAdapter implements StudentProblemSubmi
                 .setParameter("problemSetId", query.problemSetId())
                 .setParameter("problemId", query.problemId())
                 .setParameter("correctOnly", query.correctOnlyValue())
+                .setFirstResult(query.offset())
+                .setMaxResults(query.safeSize())
                 .getResultList()
                 .stream()
                 .map(this::toItem)
                 .toList();
+    }
+    @Override
+    public long countByCondition(StudentProblemSubmissionQuery query) {
+        String jpql = """
+            select count(s.submissionId)
+            from SubmissionJpaEntity s
+            join s.problem p
+            join p.problemSet ps
+            where s.userId = :userId
+              and (:problemSetId is null or ps.problemSetId = :problemSetId)
+              and (:problemId is null or p.problemId = :problemId)
+              and (:correctOnly = false or s.isCorrect = true)
+            """;
+
+        return entityManager.createQuery(jpql, Long.class)
+                .setParameter("userId", query.userId())
+                .setParameter("problemSetId", query.problemSetId())
+                .setParameter("problemId", query.problemId())
+                .setParameter("correctOnly", query.correctOnlyValue())
+                .getSingleResult();
     }
 
     private StudentProblemSubmissionItem toItem(Tuple tuple) {

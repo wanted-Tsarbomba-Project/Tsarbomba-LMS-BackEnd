@@ -5,9 +5,9 @@ import com.wanted.codebombalms.ranking.application.query.RankingListResult;
 
 public interface RankingQueryUseCase {
 
-    RankingListResult getTotalPointRankings();
+    RankingListResult getTotalPointRankings(int page, int size);
 
-    RankingListResult getWeeklyPointRankings();
+    RankingListResult getWeeklyPointRankings(int page, int size);
 
     RankingItem getMyPointRanking(Long userId);
 }

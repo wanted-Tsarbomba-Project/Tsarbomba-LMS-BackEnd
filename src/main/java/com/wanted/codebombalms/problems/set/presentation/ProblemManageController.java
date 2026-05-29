@@ -199,6 +199,7 @@ public class ProblemManageController {
         try {
             return new UploadProblemDatasetCommand(
                     datasetFile.getOriginalFilename(),
+                    datasetFile.getContentType(),
                     datasetFile.getBytes(),
                     datasetFile.getSize()
             );

@@ -17,7 +17,9 @@ import java.util.List;
 public class ProblemSetRegistrationService implements RegisterProblemSetUseCase {
 
     private static final Long TEMP_OPERATOR_USER_ID = 2L;
-
+    private static final String CODE_PROBLEM_TYPE = "CODE";
+    private static final int DEFAULT_ATTEMPT_LIMIT = 3;
+    private static final boolean DEFAULT_RETRIABLE = true;
     private final ProblemSetCommandValidationPolicy validationPolicy;
     private final ProblemSetManagementRepository problemSetManagementRepository;
 
@@ -46,7 +48,11 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
                 .map(problem -> new ProblemRegistration(
                         problem.title(),
                         problem.content(),
+                        CODE_PROBLEM_TYPE,
+                        command.difficulty(),
                         problem.point(),
+                        DEFAULT_ATTEMPT_LIMIT,
+                        DEFAULT_RETRIABLE,
                         problem.answer(),
                         problem.hint(),
                         problem.explanation()

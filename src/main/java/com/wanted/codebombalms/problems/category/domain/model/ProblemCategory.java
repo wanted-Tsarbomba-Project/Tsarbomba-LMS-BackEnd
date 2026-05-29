@@ -5,25 +5,26 @@ import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 
 public class ProblemCategory {
 
-    private static final String ACTIVE = "ACTIVE";
+    private static final ProblemCategoryStatus ACTIVE = ProblemCategoryStatus.ACTIVE;
+    private final ProblemCategoryStatus status;
+
     private static final String DEFAULT_DESCRIPTION = "문제 등록 시 자동 생성된 카테고리입니다.";
 
     private final Long categoryId;
     private final String categoryName;
     private final String description;
-    private final String status;
 
     private ProblemCategory(
             Long categoryId,
             String categoryName,
             String description,
-            String status
+            ProblemCategoryStatus status
     ) {
         if (categoryName == null || categoryName.isBlank()) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_CATEGORY_REQUIRED);
         }
 
-        if (status == null || status.isBlank()) {
+        if (status == null) {
             throw new ValidationException(ProblemErrorCode.INVALID_CATEGORY);
         }
 
@@ -46,7 +47,7 @@ public class ProblemCategory {
             Long categoryId,
             String categoryName,
             String description,
-            String status
+            ProblemCategoryStatus status
     ) {
         return new ProblemCategory(categoryId, categoryName, description, status);
     }
@@ -55,7 +56,7 @@ public class ProblemCategory {
             Long categoryId,
             String categoryName,
             String description,
-            String status
+            ProblemCategoryStatus status
     ) {
         return restore(categoryId, categoryName, description, status);
     }
@@ -72,7 +73,7 @@ public class ProblemCategory {
         return description;
     }
 
-    public String getStatus() {
+    public ProblemCategoryStatus getStatus() {
         return status;
     }
 }
