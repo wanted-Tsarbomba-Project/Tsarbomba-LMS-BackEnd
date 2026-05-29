@@ -5,6 +5,8 @@ import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseC
 import com.wanted.codebombalms.course.presentation.api.request.CourseProblemSetConfigureRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseProblemSetResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name = "강좌 문제세트", description = "강좌와 강의에 연결된 문제세트 API")
 public class CourseProblemController {
 
     private static final Logger log = LoggerFactory.getLogger(CourseProblemController.class);
@@ -28,6 +31,7 @@ public class CourseProblemController {
     private final CourseProblemQueryUseCase courseProblemQueryUseCase;
 
     @GetMapping("/courses/{courseId}/problem-sets")
+    @Operation(summary = "강좌 문제세트 목록 조회")
     public ResponseEntity<ApiResponse<?>> findProblemSetsByCourse(@PathVariable Long courseId) {
         log.info("[CourseProblemController] find course problem sets - courseId: {}", courseId);
 
@@ -42,6 +46,7 @@ public class CourseProblemController {
     }
 
     @GetMapping("/lectures/{lectureId}/problem-sets")
+    @Operation(summary = "강의 문제세트 목록 조회")
     public ResponseEntity<ApiResponse<?>> findProblemSetsByLecture(@PathVariable Long lectureId) {
         log.info("[CourseProblemController] find lecture problem sets - lectureId: {}", lectureId);
 
@@ -56,6 +61,7 @@ public class CourseProblemController {
     }
 
     @PutMapping("/courses/{courseId}/problem-sets")
+    @Operation(summary = "강좌 문제세트 연결 저장")
     public ResponseEntity<ApiResponse<?>> configureProblemSets(
             @PathVariable Long courseId,
             @Valid @RequestBody CourseProblemSetConfigureRequest request

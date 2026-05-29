@@ -8,6 +8,8 @@ public record LectureResponse(
         Long courseId,
         Long instructorId,
         String title,
+        String description,
+        String videoUrl,
         String thumbnailUrl,
         LectureStatus status,
         Integer lectureOrder
@@ -19,6 +21,8 @@ public record LectureResponse(
                 lecture.getCourse().getCourseId(),
                 lecture.getCourse().getInstructorId(),
                 lecture.getTitle(),
+                lecture.getDescription(),
+                lecture.getVideoUrl(),
                 lecture.getThumbnailUrl(),
                 lecture.getStatus(),
                 lecture.getLectureOrder()

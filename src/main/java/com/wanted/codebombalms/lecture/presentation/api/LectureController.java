@@ -9,6 +9,8 @@ import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateReq
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureDetailResponse;
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name = "강의", description = "강의 API")
 public class LectureController {
 
     private static final Logger log = LoggerFactory.getLogger(LectureController.class);
@@ -28,6 +31,7 @@ public class LectureController {
     private final LectureQueryUseCase lectureQueryUseCase;
 
     @GetMapping("/courses/{courseId}/lectures")
+    @Operation(summary = "강좌별 강의 목록 조회")
     public ResponseEntity<ApiResponse<?>> findLecturesByCourseId(@PathVariable Long courseId) {
         log.info("[LectureController] find lectures - courseId: {}", courseId);
 
@@ -42,6 +46,7 @@ public class LectureController {
     }
 
     @GetMapping("/lectures/{lectureId}")
+    @Operation(summary = "강의 단건 조회")
     public ResponseEntity<ApiResponse<?>> findLectureById(@PathVariable Long lectureId) {
         log.info("[LectureController] find lecture - lectureId: {}", lectureId);
 
@@ -53,6 +58,7 @@ public class LectureController {
     }
 
     @PostMapping("/courses/{courseId}/lectures")
+    @Operation(summary = "강의 생성")
     public ResponseEntity<ApiResponse<?>> createLecture(
             @PathVariable Long courseId,
             @Valid @RequestBody LectureCreateRequest request
@@ -76,6 +82,7 @@ public class LectureController {
     }
 
     @PutMapping("/lectures/{lectureId}")
+    @Operation(summary = "강의 수정")
     public ResponseEntity<ApiResponse<?>> updateLecture(
             @PathVariable Long lectureId,
             @Valid @RequestBody LectureUpdateRequest request
@@ -98,6 +105,7 @@ public class LectureController {
     }
 
     @DeleteMapping("/lectures/{lectureId}")
+    @Operation(summary = "강의 삭제")
     public ResponseEntity<Void> deleteLecture(@PathVariable Long lectureId) {
         log.info("[LectureController] delete lecture - lectureId: {}", lectureId);
 
