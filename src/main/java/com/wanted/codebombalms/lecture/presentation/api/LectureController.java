@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -59,6 +60,7 @@ public class LectureController {
 
     @PostMapping("/courses/{courseId}/lectures")
     @Operation(summary = "강의 생성")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> createLecture(
             @PathVariable Long courseId,
             @Valid @RequestBody LectureCreateRequest request
@@ -83,6 +85,7 @@ public class LectureController {
 
     @PutMapping("/lectures/{lectureId}")
     @Operation(summary = "강의 수정")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> updateLecture(
             @PathVariable Long lectureId,
             @Valid @RequestBody LectureUpdateRequest request
@@ -106,6 +109,7 @@ public class LectureController {
 
     @DeleteMapping("/lectures/{lectureId}")
     @Operation(summary = "강의 삭제")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<Void> deleteLecture(@PathVariable Long lectureId) {
         log.info("[LectureController] delete lecture - lectureId: {}", lectureId);
 

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -62,6 +63,7 @@ public class CourseProblemController {
 
     @PutMapping("/courses/{courseId}/problem-sets")
     @Operation(summary = "강좌 문제세트 연결 저장")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> configureProblemSets(
             @PathVariable Long courseId,
             @Valid @RequestBody CourseProblemSetConfigureRequest request
