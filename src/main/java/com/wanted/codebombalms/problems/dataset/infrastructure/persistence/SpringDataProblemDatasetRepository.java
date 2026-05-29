@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.persistence;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +25,10 @@ public interface SpringDataProblemDatasetRepository extends JpaRepository<Proble
             @Param("status") String status
     );
 
+    List<ProblemDatasetJpaEntity> findAllByProblemSet_ProblemSetIdAndStatus(
+            Long problemSetId,
+            String status
+    );
     Optional<ProblemDatasetJpaEntity> findFirstByProblemSet_ProblemSetIdAndStatus(Long problemSetId, String status);
 
     Optional<ProblemDatasetJpaEntity> findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(

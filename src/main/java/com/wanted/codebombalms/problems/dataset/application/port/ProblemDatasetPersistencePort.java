@@ -9,4 +9,5 @@ public interface ProblemDatasetPersistencePort {
 
     ProblemDataset saveUploadedDataset(StoredDatasetFile storedFile);
 
+    void deactivateActiveDatasetsByProblemSetId(Long problemSetId);
 }

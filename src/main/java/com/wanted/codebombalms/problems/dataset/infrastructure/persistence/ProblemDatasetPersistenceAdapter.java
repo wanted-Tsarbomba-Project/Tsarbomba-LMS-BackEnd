@@ -65,4 +65,10 @@ public class ProblemDatasetPersistenceAdapter implements
         );
     }
 
+    @Override
+    public void deactivateActiveDatasetsByProblemSetId(Long problemSetId) {
+        problemDatasetRepository
+                .findAllByProblemSet_ProblemSetIdAndStatus(problemSetId, "ACTIVE")
+                .forEach(ProblemDatasetJpaEntity::deactivate);
+    }
 }
