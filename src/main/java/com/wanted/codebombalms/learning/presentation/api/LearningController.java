@@ -23,6 +23,8 @@ import com.wanted.codebombalms.learning.presentation.api.response.StudentLearnin
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.presentation.request.SubmissionRequest;
 import com.wanted.codebombalms.submission.presentation.response.SubmissionResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name = "학습", description = "학습 진행률 및 강의 문제풀이 API")
 public class LearningController {
 
     private final LectureProgressCommandUseCase lectureProgressCommandUseCase;
@@ -50,6 +53,7 @@ public class LearningController {
     private final AdminLearningProgressQueryUseCase adminLearningProgressQueryUseCase;
 
     @PatchMapping("/lectures/{lectureId}/progress")
+    @Operation(summary = "강의 수강 진행률 저장")
     public ResponseEntity<ApiResponse<LectureProgressResponse>> recordLectureProgress(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long lectureId,
@@ -72,6 +76,7 @@ public class LearningController {
     }
 
     @GetMapping("/lectures/{lectureId}/progress")
+    @Operation(summary = "강의 수강 진행률 조회")
     public ResponseEntity<ApiResponse<LectureProgressResponse>> findLectureProgress(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long lectureId,
@@ -86,6 +91,7 @@ public class LearningController {
     }
 
     @GetMapping("/lecture-problem-sets/{lectureProblemSetId}")
+    @Operation(summary = "강의 문제세트 입장")
     public ResponseEntity<ApiResponse<LectureProblemSetEntryResponse>> enterLectureProblemSet(
             @PathVariable Long lectureProblemSetId,
             @RequestParam Long userId
@@ -100,6 +106,7 @@ public class LearningController {
     }
 
     @GetMapping("/lecture-problem-sets/{lectureProblemSetId}/progress")
+    @Operation(summary = "강의 문제세트 진행 상태 조회")
     public ResponseEntity<ApiResponse<LectureProblemSetProgressResponse>> findLectureProblemSetProgress(
             @PathVariable Long lectureProblemSetId,
             @RequestParam Long userId
@@ -114,6 +121,7 @@ public class LearningController {
     }
 
     @PatchMapping("/lecture-problem-sets/{lectureProblemSetId}/progress")
+    @Operation(summary = "강의 문제세트 진행 상태 저장")
     public ResponseEntity<ApiResponse<LectureProblemProgressResponse>> recordLectureProblemSetProgress(
             @PathVariable Long lectureProblemSetId,
             @Valid @RequestBody LectureProblemProgressRequest request
@@ -133,6 +141,7 @@ public class LearningController {
     }
 
     @PostMapping("/lecture-problem-sets/{lectureProblemSetId}/problems/{problemId}/submissions")
+    @Operation(summary = "강의 문제 제출")
     public ResponseEntity<ApiResponse<SubmissionResponse>> submitLectureProblem(
             @PathVariable Long lectureProblemSetId,
             @PathVariable Long problemId,
@@ -150,6 +159,7 @@ public class LearningController {
     }
 
     @GetMapping("/courses/{courseId}/learning-progress")
+    @Operation(summary = "강좌 학습률 조회")
     public ResponseEntity<ApiResponse<CourseLearningProgressResponse>> findCourseLearningProgress(
             @PathVariable Long courseId
     ) {
@@ -161,6 +171,7 @@ public class LearningController {
     }
 
     @GetMapping("/courses/learning-progress")
+    @Operation(summary = "전체 강좌 학습률 조회")
     public ResponseEntity<ApiResponse<List<CourseLearningProgressResponse>>> findCourseLearningProgresses() {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
@@ -173,6 +184,7 @@ public class LearningController {
     }
 
     @GetMapping("/courses/{courseId}/users/learning-progress")
+    @Operation(summary = "강좌별 학생 학습률 목록 조회")
     public ResponseEntity<ApiResponse<List<StudentLearningProgressResponse>>> findStudentLearningProgresses(
             @PathVariable Long courseId
     ) {
@@ -187,6 +199,7 @@ public class LearningController {
     }
 
     @GetMapping("/courses/{courseId}/users/{userId}/learning-progress")
+    @Operation(summary = "학생 학습률 단건 조회")
     public ResponseEntity<ApiResponse<StudentLearningProgressResponse>> findStudentLearningProgress(
             @PathVariable Long courseId,
             @PathVariable Long userId
@@ -201,6 +214,7 @@ public class LearningController {
     }
 
     @GetMapping("/courses/{courseId}/lectures/learning-progress")
+    @Operation(summary = "강좌별 강의 학습률 목록 조회")
     public ResponseEntity<ApiResponse<List<LectureLearningProgressResponse>>> findLectureLearningProgresses(
             @PathVariable Long courseId
     ) {
@@ -215,6 +229,7 @@ public class LearningController {
     }
 
     @GetMapping("/lectures/{lectureId}/problems/statistics")
+    @Operation(summary = "강의 문제 통계 조회")
     public ResponseEntity<ApiResponse<LectureProblemStatisticsResponse>> findLectureProblemStatistics(
             @PathVariable Long lectureId
     ) {
@@ -228,6 +243,7 @@ public class LearningController {
     }
 
     @GetMapping("/learning-progress/summary")
+    @Operation(summary = "학습률 요약 조회")
     public ResponseEntity<ApiResponse<LearningProgressSummaryResponse>> summarizeLearningProgress() {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
