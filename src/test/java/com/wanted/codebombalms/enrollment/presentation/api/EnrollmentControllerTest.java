@@ -84,6 +84,7 @@ class EnrollmentControllerTest {
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
         mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
+                        .principal(studentPrincipal(studentId))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
