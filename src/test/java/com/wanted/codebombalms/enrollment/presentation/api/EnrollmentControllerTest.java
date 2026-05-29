@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -83,13 +84,19 @@ class EnrollmentControllerTest {
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
-        mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
+
+        try {
+            mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                    .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
+                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test

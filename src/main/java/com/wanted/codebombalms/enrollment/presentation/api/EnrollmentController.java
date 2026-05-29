@@ -50,13 +50,17 @@ public class EnrollmentController {
 
     @GetMapping("/users/{userId}/enrollments")
     @Operation(summary = "학생 수강 목록 조회")
-    public ResponseEntity<ApiResponse<?>> findMyCourses(@PathVariable Long userId) {
-        log.info("[EnrollmentController] find my courses - userId: {}", userId);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<?>> findMyCourses(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Long authenticatedUserId
+    ) {
+        log.info("[EnrollmentController] find my courses - userId: {}", authenticatedUserId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 EnrollmentResponseCode.RETRIEVED,
                 EnrollmentResponseMessage.RETRIEVED,
-                enrollmentQueryUseCase.findMyCourses(userId)
+                enrollmentQueryUseCase.findMyCourses(authenticatedUserId)
                         .stream()
                         .map(enrollment -> MyCourseResponse.from(
                                 enrollment,
