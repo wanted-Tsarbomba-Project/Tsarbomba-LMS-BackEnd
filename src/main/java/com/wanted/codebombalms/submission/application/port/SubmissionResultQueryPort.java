@@ -4,5 +4,5 @@ import com.wanted.codebombalms.submission.domain.model.CodeSubmissionResult;
 
 public interface SubmissionResultQueryPort {
 
-    CodeSubmissionResult getCodeSubmissionResult(Long submissionId);
+    CodeSubmissionResult getCodeSubmissionResult(Long submissionId, Long userId);
 }

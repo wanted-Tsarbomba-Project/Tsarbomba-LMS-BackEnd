@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -249,12 +251,11 @@ public class ProblemSetController {
                     )
             )
     })
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/api/v1/problem-sets/{problemSetId}")
     public ResponseEntity<ApiResponse<ProblemSetEnterResponse>> enterProblemSet(
-            @Parameter(description = "진입할 문제 세트 ID", example = "3001")
             @PathVariable Long problemSetId,
-            @Parameter(description = "문제를 풀 학생 ID", example = "3")
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         var query = new EnterProblemSetQuery(problemSetId, userId);
 

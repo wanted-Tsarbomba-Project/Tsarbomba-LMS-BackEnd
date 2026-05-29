@@ -139,12 +139,12 @@ public class LearningController {
                 ))
         ));
     }
-
     @PostMapping("/lecture-problem-sets/{lectureProblemSetId}/problems/{problemId}/submissions")
     @Operation(summary = "강의 문제 제출")
     public ResponseEntity<ApiResponse<SubmissionResponse>> submitLectureProblem(
             @PathVariable Long lectureProblemSetId,
             @PathVariable Long problemId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody SubmissionRequest request
     ) {
         return ResponseEntity.ok(ApiResponse.success(
@@ -153,7 +153,7 @@ public class LearningController {
                 new SubmissionResponse(lectureProblemSubmissionUseCase.submit(
                         lectureProblemSetId,
                         problemId,
-                        new SubmitCodeCommand(request.getUserId(), request.getCode())
+                        new SubmitCodeCommand(userId, request.getCode())
                 ))
         ));
     }

@@ -24,8 +24,8 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
     }
 
     @Override
-    public CodeSubmissionResult getCodeSubmissionResult(Long submissionId) {
-        SubmissionJpaEntity submission = submissionRepository.findById(submissionId)
+    public CodeSubmissionResult getCodeSubmissionResult(Long submissionId, Long userId) {
+        SubmissionJpaEntity submission = submissionRepository.findBySubmissionIdAndUserId(submissionId, userId)
                 .orElseThrow(() -> new NotFoundException(SubmissionErrorCode.SUBMISSION_NOT_FOUND));
 
         List<CodeSubmissionTestCaseResult> testCaseResults = submissionTestResultRepository

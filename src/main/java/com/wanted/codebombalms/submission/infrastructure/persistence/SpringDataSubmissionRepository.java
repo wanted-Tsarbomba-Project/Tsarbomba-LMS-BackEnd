@@ -14,7 +14,7 @@ public interface SpringDataSubmissionRepository extends JpaRepository<Submission
             Long userId,
             Long problemId
     );
-
+    Optional<SubmissionJpaEntity> findBySubmissionIdAndUserId(Long submissionId, Long userId);
     boolean existsByProblem_ProblemSet_ProblemSetId(Long problemSetId);
 
     Page<SubmissionJpaEntity> findByProblem_ProblemIdAndSubmittedCodeIsNotNullOrderBySubmittedAtDesc(

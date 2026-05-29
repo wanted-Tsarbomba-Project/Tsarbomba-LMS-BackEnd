@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -206,16 +208,18 @@ public class SubmissionController {
                     )
             )
     })
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/api/v1/problems/{problemId}/submissions")
     public ResponseEntity<ApiResponse<SubmissionResponse>> submitCode(
-            @Parameter(description = "제출할 코드 문제 ID", example = "3001")
             @PathVariable Long problemId,
+            @AuthenticationPrincipal Long userId,
             @RequestBody SubmissionRequest request
     ) {
         var command = new SubmitCodeCommand(
-                request.getUserId(),
+                userId,
                 request.getCode()
         );
+
         var response = new SubmissionResponse(
                 submissionCommandUseCase.handle(problemId, command)
         );
@@ -226,7 +230,6 @@ public class SubmissionController {
                 response
         ));
     }
-
     @Operation(
             summary = "코드 채점 결과 조회",
             description = "학생이 제출한 코드 답안의 채점 결과와 테스트케이스별 통과 정보를 조회합니다. "
@@ -299,16 +302,17 @@ public class SubmissionController {
                     )
             )
     })
+    @PreAuthorize("isAuthenticated()")
     @GetMapping({
             "/api/v1/code-submissions/{submissionId}",
             "/api/v1/submissions/{submissionId}/result"
     })
     public ResponseEntity<ApiResponse<CodeSubmissionResultResponse>> getCodeSubmissionResult(
-            @Parameter(description = "조회할 제출 ID", example = "3001")
-            @PathVariable Long submissionId
+            @PathVariable Long submissionId,
+            @AuthenticationPrincipal Long userId
     ) {
         var response = new CodeSubmissionResultResponse(
-                codeSubmissionResultQueryUseCase.handle(submissionId)
+                codeSubmissionResultQueryUseCase.handle(submissionId, userId)
         );
 
         return ResponseEntity.ok(ApiResponse.success(
