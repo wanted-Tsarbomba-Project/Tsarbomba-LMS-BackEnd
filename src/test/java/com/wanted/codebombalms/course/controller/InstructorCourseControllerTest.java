@@ -5,6 +5,10 @@ import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
+import com.wanted.codebombalms.course.presentation.api.CourseResponseMessage;
+import com.wanted.codebombalms.course.presentation.api.UserCourseController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

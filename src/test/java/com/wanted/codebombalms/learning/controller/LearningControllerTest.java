@@ -15,6 +15,8 @@ import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemStatistics;
 import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
+import com.wanted.codebombalms.learning.presentation.api.LearningController;
+import com.wanted.codebombalms.learning.presentation.api.LearningResponseCode;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
 import java.time.LocalDateTime;

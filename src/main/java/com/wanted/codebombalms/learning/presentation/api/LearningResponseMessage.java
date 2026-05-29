@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.learning.controller;
+package com.wanted.codebombalms.learning.presentation.api;
 
 public class LearningResponseMessage {
 

@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.lecture.controller;
+package com.wanted.codebombalms.lecture.presentation.api;
 
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;

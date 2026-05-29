@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.enrollment.controller;
+package com.wanted.codebombalms.enrollment.presentation.api;
 
 public class EnrollmentResponseMessage {
 

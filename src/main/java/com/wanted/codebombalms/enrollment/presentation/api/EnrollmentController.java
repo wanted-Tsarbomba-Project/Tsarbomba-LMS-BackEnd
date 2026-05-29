@@ -1,15 +1,13 @@
-package com.wanted.codebombalms.enrollment.controller;
+package com.wanted.codebombalms.enrollment.presentation.api;
 
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
-import com.wanted.codebombalms.enrollment.presentation.api.request.EnrollCourseRequest;
 import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
 import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
