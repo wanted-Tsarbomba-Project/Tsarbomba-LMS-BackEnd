@@ -12,6 +12,7 @@ Content-Type: application/json
 }
 
 ### 1. 내 정보 조회 — 정상 (0번 직후 실행)
+# @no-cookie-jar
 GET http://localhost:8080/api/v1/users/me
 
 ### 2. 로그아웃 (다음 401 케이스 준비)
@@ -19,3 +20,37 @@ POST http://localhost:8080/api/v1/auth/logout
 
 ### 3. 내 정보 조회 — 401 (로그아웃 후 / 쿠키 만료)
 GET http://localhost:8080/api/v1/users/me
+
+
+
+### A. 로그인 → Set-Cookie 헤더에서 refreshToken 값만 캡처
+# @no-cookie-jar
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+> {%
+    const setCookies = response.headers.valuesOf("Set-Cookie");
+    let rt = "";
+    setCookies.forEach(c => {
+        const m = c.match(/refreshToken=([^;]+)/);
+        if (m) rt = m[1];
+    });
+    client.global.set("rt", rt);
+    client.log("captured refreshToken: " + rt.substring(0, 20) + "...");
+%}
+
+### B. 우회 시도 — refreshToken을 accessToken 쿠키에 넣어 호출 (401 기대)
+GET http://localhost:8080/api/v1/users/me
+Cookie: accessToken={{rt}}
+
+> {%
+    client.test("eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwidHlwIjoicmVmcmVzaCIsImlhdCI6MTc4MDAyNDEyNiwiZXhwIjoxNzgxMjMzNzI2fQ.zjLDZ9iH08DrKpbyBUTeh8DgFz-c0g_Zn8ZvvTO1zuk", function () {
+        client.assert(response.status === 401,
+            "기대 401, 실제 " + response.status);
+    });
+%}
