@@ -3,6 +3,7 @@ package com.wanted.codebombalms.problems.exception;
 import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
@@ -49,6 +50,7 @@ public enum ProblemErrorCode implements ErrorCode {
     PROBLEM_TEST_CASE_INVALID_INPUT("PRB-TC-002", "테스트케이스 입력값이 올바르지 않습니다."),
     PROBLEM_TEST_CASE_ALREADY_EXISTS("PRB-TC-003", "이미 등록된 테스트케이스가 있습니다."),
     PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE("PRB-TC-004", "코드 문제에만 테스트케이스를 등록할 수 있습니다."),
+    PROBLEM_TEST_CASE_DUPLICATE_ORDER( "PRB-TC-006", "이미 같은 순서의 테스트케이스가 존재합니다."),
 
     // 코드 실행 (PRB-EXE)
     PROBLEM_CODE_INVALID_INPUT("PRB-EXE-001", "코드 값이 비어 있습니다."),

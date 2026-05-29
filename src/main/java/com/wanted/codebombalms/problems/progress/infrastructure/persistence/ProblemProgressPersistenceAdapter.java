@@ -16,6 +16,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ValidationEx
 import com.wanted.codebombalms.submission.application.port.SubmissionQueryPort;
 import com.wanted.codebombalms.submission.domain.model.LatestSubmission;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -66,16 +67,24 @@ public class ProblemProgressPersistenceAdapter implements
             Integer currentProblemNumber,
             ProblemJpaEntity problem
     ) {
-        Boolean latestCorrect = submissionQueryPort
-                .findLatestResult(userId, problem.getProblemId())
+        var latestSubmission = submissionQueryPort
+                .findLatestResult(userId, problem.getProblemId());
+
+        Boolean latestCorrect = latestSubmission
                 .map(LatestSubmission::correct)
+                .orElse(null);
+
+        Long latestSubmissionId = latestSubmission
+                .map(LatestSubmission::submissionId)
                 .orElse(null);
 
         return ProblemProgressItem.of(
                 problem.getProblemId(),
                 problem.getProblemOrder(),
+                problem.getTitle(),
                 currentProblemNumber,
-                latestCorrect
+                latestCorrect,
+                latestSubmissionId
         );
     }
 
@@ -121,9 +130,19 @@ public class ProblemProgressPersistenceAdapter implements
                 .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
                 .orElseGet(() -> {
                     ProblemSetJpaEntity problemSet = loadProblemSet(problemSetId);
-                    problemSet.increaseStartedUserCount();
-                    return progressRepository.save(new ProgressJpaEntity(userId, problemSet));
+                    return createProgressSafely(userId, problemSet);
                 });
+    }
+
+    private ProgressJpaEntity createProgressSafely(Long userId, ProblemSetJpaEntity problemSet) {
+        try {
+            problemSet.increaseStartedUserCount();
+            return progressRepository.saveAndFlush(new ProgressJpaEntity(userId, problemSet));
+        } catch (DataIntegrityViolationException e) {
+            return progressRepository
+                    .findByUserIdAndProblemSet_ProblemSetId(userId, problemSet.getProblemSetId())
+                    .orElseThrow(() -> e);
+        }
     }
 
     private ProblemSetJpaEntity loadProblemSet(Long problemSetId) {

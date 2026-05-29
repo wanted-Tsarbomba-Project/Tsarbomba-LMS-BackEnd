@@ -4,5 +4,5 @@ import com.wanted.codebombalms.submission.domain.model.CodeSubmissionPage;
 
 public interface SubmissionListQueryPort {
 
-    CodeSubmissionPage findCodeSubmissions(Long problemId, int page, int size);
+    CodeSubmissionPage findCodeSubmissions(Long userId, Long problemId, int page, int size);
 }

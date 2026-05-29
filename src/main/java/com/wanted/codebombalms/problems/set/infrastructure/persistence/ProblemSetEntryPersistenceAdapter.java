@@ -9,6 +9,7 @@ import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblem
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetEntryPort;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,17 +31,27 @@ public class ProblemSetEntryPersistenceAdapter implements
     @Override
     public ProblemSetProgressState findOrCreateProgress(Long userId, Long problemSetId) {
         ProblemSetJpaEntity problemSet = loadProblemSet(problemSetId);
+
         ProgressJpaEntity progress = progressRepository
                 .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
-                .orElseGet(() -> {
-                    problemSet.increaseStartedUserCount();
-                    return progressRepository.save(new ProgressJpaEntity(userId, problemSet));
-                });
+                .orElseGet(() -> createProgressSafely(userId, problemSet));
 
         return new ProblemSetProgressState(
                 progress.getCurrentProblemNumber(),
                 progress.getCompleted()
         );
+    }
+
+
+    private ProgressJpaEntity createProgressSafely(Long userId, ProblemSetJpaEntity problemSet) {
+        try {
+            problemSet.increaseStartedUserCount();
+            return progressRepository.save(new ProgressJpaEntity(userId, problemSet));
+        } catch (DataIntegrityViolationException e) {
+            return progressRepository
+                    .findByUserIdAndProblemSet_ProblemSetId(userId, problemSet.getProblemSetId())
+                    .orElseThrow(() -> e);
+        }
     }
 
     private ProblemSetJpaEntity loadProblemSet(Long problemSetId) {

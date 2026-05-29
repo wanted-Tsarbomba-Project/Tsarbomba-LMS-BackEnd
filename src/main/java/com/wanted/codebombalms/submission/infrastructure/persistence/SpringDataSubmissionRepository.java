@@ -21,4 +21,10 @@ public interface SpringDataSubmissionRepository extends JpaRepository<Submission
             Long problemId,
             Pageable pageable
     );
+
+    Page<SubmissionJpaEntity> findByUserIdAndProblem_ProblemIdAndSubmittedCodeIsNotNullOrderBySubmittedAtDesc(
+            Long userId,
+            Long problemId,
+            Pageable pageable
+    );
 }

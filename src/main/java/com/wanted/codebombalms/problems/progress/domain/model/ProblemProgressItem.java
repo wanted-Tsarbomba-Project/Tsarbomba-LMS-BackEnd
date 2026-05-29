@@ -6,28 +6,38 @@ public class ProblemProgressItem {
 
     private final Long problemId;
     private final Integer problemNumber;
+    private final String title;
     private final ProblemProgressStatus status;
+    private final Long latestSubmissionId;
 
     private ProblemProgressItem(
             Long problemId,
             Integer problemNumber,
-            ProblemProgressStatus status
+            String title,
+            ProblemProgressStatus status,
+            Long latestSubmissionId
     ) {
         this.problemId = problemId;
         this.problemNumber = problemNumber;
+        this.title = title;
         this.status = status;
+        this.latestSubmissionId = latestSubmissionId;
     }
 
     public static ProblemProgressItem of(
             Long problemId,
             Integer problemNumber,
+            String title,
             Integer currentProblemNumber,
-            Boolean latestCorrect
+            Boolean latestCorrect,
+            Long latestSubmissionId
     ) {
         return new ProblemProgressItem(
                 problemId,
                 problemNumber,
-                decideStatus(problemNumber, currentProblemNumber, latestCorrect)
+                title,
+                decideStatus(problemNumber, currentProblemNumber, latestCorrect),
+                latestSubmissionId
         );
     }
 
@@ -57,7 +67,15 @@ public class ProblemProgressItem {
         return problemNumber;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public ProblemProgressStatus getStatus() {
         return status;
+    }
+
+    public Long getLatestSubmissionId() {
+        return latestSubmissionId;
     }
 }

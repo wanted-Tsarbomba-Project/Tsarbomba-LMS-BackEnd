@@ -60,7 +60,10 @@ public class ProblemProgressQueryService implements GetProblemProgressUseCase {
         return new ProblemProgressItemView(
                 problem.getProblemId(),
                 problem.getProblemNumber(),
-                problem.getStatus().name()
+                problem.getTitle(),
+                problem.getStatus().name(),
+                problem.getLatestSubmissionId()
         );
     }
 }
+
