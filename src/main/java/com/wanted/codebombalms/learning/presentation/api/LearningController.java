@@ -29,6 +29,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -54,15 +55,15 @@ public class LearningController {
 
     @PatchMapping("/lectures/{lectureId}/progress")
     @Operation(summary = "강의 수강 진행률 저장")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LectureProgressResponse>> recordLectureProgress(
             @AuthenticationPrincipal Long userId,
             @PathVariable Long lectureId,
             @Valid @RequestBody LectureProgressRequest request
     ) {
-        Long requesterId = userId != null ? userId : request.userId();
         LectureProgressResponse response = LectureProgressResponse.from(
                 lectureProgressCommandUseCase.recordProgress(new RecordLectureProgressCommand(
-                        requesterId,
+                        userId,
                         lectureId,
                         request.completed()
                 ))
