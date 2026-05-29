@@ -66,3 +66,91 @@ Plan 승인됨. 코드 아직 한 줄도 안 짬.
 
 - `/tdd` — 각 Slice 구현 시 (특히 ChatContextBuilder 분기 테스트)
 - `/simplify` — 구현 후 코드 리뷰
+
+---
+
+## FastAPI Payload 검증 완료 (2026-05-28)
+
+### 검증된 FastApiChatRequest JSON 구조
+
+실제 AWS RDS 데이터 기반 검증 완료. FastAPI 구현 시 이 payload를 기준으로 삼을 것.
+
+```json
+{
+  "user_message": "4번 문제 풀이 도와줘",
+  "problem_set": {
+    "problem_set_id": 3001,
+    "title": "pandas 기초 분석 문제 세트",
+    "description": "CSV 데이터를 불러와 기본 정보를 확인하는 코드 실행형 문제 세트입니다."
+  },
+  "problems": [
+    {
+      "title": "데이터 행과 열 개수 확인",
+      "content": "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하는 코드를 작성하세요.",
+      "problem_type": "CODE",
+      "explanation": "DataFrame의 shape 속성을 사용하면 행과 열 개수를 튜플로 확인할 수 있습니다."
+    }
+  ],
+  "session_progress": {
+    "current_problem_number": 1
+  },
+  "dataset": {
+    "meta_data": "[\"id\", \"value\"]"
+  },
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "고객 세그먼트가 정확히 뭔가요?"
+    }
+  ]
+}
+```
+
+### FastAPI가 반환해야 하는 응답 구조
+
+```json
+{
+  "message": "AI 응답 텍스트",
+  "is_answer_detected": true
+}
+```
+
+> ⚠️ `is_answer_detected` 키 이름 정확히 지켜야 함. `answer_detected`로 보내면 역직렬화 실패.
+
+### 필드 존재 조건 (NON_NULL — null 필드는 JSON에 포함 안 됨)
+
+| 필드 | null이 되는 경우 |
+|------|----------------|
+| `problem_set` | chatRoom.problemSetId == null (자유질문 모드) |
+| `problems` | problemInfos 빈 배열일 때 null로 변환 |
+| `session_progress` | chatRoom.problemId == null |
+| `dataset` | problemSetId에 ACTIVE dataset 없음 |
+| `answer` (problems 내부) | CODE 타입 문제 |
+| `submitted_answer` (problems 내부) | 유저가 아직 제출 안 함 |
+
+### 필드 상세
+
+| JSON 키 | 타입 | 비고 |
+|---------|------|------|
+| `user_message` | String | 유저 입력 |
+| `problem_set.problem_set_id` | Long | |
+| `problem_set.title` | String | |
+| `problem_set.description` | String | |
+| `problems[].title` | String | |
+| `problems[].content` | String | |
+| `problems[].problem_type` | String | `"TEXT"` or `"CODE"` |
+| `problems[].answer` | String \| null | TEXT 타입만 존재 |
+| `problems[].explanation` | String | |
+| `problems[].submitted_answer` | String \| null | 제출 이력 있을 때만 |
+| `session_progress.current_problem_number` | Integer | |
+| `dataset.meta_data` | String | DB meta_data 컬럼값 그대로 |
+| `conversation_history[].role` | String | `"user"` or `"ai"` 소문자 |
+| `conversation_history[].content` | String | |
+
+### 참고 파일 경로
+
+- `chatbot/infrastructure/client/FastApiChatRequest.java` — 요청 DTO
+- `chatbot/infrastructure/client/FastApiChatResponse.java` — 응답 DTO
+- `chatbot/infrastructure/client/FastApiChatClient.java` — WebClient POST /chat
+- `chatbot/application/service/ChatContextBuilder.java` — 컨텍스트 빌드 로직
+- `chatbot/application/model/ChatContext.java` — 중간 VO
