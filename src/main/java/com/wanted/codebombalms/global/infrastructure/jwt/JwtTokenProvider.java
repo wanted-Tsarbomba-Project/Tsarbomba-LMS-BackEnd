@@ -20,6 +20,9 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final String TYPE_ACCESS = "access";
+    private static final String TYPE_REFRESH = "refresh";
+
     private final Key key;
     private final long accessExpiration;
     private final long refreshExpiration;
@@ -34,9 +37,10 @@ public class JwtTokenProvider {
         this.refreshExpiration = refreshExpiration;
     }
 
-    public String generateAccessToken(Long userId,String nickname, UserRole role) {
+    public String generateAccessToken(Long userId, String nickname, UserRole role) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("typ", TYPE_ACCESS)
                 .claim("nickname", nickname)
                 .claim("role", role.name())
                 .issuedAt(new Date())
@@ -45,8 +49,10 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String generateRefreshToken(Long userId) {        return Jwts.builder()
+    public String generateRefreshToken(Long userId) {
+        return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("typ", TYPE_REFRESH)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(key)
@@ -65,7 +71,12 @@ public class JwtTokenProvider {
 
     public void validateAccessToken(String token) {
         try {
-            getClaims(token);
+            Claims claims = getClaims(token);
+            // refresh token을 accessToken 쿠키에 넣어 우회하는 것을 차단
+            if (!TYPE_ACCESS.equals(claims.get("typ", String.class))
+                    || claims.get("role", String.class) == null) {
+                throw new UnauthorizedException(AuthErrorCode.AUTH_TOKEN_INVALID);
+            }
         } catch (ExpiredJwtException e) {
             throw new UnauthorizedException(AuthErrorCode.AUTH_TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
@@ -75,7 +86,10 @@ public class JwtTokenProvider {
 
     public void validateRefreshToken(String token) {
         try {
-            getClaims(token);
+            Claims claims = getClaims(token);
+            if (!TYPE_REFRESH.equals(claims.get("typ", String.class))) {
+                throw new UnauthorizedException(AuthErrorCode.AUTH_REFRESH_TOKEN_INVALID);
+            }
         } catch (ExpiredJwtException e) {
             throw new UnauthorizedException(AuthErrorCode.AUTH_REFRESH_TOKEN_EXPIRED);
         } catch (JwtException | IllegalArgumentException e) {
