@@ -9,6 +9,7 @@ public record CourseResponse(
         Long courseCategoryId,
         String courseCategoryName,
         String title,
+        String description,
         String thumbnailUrl,
         CourseStatus status
 ) {
@@ -20,6 +21,7 @@ public record CourseResponse(
                 course.getCourseCategoryId(),
                 course.getCourseCategoryName(),
                 course.getTitle(),
+                course.getDescription(),
                 course.getThumbnailUrl(),
                 course.getStatus()
         );
