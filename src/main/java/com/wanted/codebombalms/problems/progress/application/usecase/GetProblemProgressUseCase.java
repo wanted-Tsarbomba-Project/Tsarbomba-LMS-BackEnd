@@ -21,7 +21,9 @@ public interface GetProblemProgressUseCase {
     record ProblemProgressItemView(
             Long problemId,
             Integer problemNumber,
-            String status
+            String title,
+            String status,
+            Long latestSubmissionId
     ) {
     }
 }

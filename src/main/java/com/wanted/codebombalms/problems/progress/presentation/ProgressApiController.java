@@ -98,6 +98,21 @@ public class ProgressApiController {
             )
     })
     @GetMapping("/api/v1/problem-sets/{problemSetId}/progress")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "AUT-016 - 인증이 필요합니다.",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(value = """
+                        {
+                          "status": 401,
+                          "code": "AUT-016",
+                          "message": "인증이 필요합니다.",
+                          "path": "/api/v1/problem-sets/3001/progress"
+                        }
+                        """)
+            )
+    )
     public ResponseEntity<ApiResponse<ProblemProgressResponse>> findProblemSetProgress(
             @Parameter(description = "진행 상태를 조회할 문제 세트 ID", example = "3001")
             @PathVariable Long problemSetId,

@@ -29,7 +29,7 @@ public class CodeSubmissionListQueryService implements CodeSubmissionListQueryUs
 
     @Override
     @Transactional(readOnly = true)
-    public CodeSubmissionPageView handle(Long problemId, int page, int size) {
+    public CodeSubmissionPageView handle(Long userId, Long problemId, int page, int size) {
         if (problemId == null) {
             throw new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND);
         }
@@ -38,7 +38,8 @@ public class CodeSubmissionListQueryService implements CodeSubmissionListQueryUs
 
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
-        CodeSubmissionPage result = submissionListQueryPort.findCodeSubmissions(problemId, safePage, safeSize);
+        CodeSubmissionPage result =
+                submissionListQueryPort.findCodeSubmissions(userId, problemId, safePage, safeSize);
 
         return new CodeSubmissionPageView(
                 result.submissions()

@@ -15,4 +15,17 @@ public interface SpringDataProblemTestCaseRepository extends JpaRepository<Probl
             Long testCaseId,
             String status
     );
+
+    boolean existsByProblem_ProblemIdAndTestOrderAndStatus(
+            Long problemId,
+            Integer testOrder,
+            String status
+    );
+
+    boolean existsByProblem_ProblemIdAndTestOrderAndStatusAndTestCaseIdNot(
+            Long problemId,
+            Integer testOrder,
+            String status,
+            Long testCaseId
+    );
 }

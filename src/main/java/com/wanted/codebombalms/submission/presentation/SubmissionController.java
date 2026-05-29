@@ -351,17 +351,16 @@ public class SubmissionController {
                     )
             )
     })
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/api/v1/code-problems/{problemId}/submissions")
     public ResponseEntity<ApiResponse<CodeSubmissionListResponse>> getCodeSubmissions(
-            @Parameter(description = "제출 기록을 조회할 코드 문제 ID", example = "3001")
             @PathVariable Long problemId,
-            @Parameter(description = "페이지 번호. 기본값 1", example = "1")
+            @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "1") int page,
-            @Parameter(description = "페이지 크기. 기본값 10", example = "10")
             @RequestParam(defaultValue = "10") int size
     ) {
         var response = new CodeSubmissionListResponse(
-                codeSubmissionListQueryUseCase.handle(problemId, page, size)
+                codeSubmissionListQueryUseCase.handle(userId, problemId, page, size)
         );
 
         return ResponseEntity.ok(ApiResponse.success(

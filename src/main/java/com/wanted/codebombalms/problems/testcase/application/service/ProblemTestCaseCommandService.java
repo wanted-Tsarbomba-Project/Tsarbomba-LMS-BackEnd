@@ -26,7 +26,10 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
     @Override
     @Transactional
     public TestCaseView handle(CreateProblemTestCaseCommand command) {
-        problemTestCasePolicy.validateCreatable(command.problemId());
+        problemTestCasePolicy.validateCreatable(
+                command.problemId(),
+                command.testOrder()
+        );
 
         ProblemTestCase testCase = ProblemTestCase.create(
                 command.problemId(),
@@ -45,7 +48,11 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
     public TestCaseView handle(UpdateProblemTestCaseCommand command) {
         ProblemTestCase existingTestCase = problemTestCaseRepository.findActiveById(command.testCaseId());
 
-        problemTestCasePolicy.validateUpdatable(existingTestCase.getProblemId());
+        problemTestCasePolicy.validateUpdatable(
+                existingTestCase.getProblemId(),
+                existingTestCase.getTestCaseId(),
+                command.testOrder()
+        );
 
         ProblemTestCase updatedTestCase = ProblemTestCase.restore(
                 existingTestCase.getTestCaseId(),

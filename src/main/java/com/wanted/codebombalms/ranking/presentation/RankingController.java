@@ -7,6 +7,8 @@ import com.wanted.codebombalms.ranking.presentation.response.MyRankingResponse;
 import com.wanted.codebombalms.ranking.presentation.response.RankingListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +92,22 @@ public class RankingController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내 포인트 랭킹 조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증이 필요합니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "RNK-001 - 랭킹 정보를 찾을 수 없습니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 내부 오류"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "RNK-001 - 랭킹 정보를 찾을 수 없음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                        {
+                          "status": 404,
+                          "code": "RNK-001",
+                          "message": "랭킹 정보를 찾을 수 없습니다.",
+                          "path": "/api/v1/rankings/points/me"
+                        }
+                        """)
+                    )
+            )
     })
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MyRankingResponse>> getMyPointRanking(

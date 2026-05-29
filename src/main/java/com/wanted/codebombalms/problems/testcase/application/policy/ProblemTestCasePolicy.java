@@ -5,6 +5,7 @@ import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.testcase.application.port.LoadTestCaseProblemPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import com.wanted.codebombalms.problems.testcase.application.port.CheckDuplicateTestCaseOrderPort;
 
 @Component
 @RequiredArgsConstructor
@@ -14,9 +15,17 @@ public class ProblemTestCasePolicy {
 
     private final LoadTestCaseProblemPort loadTestCaseProblemPort;
 
+    private final CheckDuplicateTestCaseOrderPort checkDuplicateTestCaseOrderPort;
 
-    public void validateCreatable(Long problemId) {
+    public void validateCreatable(Long problemId, Integer testOrder) {
         validateCodeProblem(problemId);
+        validateDuplicateOrder(problemId, testOrder);
+    }
+
+    private void validateDuplicateOrder(Long problemId, Integer testOrder) {
+        if (checkDuplicateTestCaseOrderPort.existsActiveOrder(problemId, testOrder)) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_DUPLICATE_ORDER);
+        }
     }
 
     public void validateReadable(Long problemId) {
@@ -32,6 +41,17 @@ public class ProblemTestCasePolicy {
 
         if (!CODE_PROBLEM_TYPE.equals(problem.problemType())) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE);
+        }
+    }
+
+    public void validateUpdatable(Long problemId, Long testCaseId, Integer testOrder) {
+        validateCodeProblem(problemId);
+        validateDuplicateOrderExceptSelf(problemId, testCaseId, testOrder);
+    }
+
+    private void validateDuplicateOrderExceptSelf(Long problemId, Long testCaseId, Integer testOrder) {
+        if (checkDuplicateTestCaseOrderPort.existsActiveOrderExceptSelf(problemId, testOrder, testCaseId)) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_DUPLICATE_ORDER);
         }
     }
 }

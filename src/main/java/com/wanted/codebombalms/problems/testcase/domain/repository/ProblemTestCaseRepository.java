@@ -13,3 +13,4 @@ public interface ProblemTestCaseRepository {
 
     ProblemTestCase deactivate(Long testCaseId);
 }
+

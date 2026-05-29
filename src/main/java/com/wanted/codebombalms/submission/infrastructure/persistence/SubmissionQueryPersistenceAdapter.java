@@ -24,6 +24,7 @@ public class SubmissionQueryPersistenceAdapter implements SubmissionQueryPort {
 
     private LatestSubmission toResult(SubmissionJpaEntity submission) {
         return new LatestSubmission(
+                submission.getSubmissionId(),
                 submission.getProblem().getProblemId(),
                 submission.getProblem().getProblemOrder(),
                 submission.getSubmittedAnswer(),

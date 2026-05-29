@@ -17,10 +17,14 @@ public class SubmissionListQueryPersistenceAdapter implements SubmissionListQuer
     }
 
     @Override
-    public CodeSubmissionPage findCodeSubmissions(Long problemId, int page, int size) {
+    public CodeSubmissionPage findCodeSubmissions(Long userId, Long problemId, int page, int size){
         PageRequest pageRequest = PageRequest.of(page - 1, size);
         Page<SubmissionJpaEntity> result = submissionRepository
-                .findByProblem_ProblemIdAndSubmittedCodeIsNotNullOrderBySubmittedAtDesc(problemId, pageRequest);
+                .findByUserIdAndProblem_ProblemIdAndSubmittedCodeIsNotNullOrderBySubmittedAtDesc(
+                        userId,
+                        problemId,
+                        pageRequest
+                );
 
         return new CodeSubmissionPage(
                 result.getContent()

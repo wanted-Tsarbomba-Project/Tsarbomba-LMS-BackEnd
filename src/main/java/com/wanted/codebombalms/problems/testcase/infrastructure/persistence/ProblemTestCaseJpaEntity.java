@@ -1,20 +1,20 @@
 package com.wanted.codebombalms.problems.testcase.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "problem_test_case")
+@Table(
+        name = "problem_test_case",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_problem_test_case_problem_order",
+                        columnNames = {"problem_id", "test_order"}
+                )
+        }
+)
 public class ProblemTestCaseJpaEntity {
 
     @Id

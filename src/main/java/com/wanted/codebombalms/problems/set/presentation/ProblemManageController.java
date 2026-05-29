@@ -27,7 +27,9 @@ import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetWith
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -85,6 +87,48 @@ public class ProblemManageController {
             summary = "문제 세트 수정",
             description = "문제 세트 기본 정보와 소문제 목록을 수정합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "문제 세트 및 데이터셋 수정 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                {
+                                  "status": 200,
+                                  "code": "COMMON-SUCCESS",
+                                  "message": "요청이 성공적으로 처리되었습니다.",
+                                  "data": {
+                                    "problemSetId": 3001,
+                                    "title": "pandas 기초 분석 문제 세트",
+                                    "categoryName": "Python 데이터 분석",
+                                    "totalProblemCount": 2
+                                  }
+                                }
+                                """)
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "PRB-SET-006, PRB-PBL-009, PRB-DAT-004, PRB-DAT-005 - 입력값 오류 또는 CSV 업로드 실패"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "AUT-003, AUT-016 - 인증 토큰 만료 또는 인증 필요"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "AUT-015 - 접근 권한 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "PRB-SET-001 - 문제 세트를 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "PRB-002 - 문제 도메인 처리 중 서버 오류"
+            )
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PutMapping("/api/v1/problems/{problemSetId}")
     public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSet(
@@ -219,7 +263,7 @@ public class ProblemManageController {
                 response
         ));
     }
-    
+
     private ProblemSetUpdateRequest parseProblemSetUpdateRequest(String requestJson) {
         try {
             return objectMapper.readValue(requestJson, ProblemSetUpdateRequest.class);

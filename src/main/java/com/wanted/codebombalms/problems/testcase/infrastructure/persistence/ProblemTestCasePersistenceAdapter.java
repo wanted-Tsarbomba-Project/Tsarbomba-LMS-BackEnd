@@ -4,6 +4,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
+import com.wanted.codebombalms.problems.testcase.application.port.CheckDuplicateTestCaseOrderPort;
 import com.wanted.codebombalms.problems.testcase.application.port.LoadTestCaseProblemPort;
 import com.wanted.codebombalms.problems.testcase.domain.model.ProblemTestCase;
 import com.wanted.codebombalms.problems.testcase.domain.repository.ProblemTestCaseRepository;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseRepository, LoadTestCaseProblemPort {
+public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseRepository, CheckDuplicateTestCaseOrderPort,LoadTestCaseProblemPort {
 
     private static final String ACTIVE = "ACTIVE";
 
@@ -63,8 +64,28 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
     }
 
     @Override
+    public boolean existsActiveOrderExceptSelf(Long problemId, Integer testOrder, Long testCaseId) {
+        return testCaseRepository
+                .existsByProblem_ProblemIdAndTestOrderAndStatusAndTestCaseIdNot(
+                        problemId,
+                        testOrder,
+                        "ACTIVE",
+                        testCaseId
+                );
+    }
+
+    @Override
     public ProblemTestCase findActiveById(Long testCaseId) {
         return toDomain(loadActiveTestCase(testCaseId));
+    }
+
+    @Override
+    public boolean existsActiveOrder(Long problemId, Integer testOrder) {
+        return testCaseRepository.existsByProblem_ProblemIdAndTestOrderAndStatus(
+                problemId,
+                testOrder,
+                "ACTIVE"
+        );
     }
 
     @Override
@@ -108,3 +129,4 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
         );
     }
 }
+

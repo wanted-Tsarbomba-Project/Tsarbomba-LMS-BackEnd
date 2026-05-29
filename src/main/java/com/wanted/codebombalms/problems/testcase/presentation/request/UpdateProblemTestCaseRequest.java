@@ -28,6 +28,8 @@ public record UpdateProblemTestCaseRequest(
                 example = "1",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
+        @NotNull(message = "테스트 순서는 필수입니다.")
+        @Min(value = 1, message = "테스트 순서는 1 이상이어야 합니다.")
         Integer testOrder,
 
         @NotNull(message = "히든 여부는 필수입니다.")
@@ -44,6 +46,8 @@ public record UpdateProblemTestCaseRequest(
                 example = "3000",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
+        @NotNull(message = "실행 제한 시간은 필수입니다.")
+        @Min(value = 1, message = "실행 제한 시간은 1ms 이상이어야 합니다.")
         Integer timeoutMs
 ) {
 }

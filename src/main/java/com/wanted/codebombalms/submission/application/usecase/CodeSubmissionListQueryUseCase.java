@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface CodeSubmissionListQueryUseCase {
 
-    CodeSubmissionPageView handle(Long problemId, int page, int size);
+    CodeSubmissionPageView handle(Long userId, Long problemId, int page, int size);
 
     record CodeSubmissionPageView(
             List<CodeSubmissionListItemView> submissions,
