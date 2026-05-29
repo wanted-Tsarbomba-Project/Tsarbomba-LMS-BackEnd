@@ -1,0 +1,40 @@
+### 1. 인증 코드 발송 (새 이메일로)
+POST http://localhost:8080/api/v1/auth/email/send
+Content-Type: application/json
+
+{ "email": "verifytest01@test.com" }
+
+### 2. 인증 코드 검증 (터미널에 redis-cli GET "email:verify:verifytest01@test.com" 치기)
+POST http://localhost:8080/api/v1/auth/email/verify
+Content-Type: application/json
+
+{ "email": "verifytest01@test.com", "code": "417863" }
+
+### 3. 회원가입
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "verifytest01@test.com",
+  "password": "Test1234!",
+  "passwordConfirm": "Test1234!",
+  "name": "검증테스트",
+  "nickname": "verify01",
+  "phone": "010-9999-0001"
+}
+
+### 4. 로그인
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{ "email": "verifytest01@test.com", "password": "Test1234!" }
+
+### 5. 내 정보 조회 → emailVerified: true 기대
+GET http://localhost:8080/api/v1/users/me
+
+> {%
+    client.test("신규 가입자도 emailVerified true", function () {
+        client.assert(response.body.data.emailVerified === true,
+            "기대 true, 실제 " + response.body.data.emailVerified);
+    });
+%}

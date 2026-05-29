@@ -57,7 +57,7 @@ public class User {
         user.nickname      = nickname;
         user.phone         = phone;
         user.provider      = AuthProvider.LOCAL;
-        user.emailVerified = false;
+        user.emailVerified = true;
         user.isLocked      = false;
         return user;
     }
