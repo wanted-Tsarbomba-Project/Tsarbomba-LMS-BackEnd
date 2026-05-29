@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.course.controller;
+package com.wanted.codebombalms.course.presentation.api;
 
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.course.presentation.api.response.CourseResponse;

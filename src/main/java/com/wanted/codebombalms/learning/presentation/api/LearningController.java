@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.learning.controller;
+package com.wanted.codebombalms.learning.presentation.api;
 
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;

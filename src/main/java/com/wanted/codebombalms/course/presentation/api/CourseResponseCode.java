@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.course.controller;
+package com.wanted.codebombalms.course.presentation.api;
 
 public class CourseResponseCode {
 

@@ -1,10 +1,11 @@
-package com.wanted.codebombalms.course.controller;
+package com.wanted.codebombalms.course.presentation.api;
 
 import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.presentation.api.request.CourseCreateRequest;
 import com.wanted.codebombalms.course.presentation.api.request.CourseUpdateRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseDetailResponse;
@@ -14,11 +15,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -39,13 +42,13 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/courses")
-    public ResponseEntity<ApiResponse<?>> findAllCourses() {
+    public ResponseEntity<ApiResponse<?>> findAllCourses(Authentication authentication) {
         log.info("[CourseController] find courses");
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseQueryUseCase.findAllCourses(null)
+                findCourses(null, authentication)
                         .stream()
                         .map(CourseResponse::from)
                         .toList()
@@ -57,13 +60,16 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     })
     @GetMapping("/course-categories/{courseCategoryId}/courses")
-    public ResponseEntity<ApiResponse<?>> findCoursesByCategory(@PathVariable Long courseCategoryId) {
+    public ResponseEntity<ApiResponse<?>> findCoursesByCategory(
+            @PathVariable Long courseCategoryId,
+            Authentication authentication
+    ) {
         log.info("[CourseController] find courses - courseCategoryId: {}", courseCategoryId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseQueryUseCase.findAllCourses(courseCategoryId)
+                findCourses(courseCategoryId, authentication)
                         .stream()
                         .map(CourseResponse::from)
                         .toList()
@@ -76,13 +82,18 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "CRS-001: 존재하지 않는 강좌")
     })
     @GetMapping("/courses/{courseId}")
-    public ResponseEntity<ApiResponse<?>> findCourseById(@PathVariable Long courseId) {
+    public ResponseEntity<ApiResponse<?>> findCourseById(
+            @PathVariable Long courseId,
+            Authentication authentication
+    ) {
         log.info("[CourseController] find course - courseId: {}", courseId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                CourseDetailResponse.from(courseQueryUseCase.findCourseById(courseId))
+                CourseDetailResponse.from(isOperator(authentication)
+                        ? courseQueryUseCase.findCourseByIdForOperator(courseId)
+                        : courseQueryUseCase.findCourseById(courseId))
         ));
     }
 
@@ -120,6 +131,7 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "CRS-001: 존재하지 않는 강좌")
     })
     @PutMapping("/courses/{courseId}")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> updateCourse(
             @PathVariable Long courseId,
             @Valid @RequestBody CourseUpdateRequest request
@@ -147,6 +159,7 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "CRS-001: 존재하지 않는 강좌")
     })
     @PatchMapping("/courses/{courseId}/publish")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> publishCourse(@PathVariable Long courseId) {
         log.info("[CourseController] publish course - courseId: {}", courseId);
 
@@ -163,11 +176,27 @@ public class CourseController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "CRS-001: 존재하지 않는 강좌")
     })
     @DeleteMapping("/courses/{courseId}")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<Void> deleteCourse(@PathVariable Long courseId) {
         log.info("[CourseController] delete course - courseId: {}", courseId);
 
         courseCommandUseCase.deleteCourse(courseId);
 
         return ResponseEntity.noContent().build();
+    }
+
+    private List<Course> findCourses(
+            Long courseCategoryId,
+            Authentication authentication
+    ) {
+        return isOperator(authentication)
+                ? courseQueryUseCase.findAllCoursesForOperator(courseCategoryId)
+                : courseQueryUseCase.findAllCourses(courseCategoryId);
+    }
+
+    private boolean isOperator(Authentication authentication) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_OPERATOR".equals(authority.getAuthority()));
     }
 }

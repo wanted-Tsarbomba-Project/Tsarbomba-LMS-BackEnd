@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.lecture.controller;
+package com.wanted.codebombalms.lecture.presentation.api;
 
 public class LectureResponseMessage {
 

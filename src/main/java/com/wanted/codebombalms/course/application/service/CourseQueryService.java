@@ -44,6 +44,19 @@ public class CourseQueryService implements CourseQueryUseCase {
     }
 
     @Override
+    public List<Course> findAllCoursesForOperator(Long courseCategoryId) {
+        log.info("[CourseQueryService] find operator courses");
+
+        List<Course> courses = courseCategoryId == null
+                ? courseRepository.findByDeletedAtIsNull()
+                : courseRepository.findByCourseCategoryIdAndDeletedAtIsNull(courseCategoryId);
+
+        log.info("[CourseQueryService] found operator courses - count: {}", courses.size());
+
+        return courses;
+    }
+
+    @Override
     public List<Course> findCoursesByInstructor(Long instructorId) {
         log.info("[CourseQueryService] find instructor courses - instructorId: {}", instructorId);
 
@@ -65,6 +78,18 @@ public class CourseQueryService implements CourseQueryUseCase {
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
         log.info("[CourseQueryService] found active course - courseId: {}", courseId);
+
+        return course;
+    }
+
+    @Override
+    public Course findCourseByIdForOperator(Long courseId) {
+        log.info("[CourseQueryService] find operator course - courseId: {}", courseId);
+
+        var course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        log.info("[CourseQueryService] found operator course - courseId: {}", courseId);
 
         return course;
     }
