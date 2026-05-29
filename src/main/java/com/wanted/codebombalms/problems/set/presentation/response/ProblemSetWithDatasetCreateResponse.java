@@ -27,7 +27,7 @@ public record ProblemSetWithDatasetCreateResponse(
         @Schema(description = "GCS에 저장된 CSV 파일 URL", example = "https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv")
         String datasetUrl,
 
-        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드", example = "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv\")")
+        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드")
         String startCode
 ) {
 }

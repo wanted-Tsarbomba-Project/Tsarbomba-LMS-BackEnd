@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface CodeSubmissionResultQueryUseCase {
 
-    CodeSubmissionResultView handle(Long submissionId);
+    CodeSubmissionResultView handle(Long submissionId, Long userId);
 
     record CodeSubmissionResultView(
             Long submissionId,

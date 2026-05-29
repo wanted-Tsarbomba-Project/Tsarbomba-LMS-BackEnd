@@ -18,8 +18,8 @@ public class CodeSubmissionResultQueryService implements CodeSubmissionResultQue
 
     @Override
     @Transactional(readOnly = true)
-    public CodeSubmissionResultView handle(Long submissionId) {
-        CodeSubmissionResult result = submissionResultQueryPort.getCodeSubmissionResult(submissionId);
+    public CodeSubmissionResultView handle(Long submissionId, Long userId) {
+        CodeSubmissionResult result = submissionResultQueryPort.getCodeSubmissionResult(submissionId, userId);
 
         return new CodeSubmissionResultView(
                 result.submissionId(),
