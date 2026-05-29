@@ -1,10 +1,10 @@
 package com.wanted.codebombalms.chatbot.presentation.api;
 
-import com.wanted.codebombalms.chatbot.application.command.CreateChatRoomCommand;
-import com.wanted.codebombalms.chatbot.application.result.ChatRoomResult;
+import com.wanted.codebombalms.chatbot.application.command.SendFirstMessageCommand;
+import com.wanted.codebombalms.chatbot.presentation.api.request.SendFirstMessageRequest;
+import com.wanted.codebombalms.chatbot.presentation.api.response.SendFirstMessageResponse;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomCommandUseCase;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomQueryUseCase;
-import com.wanted.codebombalms.chatbot.presentation.api.request.ChatRoomCreateRequest;
 import com.wanted.codebombalms.chatbot.presentation.api.response.ChatRoomResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,77 +35,77 @@ public class ChatRoomController {
     private final ChatMessageCommandUseCase chatMessageCommandUseCase;
 
     @Operation(
-            summary = "채팅방 생성",
-            description = "항상 새 방 생성. 동일 문제에 대해 기존 방이 있어도 새로 생성됩니다."
+            summary = "첫 메시지 전송 (채팅방 자동 생성)",
+            description = "채팅방을 생성하고 첫 메시지를 전송합니다. 응답의 roomId로 이후 메시지를 전송합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "201",
-                    description = "채팅방 생성 성공",
+                    description = "채팅방 생성 + 메시지 전송 성공",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
-                                    name = "생성 성공",
+                                    name = "성공",
                                     value = """
-                                            {
-                                              "timestamp": "2026-05-28T12:00:00",
-                                              "status": 201,
-                                              "code": "CHT-001",
-                                              "message": "채팅방이 생성되었습니다.",
-                                              "data": {
-                                                "roomId": 1,
-                                                "problemSetId": 10,
-                                                "problemId": 100,
-                                                "title": "문제 100 채팅방",
-                                                "createdAt": "2026-05-28T12:00:00Z",
-                                                "updatedAt": "2026-05-28T12:00:00Z"
-                                              }
-                                            }
-                                            """
+                                        {
+                                          "timestamp": "2026-05-29T12:00:00",
+                                          "status": 201,
+                                          "code": "CHAT-FIRST-MESSAGE-SENT",
+                                          "message": "채팅방이 생성되고 메시지가 전송되었습니다.",
+                                          "data": {
+                                            "roomId": 42,
+                                            "answer": "힌트: 배열의 합을 구할 때는 누적합을 활용해보세요."
+                                          }
+                                        }
+                                        """
                             )
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
-                    description = "CHT-002 - 권한 없음",
+                    responseCode = "502",
+                    description = "CHT-003 - AI 응답 실패",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
-                                    name = "권한 없음",
+                                    name = "AI 응답 실패",
                                     value = """
-                                            {
-                                              "timestamp": "2026-05-28T12:00:00",
-                                              "status": 401,
-                                              "code": "CHT-002",
-                                              "message": "채팅방에 접근 권한이 없습니다.",
-                                              "path": "/api/v1/chat"
-                                            }
-                                            """
+                                        {
+                                          "timestamp": "2026-05-29T12:00:00",
+                                          "status": 502,
+                                          "code": "CHT-003",
+                                          "message": "AI 응답 생성에 실패했습니다.",
+                                          "path": "/api/v1/chat/messages"
+                                        }
+                                        """
                             )
                     )
             )
     })
-    @PostMapping
-    public ResponseEntity<ApiResponse<ChatRoomResponse>> createChatRoom(
+    @PostMapping("/messages")
+    public ResponseEntity<ApiResponse<SendFirstMessageResponse>> sendFirstMessage(
             @AuthenticationPrincipal Long userId,
-            @RequestBody ChatRoomCreateRequest request
+            @RequestBody SendFirstMessageRequest request
     ) {
-        CreateChatRoomCommand command = new CreateChatRoomCommand(
+        SendFirstMessageCommand command = new SendFirstMessageCommand(
                 userId,
+                request.userMessage(),
                 request.problemSetId(),
                 request.problemId()
         );
-        ChatRoomResult result = chatRoomCommandUseCase.create(command);
-        ChatRoomResponse response = ChatRoomResponse.from(result);
+
+        SendFirstMessageResponse response = SendFirstMessageResponse.from(
+                chatRoomCommandUseCase.sendFirst(command)
+        );
 
         return ResponseEntity.status(201).body(
                 ApiResponse.created(
-                        ChatResponseCode.ROOM_CREATED,
-                        ChatResponseMessage.ROOM_CREATED,
+                        ChatResponseCode.FIRST_MESSAGE_SENT,
+                        ChatResponseMessage.FIRST_MESSAGE_SENT,
                         response
                 )
         );
     }
+
 
     @Operation(
             summary = "채팅방 목록 조회",
