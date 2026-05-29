@@ -150,9 +150,13 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 problemSet,
                 command.title(),
                 command.content(),
+                command.problemType(),
+                command.difficulty(),
                 command.answer(),
                 command.explanation(),
                 command.point(),
+                command.attemptLimit(),
+                command.isRetriable(),
                 problemOrder
         );
     }
@@ -166,9 +170,13 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 problemSet,
                 command.title(),
                 command.content(),
+                command.problemType(),
+                command.difficulty(),
                 command.answer(),
                 command.explanation(),
                 command.point(),
+                command.attemptLimit(),
+                command.isRetriable(),
                 problemOrder
         );
     }
@@ -189,9 +197,13 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
         problem.update(
                 command.title(),
                 command.content(),
+                command.problemType(),
+                command.difficulty(),
                 command.answer(),
                 command.explanation(),
-                command.point()
+                command.point(),
+                command.attemptLimit(),
+                command.isRetriable()
         );
 
         return problem;

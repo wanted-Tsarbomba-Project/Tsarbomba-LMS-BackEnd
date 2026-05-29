@@ -57,21 +57,25 @@ public class ProblemJpaEntity {
             ProblemSetJpaEntity problemSet,
             String title,
             String content,
+            String problemType,
+            String difficulty,
             String answer,
             String explanation,
             Integer point,
+            Integer attemptLimit,
+            Boolean isRetriable,
             Integer problemOrder
     ) {
         this.problemSet = problemSet;
         this.title = title;
         this.content = content;
-        this.problemType = "TEXT";
-        this.difficulty = "EASY";
+        this.problemType = problemType;
+        this.difficulty = difficulty;
         this.answer = answer;
         this.explanation = explanation;
         this.point = point == null ? 0 : point;
-        this.attemptLimit = 3;
-        this.isRetriable = true;
+        this.attemptLimit = attemptLimit;
+        this.isRetriable = isRetriable;
         this.status = "ACTIVE";
         this.problemOrder = problemOrder;
     }
@@ -79,15 +83,23 @@ public class ProblemJpaEntity {
     public void update(
             String title,
             String content,
+            String problemType,
+            String difficulty,
             String answer,
             String explanation,
-            Integer point
+            Integer point,
+            Integer attemptLimit,
+            Boolean isRetriable
     ) {
         this.title = title;
         this.content = content;
+        this.problemType = problemType;
+        this.difficulty = difficulty;
         this.answer = answer;
         this.explanation = explanation;
         this.point = point == null ? 0 : point;
+        this.attemptLimit = attemptLimit;
+        this.isRetriable = isRetriable;
     }
 
     public void deactivate() {

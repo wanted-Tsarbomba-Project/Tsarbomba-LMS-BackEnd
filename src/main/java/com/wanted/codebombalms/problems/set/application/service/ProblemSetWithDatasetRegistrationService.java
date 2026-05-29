@@ -22,6 +22,8 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
     private final RegisterProblemSetUseCase registerProblemSetUseCase;
     private final StoreDatasetFilePort storeDatasetFilePort;
     private final ProblemDatasetPersistencePort problemDatasetPersistencePort;
+    private static final long MAX_DATASET_FILE_SIZE = 10 * 1024 * 1024;
+    private static final String CSV_EXTENSION = ".csv";
 
     @Override
     @Transactional
@@ -76,7 +78,19 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
 
         String originalFileName = command.originalFileName();
 
-        if (originalFileName == null || !originalFileName.toLowerCase().endsWith(".csv")) {
+        if (originalFileName == null || !originalFileName.toLowerCase().endsWith(CSV_EXTENSION)) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
+        }
+
+        if (command.fileSize() <= 0 || command.fileSize() > MAX_DATASET_FILE_SIZE) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
+        }
+
+        String contentType = command.contentType();
+
+        if (contentType != null
+                && !contentType.equals("text/csv")
+                && !contentType.equals("application/vnd.ms-excel")) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
         }
     }

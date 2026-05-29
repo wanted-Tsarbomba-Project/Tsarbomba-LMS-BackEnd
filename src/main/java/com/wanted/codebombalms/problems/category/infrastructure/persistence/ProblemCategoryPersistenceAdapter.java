@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.problems.category.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
+import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
 import com.wanted.codebombalms.problems.category.domain.repository.ProblemCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -17,7 +18,7 @@ public class ProblemCategoryPersistenceAdapter implements ProblemCategoryReposit
 
     @Override
     public List<ProblemCategory> loadActiveCategories() {
-        return springDataProblemCategoryRepository.findByStatusOrderByCategoryIdAsc("ACTIVE")
+        return springDataProblemCategoryRepository.findByStatusOrderByCategoryIdAsc(ProblemCategoryStatus.ACTIVE)
                 .stream()
                 .map(ProblemCategoryMapper::toDomain)
                 .toList();

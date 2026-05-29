@@ -43,8 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("운영 자동 알림 스케줄러 통합 테스트")
-// 운영 자동 규칙 실행 전후의 알림 생성 상태 변화를 검증한다.
+@DisplayName("Operation rule scheduler integration test")
+// ??怨멸껀 ???吏??잙?裕?????덈뺄 ?熬곥굦??????逾???諛댁뎽 ??⑤객臾??곌떠???? ?롪틵?嶺뚯빘鍮쒒뇡??
 class OperationRuleSchedulerIntegrationTest {
 
     private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
@@ -68,7 +68,7 @@ class OperationRuleSchedulerIntegrationTest {
     private MutableClock mutableClock;
 
     @Test
-    @DisplayName("08시 59분에는 알림이 없고 09시 규칙 실행 후 강좌/학생/문제 알림이 생성된다.")
+    @DisplayName("08??59?釉뚯뫒??????逾?????㈑?09???잙?裕?????덈뺄 ???띠룆踰▽펺????뉖Ц/??쒖굣?????逾????諛댁뎽??類ｋ펲.")
     void operationRuleSchedulerCreatesAlertsAtNine() {
         // given
         LocalDateTime beforeScheduleTime = LocalDateTime.of(2026, 5, 24, 8, 59);
@@ -83,7 +83,7 @@ class OperationRuleSchedulerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        // 1. 등록된 규칙 조회
+        // 1. ?繹먮굞夷???잙?裕???브퀗???
         List<AutomationRule> registeredRules = automationRuleRepository.findAllActive(null);
         printRules(registeredRules);
         assertEquals(3, registeredRules.size());
@@ -94,12 +94,12 @@ class OperationRuleSchedulerIntegrationTest {
         assertTrue(registeredRules.stream()
                 .anyMatch(rule -> rule.getRuleCode() == OperationRuleCode.PROBLEM_HIGH_WRONG_RATE));
 
-        // 2. 현재 시간이 08시 59분이라고 가정하고 알람 조회
+        // 2. ?熬곣뫗????蹂?뜟??08??59?釉뚯뫒????┑??띠럾??筌먐삳┃?????肉??브퀗???
         List<OperationAlertJpaEntity> alertsAtBeforeScheduleTime = operationAlertRepository.findAll();
         printAlerts("08:59 before scheduler", alertsAtBeforeScheduleTime);
         assertEquals(0, alertsAtBeforeScheduleTime.size());
 
-        // 3. 1분 뒤에 스케줄러가 실행하는 유스케이스를 호출하고 알람 조회
+        // 3. 1?????고뱺 ???繞벿븐뫊??泥? ???덈뺄??濡ル츎 ??ル∥裕??댟??怨룸츩???筌뤾쑵????겶????肉??브퀗???
         mutableClock.setTime(scheduleTime);
         runOperationRuleUseCase.run();
         entityManager.flush();
@@ -202,8 +202,8 @@ class OperationRuleSchedulerIntegrationTest {
     private CourseJpaEntity seedCourseForLowEnrollmentAlert() {
         CourseJpaEntity course = new CourseJpaEntity(
                 10L,
-                "수강생이 없는 운영 점검 강좌",
-                "운영 자동 알림 테스트용 강좌입니다.",
+                "Low enrollment course",
+                "Course for low enrollment alert",
                 "course.png",
                 CourseStatus.ACTIVE
         );
@@ -216,8 +216,8 @@ class OperationRuleSchedulerIntegrationTest {
     private CourseJpaEntity seedCourseForEnrollment() {
         CourseJpaEntity course = new CourseJpaEntity(
                 10L,
-                "학생이 수강 중인 강좌",
-                "미수강 조건 제거 검증용 강좌입니다.",
+                "Enrolled course",
+                "Course for inactive user enrollment",
                 "enrolled-course.png",
                 CourseStatus.ACTIVE
         );
@@ -247,7 +247,7 @@ class OperationRuleSchedulerIntegrationTest {
                             'STUDENT',
                             'inactive-student@test.com',
                             'encoded',
-                            '장기미접속 학생',
+                            '?鰲?깃퀎泥뗰쭗袁⑹젘?????뉖Ц',
                             'inactive',
                             'LOCAL',
                             true,
@@ -299,13 +299,13 @@ class OperationRuleSchedulerIntegrationTest {
     }
 
     private void seedProblemForHighWrongRateAlert() {
-        ProblemCategoryJpaEntity category = new ProblemCategoryJpaEntity("Java", "Java 문제");
+        ProblemCategoryJpaEntity category = new ProblemCategoryJpaEntity("Java", "Java problems");
         entityManager.persist(category);
 
         ProblemSetJpaEntity problemSet = new ProblemSetJpaEntity(
                 category,
-                "오답률 점검 문제 세트",
-                "운영 자동 알림 테스트용 문제 세트입니다.",
+                "High wrong rate problem set",
+                "Problem set for operation alert test",
                 "EASY",
                 1,
                 1L
@@ -314,11 +314,15 @@ class OperationRuleSchedulerIntegrationTest {
 
         ProblemJpaEntity problem = new ProblemJpaEntity(
                 problemSet,
-                "오답률 높은 문제",
-                "1 + 1은?",
+                "High wrong rate problem",
+                "What is 1 + 1?",
+                "TEXT",
+                "EASY",
                 "2",
-                "기본 덧셈 문제입니다.",
+                "Basic arithmetic problem",
                 10,
+                10,
+                true,
                 1
         );
         entityManager.persist(problem);
@@ -375,7 +379,7 @@ class OperationRuleSchedulerIntegrationTest {
                 OperationAlertRuleInfo.from(OperationRuleCode.USER_INACTIVE_NO_COURSE, null)
         );
 
-        assertEquals("장기미접속 학생", targetDetail.target().title());
+        assertEquals("?鰲?깃퀎泥뗰쭗袁⑹젘?????뉖Ц", targetDetail.target().title());
         assertEquals("inactive", targetDetail.target().nickname());
         assertEquals("inactive-student@test.com", targetDetail.target().email());
     }

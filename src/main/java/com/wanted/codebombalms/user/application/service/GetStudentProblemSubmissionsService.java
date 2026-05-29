@@ -27,9 +27,13 @@ public class GetStudentProblemSubmissionsService implements GetStudentProblemSub
     ) {
         validateStudent(query.userId());
 
+        long totalCount = queryPort.countByCondition(query);
+        var submissions = queryPort.findByCondition(query);
+
         return StudentProblemSubmissionResult.of(
                 query.userId(),
-                queryPort.findByCondition(query)
+                totalCount,
+                submissions
         );
     }
 

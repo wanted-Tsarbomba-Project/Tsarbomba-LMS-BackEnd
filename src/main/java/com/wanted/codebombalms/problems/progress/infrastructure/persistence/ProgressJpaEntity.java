@@ -1,19 +1,20 @@
 package com.wanted.codebombalms.problems.progress.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "problem_progress")
+@Table(
+        name = "problem_progress",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_problem_progress_user_problem_set",
+                        columnNames = {"user_id", "problem_set_id"}
+                )
+        }
+)
 public class ProgressJpaEntity {
 
     @Id

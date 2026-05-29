@@ -8,4 +8,6 @@ import java.util.List;
 public interface StudentProblemSubmissionQueryPort {
 
     List<StudentProblemSubmissionItem> findByCondition(StudentProblemSubmissionQuery query);
+    long countByCondition(StudentProblemSubmissionQuery query);
+
 }

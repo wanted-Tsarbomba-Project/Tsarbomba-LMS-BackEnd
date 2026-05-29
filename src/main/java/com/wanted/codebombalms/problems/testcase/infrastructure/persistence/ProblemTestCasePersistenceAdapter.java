@@ -68,11 +68,6 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
     }
 
     @Override
-    public boolean existsActiveByProblemId(Long problemId) {
-        return testCaseRepository.existsByProblem_ProblemIdAndStatus(problemId, ACTIVE);
-    }
-
-    @Override
     public ProblemTestCase deactivate(Long testCaseId) {
         ProblemTestCaseJpaEntity testCase = loadActiveTestCase(testCaseId);
         testCase.deactivate();

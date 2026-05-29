@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.presentation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
@@ -12,11 +13,7 @@ import com.wanted.codebombalms.problems.set.application.command.ProblemUpdateCom
 import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.command.UpdateProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.query.GetProblemSetForUpdateQuery;
-import com.wanted.codebombalms.problems.set.application.usecase.DeleteProblemSetUseCase;
-import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetForUpdateUseCase;
-import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetUseCase;
-import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetWithDatasetUseCase;
-import com.wanted.codebombalms.problems.set.application.usecase.UpdateProblemSetUseCase;
+import com.wanted.codebombalms.problems.set.application.usecase.*;
 import com.wanted.codebombalms.problems.set.presentation.request.ProblemCreateRequest;
 import com.wanted.codebombalms.problems.set.presentation.request.ProblemSetCreateRequest;
 import com.wanted.codebombalms.problems.set.presentation.request.ProblemSetUpdateRequest;
@@ -61,6 +58,8 @@ public class ProblemManageController {
     private final RegisterProblemSetWithDatasetUseCase registerProblemSetWithDatasetUseCase;
     private final UpdateProblemSetUseCase updateProblemSetUseCase;
     private final DeleteProblemSetUseCase deleteProblemSetUseCase;
+    private final UpdateProblemSetWithDatasetUseCase updateProblemSetWithDatasetUseCase;
+    private final ObjectMapper objectMapper;
 
     @Operation(
             summary = "문제 세트 등록",
@@ -195,10 +194,45 @@ public class ProblemManageController {
         ));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    @PutMapping(
+            value = "/api/v1/problems/{problemSetId}/with-dataset",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSetWithDataset(
+            @PathVariable Long problemSetId,
+            @RequestPart("request") String requestJson,
+            @RequestPart("datasetFile") MultipartFile datasetFile
+    ) {
+        ProblemSetUpdateRequest request = parseProblemSetUpdateRequest(requestJson);
+
+        var result = updateProblemSetWithDatasetUseCase.handle(
+                toCommand(problemSetId, request),
+                toDatasetCommand(datasetFile)
+        );
+
+        var response = new ProblemSetUpdateResponse(result);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                ApiResponseCode.SUCCESS,
+                ApiResponseMessage.SUCCESS,
+                response
+        ));
+    }
+    
+    private ProblemSetUpdateRequest parseProblemSetUpdateRequest(String requestJson) {
+        try {
+            return objectMapper.readValue(requestJson, ProblemSetUpdateRequest.class);
+        } catch (IOException e) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+    }
+
     private UploadProblemDatasetCommand toDatasetCommand(MultipartFile datasetFile) {
         try {
             return new UploadProblemDatasetCommand(
                     datasetFile.getOriginalFilename(),
+                    datasetFile.getContentType(),
                     datasetFile.getBytes(),
                     datasetFile.getSize()
             );

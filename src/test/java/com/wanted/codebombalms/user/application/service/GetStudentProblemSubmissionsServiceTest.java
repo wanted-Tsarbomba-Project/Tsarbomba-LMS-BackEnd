@@ -27,7 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("GetStudentProblemSubmissionsService 단위 테스트")
+@DisplayName("GetStudentProblemSubmissionsService unit test")
 class GetStudentProblemSubmissionsServiceTest {
 
     @Mock private UserRepository userRepository;
@@ -37,11 +37,11 @@ class GetStudentProblemSubmissionsServiceTest {
     private GetStudentProblemSubmissionsService service;
 
     private final StudentProblemSubmissionQuery query =
-            new StudentProblemSubmissionQuery(1L, null, null, null);
+            new StudentProblemSubmissionQuery(1L, null, null, null, 0, 20);
 
     @Test
-    @DisplayName("정상 학생이면 제출 조회 포트를 호출하고 결과를 반환한다.")
-    void 정상_조회() {
+    @DisplayName("returns submissions for valid student")
+    void returns_submissions_for_valid_student() {
         // given
         given(userRepository.findByUserId(1L)).willReturn(Optional.of(createStudent(false)));
         given(queryPort.findByCondition(query)).willReturn(List.of());
@@ -55,8 +55,8 @@ class GetStudentProblemSubmissionsServiceTest {
     }
 
     @Test
-    @DisplayName("존재하지 않는 회원이면 STUDENT_NOT_FOUND를 던지고 조회 포트를 호출하지 않는다.")
-    void 회원_없음() {
+    @DisplayName("throws STUDENT_NOT_FOUND when user does not exist")
+    void throws_when_user_not_found() {
         given(userRepository.findByUserId(1L)).willReturn(Optional.empty());
 
         NotFoundException ex = assertThrows(
@@ -68,8 +68,8 @@ class GetStudentProblemSubmissionsServiceTest {
     }
 
     @Test
-    @DisplayName("학생(STUDENT)이 아니면 STUDENT_NOT_FOUND를 던진다.")
-    void 학생_아님() {
+    @DisplayName("throws STUDENT_NOT_FOUND when user is not student")
+    void throws_when_user_is_not_student() {
         given(userRepository.findByUserId(1L)).willReturn(Optional.of(createUser(UserRole.ADMIN, false)));
 
         NotFoundException ex = assertThrows(
@@ -81,8 +81,8 @@ class GetStudentProblemSubmissionsServiceTest {
     }
 
     @Test
-    @DisplayName("삭제된 학생이면 STUDENT_NOT_FOUND를 던진다.")
-    void 삭제된_학생() {
+    @DisplayName("throws STUDENT_NOT_FOUND when student is deleted")
+    void throws_when_student_is_deleted() {
         given(userRepository.findByUserId(1L)).willReturn(Optional.of(createStudent(true)));
 
         NotFoundException ex = assertThrows(
@@ -101,7 +101,7 @@ class GetStudentProblemSubmissionsServiceTest {
     private User createUser(UserRole role, boolean deleted) {
         return User.restore(
                 1L, role, "student@test.com", "ENCODED_PW",
-                "김학생", "학생01", "010-1234-5678",
+                "Student", "student01", "010-1234-5678",
                 AuthProvider.LOCAL, null,
                 true, false, null, null,
                 LocalDateTime.now(), LocalDateTime.now(),

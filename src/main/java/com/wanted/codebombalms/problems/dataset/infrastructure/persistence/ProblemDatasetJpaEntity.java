@@ -72,6 +72,10 @@ public class ProblemDatasetJpaEntity {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void deactivate() {
+        this.status = "INACTIVE";
+        this.updatedAt = LocalDateTime.now();
+    }
     public Long getDatasetId() {
         return datasetId;
     }

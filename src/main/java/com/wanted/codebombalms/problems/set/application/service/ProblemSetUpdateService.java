@@ -18,6 +18,9 @@ public class ProblemSetUpdateService implements UpdateProblemSetUseCase {
 
     private final ProblemSetCommandValidationPolicy validationPolicy;
     private final ProblemSetManagementRepository problemSetManagementRepository;
+    private static final String CODE_PROBLEM_TYPE = "CODE";
+    private static final int DEFAULT_ATTEMPT_LIMIT = 3;
+    private static final boolean DEFAULT_RETRIABLE = true;
 
     public ProblemSetUpdateService(
             ProblemSetCommandValidationPolicy validationPolicy,
@@ -42,7 +45,11 @@ public class ProblemSetUpdateService implements UpdateProblemSetUseCase {
                         problem.problemId(),
                         problem.title(),
                         problem.content(),
+                        CODE_PROBLEM_TYPE,
+                        command.difficulty(),
                         problem.point(),
+                        DEFAULT_ATTEMPT_LIMIT,
+                        DEFAULT_RETRIABLE,
                         problem.answer(),
                         problem.hintId(),
                         problem.hint(),

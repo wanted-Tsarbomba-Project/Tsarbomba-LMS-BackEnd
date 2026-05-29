@@ -77,13 +77,21 @@ public class GetStudentProblemSubmissionsController {
             @RequestParam(required = false) Long problemId,
 
             @Parameter(description = "정답 제출 기록만 조회할지 여부", example = "false")
-            @RequestParam(defaultValue = "false") Boolean correctOnly
+            @RequestParam(defaultValue = "false") Boolean correctOnly,
+
+            @Parameter(description = "페이지 번호. 0부터 시작합니다.", example = "0")
+            @RequestParam(defaultValue = "0") Integer page,
+
+            @Parameter(description = "페이지 크기. 최대 100개까지 조회합니다.", example = "20")
+            @RequestParam(defaultValue = "20") Integer size
     ) {
         var query = new StudentProblemSubmissionQuery(
                 userId,
                 problemSetId,
                 problemId,
-                correctOnly
+                correctOnly,
+                page,
+                size
         );
 
         var result = getStudentProblemSubmissionsUseCase.getStudentProblemSubmissions(query);

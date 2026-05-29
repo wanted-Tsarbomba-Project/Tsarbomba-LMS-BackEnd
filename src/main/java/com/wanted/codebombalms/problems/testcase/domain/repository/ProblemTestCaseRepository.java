@@ -11,7 +11,5 @@ public interface ProblemTestCaseRepository {
 
     ProblemTestCase findActiveById(Long testCaseId);
 
-    boolean existsActiveByProblemId(Long problemId);
-
     ProblemTestCase deactivate(Long testCaseId);
 }

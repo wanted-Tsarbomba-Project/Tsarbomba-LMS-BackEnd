@@ -19,19 +19,34 @@ public class RankingService implements RankingQueryUseCase {
     private final RankingQueryPort rankingQueryPort;
 
     @Override
-    public RankingListResult getTotalPointRankings() {
+    public RankingListResult getTotalPointRankings(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = normalizeSize(size);
+        int offset = safePage * safeSize;
+
         return new RankingListResult(
-                rankingQueryPort.findTotalPointRankings()
+                rankingQueryPort.findTotalPointRankings(offset, safeSize)
         );
     }
 
     @Override
-    public RankingListResult getWeeklyPointRankings() {
+    public RankingListResult getWeeklyPointRankings(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = normalizeSize(size);
+        int offset = safePage * safeSize;
         LocalDateTime from = LocalDateTime.now().minusDays(7);
 
         return new RankingListResult(
-                rankingQueryPort.findWeeklyPointRankings(from)
+                rankingQueryPort.findWeeklyPointRankings(from, offset, safeSize)
         );
+    }
+
+    private int normalizeSize(int size) {
+        if (size < 1) {
+            return 20;
+        }
+
+        return Math.min(size, 100);
     }
 
     @Override
