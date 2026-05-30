@@ -3,8 +3,8 @@ package com.wanted.codebombalms.admin.operation.automation.infrastructure.adapte
 import com.wanted.codebombalms.admin.operation.automation.application.model.OperationRuleDetectionResult;
 import com.wanted.codebombalms.admin.operation.automation.application.port.UserOperationMetricPort;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
-import com.wanted.codebombalms.user.domain.model.UserRole;
-import jakarta.persistence.EntityManager;
+import com.wanted.codebombalms.auth.application.usecase.LoginActivityQueryUseCase;
+import com.wanted.codebombalms.user.application.usecase.UserOperationQueryUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,8 @@ import java.util.List;
 // 사용자와 로그인 이력을 조회해 장기 미접속 학생 지표를 만든다.
 public class UserOperationMetricAdapter implements UserOperationMetricPort {
 
-    private final EntityManager entityManager;
+    private final UserOperationQueryUseCase userOperationQueryUseCase;
+    private final LoginActivityQueryUseCase loginActivityQueryUseCase;
     private final Clock clock;
 
     @Override
@@ -30,35 +31,25 @@ public class UserOperationMetricAdapter implements UserOperationMetricPort {
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime cutoff = now.minusDays(inactiveDays);
 
-        return entityManager.createQuery("""
-                        select u.userId,
-                               u.name,
-                               u.email,
-                               coalesce(max(lh.createdAt), u.createdAt)
-                        from UserJpaEntity u
-                        left join LoginHistoryJpaEntity lh
-                            on lh.userId = u.userId
-                        where u.deletedAt is null
-                          and u.role = :studentRole
-                        group by u.userId, u.name, u.email, u.createdAt
-                        """, Object[].class)
-                .setParameter("studentRole", UserRole.STUDENT)
-                .getResultList()
-                .stream()
-                .map(row -> toMetric(row, now))
+        return userOperationQueryUseCase.findStudents().stream()
+                .map(student -> toMetric(student, now))
                 .filter(metric -> !metric.lastActivityAt().isAfter(cutoff))
                 .map(metric -> toResult(metric, inactiveDaysThreshold))
                 .toList();
     }
 
-    private UserInactiveMetric toMetric(Object[] row, LocalDateTime now) {
-        LocalDateTime lastActivityAt = (LocalDateTime) row[3];
+    private UserInactiveMetric toMetric(
+            UserOperationQueryUseCase.UserOperationView student,
+            LocalDateTime now
+    ) {
+        LocalDateTime lastActivityAt = loginActivityQueryUseCase.findLatestLoginAt(student.userId())
+                .orElse(student.createdAt());
         long inactiveDays = ChronoUnit.DAYS.between(lastActivityAt, now);
 
         return new UserInactiveMetric(
-                (Long) row[0],
-                (String) row[1],
-                (String) row[2],
+                student.userId(),
+                student.name(),
+                student.email(),
                 lastActivityAt,
                 inactiveDays
         );
