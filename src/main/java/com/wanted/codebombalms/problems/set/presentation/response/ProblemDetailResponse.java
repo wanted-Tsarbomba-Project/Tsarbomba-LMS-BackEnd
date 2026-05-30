@@ -1,39 +1,41 @@
 package com.wanted.codebombalms.problems.set.presentation.response;
 
-import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase.ProblemDetailView;
+import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase.ProblemDetailItemView;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record ProblemDetailResponse(
         @Schema(description = "문제 ID", example = "3001")
         Long problemId,
 
-        @Schema(description = "문제 세트 내 소문제 번호", example = "1")
+        @Schema(description = "문제 세트 안에서의 소문제 번호", example = "1")
         Integer problemNumber,
 
         @Schema(description = "소문제 제목", example = "데이터 행과 열 개수 확인")
         String title,
 
-        @Schema(description = "소문제 내용", example = "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.")
+        @Schema(description = "소문제 내용", example = "DataFrame의 행과 열 개수를 확인하세요.")
         String content,
 
         @Schema(description = "문제 유형", example = "CODE")
         String problemType,
 
-        @Schema(description = "정답 시 지급할 포인트", example = "10")
+        @Schema(description = "정답 시 지급 포인트", example = "10")
         Integer point,
 
-        @Schema(
-                description = "코드 에디터에 표시할 시작 코드. 데이터셋이 연결된 코드 문제는 GCS CSV URL을 읽는 코드가 포함될 수 있습니다.",
-                example = """
-                        import pandas as pd
+        @Schema(description = "코드 에디터에 표시할 시작 코드", nullable = true)
+        String startCode,
 
-                        df = pd.read_csv("https://storage.googleapis.com/codebombalms/problem_dataset/28679fde-6075-4c2e-a3f0-190fa3d80db7_employee_performance.csv")
-                        """,
-                nullable = true
+        @Schema(
+                description = "학생 기준 소문제 상태",
+                example = "LOCKED",
+                allowableValues = {"LOCKED", "UNSOLVED", "CORRECT", "WRONG"}
         )
-        String startCode
+        String status,
+
+        @Schema(description = "가장 최근 제출 ID", example = "3021", nullable = true)
+        Long latestSubmissionId
 ) {
-    public ProblemDetailResponse(ProblemDetailView problem) {
+    public ProblemDetailResponse(ProblemDetailItemView problem) {
         this(
                 problem.problemId(),
                 problem.problemNumber(),
@@ -41,7 +43,9 @@ public record ProblemDetailResponse(
                 problem.content(),
                 problem.problemType(),
                 problem.point(),
-                problem.startCode()
+                problem.startCode(),
+                problem.status(),
+                problem.latestSubmissionId()
         );
     }
 }

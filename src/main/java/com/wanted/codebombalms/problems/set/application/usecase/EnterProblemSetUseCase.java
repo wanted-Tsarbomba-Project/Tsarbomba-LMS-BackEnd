@@ -2,6 +2,8 @@ package com.wanted.codebombalms.problems.set.application.usecase;
 
 import com.wanted.codebombalms.problems.set.application.query.EnterProblemSetQuery;
 
+import java.util.List;
+
 public interface EnterProblemSetUseCase {
 
     ProblemSetEntryView handle(EnterProblemSetQuery query);
@@ -11,19 +13,24 @@ public interface EnterProblemSetUseCase {
             String title,
             String description,
             Integer currentProblemNumber,
+            Long currentProblemId,
+            Integer totalProblemCount,
+            Integer solvedProblemCount,
             Boolean isCompleted,
-            ProblemDetailView problem
+            List<ProblemDetailItemView> problems
     ) {
     }
 
-    record ProblemDetailView(
+    record ProblemDetailItemView(
             Long problemId,
             Integer problemNumber,
             String title,
             String content,
             String problemType,
             Integer point,
-            String startCode
+            String startCode,
+            String status,
+            Long latestSubmissionId
     ) {
     }
 }

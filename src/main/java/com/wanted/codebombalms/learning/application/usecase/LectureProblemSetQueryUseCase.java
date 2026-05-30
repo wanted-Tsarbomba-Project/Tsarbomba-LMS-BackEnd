@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.learning.application.usecase;
 
+import java.util.List;
+
 public interface LectureProblemSetQueryUseCase {
 
     LectureProblemSetEntryView enterLectureProblemSet(Long userId, Long lectureProblemSetId);
@@ -12,8 +14,11 @@ public interface LectureProblemSetQueryUseCase {
             String title,
             String description,
             Integer currentProblemNumber,
+            Long currentProblemId,
+            Integer totalProblemCount,
+            Integer solvedProblemCount,
             Boolean completed,
-            ProblemDetailView problem
+            List<ProblemDetailView> problems
     ) {
     }
 
@@ -24,7 +29,9 @@ public interface LectureProblemSetQueryUseCase {
             String content,
             String problemType,
             Integer point,
-            String startCode
+            String startCode,
+            String status,
+            Long latestSubmissionId
     ) {
     }
 

@@ -57,10 +57,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
         boolean isCorrect = gradingResult.correct();
         int attemptNo = previousAttemptCount + 1;
-        Integer remainingAttemptCount = submissionAttemptPolicy.calculateRemainingAttemptCount(
-                problem.attemptLimit(),
-                attemptNo
-        );
+        Integer remainingAttemptCount = null;
         boolean canRetry = submissionAttemptPolicy.canRetry(
                 problem.retriable(),
                 remainingAttemptCount,

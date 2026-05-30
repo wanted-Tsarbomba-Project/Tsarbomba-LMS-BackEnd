@@ -2,14 +2,19 @@ package com.wanted.codebombalms.learning.presentation.api.response;
 
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemSetQueryUseCase.LectureProblemSetEntryView;
 
+import java.util.List;
+
 public record LectureProblemSetEntryResponse(
         Long lectureProblemSetId,
         Long problemSetId,
         String title,
         String description,
         Integer currentProblemNumber,
+        Long currentProblemId,
+        Integer totalProblemCount,
+        Integer solvedProblemCount,
         Boolean completed,
-        ProblemDetailResponse problem
+        List<ProblemDetailResponse> problems
 ) {
 
     public static LectureProblemSetEntryResponse from(LectureProblemSetEntryView entry) {
@@ -19,8 +24,14 @@ public record LectureProblemSetEntryResponse(
                 entry.title(),
                 entry.description(),
                 entry.currentProblemNumber(),
+                entry.currentProblemId(),
+                entry.totalProblemCount(),
+                entry.solvedProblemCount(),
                 entry.completed(),
-                entry.problem() == null ? null : ProblemDetailResponse.from(entry.problem())
+                entry.problems()
+                        .stream()
+                        .map(ProblemDetailResponse::from)
+                        .toList()
         );
     }
 
@@ -31,7 +42,9 @@ public record LectureProblemSetEntryResponse(
             String content,
             String problemType,
             Integer point,
-            String startCode
+            String startCode,
+            String status,
+            Long latestSubmissionId
     ) {
 
         private static ProblemDetailResponse from(
@@ -44,7 +57,9 @@ public record LectureProblemSetEntryResponse(
                     problem.content(),
                     problem.problemType(),
                     problem.point(),
-                    problem.startCode()
+                    problem.startCode(),
+                    problem.status(),
+                    problem.latestSubmissionId()
             );
         }
     }

@@ -8,10 +8,6 @@ import org.springframework.stereotype.Component;
 public class SubmissionAttemptPolicy {
 
     public void validateAttemptLimit(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {
-        if (attemptLimit != null && previousAttemptCount >= attemptLimit) {
-            throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
-        }
-
         if (!Boolean.TRUE.equals(retriable) && previousAttemptCount > 0) {
             throw new ValidationException(SubmissionErrorCode.PROBLEM_NOT_RETRIABLE);
         }

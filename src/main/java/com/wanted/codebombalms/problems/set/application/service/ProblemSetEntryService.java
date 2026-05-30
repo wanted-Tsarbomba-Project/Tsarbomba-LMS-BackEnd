@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.problems.set.application.service;
 
+import com.wanted.codebombalms.problems.progress.application.port.LoadProgressProblemPort;
+import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
 import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetProgressPort;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemForEntryPort;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetEntryPort;
@@ -13,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class ProblemSetEntryService implements EnterProblemSetUseCase {
@@ -21,50 +27,72 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final FindOrCreateProblemSetProgressPort findOrCreateProblemSetProgressPort;
     private final LoadProblemForEntryPort loadProblemForEntryPort;
     private final LoadProblemStartCodePort loadProblemStartCodePort;
+    private final LoadProgressProblemPort loadProgressProblemPort;
 
     @Override
     @Transactional
     public ProblemSetEntryView handle(EnterProblemSetQuery query) {
         ProblemSetEntry problemSet = loadProblemSetEntryPort.loadProblemSetEntry(query.problemSetId());
+
         ProblemSetProgressState progress =
                 findOrCreateProblemSetProgressPort.findOrCreateProgress(query.userId(), query.problemSetId());
 
-        ProblemDetail currentProblem = Boolean.TRUE.equals(progress.completed())
-                ? loadProblemForEntryPort.loadLastProblem(query.problemSetId()).orElse(null)
-                : loadProblemForEntryPort.loadCurrentProblem(
-                        query.problemSetId(),
-                        progress.currentProblemNumber()
-                );
+        var progressItems = loadProgressProblemPort.loadProgressProblems(
+                query.userId(),
+                query.problemSetId(),
+                progress.currentProblemNumber()
+        );
 
-        if (currentProblem != null) {
-            currentProblem = currentProblem.withStartCode(
-                    loadProblemStartCodePort.loadStartCode(currentProblem.getProblemId())
-            );
-        }
+        Map<Long, ProblemProgressItem> progressItemMap = progressItems.stream()
+                .collect(Collectors.toMap(
+                        ProblemProgressItem::getProblemId,
+                        Function.identity()
+                ));
+
+        var problems = loadProblemForEntryPort.loadProblems(query.problemSetId())
+                .stream()
+                .map(problem -> toDetailItemView(problem, progressItemMap.get(problem.getProblemId())))
+                .toList();
+
+        Long currentProblemId = problems.stream()
+                .filter(problem -> problem.problemNumber().equals(progress.currentProblemNumber()))
+                .map(ProblemDetailItemView::problemId)
+                .findFirst()
+                .orElse(null);
+
+        int solvedProblemCount = (int) problems.stream()
+                .filter(problem -> "CORRECT".equals(problem.status()))
+                .count();
 
         return new ProblemSetEntryView(
                 problemSet.getProblemSetId(),
                 problemSet.getTitle(),
                 problemSet.getDescription(),
                 progress.currentProblemNumber(),
+                currentProblemId,
+                problems.size(),
+                solvedProblemCount,
                 progress.completed(),
-                toView(currentProblem)
+                problems
         );
     }
 
-    private ProblemDetailView toView(ProblemDetail problem) {
-        if (problem == null) {
-            return null;
-        }
+    private ProblemDetailItemView toDetailItemView(
+            ProblemDetail problem,
+            ProblemProgressItem progressItem
+    ) {
+        String startCode = loadProblemStartCodePort.loadStartCode(problem.getProblemId());
 
-        return new ProblemDetailView(
+        return new ProblemDetailItemView(
                 problem.getProblemId(),
                 problem.getProblemNumber(),
                 problem.getTitle(),
                 problem.getContent(),
                 problem.getProblemType(),
                 problem.getPoint(),
-                problem.getStartCode()
+                startCode,
+                progressItem == null ? "UNSOLVED" : progressItem.getStatus().name(),
+                progressItem == null ? null : progressItem.getLatestSubmissionId()
         );
     }
 }
