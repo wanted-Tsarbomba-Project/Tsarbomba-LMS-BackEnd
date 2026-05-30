@@ -9,6 +9,7 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -34,6 +35,15 @@ public class ProblemForEntryPersistenceAdapter implements LoadProblemForEntryPor
         return problemRepository
                 .findTopByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderDesc(problemSetId, "ACTIVE")
                 .map(this::toDetail);
+    }
+
+    @Override
+    public List<ProblemDetail> loadProblems(Long problemSetId) {
+        return problemRepository
+                .findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(problemSetId, "ACTIVE")
+                .stream()
+                .map(this::toDetail)
+                .toList();
     }
 
     private ProblemDetail toDetail(ProblemJpaEntity problem) {

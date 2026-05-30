@@ -49,16 +49,24 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 entry.title(),
                 entry.description(),
                 entry.currentProblemNumber(),
+                entry.currentProblemId(),
+                entry.totalProblemCount(),
+                entry.solvedProblemCount(),
                 entry.isCompleted(),
-                entry.problem() == null ? null : new ProblemDetailView(
-                        entry.problem().problemId(),
-                        entry.problem().problemNumber(),
-                        entry.problem().title(),
-                        entry.problem().content(),
-                        entry.problem().problemType(),
-                        entry.problem().point(),
-                        entry.problem().startCode()
-                )
+                entry.problems()
+                        .stream()
+                        .map(problem -> new ProblemDetailView(
+                                problem.problemId(),
+                                problem.problemNumber(),
+                                problem.title(),
+                                problem.content(),
+                                problem.problemType(),
+                                problem.point(),
+                                problem.startCode(),
+                                problem.status(),
+                                problem.latestSubmissionId()
+                        ))
+                        .toList()
         );
     }
 
