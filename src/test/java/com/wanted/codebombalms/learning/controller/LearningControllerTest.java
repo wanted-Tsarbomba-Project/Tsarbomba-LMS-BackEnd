@@ -129,15 +129,33 @@ class LearningControllerTest {
                         "Problem Set",
                         "description",
                         1,
+                        3001L,
+                        2,
+                        0,
                         false,
-                        new LectureProblemSetQueryUseCase.ProblemDetailView(
-                                3001L,
-                                1,
-                                "Problem 1",
-                                "content",
-                                "CODE",
-                                10,
-                                "print()"
+                        List.of(
+                                new LectureProblemSetQueryUseCase.ProblemDetailView(
+                                        3001L,
+                                        1,
+                                        "Problem 1",
+                                        "content",
+                                        "CODE",
+                                        10,
+                                        "print()",
+                                        "UNSOLVED",
+                                        null
+                                ),
+                                new LectureProblemSetQueryUseCase.ProblemDetailView(
+                                        3002L,
+                                        2,
+                                        "Problem 2",
+                                        "content 2",
+                                        "CODE",
+                                        10,
+                                        "print()",
+                                        "LOCKED",
+                                        null
+                                )
                         )
                 ));
 
@@ -148,7 +166,13 @@ class LearningControllerTest {
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.data.lectureProblemSetId").value(6001L))
                 .andExpect(jsonPath("$.data.problemSetId").value(2001L))
-                .andExpect(jsonPath("$.data.problem.problemId").value(3001L));
+                .andExpect(jsonPath("$.data.currentProblemId").value(3001L))
+                .andExpect(jsonPath("$.data.totalProblemCount").value(2))
+                .andExpect(jsonPath("$.data.solvedProblemCount").value(0))
+                .andExpect(jsonPath("$.data.problems[0].problemId").value(3001L))
+                .andExpect(jsonPath("$.data.problems[0].status").value("UNSOLVED"))
+                .andExpect(jsonPath("$.data.problems[1].problemId").value(3002L))
+                .andExpect(jsonPath("$.data.problems[1].status").value("LOCKED"));
     }
 
     @Test
