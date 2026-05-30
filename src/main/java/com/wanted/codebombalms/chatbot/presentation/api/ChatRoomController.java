@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -86,7 +87,7 @@ public class ChatRoomController {
     @PostMapping("/messages")
     public ResponseEntity<ApiResponse<SendFirstMessageResponse>> sendFirstMessage(
             @AuthenticationPrincipal Long userId,
-            @RequestBody SendFirstMessageRequest request
+            @Valid @RequestBody SendFirstMessageRequest request
     ) {
         SendFirstMessageCommand command = new SendFirstMessageCommand(
                 userId,
@@ -267,7 +268,7 @@ public class ChatRoomController {
             @Parameter(description = "메시지를 전송할 채팅방 ID", example = "1")
             @PathVariable Long roomId,
             @AuthenticationPrincipal Long userId,
-            @RequestBody ChatMessageRequest request
+            @Valid @RequestBody ChatMessageRequest request
     ) {
         SendMessageCommand command = new SendMessageCommand(
                 userId,
