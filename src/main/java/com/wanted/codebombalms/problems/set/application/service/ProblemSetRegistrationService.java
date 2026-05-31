@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class ProblemSetRegistrationService implements RegisterProblemSetUseCase {
 
-    private static final Long TEMP_OPERATOR_USER_ID = 2L;
+
     private static final String CODE_PROBLEM_TYPE = "CODE";
     private static final int DEFAULT_ATTEMPT_LIMIT = 3;
     private static final boolean DEFAULT_RETRIABLE = true;
@@ -38,7 +38,7 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
 
         return toCommandResult(problemSetManagementRepository.createProblemSet(
                 toRegistration(command),
-                TEMP_OPERATOR_USER_ID
+                command.createdBy()
         ));
     }
 
