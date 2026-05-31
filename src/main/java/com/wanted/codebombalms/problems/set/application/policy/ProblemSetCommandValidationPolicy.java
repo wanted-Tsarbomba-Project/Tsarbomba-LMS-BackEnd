@@ -12,6 +12,10 @@ import org.springframework.stereotype.Component;
 public class ProblemSetCommandValidationPolicy {
 
     public void validate(RegisterProblemSetCommand command) {
+        if (command.createdBy() == null) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+
         validateProblemSet(
                 command.title(),
                 command.categoryName(),

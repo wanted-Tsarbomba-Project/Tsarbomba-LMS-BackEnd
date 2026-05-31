@@ -36,6 +36,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,9 +71,10 @@ public class ProblemManageController {
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/api/v1/problems")
     public ResponseEntity<ApiResponse<ProblemSetCreateResponse>> createProblem(
+            @AuthenticationPrincipal Long createdBy,
             @RequestBody ProblemSetCreateRequest request
     ) {
-        var result = registerProblemSetUseCase.handle(toCommand(request));
+        var result = registerProblemSetUseCase.handle(toCommand(createdBy, request));
         var response = new ProblemSetCreateResponse(result);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -185,13 +187,14 @@ public class ProblemManageController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<ApiResponse<ProblemSetWithDatasetCreateResponse>> createProblemWithDataset(
+            @AuthenticationPrincipal Long createdBy,
             @Parameter(description = "문제 세트 등록 JSON 파트", required = true)
             @RequestPart("request") ProblemSetCreateRequest request,
             @Parameter(description = "문제 세트에 연결할 CSV 데이터셋 파일", required = true)
             @RequestPart("datasetFile") MultipartFile datasetFile
     ) {
         var result = registerProblemSetWithDatasetUseCase.handle(
-                toCommand(request),
+                toCommand(createdBy, request),
                 toDatasetCommand(datasetFile)
         );
 
@@ -285,15 +288,16 @@ public class ProblemManageController {
         }
     }
 
-    private RegisterProblemSetCommand toCommand(ProblemSetCreateRequest request) {
+    private RegisterProblemSetCommand toCommand(Long createdBy, ProblemSetCreateRequest request) {
         List<ProblemCreateCommand> problems = request.problems() == null
                 ? null
                 : request.problems()
-                        .stream()
-                        .map(this::toCommand)
-                        .toList();
+                .stream()
+                .map(this::toCommand)
+                .toList();
 
         return new RegisterProblemSetCommand(
+                createdBy,
                 request.title(),
                 request.categoryName(),
                 request.difficulty(),
