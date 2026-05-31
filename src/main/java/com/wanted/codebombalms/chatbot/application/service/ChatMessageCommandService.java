@@ -5,12 +5,10 @@ import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
 import com.wanted.codebombalms.chatbot.application.result.AiChatResult;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatMessageCommandUseCase;
-import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
 import com.wanted.codebombalms.chatbot.domain.model.ChatMessage;
 import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
 import com.wanted.codebombalms.chatbot.domain.repository.ChatMessageRepository;
 import com.wanted.codebombalms.chatbot.domain.repository.ChatRoomRepository;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +27,7 @@ public class ChatMessageCommandService implements ChatMessageCommandUseCase {
 
     @Override
     public AiChatResult send(SendMessageCommand command) {
-        ChatRoom chatRoom = chatRoomRepository.findById(command.roomId())
-                .orElseThrow(() -> new NotFoundException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
+        ChatRoom chatRoom = chatRoomRepository.getById(command.roomId());
 
         chatRoom.verifyOwner(command.userId());
 
