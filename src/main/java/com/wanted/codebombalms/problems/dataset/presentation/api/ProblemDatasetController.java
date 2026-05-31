@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.presentation;
+package com.wanted.codebombalms.problems.dataset.presentation.api;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -6,7 +6,7 @@ import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
-import com.wanted.codebombalms.problems.dataset.presentation.response.ProblemDatasetUploadResponse;
+import com.wanted.codebombalms.problems.dataset.presentation.api.response.ProblemDatasetUploadResponse;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

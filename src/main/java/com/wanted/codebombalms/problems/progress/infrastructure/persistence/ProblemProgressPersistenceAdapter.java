@@ -118,9 +118,7 @@ public class ProblemProgressPersistenceAdapter implements
             return;
         }
 
-        ProblemSetJpaEntity problemSet = loadProblemSet(problemSetId);
         progress.complete();
-        problemSet.increaseCompletedUserCount();
 
         progressRepository.save(progress);
     }

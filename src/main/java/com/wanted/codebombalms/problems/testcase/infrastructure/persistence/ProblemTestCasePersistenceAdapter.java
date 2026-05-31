@@ -3,35 +3,31 @@ package com.wanted.codebombalms.problems.testcase.infrastructure.persistence;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
 import com.wanted.codebombalms.problems.testcase.application.port.CheckDuplicateTestCaseOrderPort;
-import com.wanted.codebombalms.problems.testcase.application.port.LoadTestCaseProblemPort;
 import com.wanted.codebombalms.problems.testcase.domain.model.ProblemTestCase;
 import com.wanted.codebombalms.problems.testcase.domain.repository.ProblemTestCaseRepository;
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseRepository, CheckDuplicateTestCaseOrderPort,LoadTestCaseProblemPort {
+@RequiredArgsConstructor
+public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseRepository, CheckDuplicateTestCaseOrderPort {
 
     private static final String ACTIVE = "ACTIVE";
 
     private final SpringDataProblemTestCaseRepository testCaseRepository;
-    private final SpringDataProblemRepository problemRepository;
-
-    public ProblemTestCasePersistenceAdapter(
-            SpringDataProblemTestCaseRepository testCaseRepository,
-            SpringDataProblemRepository problemRepository
-    ) {
-        this.testCaseRepository = testCaseRepository;
-        this.problemRepository = problemRepository;
-    }
+    private final EntityManager entityManager;
 
     @Override
     public ProblemTestCase save(ProblemTestCase testCase) {
         if (testCase.getTestCaseId() == null) {
-            ProblemJpaEntity problem = loadProblem(testCase.getProblemId());
+            ProblemJpaEntity problem = entityManager.getReference(
+                    ProblemJpaEntity.class,
+                    testCase.getProblemId()
+            );
 
             return toDomain(testCaseRepository.save(ProblemTestCaseJpaEntity.create(
                     problem,
@@ -65,13 +61,12 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
 
     @Override
     public boolean existsActiveOrderExceptSelf(Long problemId, Integer testOrder, Long testCaseId) {
-        return testCaseRepository
-                .existsByProblem_ProblemIdAndTestOrderAndStatusAndTestCaseIdNot(
-                        problemId,
-                        testOrder,
-                        "ACTIVE",
-                        testCaseId
-                );
+        return testCaseRepository.existsByProblem_ProblemIdAndTestOrderAndStatusAndTestCaseIdNot(
+                problemId,
+                testOrder,
+                ACTIVE,
+                testCaseId
+        );
     }
 
     @Override
@@ -84,7 +79,7 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
         return testCaseRepository.existsByProblem_ProblemIdAndTestOrderAndStatus(
                 problemId,
                 testOrder,
-                "ACTIVE"
+                ACTIVE
         );
     }
 
@@ -94,21 +89,6 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
         testCase.deactivate();
 
         return toDomain(testCase);
-    }
-
-    @Override
-    public LoadTestCaseProblemPort.TestCaseProblemView loadByProblemId(Long problemId) {
-        ProblemJpaEntity problem = loadProblem(problemId);
-
-        return new LoadTestCaseProblemPort.TestCaseProblemView(
-                problem.getProblemId(),
-                problem.getProblemType()
-        );
-    }
-
-    private ProblemJpaEntity loadProblem(Long problemId) {
-        return problemRepository.findById(problemId)
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
     }
 
     private ProblemTestCaseJpaEntity loadActiveTestCase(Long testCaseId) {
@@ -129,4 +109,3 @@ public class ProblemTestCasePersistenceAdapter implements ProblemTestCaseReposit
         );
     }
 }
-

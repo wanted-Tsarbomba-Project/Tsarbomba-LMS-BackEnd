@@ -1,7 +1,13 @@
 package com.wanted.codebombalms.problems.problem.infrastructure.persistence;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.problems.execution.application.port.LoadExecutionProblemPort;
+import com.wanted.codebombalms.problems.problem.application.port.LoadProblemSetIdByProblemIdPort;
 import com.wanted.codebombalms.problems.problem.domain.model.Problem;
 import com.wanted.codebombalms.problems.problem.domain.repository.ProblemRepository;
+import com.wanted.codebombalms.problems.testcase.application.port.LoadTestCaseProblemPort;
+import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +16,12 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class ProblemPersistenceAdapter implements ProblemRepository {
+public class ProblemPersistenceAdapter implements
+        ProblemRepository,
+        LoadTestCaseProblemPort,
+        LoadExecutionProblemPort,
+        LoadProblemSetIdByProblemIdPort,
+        LoadProblemForSubmissionPort {
 
     private static final String ACTIVE_STATUS = "ACTIVE";
 
@@ -33,6 +44,65 @@ public class ProblemPersistenceAdapter implements ProblemRepository {
                 problemOrder,
                 ACTIVE_STATUS
         ).map(this::toDomain);
+    }
+
+    @Override
+    public Long loadProblemSetIdByProblemId(Long problemId) {
+        ProblemJpaEntity problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        return problem.getProblemSet().getProblemSetId();
+    }
+
+    @Override
+    public ProblemForSubmission loadProblemForSubmission(Long problemId) {
+        ProblemJpaEntity problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        return new ProblemForSubmission(
+                problem.getProblemId(),
+                problem.getProblemSet().getProblemSetId(),
+                problem.getProblemOrder(),
+                problem.getAnswer(),
+                problem.getExplanation(),
+                problem.getPoint(),
+                problem.getAttemptLimit(),
+                problem.getRetriable()
+        );
+    }
+
+    @Override
+    public TestCaseProblemView loadByProblemId(Long problemId) {
+        ProblemJpaEntity problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        return new TestCaseProblemView(
+                problem.getProblemId(),
+                problem.getProblemType()
+        );
+    }
+
+    @Override
+    public ExecutionProblem loadProblem(Long problemId) {
+        ProblemJpaEntity problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
+
+        return new ExecutionProblem(
+                problem.getProblemId(),
+                problem.getProblemSet().getProblemSetId(),
+                problem.getProblemType()
+        );
+    }
+
+    @Override
+    public Optional<Long> findNextProblemId(Long problemSetId, Integer nextProblemOrder) {
+        return problemRepository
+                .findByProblemSet_ProblemSetIdAndProblemOrderAndStatus(
+                        problemSetId,
+                        nextProblemOrder,
+                        ACTIVE_STATUS
+                )
+                .map(ProblemJpaEntity::getProblemId);
     }
 
     @Override

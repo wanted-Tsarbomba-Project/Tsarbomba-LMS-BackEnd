@@ -35,7 +35,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
     public SubmissionView handle(Long problemId, SubmitCodeCommand command) {
         submissionCodePolicy.validate(command.code());
 
-        ProblemForSubmission problem = loadProblemForSubmissionPort.loadProblem(problemId);
+        ProblemForSubmission problem = loadProblemForSubmissionPort.loadProblemForSubmission(problemId);
         Long problemSetId = problem.problemSetId();
 
         problemProgressPort.validateCurrentProblem(

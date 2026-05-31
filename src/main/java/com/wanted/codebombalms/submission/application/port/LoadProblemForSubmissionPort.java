@@ -4,7 +4,7 @@ import java.util.Optional;
 
 public interface LoadProblemForSubmissionPort {
 
-    ProblemForSubmission loadProblem(Long problemId);
+    ProblemForSubmission loadProblemForSubmission(Long problemId);
 
     Optional<Long> findNextProblemId(Long problemSetId, Integer nextProblemOrder);
 

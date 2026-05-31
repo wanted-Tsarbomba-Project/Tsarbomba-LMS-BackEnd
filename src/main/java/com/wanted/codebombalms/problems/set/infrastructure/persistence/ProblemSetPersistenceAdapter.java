@@ -1,5 +1,8 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.problems.set.application.port.IncreaseProblemSetCompletedCountPort;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetPort;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +13,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
-public class ProblemSetPersistenceAdapter implements LoadProblemSetPort {
+public class ProblemSetPersistenceAdapter implements LoadProblemSetPort, IncreaseProblemSetCompletedCountPort {
 
     private final SpringDataProblemSetRepository problemSetRepository;
 
@@ -24,6 +27,15 @@ public class ProblemSetPersistenceAdapter implements LoadProblemSetPort {
                 .toList();
     }
 
+    @Override
+    public void increaseCompletedUserCount(Long problemSetId) {
+        ProblemSetJpaEntity problemSet = problemSetRepository.findById(problemSetId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
+
+        problemSet.increaseCompletedUserCount();
+
+        problemSetRepository.save(problemSet);
+    }
     @Override
     public List<ProblemSetSummary> loadActiveProblemSets() {
         var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc("ACTIVE");
