@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.user.presentation.api.dto.request;
+package com.wanted.codebombalms.user.presentation.api.request;
 
 import jakarta.validation.constraints.NotNull;
 

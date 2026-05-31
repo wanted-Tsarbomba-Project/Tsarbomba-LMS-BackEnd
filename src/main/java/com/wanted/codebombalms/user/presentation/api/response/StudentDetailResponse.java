@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.user.presentation.api.dto.response;
+package com.wanted.codebombalms.user.presentation.api.response;
 
 import com.wanted.codebombalms.user.application.query.StudentDetail;
 
