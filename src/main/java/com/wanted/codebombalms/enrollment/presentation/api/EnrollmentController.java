@@ -72,6 +72,7 @@ public class EnrollmentController {
 
     @GetMapping("/enrollments")
     @Operation(summary = "전체 수강신청 목록 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
         log.info("[EnrollmentController] find all active enrollments");
 
@@ -90,13 +91,15 @@ public class EnrollmentController {
 
     @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     @Operation(summary = "수강신청 취소")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long userId,
-            @PathVariable Long enrollmentId
+            @PathVariable Long enrollmentId,
+            @AuthenticationPrincipal Long authenticatedUserId
     ) {
-        log.info("[EnrollmentController] cancel enrollment - userId: {}, enrollmentId: {}", userId, enrollmentId);
+        log.info("[EnrollmentController] cancel enrollment - userId: {}, enrollmentId: {}", authenticatedUserId, enrollmentId);
 
-        enrollmentCommandUseCase.cancelEnrollment(new CancelEnrollmentCommand(userId, enrollmentId));
+        enrollmentCommandUseCase.cancelEnrollment(new CancelEnrollmentCommand(authenticatedUserId, enrollmentId));
 
         return ResponseEntity.noContent().build();
     }

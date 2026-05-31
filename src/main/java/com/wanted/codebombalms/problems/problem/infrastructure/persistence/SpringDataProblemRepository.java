@@ -1,8 +1,11 @@
 package com.wanted.codebombalms.problems.problem.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.problem.application.port.ProblemTargetDetailPort.ProblemTargetDetailView;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface SpringDataProblemRepository extends JpaRepository<ProblemJpaEntity, Long> {
 
@@ -31,4 +34,19 @@ public interface SpringDataProblemRepository extends JpaRepository<ProblemJpaEnt
             Long problemId,
             Long problemSetId
     );
+
+    @Query("""
+            select new com.wanted.codebombalms.problems.problem.application.port.ProblemTargetDetailPort$ProblemTargetDetailView(
+                p.problemId,
+                p.title,
+                p.status,
+                ps.problemSetId,
+                ps.title,
+                ps.createdBy
+            )
+            from ProblemJpaEntity p
+            join p.problemSet ps
+            where p.problemId = :problemId
+            """)
+    Optional<ProblemTargetDetailView> findProblemTargetDetail(@Param("problemId") Long problemId);
 }
