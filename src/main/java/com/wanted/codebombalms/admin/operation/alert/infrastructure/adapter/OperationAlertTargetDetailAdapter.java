@@ -8,8 +8,13 @@ import com.wanted.codebombalms.admin.operation.alert.application.query.Operation
 import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertTargetInfo;
 import com.wanted.codebombalms.admin.operation.alert.domain.exception.OperationAlertErrorCode;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
+import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import jakarta.persistence.EntityManager;
+import com.wanted.codebombalms.problems.problem.application.port.ProblemTargetDetailPort.ProblemTargetDetailView;
+import com.wanted.codebombalms.problems.problem.application.usecase.ProblemTargetDetailQueryUseCase;
+import com.wanted.codebombalms.user.application.query.StudentDetail;
+import com.wanted.codebombalms.user.application.usecase.GetStudentDetailUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +27,9 @@ import java.math.BigDecimal;
 // COURSE, PROBLEM, USER 알림 대상의 상세 정보와 담당자 정보를 조회한다.
 public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDetailPort {
 
-    private final EntityManager entityManager;
+    private final CourseQueryUseCase courseQueryUseCase;
+    private final ProblemTargetDetailQueryUseCase problemTargetDetailQueryUseCase;
+    private final GetStudentDetailUseCase getStudentDetailUseCase;
 
     @Override
     // 대상 타입에 따라 강좌, 문제 또는 사용자 상세 조회로 분기한다.
@@ -47,43 +54,24 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
             BigDecimal thresholdValue,
             OperationAlertRuleInfo rule
     ) {
-        Object[] row = entityManager.createQuery("""
-                        select c.courseId,
-                               c.title,
-                               c.status,
-                               u.userId,
-                               u.name,
-                               u.nickname,
-                               u.email,
-                               u.role
-                        from CourseJpaEntity c
-                        left join UserJpaEntity u
-                            on u.userId = c.instructorId
-                           and u.deletedAt is null
-                        where c.courseId = :courseId
-                          and c.deletedAt is null
-                        """, Object[].class)
-                .setParameter("courseId", courseId)
-                .getResultStream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(OperationAlertErrorCode.OPERATION_ALERT_TARGET_NOT_FOUND));
+        Course course = courseQueryUseCase.findCourseByIdForOperator(courseId);
 
         OperationAlertTargetInfo target = new OperationAlertTargetInfo(
                 OperationTargetType.COURSE,
-                (Long) row[0],
-                (String) row[1],
-                toStringOrNull(row[2]),
+                course.getCourseId(),
+                course.getTitle(),
+                toStringOrNull(course.getStatus()),
                 null,
                 null,
-                (Long) row[0],
-                (String) row[1],
+                course.getCourseId(),
+                course.getTitle(),
                 null,
                 null
         );
 
         return new OperationAlertTargetDetail(
                 target,
-                toAssignee(row, 3),
+                loadAssignee(course.getInstructorId()),
                 toMetric(rule, detectedValue, thresholdValue)
         );
     }
@@ -95,45 +83,24 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
             BigDecimal thresholdValue,
             OperationAlertRuleInfo rule
     ) {
-        Object[] row = entityManager.createQuery("""
-                        select p.problemId,
-                               p.title,
-                               p.status,
-                               ps.problemSetId,
-                               ps.title,
-                               u.userId,
-                               u.name,
-                               u.nickname,
-                               u.email,
-                               u.role
-                        from ProblemJpaEntity p
-                        join p.problemSet ps
-                        left join UserJpaEntity u
-                            on u.userId = ps.createdBy
-                           and u.deletedAt is null
-                        where p.problemId = :problemId
-                        """, Object[].class)
-                .setParameter("problemId", problemId)
-                .getResultStream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(OperationAlertErrorCode.OPERATION_ALERT_TARGET_NOT_FOUND));
+        ProblemTargetDetailView problem = problemTargetDetailQueryUseCase.findProblemTargetDetail(problemId);
 
         OperationAlertTargetInfo target = new OperationAlertTargetInfo(
                 OperationTargetType.PROBLEM,
-                (Long) row[0],
-                (String) row[1],
-                (String) row[2],
+                problem.problemId(),
+                problem.title(),
+                problem.status(),
                 null,
                 null,
                 null,
                 null,
-                (Long) row[3],
-                (String) row[4]
+                problem.problemSetId(),
+                problem.problemSetTitle()
         );
 
         return new OperationAlertTargetDetail(
                 target,
-                toAssignee(row, 5),
+                loadAssignee(problem.createdBy()),
                 toMetric(rule, detectedValue, thresholdValue)
         );
     }
@@ -145,29 +112,15 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
             BigDecimal thresholdValue,
             OperationAlertRuleInfo rule
     ) {
-        Object[] row = entityManager.createQuery("""
-                        select u.userId,
-                               u.name,
-                               u.nickname,
-                               u.email,
-                               u.role,
-                               u.isLocked
-                        from UserJpaEntity u
-                        where u.userId = :userId
-                          and u.deletedAt is null
-                        """, Object[].class)
-                .setParameter("userId", userId)
-                .getResultStream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException(OperationAlertErrorCode.OPERATION_ALERT_TARGET_NOT_FOUND));
+        StudentDetail user = loadUser(userId);
 
         OperationAlertTargetInfo target = new OperationAlertTargetInfo(
                 OperationTargetType.USER,
-                (Long) row[0],
-                (String) row[1],
-                toUserStatus(row[4], row[5]),
-                (String) row[2],
-                (String) row[3],
+                user.userId(),
+                user.name(),
+                toUserStatus(user.role(), user.isLocked()),
+                user.nickname(),
+                user.email(),
                 null,
                 null,
                 null,
@@ -181,20 +134,27 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
         );
     }
 
-    // 조회 결과의 사용자 컬럼을 담당자 정보로 변환한다.
-    private OperationAlertAssigneeInfo toAssignee(Object[] row, int startIndex) {
-        Long userId = (Long) row[startIndex];
+    private OperationAlertAssigneeInfo loadAssignee(Long userId) {
         if (userId == null) {
             return null;
         }
 
+        StudentDetail user = loadUser(userId);
         return new OperationAlertAssigneeInfo(
-                userId,
-                (String) row[startIndex + 1],
-                (String) row[startIndex + 2],
-                (String) row[startIndex + 3],
-                toStringOrNull(row[startIndex + 4])
+                user.userId(),
+                user.name(),
+                user.nickname(),
+                user.email(),
+                toStringOrNull(user.role())
         );
+    }
+
+    private StudentDetail loadUser(Long userId) {
+        try {
+            return getStudentDetailUseCase.getStudentDetail(userId);
+        } catch (NotFoundException exception) {
+            throw new NotFoundException(OperationAlertErrorCode.OPERATION_ALERT_TARGET_NOT_FOUND);
+        }
     }
 
     // 규칙 메타데이터와 알림 값을 화면 표시용 지표 정보로 변환한다.

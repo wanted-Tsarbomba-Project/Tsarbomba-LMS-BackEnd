@@ -20,5 +20,7 @@ public interface UserRepository {
 
     List<User> findAllByRole(UserRole role, int page, int size);
 
+    List<User> findAllByRole(UserRole role);
+
     long countByRole(UserRole role);
 }
