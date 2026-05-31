@@ -3,7 +3,7 @@ package com.wanted.codebombalms.user.presentation.api;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.user.application.query.StudentPageResult;
 import com.wanted.codebombalms.user.application.usecase.GetStudentsUseCase;
-import com.wanted.codebombalms.user.presentation.api.dto.response.StudentPageResponse;
+import com.wanted.codebombalms.user.presentation.api.response.StudentPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
