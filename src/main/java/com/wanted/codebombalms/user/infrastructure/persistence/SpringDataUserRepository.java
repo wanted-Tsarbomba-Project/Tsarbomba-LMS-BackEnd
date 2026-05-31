@@ -19,5 +19,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     List<UserJpaEntity> findAllByRoleOrderByCreatedAtDesc(UserRole role, Pageable pageable);
 
+    List<UserJpaEntity> findAllByRoleOrderByCreatedAtDesc(UserRole role);
+
     long countByRole(UserRole role);
 }
