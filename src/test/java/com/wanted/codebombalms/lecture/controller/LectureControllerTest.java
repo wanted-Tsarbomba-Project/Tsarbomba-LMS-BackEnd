@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,6 +30,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -94,6 +97,7 @@ class LectureControllerTest {
                 .willReturn(createDetailResult(1L, "Java 1"));
 
         mockMvc.perform(post("/api/v1/courses/{courseId}/lectures", courseId)
+                        .with(authentication(operatorUser(10L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -118,6 +122,7 @@ class LectureControllerTest {
                 .willReturn(createDetailResult(lectureId, "Updated Java"));
 
         mockMvc.perform(put("/api/v1/lectures/{lectureId}", lectureId)
+                        .with(authentication(operatorUser(10L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -131,7 +136,8 @@ class LectureControllerTest {
     void deleteLecture_returnsNoContent() throws Exception {
         Long lectureId = 1L;
 
-        mockMvc.perform(delete("/api/v1/lectures/{lectureId}", lectureId))
+        mockMvc.perform(delete("/api/v1/lectures/{lectureId}", lectureId)
+                        .with(authentication(operatorUser(10L))))
                 .andExpect(status().isNoContent());
 
         verify(lectureCommandUseCase).deleteLecture(lectureId);
@@ -166,5 +172,11 @@ class LectureControllerTest {
         lecture.setCreatedAt(LocalDateTime.now());
         lecture.setUpdatedAt(LocalDateTime.now());
         return lecture;
+    }
+
+    private Authentication operatorUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
+        authentication.setAuthenticated(true);
+        return authentication;
     }
 }

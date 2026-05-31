@@ -107,12 +107,18 @@ class EnrollmentControllerTest {
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
-        mockMvc.perform(get("/api/v1/enrollments")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(200))
-                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+        SecurityContextHolder.getContext().setAuthentication(operatorPrincipal(1L));
+
+        try {
+            mockMvc.perform(get("/api/v1/enrollments")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test
@@ -120,10 +126,24 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Long enrollmentId = 1L;
 
-        mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId))
-                .andExpect(status().isNoContent());
+        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
+
+        try {
+            mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId))
+                    .andExpect(status().isNoContent());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
 
         verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
+    }
+
+    private UsernamePasswordAuthenticationToken operatorPrincipal(Long userId) {
+        return new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_OPERATOR"))
+        );
     }
 
     private Enrollment createEnrollment(

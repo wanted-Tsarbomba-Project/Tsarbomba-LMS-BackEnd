@@ -78,24 +78,24 @@ public class LearningController {
 
     @GetMapping("/lectures/{lectureId}/progress")
     @Operation(summary = "강의 수강 진행률 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LectureProgressResponse>> findLectureProgress(
             @AuthenticationPrincipal Long userId,
-            @PathVariable Long lectureId,
-            @RequestParam(required = false) Long requestUserId
+            @PathVariable Long lectureId
     ) {
-        Long requesterId = userId != null ? userId : requestUserId;
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
                 LearningResponseMessage.RETRIEVED,
-                LectureProgressResponse.from(lectureProgressQueryUseCase.findProgress(requesterId, lectureId))
+                LectureProgressResponse.from(lectureProgressQueryUseCase.findProgress(userId, lectureId))
         ));
     }
 
     @GetMapping("/lecture-problem-sets/{lectureProblemSetId}")
     @Operation(summary = "강의 문제세트 입장")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LectureProblemSetEntryResponse>> enterLectureProblemSet(
             @PathVariable Long lectureProblemSetId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
@@ -108,9 +108,10 @@ public class LearningController {
 
     @GetMapping("/lecture-problem-sets/{lectureProblemSetId}/progress")
     @Operation(summary = "강의 문제세트 진행 상태 조회")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LectureProblemSetProgressResponse>> findLectureProblemSetProgress(
             @PathVariable Long lectureProblemSetId,
-            @RequestParam Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
@@ -123,7 +124,9 @@ public class LearningController {
 
     @PatchMapping("/lecture-problem-sets/{lectureProblemSetId}/progress")
     @Operation(summary = "강의 문제세트 진행 상태 저장")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<LectureProblemProgressResponse>> recordLectureProblemSetProgress(
+            @AuthenticationPrincipal Long userId,
             @PathVariable Long lectureProblemSetId,
             @Valid @RequestBody LectureProblemProgressRequest request
     ) {
@@ -132,7 +135,7 @@ public class LearningController {
                 LearningResponseMessage.UPDATED,
                 LectureProblemProgressResponse.from(lectureProblemProgressCommandUseCase.recordProgress(
                         new RecordLectureProblemProgressCommand(
-                                request.userId(),
+                                userId,
                                 lectureProblemSetId,
                                 request.currentProblemNumber(),
                                 request.completed()
@@ -142,6 +145,7 @@ public class LearningController {
     }
     @PostMapping("/lecture-problem-sets/{lectureProblemSetId}/problems/{problemId}/submissions")
     @Operation(summary = "강의 문제 제출")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<SubmissionResponse>> submitLectureProblem(
             @PathVariable Long lectureProblemSetId,
             @PathVariable Long problemId,
@@ -161,6 +165,7 @@ public class LearningController {
 
     @GetMapping("/courses/{courseId}/learning-progress")
     @Operation(summary = "강좌 학습률 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<CourseLearningProgressResponse>> findCourseLearningProgress(
             @PathVariable Long courseId
     ) {
@@ -173,6 +178,7 @@ public class LearningController {
 
     @GetMapping("/courses/learning-progress")
     @Operation(summary = "전체 강좌 학습률 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<List<CourseLearningProgressResponse>>> findCourseLearningProgresses() {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
@@ -186,6 +192,7 @@ public class LearningController {
 
     @GetMapping("/courses/{courseId}/users/learning-progress")
     @Operation(summary = "강좌별 학생 학습률 목록 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<List<StudentLearningProgressResponse>>> findStudentLearningProgresses(
             @PathVariable Long courseId
     ) {
@@ -201,6 +208,7 @@ public class LearningController {
 
     @GetMapping("/courses/{courseId}/users/{userId}/learning-progress")
     @Operation(summary = "학생 학습률 단건 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<StudentLearningProgressResponse>> findStudentLearningProgress(
             @PathVariable Long courseId,
             @PathVariable Long userId
@@ -216,6 +224,7 @@ public class LearningController {
 
     @GetMapping("/courses/{courseId}/lectures/learning-progress")
     @Operation(summary = "강좌별 강의 학습률 목록 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<List<LectureLearningProgressResponse>>> findLectureLearningProgresses(
             @PathVariable Long courseId
     ) {
@@ -231,6 +240,7 @@ public class LearningController {
 
     @GetMapping("/lectures/{lectureId}/problems/statistics")
     @Operation(summary = "강의 문제 통계 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<LectureProblemStatisticsResponse>> findLectureProblemStatistics(
             @PathVariable Long lectureId
     ) {
@@ -245,6 +255,7 @@ public class LearningController {
 
     @GetMapping("/learning-progress/summary")
     @Operation(summary = "학습률 요약 조회")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<LearningProgressSummaryResponse>> summarizeLearningProgress() {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,

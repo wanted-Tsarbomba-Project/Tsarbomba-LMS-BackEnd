@@ -29,6 +29,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -159,20 +160,25 @@ class LearningControllerTest {
                         )
                 ));
 
-        mockMvc.perform(get("/api/v1/lecture-problem-sets/{lectureProblemSetId}", 6001L)
-                        .param("userId", "10")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data.lectureProblemSetId").value(6001L))
-                .andExpect(jsonPath("$.data.problemSetId").value(2001L))
-                .andExpect(jsonPath("$.data.currentProblemId").value(3001L))
-                .andExpect(jsonPath("$.data.totalProblemCount").value(2))
-                .andExpect(jsonPath("$.data.solvedProblemCount").value(0))
-                .andExpect(jsonPath("$.data.problems[0].problemId").value(3001L))
-                .andExpect(jsonPath("$.data.problems[0].status").value("UNSOLVED"))
-                .andExpect(jsonPath("$.data.problems[1].problemId").value(3002L))
-                .andExpect(jsonPath("$.data.problems[1].status").value("LOCKED"));
+        SecurityContextHolder.getContext().setAuthentication(authenticatedUser(10L));
+
+        try {
+            mockMvc.perform(get("/api/v1/lecture-problem-sets/{lectureProblemSetId}", 6001L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
+                    .andExpect(jsonPath("$.data.lectureProblemSetId").value(6001L))
+                    .andExpect(jsonPath("$.data.problemSetId").value(2001L))
+                    .andExpect(jsonPath("$.data.currentProblemId").value(3001L))
+                    .andExpect(jsonPath("$.data.totalProblemCount").value(2))
+                    .andExpect(jsonPath("$.data.solvedProblemCount").value(0))
+                    .andExpect(jsonPath("$.data.problems[0].problemId").value(3001L))
+                    .andExpect(jsonPath("$.data.problems[0].status").value("UNSOLVED"))
+                    .andExpect(jsonPath("$.data.problems[1].problemId").value(3002L))
+                    .andExpect(jsonPath("$.data.problems[1].status").value("LOCKED"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test
@@ -189,13 +195,18 @@ class LearningControllerTest {
                         List.of(new LectureProblemSetQueryUseCase.ProblemProgressItemView(3001L, 1, "CORRECT"))
                 ));
 
-        mockMvc.perform(get("/api/v1/lecture-problem-sets/{lectureProblemSetId}/progress", 6001L)
-                        .param("userId", "10")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data.currentProblemNumber").value(2))
-                .andExpect(jsonPath("$.data.problems[0].status").value("CORRECT"));
+        SecurityContextHolder.getContext().setAuthentication(authenticatedUser(10L));
+
+        try {
+            mockMvc.perform(get("/api/v1/lecture-problem-sets/{lectureProblemSetId}/progress", 6001L)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
+                    .andExpect(jsonPath("$.data.currentProblemNumber").value(2))
+                    .andExpect(jsonPath("$.data.problems[0].status").value("CORRECT"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
     }
 
     @Test
@@ -213,6 +224,7 @@ class LearningControllerTest {
                 ));
 
         mockMvc.perform(patch("/api/v1/lecture-problem-sets/{lectureProblemSetId}/progress", 6001L)
+                        .with(authentication(authenticatedUser(10L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -252,6 +264,7 @@ class LearningControllerTest {
         ));
 
         mockMvc.perform(post("/api/v1/lecture-problem-sets/{lectureProblemSetId}/problems/{problemId}/submissions", 6001L, 3001L)
+                        .with(authentication(authenticatedUser(10L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -279,6 +292,7 @@ class LearningControllerTest {
                 )));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/users/learning-progress", 101L)
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -294,6 +308,7 @@ class LearningControllerTest {
                 .willReturn(CourseLearningProgress.of(101L, "Java", 2L, 3L, 4L, 5L, 6L));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/learning-progress", 101L)
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -307,6 +322,7 @@ class LearningControllerTest {
                 .willReturn(List.of(CourseLearningProgress.of(101L, "Java", 2L, 3L, 4L, 5L, 6L)));
 
         mockMvc.perform(get("/api/v1/courses/learning-progress")
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -319,6 +335,7 @@ class LearningControllerTest {
                 .willReturn(StudentLearningProgress.of(10L, "?숈깮", 1L, 2L, 2L, 3L));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/users/{userId}/learning-progress", 101L, 10L)
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -331,6 +348,7 @@ class LearningControllerTest {
                 .willReturn(List.of(LectureLearningProgress.of(201L, "OT", 1L, 2L)));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/lectures/learning-progress", 101L)
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -344,6 +362,7 @@ class LearningControllerTest {
                 .willReturn(LectureProblemStatistics.of(201L, 2L, 4L));
 
         mockMvc.perform(get("/api/v1/lectures/{lectureId}/problems/statistics", 201L)
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -357,6 +376,7 @@ class LearningControllerTest {
                 .willReturn(LearningProgressSummary.of(2L, 3L, 4L, 5L, 6L, 7L));
 
         mockMvc.perform(get("/api/v1/learning-progress/summary")
+                        .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
@@ -366,6 +386,12 @@ class LearningControllerTest {
 
     private Authentication authenticatedUser(Long userId) {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null);
+        authentication.setAuthenticated(true);
+        return authentication;
+    }
+
+    private Authentication operatorUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
         authentication.setAuthenticated(true);
         return authentication;
     }
