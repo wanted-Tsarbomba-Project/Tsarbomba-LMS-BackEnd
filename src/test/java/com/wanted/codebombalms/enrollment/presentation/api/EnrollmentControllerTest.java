@@ -75,6 +75,14 @@ class EnrollmentControllerTest {
         );
     }
 
+    private UsernamePasswordAuthenticationToken adminPrincipal(Long userId) {
+        return new UsernamePasswordAuthenticationToken(
+                userId,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
+    }
+
     @Test
     void findMyCourses_returnsApiResponse() throws Exception {
         Long studentId = 10L;
@@ -84,7 +92,7 @@ class EnrollmentControllerTest {
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
-        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
+        SecurityContextHolder.getContext().setAuthentication(adminPrincipal(1L));
 
         try {
             mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
