@@ -13,6 +13,9 @@ public interface ChatContextPort {
     // problemId로 현재 문제 순서 조회
     SessionProgressInfo findSessionProgress(Long problemId);
 
+    // problemId로 문제 제목 조회
+    String findProblemTitle(Long problemId);
+
     // problemSetId로 데이터셋 정보 조회
     DatasetInfo findDataset(Long problemSetId);
 

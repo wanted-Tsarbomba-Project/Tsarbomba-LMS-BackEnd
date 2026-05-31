@@ -40,6 +40,25 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
                 .toList();
     }
 
+    // === 챗봇 adapter용 메서드 ===
+    // chatbot ChatContextAdapter.findProblemSet() 가 호출
+    @Transactional(readOnly = true)
+    public ProblemSetDetailView findProblemSetDetail(Long problemSetId) {
+        return loadProblemSetPort.loadById(problemSetId)
+                .map(ps -> new ProblemSetDetailView(
+                        ps.getProblemSetId(),
+                        ps.getTitle(),
+                        ps.getDescription()))
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
+    }
+
+    // 챗봇 adapter 응답 DTO
+    public record ProblemSetDetailView(
+            Long problemSetId,
+            String title,
+            String description
+    ) {}
+
     private ProblemSetSummaryView toView(ProblemSetSummary problemSet) {
         return new ProblemSetSummaryView(
                 problemSet.getProblemSetId(),
