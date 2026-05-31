@@ -26,7 +26,8 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
 
     @Override
     public SendFirstMessageResult sendFirst(SendFirstMessageCommand command) {
-        ChatRoom room = createRoom(command.userId(), command.problemSetId(), command.problemId());
+        ChatRoom room = createRoom(
+                command.userId(), command.problemSetId(), command.problemId(), command.userMessage());
 
         AiChatResult aiResult = chatMessageCommandUseCase.send(
                 new SendMessageCommand(command.userId(), room.getId(), command.userMessage())
@@ -35,13 +36,35 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
         return new SendFirstMessageResult(room.getId(), aiResult.answer());
     }
 
-    private ChatRoom createRoom(Long userId, Long problemSetId, Long problemId) {
-        ChatContextPort.ProblemSetInfo problemSetInfo =
-                problemSetId != null ? chatContextPort.findProblemSet(problemSetId) : null;
-
-        String title = problemSetInfo != null ? problemSetInfo.title() : "";
+    private ChatRoom createRoom(Long userId, Long problemSetId, Long problemId, String userMessage) {
+        String title = resolveTitle(problemSetId, problemId, userMessage);
         ChatRoom newRoom = ChatRoom.create(userId, problemSetId, problemId, title);
         return chatRoomRepository.save(newRoom);
+    }
+
+    private String resolveTitle(Long problemSetId, Long problemId, String userMessage) {
+        if (problemSetId == null) {
+            return summarize(userMessage);
+        }
+
+        ChatContextPort.ProblemSetInfo setInfo = chatContextPort.findProblemSet(problemSetId);
+        String setTitle = setInfo != null ? setInfo.title() : "";
+
+        if (problemId != null) {
+            String problemTitle = chatContextPort.findProblemTitle(problemId);
+            if (problemTitle != null && !problemTitle.isBlank()) {
+                return setTitle + " - " + problemTitle;
+            }
+        }
+        return setTitle;
+    }
+
+    private String summarize(String message) {
+        if (message == null || message.isBlank()) {
+            return "새 대화";
+        }
+        String trimmed = message.strip();
+        return trimmed.length() <= 20 ? trimmed : trimmed.substring(0, 20) + "…";
     }
 
     @Override
