@@ -4,7 +4,7 @@ import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.user.application.query.StudentProblemSubmissionQuery;
 import com.wanted.codebombalms.user.application.usecase.GetStudentProblemSubmissionsUseCase;
-import com.wanted.codebombalms.user.presentation.api.dto.response.StudentProblemSubmissionListResponse;
+import com.wanted.codebombalms.user.presentation.api.response.StudentProblemSubmissionListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

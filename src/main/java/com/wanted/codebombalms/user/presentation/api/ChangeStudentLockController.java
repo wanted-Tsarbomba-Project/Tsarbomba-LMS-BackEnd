@@ -2,7 +2,7 @@ package com.wanted.codebombalms.user.presentation.api;
 
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.user.application.usecase.ChangeStudentLockUseCase;
-import com.wanted.codebombalms.user.presentation.api.dto.request.ChangeStudentLockRequest;
+import com.wanted.codebombalms.user.presentation.api.request.ChangeStudentLockRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
