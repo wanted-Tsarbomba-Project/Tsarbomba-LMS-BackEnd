@@ -4,16 +4,21 @@ import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetP
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 import com.wanted.codebombalms.problems.execution.application.port.LoadExecutionDatasetPort;
+import com.wanted.codebombalms.problems.set.application.port.LoadDatasetForUpdatePort;
 import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import jakarta.persistence.EntityManager;
+
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class ProblemDatasetPersistenceAdapter implements
         ProblemDatasetPersistencePort,
         LoadExecutionDatasetPort,
-        LoadActiveDatasetUrlPort {
+        LoadActiveDatasetUrlPort,
+        LoadDatasetForUpdatePort {
 
     private final SpringDataProblemDatasetRepository problemDatasetRepository;
     private final EntityManager entityManager;
@@ -76,6 +81,17 @@ public class ProblemDatasetPersistenceAdapter implements
                 .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
                 .map(ProblemDatasetJpaEntity::getFileUrl)
                 .orElse(null);
+    }
+
+    @Override
+    public Optional<DatasetForUpdateData> loadActiveDatasetForUpdate(Long problemSetId) {
+        return problemDatasetRepository
+                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
+                .map(dataset -> new DatasetForUpdateData(
+                        dataset.getDatasetId(),
+                        dataset.getOriginalFileName(),
+                        dataset.getFileUrl()
+                ));
     }
 
     @Override

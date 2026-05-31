@@ -1,45 +1,29 @@
 package com.wanted.codebombalms.problems.progress.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
-import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
-import com.wanted.codebombalms.problems.progress.application.port.CheckProgressProblemSetPort;
 import com.wanted.codebombalms.problems.progress.application.port.LoadCurrentProgressPort;
-import com.wanted.codebombalms.problems.progress.application.port.LoadProgressProblemPort;
 import com.wanted.codebombalms.problems.progress.application.port.ProgressManagementPort;
+import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetProgressPort;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetProgressState;
 import com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetJpaEntity;
-import com.wanted.codebombalms.problems.set.infrastructure.persistence.SpringDataProblemSetRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
-import com.wanted.codebombalms.submission.application.port.SubmissionQueryPort;
-import com.wanted.codebombalms.submission.domain.model.LatestSubmission;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class ProblemProgressPersistenceAdapter implements
-        CheckProgressProblemSetPort,
         LoadCurrentProgressPort,
-        LoadProgressProblemPort,
-        ProgressManagementPort {
+        ProgressManagementPort,
+        FindOrCreateProblemSetProgressPort {
 
-    private final SpringDataProblemSetRepository problemSetRepository;
     private final SpringDataProgressRepository progressRepository;
-    private final SpringDataProblemRepository problemRepository;
-    private final SubmissionQueryPort submissionQueryPort;
+    private final EntityManager entityManager;
 
-    @Override
-    public void checkProblemSetExists(Long problemSetId) {
-        if (!problemSetRepository.existsById(problemSetId)) {
-            throw new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND);
-        }
-    }
 
     @Override
     public Integer loadCurrentProblemNumber(Long userId, Long problemSetId) {
@@ -49,48 +33,10 @@ public class ProblemProgressPersistenceAdapter implements
                 .orElse(1);
     }
 
-    @Override
-    public List<ProblemProgressItem> loadProgressProblems(
-            Long userId,
-            Long problemSetId,
-            Integer currentProblemNumber
-    ) {
-        return problemRepository
-                .findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(problemSetId, "ACTIVE")
-                .stream()
-                .map(problem -> toProgressItem(userId, currentProblemNumber, problem))
-                .toList();
-    }
-
-    private ProblemProgressItem toProgressItem(
-            Long userId,
-            Integer currentProblemNumber,
-            ProblemJpaEntity problem
-    ) {
-        var latestSubmission = submissionQueryPort
-                .findLatestResult(userId, problem.getProblemId());
-
-        Boolean latestCorrect = latestSubmission
-                .map(LatestSubmission::correct)
-                .orElse(null);
-
-        Long latestSubmissionId = latestSubmission
-                .map(LatestSubmission::submissionId)
-                .orElse(null);
-
-        return ProblemProgressItem.of(
-                problem.getProblemId(),
-                problem.getProblemOrder(),
-                problem.getTitle(),
-                currentProblemNumber,
-                latestCorrect,
-                latestSubmissionId
-        );
-    }
 
     @Override
     public void validateCurrentProblem(Long userId, Long problemSetId, Integer problemOrder) {
-        ProgressJpaEntity progress = findOrCreateProgress(userId, problemSetId);
+        ProgressJpaEntity progress = findOrCreateProgressEntity(userId, problemSetId);
 
         if (Boolean.TRUE.equals(progress.getCompleted())) {
             throw new ConflictException(ProblemErrorCode.ALREADY_COMPLETED);
@@ -102,8 +48,45 @@ public class ProblemProgressPersistenceAdapter implements
     }
 
     @Override
+    public ProblemSetProgressState findOrCreateProgress(Long userId, Long problemSetId) {
+        return progressRepository
+                .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
+                .map(progress -> new ProblemSetProgressState(
+                        progress.getCurrentProblemNumber(),
+                        progress.getCompleted(),
+                        false
+                ))
+                .orElseGet(() -> createProgressStateSafely(userId, problemSetId));
+    }
+
+    private ProblemSetProgressState createProgressStateSafely(Long userId, Long problemSetId) {
+        try {
+            ProblemSetJpaEntity problemSet = getProblemSetReference(problemSetId);
+            ProgressJpaEntity saved = progressRepository.saveAndFlush(
+                    new ProgressJpaEntity(userId, problemSet)
+            );
+
+            return new ProblemSetProgressState(
+                    saved.getCurrentProblemNumber(),
+                    saved.getCompleted(),
+                    true
+            );
+        } catch (DataIntegrityViolationException e) {
+            ProgressJpaEntity progress = progressRepository
+                    .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
+                    .orElseThrow(() -> e);
+
+            return new ProblemSetProgressState(
+                    progress.getCurrentProblemNumber(),
+                    progress.getCompleted(),
+                    false
+            );
+        }
+    }
+
+    @Override
     public Integer openNextProblem(Long userId, Long problemSetId) {
-        ProgressJpaEntity progress = findOrCreateProgress(userId, problemSetId);
+        ProgressJpaEntity progress = findOrCreateProgressEntity(userId, problemSetId);
 
         progress.openNextProblem();
 
@@ -112,7 +95,7 @@ public class ProblemProgressPersistenceAdapter implements
 
     @Override
     public void completeProblemSet(Long userId, Long problemSetId) {
-        ProgressJpaEntity progress = findOrCreateProgress(userId, problemSetId);
+        ProgressJpaEntity progress = findOrCreateProgressEntity(userId, problemSetId);
 
         if (Boolean.TRUE.equals(progress.getCompleted())) {
             return;
@@ -123,18 +106,17 @@ public class ProblemProgressPersistenceAdapter implements
         progressRepository.save(progress);
     }
 
-    private ProgressJpaEntity findOrCreateProgress(Long userId, Long problemSetId) {
+    private ProgressJpaEntity findOrCreateProgressEntity(Long userId, Long problemSetId) {
         return progressRepository
                 .findByUserIdAndProblemSet_ProblemSetId(userId, problemSetId)
                 .orElseGet(() -> {
-                    ProblemSetJpaEntity problemSet = loadProblemSet(problemSetId);
+                    ProblemSetJpaEntity problemSet = getProblemSetReference(problemSetId);
                     return createProgressSafely(userId, problemSet);
                 });
     }
 
     private ProgressJpaEntity createProgressSafely(Long userId, ProblemSetJpaEntity problemSet) {
         try {
-            problemSet.increaseStartedUserCount();
             return progressRepository.saveAndFlush(new ProgressJpaEntity(userId, problemSet));
         } catch (DataIntegrityViolationException e) {
             return progressRepository
@@ -143,8 +125,8 @@ public class ProblemProgressPersistenceAdapter implements
         }
     }
 
-    private ProblemSetJpaEntity loadProblemSet(Long problemSetId) {
-        return problemSetRepository.findById(problemSetId)
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
+    private ProblemSetJpaEntity getProblemSetReference(Long problemSetId) {
+        return entityManager.getReference(ProblemSetJpaEntity.class, problemSetId);
     }
 }
+
