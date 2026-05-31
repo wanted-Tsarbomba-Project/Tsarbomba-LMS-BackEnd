@@ -2,10 +2,7 @@ package com.wanted.codebombalms.problems.set.application.service;
 
 import com.wanted.codebombalms.problems.progress.application.port.LoadProgressProblemPort;
 import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
-import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetProgressPort;
-import com.wanted.codebombalms.problems.set.application.port.LoadProblemForEntryPort;
-import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetEntryPort;
-import com.wanted.codebombalms.problems.set.application.port.LoadProblemStartCodePort;
+import com.wanted.codebombalms.problems.set.application.port.*;
 import com.wanted.codebombalms.problems.set.application.query.EnterProblemSetQuery;
 import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
@@ -28,6 +25,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final LoadProblemForEntryPort loadProblemForEntryPort;
     private final LoadProblemStartCodePort loadProblemStartCodePort;
     private final LoadProgressProblemPort loadProgressProblemPort;
+    private final IncreaseProblemSetStartedCountPort increaseProblemSetStartedCountPort;
 
     @Override
     @Transactional
@@ -36,6 +34,9 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
 
         ProblemSetProgressState progress =
                 findOrCreateProblemSetProgressPort.findOrCreateProgress(query.userId(), query.problemSetId());
+        if (Boolean.TRUE.equals(progress.created())) {
+            increaseProblemSetStartedCountPort.increaseStartedUserCount(query.problemSetId());
+        }
 
         var progressItems = loadProgressProblemPort.loadProgressProblems(
                 query.userId(),

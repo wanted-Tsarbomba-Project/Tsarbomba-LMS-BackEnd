@@ -7,9 +7,5 @@ import java.util.Optional;
 
 public interface LoadProblemForEntryPort {
 
-    ProblemDetail loadCurrentProblem(Long problemSetId, Integer problemNumber);
-
-    Optional<ProblemDetail> loadLastProblem(Long problemSetId);
-
     List<ProblemDetail> loadProblems(Long problemSetId);
 }

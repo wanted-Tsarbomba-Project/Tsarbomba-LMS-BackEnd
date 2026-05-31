@@ -10,6 +10,7 @@ import com.wanted.codebombalms.reward.point.domain.repository.PointHistoryReposi
 import com.wanted.codebombalms.reward.point.domain.repository.UserPointRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -22,7 +23,7 @@ public class RewardPointGrantService implements GrantProblemPointUseCase {
     private final PointHistoryRepository pointHistoryRepository;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void grant(Long userId, Long problemId, Long submissionId, Integer point) {
         validatePoint(point);
         validateNotAlreadyGranted(userId, problemId);

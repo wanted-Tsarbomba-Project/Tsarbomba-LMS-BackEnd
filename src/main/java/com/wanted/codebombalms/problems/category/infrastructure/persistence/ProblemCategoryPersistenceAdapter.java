@@ -1,18 +1,21 @@
 package com.wanted.codebombalms.problems.category.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.category.application.port.LoadProblemCategoryPort;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
-import com.wanted.codebombalms.problems.category.domain.repository.ProblemCategoryRepository;
+import com.wanted.codebombalms.problems.set.application.port.CheckProblemSetCategoryPort;
+import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetCategoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Repository
-@Transactional
 @RequiredArgsConstructor
-public class ProblemCategoryPersistenceAdapter implements ProblemCategoryRepository {
+public class ProblemCategoryPersistenceAdapter implements
+        LoadProblemCategoryPort,
+        CheckProblemSetCategoryPort,
+        FindOrCreateProblemSetCategoryPort {
 
     private final SpringDataProblemCategoryRepository springDataProblemCategoryRepository;
 
@@ -22,5 +25,26 @@ public class ProblemCategoryPersistenceAdapter implements ProblemCategoryReposit
                 .stream()
                 .map(ProblemCategoryMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public boolean existsActiveCategory(Long categoryId) {
+        return springDataProblemCategoryRepository.existsByCategoryIdAndStatus(
+                categoryId,
+                ProblemCategoryStatus.ACTIVE
+        );
+    }
+    @Override
+    public Long findOrCreateActiveCategoryId(String categoryName) {
+        ProblemCategory category = ProblemCategory.create(categoryName);
+
+        return springDataProblemCategoryRepository.findByCategoryNameAndStatus(
+                        category.getCategoryName(),
+                        category.getStatus()
+                )
+                .orElseGet(() -> springDataProblemCategoryRepository.save(
+                        ProblemCategoryMapper.toEntity(category)
+                ))
+                .getCategoryId();
     }
 }

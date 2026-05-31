@@ -15,7 +15,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
+// 조회용 어뎁터
 @Component
 @RequiredArgsConstructor
 public class ProblemSetResultPersistenceAdapter implements

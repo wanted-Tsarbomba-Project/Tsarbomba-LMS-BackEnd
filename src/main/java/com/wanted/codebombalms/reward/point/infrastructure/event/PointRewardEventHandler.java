@@ -27,7 +27,7 @@ public class PointRewardEventHandler {
             );
         } catch (DomainException e) {
             log.warn(
-                    "Point reward failed. errorCode={}, message={}, userId={}, problemId={}, submissionId={}, point={}",
+                    "포인트획득 실패. errorCode={}, message={}, userId={}, problemId={}, submissionId={}, point={}",
                     e.getErrorCode().getCode(),
                     e.getMessage(),
                     event.userId(),
@@ -37,7 +37,7 @@ public class PointRewardEventHandler {
             );
         } catch (Exception e) {
             log.error(
-                    "Unexpected point reward error. userId={}, problemId={}, submissionId={}, point={}",
+                    "예상치 못한 오류. userId={}, problemId={}, submissionId={}, point={}",
                     event.userId(),
                     event.problemId(),
                     event.submissionId(),

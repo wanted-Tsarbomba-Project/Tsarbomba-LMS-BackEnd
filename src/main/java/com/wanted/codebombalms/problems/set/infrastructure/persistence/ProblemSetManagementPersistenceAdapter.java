@@ -1,15 +1,11 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryJpaEntity;
-import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryMapper;
-import com.wanted.codebombalms.problems.category.infrastructure.persistence.SpringDataProblemCategoryRepository;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.problems.hint.infrastructure.persistence.ProblemHintJpaEntity;
-import com.wanted.codebombalms.problems.hint.infrastructure.persistence.SpringDataProblemHintRepository;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
+import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetCategoryPort;
+import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetHintsPort;
+import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetProblemsPort;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemModification;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemRegistration;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetDeactivationResult;
@@ -18,33 +14,25 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemSetModificationR
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistration;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetRegistrationResult;
 import com.wanted.codebombalms.problems.set.domain.repository.ProblemSetManagementRepository;
+import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Component
+@RequiredArgsConstructor
 public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagementRepository {
 
-    private final SpringDataProblemCategoryRepository problemCategoryRepository;
     private final SpringDataProblemSetRepository problemSetRepository;
-    private final SpringDataProblemRepository problemRepository;
-    private final SpringDataProblemHintRepository problemHintRepository;
-
-    public ProblemSetManagementPersistenceAdapter(
-            SpringDataProblemCategoryRepository problemCategoryRepository,
-            SpringDataProblemSetRepository problemSetRepository,
-            SpringDataProblemRepository problemRepository,
-            SpringDataProblemHintRepository problemHintRepository
-    ) {
-        this.problemCategoryRepository = problemCategoryRepository;
-        this.problemSetRepository = problemSetRepository;
-        this.problemRepository = problemRepository;
-        this.problemHintRepository = problemHintRepository;
-    }
+    private final FindOrCreateProblemSetCategoryPort findOrCreateProblemSetCategoryPort;
+    private final ManageProblemSetProblemsPort manageProblemSetProblemsPort;
+    private final ManageProblemSetHintsPort manageProblemSetHintsPort;
+    private final EntityManager entityManager;
 
     @Override
     public ProblemSetRegistrationResult createProblemSet(ProblemSetRegistration registration, Long createdBy) {
-        ProblemCategoryJpaEntity category = findOrCreateActiveCategory(registration.categoryName());
+        ProblemCategoryJpaEntity category = getCategoryReference(
+                findOrCreateProblemSetCategoryPort.findOrCreateActiveCategoryId(registration.categoryName())
+        );
 
         ProblemSetJpaEntity problemSet = new ProblemSetJpaEntity(
                 category,
@@ -60,12 +48,12 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
 
         for (int i = 0; i < registration.problems().size(); i++) {
             ProblemRegistration problemCommand = registration.problems().get(i);
-            ProblemJpaEntity savedProblem = problemRepository.save(toProblemEntity(
-                    savedProblemSet,
+            Long problemId = manageProblemSetProblemsPort.createProblem(
+                    savedProblemSet.getProblemSetId(),
                     problemCommand,
                     i + 1
-            ));
-            createHint(savedProblem, problemCommand.hint());
+            );
+            manageProblemSetHintsPort.createHint(problemId, problemCommand.hint());
             createdProblemCount++;
         }
 
@@ -82,7 +70,9 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
     public ProblemSetModificationResult updateProblemSet(ProblemSetModification modification) {
         ProblemSetJpaEntity problemSet = problemSetRepository.findById(modification.problemSetId())
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
-        ProblemCategoryJpaEntity category = findOrCreateActiveCategory(modification.categoryName());
+        ProblemCategoryJpaEntity category = getCategoryReference(
+                findOrCreateProblemSetCategoryPort.findOrCreateActiveCategoryId(modification.categoryName())
+        );
 
         problemSet.update(
                 category,
@@ -95,8 +85,12 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
 
         for (int i = 0; i < modification.problems().size(); i++) {
             ProblemModification problemCommand = modification.problems().get(i);
-            ProblemJpaEntity problem = updateOrCreateProblem(problemSet, problemCommand, i + 1);
-            updateOrCreateHint(problem, problemCommand);
+            Long problemId = manageProblemSetProblemsPort.updateOrCreateProblem(
+                    problemSet.getProblemSetId(),
+                    problemCommand,
+                    i + 1
+            );
+            manageProblemSetHintsPort.updateOrCreateHint(problemId, problemCommand.hintId(), problemCommand.hint());
             updatedProblemCount++;
         }
 
@@ -114,123 +108,18 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
     public ProblemSetDeactivationResult deactivateProblemSet(Long problemSetId) {
         ProblemSetJpaEntity problemSet = problemSetRepository.findById(problemSetId)
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
-        List<ProblemJpaEntity> problems = problemRepository.findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(
-                problemSetId,
-                "ACTIVE"
-        );
 
         problemSet.deactivate();
-        problems.forEach(ProblemJpaEntity::deactivate);
+        int deactivatedProblemCount = manageProblemSetProblemsPort.deactivateActiveProblems(problemSetId);
 
         return new ProblemSetDeactivationResult(
                 problemSet.getProblemSetId(),
                 "INACTIVE",
-                problems.size()
+                deactivatedProblemCount
         );
     }
 
-    private ProblemCategoryJpaEntity findOrCreateActiveCategory(String categoryName) {
-        ProblemCategory category = ProblemCategory.create(categoryName);
-
-        return problemCategoryRepository.findByCategoryNameAndStatus(
-                        category.getCategoryName(),
-                        category.getStatus()
-                )
-                .orElseGet(() -> problemCategoryRepository.save(
-                        ProblemCategoryMapper.toEntity(category)
-                ));
-    }
-
-    private ProblemJpaEntity toProblemEntity(
-            ProblemSetJpaEntity problemSet,
-            ProblemRegistration command,
-            Integer problemOrder
-    ) {
-        return new ProblemJpaEntity(
-                problemSet,
-                command.title(),
-                command.content(),
-                command.problemType(),
-                command.difficulty(),
-                command.answer(),
-                command.explanation(),
-                command.point(),
-                command.attemptLimit(),
-                command.isRetriable(),
-                problemOrder
-        );
-    }
-
-    private ProblemJpaEntity toProblemEntity(
-            ProblemSetJpaEntity problemSet,
-            ProblemModification command,
-            Integer problemOrder
-    ) {
-        return new ProblemJpaEntity(
-                problemSet,
-                command.title(),
-                command.content(),
-                command.problemType(),
-                command.difficulty(),
-                command.answer(),
-                command.explanation(),
-                command.point(),
-                command.attemptLimit(),
-                command.isRetriable(),
-                problemOrder
-        );
-    }
-
-    private ProblemJpaEntity updateOrCreateProblem(
-            ProblemSetJpaEntity problemSet,
-            ProblemModification command,
-            Integer problemOrder
-    ) {
-        if (command.problemId() == null) {
-            return problemRepository.save(toProblemEntity(problemSet, command, problemOrder));
-        }
-
-        ProblemJpaEntity problem = problemRepository
-                .findByProblemIdAndProblemSet_ProblemSetId(command.problemId(), problemSet.getProblemSetId())
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
-
-        problem.update(
-                command.title(),
-                command.content(),
-                command.problemType(),
-                command.difficulty(),
-                command.answer(),
-                command.explanation(),
-                command.point(),
-                command.attemptLimit(),
-                command.isRetriable()
-        );
-
-        return problem;
-    }
-
-    private void createHint(ProblemJpaEntity problem, String hintContent) {
-        if (hintContent == null || hintContent.isBlank()) {
-            return;
-        }
-
-        problemHintRepository.save(new ProblemHintJpaEntity(problem, 1, hintContent));
-    }
-
-    private void updateOrCreateHint(ProblemJpaEntity problem, ProblemModification command) {
-        if (command.hint() == null || command.hint().isBlank()) {
-            return;
-        }
-
-        if (command.hintId() == null) {
-            createHint(problem, command.hint());
-            return;
-        }
-
-        ProblemHintJpaEntity hint = problemHintRepository
-                .findByHintIdAndProblem_ProblemId(command.hintId(), problem.getProblemId())
-                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
-
-        hint.update(command.hint());
+    private ProblemCategoryJpaEntity getCategoryReference(Long categoryId) {
+        return entityManager.getReference(ProblemCategoryJpaEntity.class, categoryId);
     }
 }

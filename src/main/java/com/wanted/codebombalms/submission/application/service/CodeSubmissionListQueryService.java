@@ -34,7 +34,7 @@ public class CodeSubmissionListQueryService implements CodeSubmissionListQueryUs
             throw new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND);
         }
 
-        loadProblemForSubmissionPort.loadProblem(problemId);
+        loadProblemForSubmissionPort.loadProblemForSubmission(problemId);
 
         int safePage = page < 1 ? DEFAULT_PAGE : page;
         int safeSize = size < 1 ? DEFAULT_SIZE : size;
