@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetBrief;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.progress.application.port.CheckProgressProblemSetPort;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Component
@@ -67,6 +69,12 @@ public class ProblemSetPersistenceAdapter implements
         return IntStream.range(0, problemSets.size())
                 .mapToObj(index -> ProblemSetMapper.toSummary(problemSets.get(index), index + 1))
                 .toList();
+    }
+
+    @Override
+    public Optional<ProblemSetBrief> loadById(Long problemSetId) {
+        return problemSetRepository.findById(problemSetId)
+                .map(ProblemSetMapper::toBrief);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetBrief;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
 
@@ -18,6 +19,15 @@ public class ProblemSetMapper {
                 problemSet.getCompletedUserCount(),
                 problemSet.getStartedUserCount(),
                 problemSet.getCreatedAt()
+        );
+    }
+
+    // 챗봇 adapter용 단건 조회 매핑
+    public static ProblemSetBrief toBrief(ProblemSetJpaEntity problemSet) {
+        return ProblemSetBrief.of(
+                problemSet.getProblemSetId(),
+                problemSet.getTitle(),
+                problemSet.getDescription()
         );
     }
 

@@ -66,6 +66,32 @@ public class ProblemQueryService {
                 .map(this::toView);
     }
 
+    // === 챗봇 adapter용 메서드 ===
+    // chatbot ChatContextAdapter.findProblems() 가 호출
+    @Transactional(readOnly = true)
+    public List<ProblemForChatView> findProblemsForChat(Long problemSetId) {
+        return problemRepository.findActiveProblemsByProblemSet(problemSetId)
+                .stream()
+                .map(p -> new ProblemForChatView(
+                        p.getProblemId(),
+                        p.getTitle(),
+                        p.getContent(),
+                        p.getProblemType(),
+                        p.getAnswer(),
+                        p.getExplanation()))
+                .toList();
+    }
+
+    // 챗봇 adapter 응답 DTO
+    public record ProblemForChatView(
+            Long problemId,
+            String title,
+            String content,
+            String problemType,
+            String answer,
+            String explanation
+    ) {}
+
     private ProblemView toView(Problem problem) {
         return new ProblemView(
                 problem.getProblemId(),

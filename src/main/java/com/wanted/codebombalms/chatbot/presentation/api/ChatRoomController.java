@@ -13,8 +13,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import com.wanted.codebombalms.chatbot.application.command.SendMessageCommand;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Tag(name = "Chatbot - 채팅방", description = "AI 채팅방 생성/조회/삭제 및 메시지 전송 API")
+@PreAuthorize("isAuthenticated()")  // ← 추가
 @RestController
 @RequestMapping("/api/v1/chat")
 @RequiredArgsConstructor
@@ -84,7 +87,7 @@ public class ChatRoomController {
     @PostMapping("/messages")
     public ResponseEntity<ApiResponse<SendFirstMessageResponse>> sendFirstMessage(
             @AuthenticationPrincipal Long userId,
-            @RequestBody SendFirstMessageRequest request
+            @Valid @RequestBody SendFirstMessageRequest request
     ) {
         SendFirstMessageCommand command = new SendFirstMessageCommand(
                 userId,
@@ -105,8 +108,6 @@ public class ChatRoomController {
                 )
         );
     }
-
-
     @Operation(
             summary = "채팅방 목록 조회",
             description = "로그인한 사용자의 채팅방 목록을 최신순으로 반환합니다."
@@ -267,7 +268,7 @@ public class ChatRoomController {
             @Parameter(description = "메시지를 전송할 채팅방 ID", example = "1")
             @PathVariable Long roomId,
             @AuthenticationPrincipal Long userId,
-            @RequestBody ChatMessageRequest request
+            @Valid @RequestBody ChatMessageRequest request
     ) {
         SendMessageCommand command = new SendMessageCommand(
                 userId,

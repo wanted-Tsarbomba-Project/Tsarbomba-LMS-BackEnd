@@ -1,10 +1,11 @@
 package com.wanted.codebombalms.chatbot.infrastructure.adapter;
 
 import com.wanted.codebombalms.chatbot.application.port.ChatContextPort;
-import com.wanted.codebombalms.problems.dataset.infrastructure.persistence.SpringDataProblemDatasetRepository;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
-import com.wanted.codebombalms.problems.set.infrastructure.persistence.SpringDataProblemSetRepository;
-import com.wanted.codebombalms.submission.infrastructure.persistence.SpringDataSubmissionRepository;
+import com.wanted.codebombalms.problems.dataset.application.service.ProblemDatasetQueryService;
+import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
+import com.wanted.codebombalms.problems.set.application.service.ProblemSetQueryService;
+import com.wanted.codebombalms.submission.application.service.SubmissionQueryService;
+import com.wanted.codebombalms.submission.domain.model.LatestSubmission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,38 +15,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatContextAdapter implements ChatContextPort {
 
-    private final SpringDataProblemSetRepository problemSetRepository;
-    private final SpringDataProblemRepository problemRepository;
-    private final SpringDataSubmissionRepository submissionRepository;
-    private final SpringDataProblemDatasetRepository datasetRepository;
+    // 교안 패턴: 타 BC SpringData 직접참조 제거 → 타 BC application service 경유
+    private final ProblemSetQueryService problemSetQueryService;
+    private final ProblemQueryService problemQueryService;
+    private final SubmissionQueryService submissionQueryService;
+    private final ProblemDatasetQueryService problemDatasetQueryService;
 
     @Override
     public ProblemSetInfo findProblemSet(Long problemSetId) {
-        return problemSetRepository.findById(problemSetId)
-                .map(e -> new ProblemSetInfo(
-                        e.getProblemSetId(),
-                        e.getTitle(),
-                        e.getDescription()
-                ))
-                .orElse(null);
+        var ps = problemSetQueryService.findProblemSetDetail(problemSetId);
+        return new ProblemSetInfo(ps.problemSetId(), ps.title(), ps.description());
     }
 
     @Override
     public List<ProblemInfo> findProblems(Long problemSetId, Long userId) {
-        return problemRepository
-                .findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(problemSetId, "ACTIVE")
-                .stream()
+        return problemQueryService.findProblemsForChat(problemSetId).stream()
                 .map(p -> {
-                    String submittedAnswer = submissionRepository
-                            .findTopByUserIdAndProblem_ProblemIdOrderBySubmittedAtDesc(userId, p.getProblemId())
-                            .map(s -> s.getSubmittedAnswer())
+                    String submittedAnswer = submissionQueryService
+                            .findLatestResult(userId, p.problemId())
+                            .map(LatestSubmission::submittedAnswer)
                             .orElse(null);
                     return new ProblemInfo(
-                            p.getTitle(),
-                            p.getContent(),
-                            p.getProblemType(),
-                            p.getAnswer(),
-                            p.getExplanation(),
+                            p.title(),
+                            p.content(),
+                            p.problemType(),
+                            p.answer(),
+                            p.explanation(),
                             submittedAnswer
                     );
                 })
@@ -54,17 +49,21 @@ public class ChatContextAdapter implements ChatContextPort {
 
     @Override
     public SessionProgressInfo findSessionProgress(Long problemId) {
-        int currentProblemNumber = problemRepository.findById(problemId)
-                .map(e -> e.getProblemOrder())
-                .orElse(1);
+        int currentProblemNumber = problemQueryService
+                .findProblemForSubmission(problemId)
+                .problemOrder();
         return new SessionProgressInfo(currentProblemNumber);
     }
 
     @Override
+    public String findProblemTitle(Long problemId) {
+        return problemQueryService.findProblem(problemId).getTitle();
+    }
+
+    @Override
     public DatasetInfo findDataset(Long problemSetId) {
-        return datasetRepository
-                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
-                .map(e -> new DatasetInfo(e.getMetadata()))
+        return problemDatasetQueryService.findLatestActiveMetadata(problemSetId)
+                .map(DatasetInfo::new)
                 .orElse(null);
     }
 }
