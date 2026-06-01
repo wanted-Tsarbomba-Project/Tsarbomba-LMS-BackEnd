@@ -1,0 +1,81 @@
+### ===== Admin API 테스트 시나리오 =====
+### 사전 조건: DB 에 role = 'ADMIN' 계정 존재 (admin@test.com)
+### 사전 조건: 학생 계정 몇 개 가입 완료된 상태
+
+### 0. Admin 로그인 — 쿠키 발급 (먼저 실행!)
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "Test1234!"
+}
+
+### 1. 학생 전체 조회 — 정상 (기본 page=0, size=20)
+GET http://localhost:8080/api/v1/users
+
+### 2. 학생 전체 조회 — 페이지네이션 (page=0, size=5)
+GET http://localhost:8080/api/v1/users?page=0&size=5
+
+### 3. 학생 상세 조회 — 정상 (1번/2번에서 userId 확인 후 입력)
+GET http://localhost:8080/api/v1/admin/users/5
+
+### 4. 학생 상세 조회 — 404 (존재하지 않는 userId)
+GET http://localhost:8080/api/v1/admin/users/99999
+
+### 5. 계정 정지 — locked=true
+PATCH http://localhost:8080/api/v1/users/5/lock
+Content-Type: application/json
+
+{
+  "locked": true
+}
+
+### 6. 정지 처리 후 재조회 — isLocked: true 확인
+GET http://localhost:8080/api/v1/admin/users/5
+
+### 7. 계정 해제 — locked=false
+PATCH http://localhost:8080/api/v1/users/5/lock
+Content-Type: application/json
+
+{
+  "locked": false
+}
+
+### 8. 해제 처리 후 재조회 — isLocked: false 확인
+GET http://localhost:8080/api/v1/admin/users/5
+
+
+### ===== 권한 검증 시나리오 =====
+
+### 9. (사전) 로그아웃 → STUDENT 로그인 준비
+POST http://localhost:8080/api/v1/auth/logout
+
+### 10. STUDENT 로그인
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### 11. STUDENT 가 학생 전체 조회 시도 — 403 AUT-015
+GET http://localhost:8080/api/v1/users
+
+### 12. STUDENT 가 계정 정지 시도 — 403 AUT-015
+PATCH http://localhost:8080/api/v1/users/5/lock
+Content-Type: application/json
+
+{
+  "locked": true
+}
+
+### 13. (사전) 로그아웃 → 비로그인 상태
+POST http://localhost:8080/api/v1/auth/logout
+
+### 14. 비로그인 학생 전체 조회 — 401 AUT-016
+GET http://localhost:8080/api/v1/users
+
+### 15. 비로그인 학생 상세 조회 — 401 AUT-016
+GET http://localhost:8080/api/v1/admin/users/5

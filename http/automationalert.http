@@ -1,0 +1,305 @@
+@baseUrl = http://localhost:8080
+@operationAlertId = 1
+@deletableOperationAlertId = 2
+@openOperationAlertId = 1
+
+### =========================================================
+### 운영 알림 목록 조회 - 전체
+### 응답 data 페이징 필드:
+### content, page, size, totalElements, totalPages,
+### first, last, hasNext, hasPrevious
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 문제 알림
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=PROBLEM&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 학생 알림
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=USER&page=0&size=20
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 강좌 알림
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=COURSE&page=0&size=20
+
+
+### =========================================================
+### 운영 알림 목록 조회 - OPEN 상태
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?status=OPEN&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - RESOLVED 상태
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?status=RESOLVED&page=0&size=20
+
+
+### =========================================================
+### 운영 알림 목록 조회 - IGNORED 상태
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?status=IGNORED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 문제 + OPEN
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=PROBLEM&status=OPEN&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 문제 + RESOLVED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=PROBLEM&status=RESOLVED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 문제 + IGNORED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=PROBLEM&status=IGNORED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 학생 + OPEN
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=USER&status=OPEN&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 학생 + RESOLVED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=USER&status=RESOLVED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 학생 + IGNORED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=USER&status=IGNORED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 강좌 + OPEN
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=COURSE&status=OPEN&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 강좌 + RESOLVED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=COURSE&status=RESOLVED&page=0&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 강좌 + IGNORED
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=COURSE&status=IGNORED&page=0&size=20
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 페이지 변경
+### page=1은 두 번째 페이지
+### size=10은 한 페이지당 10개 조회
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?targetType=PROBLEM&page=1&size=10
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 작은 사이즈 테스트
+### totalPages, hasNext, hasPrevious 확인용
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=0&size=3
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 두 번째 페이지 테스트
+### first=false, hasPrevious=true 확인용
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=1&size=3
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 잘못된 page 요청
+### 기대 결과: INVALID_PAGE_REQUEST
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=-1&size=20
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - 잘못된 size 요청
+### 기대 결과: INVALID_PAGE_REQUEST
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=0&size=0
+
+
+
+### =========================================================
+### 운영 알림 목록 조회 - size 최대값 초과
+### 기대 결과: INVALID_PAGE_REQUEST
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=0&size=101
+
+
+
+### =========================================================
+### 운영 알림 상세 조회
+### COURSE/PROBLEM/USER 알림 상세 조회
+### 응답 data 필드:
+### alert  - 알림 기본 정보, 상태, 메모, 처리자/처리일시
+### rule   - 규칙 코드, 라벨, 기준값 라벨/단위, 최소 제출 수
+### target - 강좌, 문제/문제세트 또는 학생 정보(USER는 email 포함)
+### assignee - 강좌 담당자 또는 문제세트 생성자(USER는 null)
+### metric - 화면 표시용 관측값/기준값/단위
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}
+
+
+### =========================================================
+### 운영 알림 상세 조회 - 없는 알림
+### 기대 결과: OPERATION_ALERT_NOT_FOUND
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts/999999
+
+
+### =========================================================
+### 운영 알림 메모 수정
+### 상세 조회의 alert.adminMemo에 반영됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "담당자에게 강좌 노출 상태 확인 요청"
+}
+
+
+### =========================================================
+### 운영 알림 메모 비우기
+### null 또는 공백 문자열은 null로 저장됨
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": null
+}
+
+
+### =========================================================
+### 운영 알림 메모 수정 - 길이 초과
+### 기대 결과: INVALID_MEMO_UPDATE_REQUEST
+### adminMemo 최대 길이는 500자
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/memo
+Content-Type: application/json
+
+
+{
+  "adminMemo": "500자를 초과하는 메모를 입력하면 INVALID_MEMO_UPDATE_REQUEST가 발생해야 합니다. 실제 테스트 시에는 이 문자열을 500자 넘게 늘려서 요청하세요."
+}
+
+
+### =========================================================
+### 운영 알림 상태 변경 - 처리 완료 RESOLVED
+### OPEN 상태 알림에만 사용
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/status
+Content-Type: application/json
+
+
+{
+  "status": "RESOLVED"
+}
+
+
+### =========================================================
+### 운영 알림 상태 변경 - 무시 IGNORED
+### OPEN 상태 알림에만 사용
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/status
+Content-Type: application/json
+
+
+{
+  "status": "IGNORED"
+}
+
+
+### =========================================================
+### 운영 알림 상태 변경 - 잘못된 상태 OPEN 요청
+### 기대 결과: INVALID_STATUS_UPDATE_REQUEST
+### 처리 API에서는 RESOLVED 또는 IGNORED만 허용
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/status
+Content-Type: application/json
+
+
+{
+  "status": "OPEN"
+}
+
+
+### =========================================================
+### 운영 알림 상태 변경 - 상태 누락
+### 기대 결과: INVALID_STATUS_UPDATE_REQUEST
+### =========================================================
+PATCH {{baseUrl}}/api/v1/admin/operation-alerts/{{operationAlertId}}/status
+Content-Type: application/json
+
+
+{
+}
+
+
+### =========================================================
+### 운영 알림 삭제 - 성공
+### RESOLVED 또는 IGNORED 상태 알림에만 사용
+### 기대 결과: deletedAt 값 반환, 이후 목록 조회에서 제외
+### =========================================================
+DELETE {{baseUrl}}/api/v1/admin/operation-alerts/{{deletableOperationAlertId}}
+
+
+### =========================================================
+### 운영 알림 삭제 - OPEN 상태 삭제 불가
+### 기대 결과: CANNOT_DELETE_OPEN_ALERT
+### =========================================================
+DELETE {{baseUrl}}/api/v1/admin/operation-alerts/{{openOperationAlertId}}
+
+
+### =========================================================
+### 운영 알림 삭제 - 이미 삭제된 알림 재삭제
+### 위 성공 요청을 먼저 실행한 뒤 다시 실행
+### 기대 결과: OPERATION_ALERT_NOT_FOUND
+### =========================================================
+DELETE {{baseUrl}}/api/v1/admin/operation-alerts/{{deletableOperationAlertId}}
+
+
+### =========================================================
+### 운영 알림 삭제 후 목록 조회 확인
+### deleted_at이 채워진 알림은 조회 결과에서 제외되어야 함
+### =========================================================
+GET {{baseUrl}}/api/v1/admin/operation-alerts?page=1&size=20

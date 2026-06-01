@@ -1,0 +1,220 @@
+### 1. 회원가입 성공
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test1@example.com",
+  "password": "Test1234!",
+  "name": "홍길동",
+  "nickname": "길동이",
+  "phone": "010-1234-5678"
+}
+
+### 2. 회원가입 — 이메일 중복 (1번 다시 실행)
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test1@example.com",
+  "password": "Test1234!",
+  "name": "홍길동",
+  "nickname": "길동이",
+  "phone": "010-1234-5678"
+}
+
+### 3. 회원가입 — 닉네임 중복 (이메일만 다름)
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test2@example.com",
+  "password": "Test1234!",
+  "name": "홍길동",
+  "nickname": "길동이",
+  "phone": "010-1234-5678"
+}
+
+### 4. 회원가입 — 비밀번호 형식 오류
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test3@example.com",
+  "password": "short",
+  "name": "홍길동",
+  "nickname": "다른닉",
+  "phone": "010-1234-5678"
+}
+
+### 5. 회원가입 — 전화번호 형식 오류
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "test4@example.com",
+  "password": "Test1234!",
+  "name": "홍길동",
+  "nickname": "또다른닉",
+  "phone": "01012345678"
+}
+
+### 6. 회원가입 — 이메일 형식 오류
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "Test1234!",
+  "name": "홍길동",
+  "nickname": "닉네임5",
+  "phone": "010-1234-5678"
+}
+
+### 7. 이메일 중복 확인 — 사용 가능
+GET http://localhost:8080/api/v1/auth/check/email?email=brand-new@example.com
+
+
+### 8. 이메일 중복 확인 — 이미 사용 중 (1번에서 가입한 이메일)
+GET http://localhost:8080/api/v1/auth/check/email?email=test1@example.com
+
+
+### 9. 닉네임 중복 확인 — 사용 가능
+GET http://localhost:8080/api/v1/auth/check/nickname?nickname=완전새로운닉
+
+
+### 10. 닉네임 중복 확인 — 이미 사용 중 (1번에서 가입한 닉네임)
+GET http://localhost:8080/api/v1/auth/check/nickname?nickname=길동이
+
+
+
+### 11. 로그인 성공 — 쿠키 2개 발급 + body.data.nickname 응답
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### 12. 로그인 실패 — 비번 틀림
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test1@example.com",
+  "password": "WrongPass1!"
+}
+
+### 13. 로그인 실패 — 없는 이메일
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "ghost@example.com",
+  "password": "Test1234!"
+}
+
+### 14. 토큰 재발급 — 쿠키 자동 전송 (11번 이후 실행)
+POST http://localhost:8080/api/v1/auth/reissue
+
+### 15. 로그아웃 (14번 또는 11번 이후 실행)
+POST http://localhost:8080/api/v1/auth/logout
+
+### 16. 로그아웃 후 다시 로그아웃 — 401 (쿠키 없음)
+POST http://localhost:8080/api/v1/auth/logout
+
+### 17. 로그아웃 후 재발급 시도 — 401 (DB에 RT 없음)
+POST http://localhost:8080/api/v1/auth/reissue
+
+
+### ===== 이메일 인증
+
+### 18. 이메일 인증 코드 발송 — 정상
+POST http://localhost:8080/api/v1/auth/email/send
+Content-Type: application/json
+
+{
+  "email": "qowjdgus0629@g.eulji.ac.kr"
+}
+
+### 19. 이메일 인증 코드 발송 — 이미 가입된 이메일 (1번에서 가입한 이메일)
+POST http://localhost:8080/api/v1/auth/email/send
+Content-Type: application/json
+
+{
+  "email": "test1@example.com"
+}
+
+### 20. 이메일 인증 코드 발송 — 1분 이내 재발송 (18번 직후 실행)
+POST http://localhost:8080/api/v1/auth/email/send
+Content-Type: application/json
+
+{
+  "email": "본인-이메일@gmail.com"
+}
+
+### 21. 이메일 인증 코드 검증 — 잘못된 코드
+POST http://localhost:8080/api/v1/auth/email/verify
+Content-Type: application/json
+
+{
+  "email": "본인-이메일@gmail.com",
+  "code": "000000"
+}
+
+### 22. 이메일 인증 코드 검증 — 만료/존재하지 않는 코드
+POST http://localhost:8080/api/v1/auth/email/verify
+Content-Type: application/json
+
+{
+  "email": "no-code@example.com",
+  "code": "382947"
+}
+
+### 23. 이메일 인증 코드 검증 — 정상 (실제 메일에서 받은 코드 입력!)
+POST http://localhost:8080/api/v1/auth/email/verify
+Content-Type: application/json
+
+{
+  "email": "qowjdgus0629@g.eulji.ac.kr",
+  "code": "111700"
+}
+
+### 24. 회원가입 — 이메일 미인증 상태
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "unverified@example.com",
+  "password": "Test1234!",
+  "passwordConfirm": "Test1234!",
+  "name": "홍길동",
+  "nickname": "미인증닉",
+  "phone": "010-1111-2222"
+}
+
+### 25. 회원가입 — 정상 (23번에서 인증 완료 후 실행!)
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "qowjdgus0629@g.eulji.ac.kr",
+  "password": "Test1234!",
+  "passwordConfirm": "Test1234!",
+  "name": "홍길동",
+  "nickname": "본인닉네임",
+  "phone": "010-1234-5678"
+}
+
+### 26. 회원가입 — 비밀번호/확인 불일치
+POST http://localhost:8080/api/v1/auth/signup
+Content-Type: application/json
+
+{
+  "email": "dkdlwkr207@gmail.com",
+  "password": "Test1234!",
+  "passwordConfirm": "Different5678!",
+  "name": "홍길동",
+  "nickname": "다른닉",
+  "phone": "010-1234-5678"
+}

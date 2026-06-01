@@ -41,10 +41,25 @@ application-*.properties
 application-*.yml
 *.env
 .env*
+/secrets/
+/src/main/resources/gcs/
 
 ### Logs ###
 *.log
 logs/
 
+### Uploaded Files ###
+uploads/
+
 ### macOS ###
 .DS_Store
+
+### Local Dev Notes ###
+CLAUDE.md
+CLAUREAD.md
+CLAUREAD-API.md
+CLAUEND.md
+.claude
+CONTEXT.md
+
+demo

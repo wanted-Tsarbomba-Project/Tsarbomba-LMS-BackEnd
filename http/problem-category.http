@@ -1,0 +1,5 @@
+@baseUrl = http://localhost:8080
+
+### 문제 분야 목록 조회
+GET {{baseUrl}}/api/v1/problem-categories
+Accept: application/json

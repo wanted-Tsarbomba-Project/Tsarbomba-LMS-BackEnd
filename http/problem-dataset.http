@@ -1,0 +1,162 @@
+@baseUrl = http://localhost:8080
+@problemId = 3001
+@datasetId = 3001
+@uploadedDatasetId = 3008
+@notFoundDatasetId = 999999
+@notFoundProblemId = 999999
+@employeeDatasetUrl =https://storage.googleapis.com/codebombalms/problem_dataset/28679fde-6075-4c2e-a3f0-190fa3d80db7_employee_performance.csv
+@datasetFilePath = ../uploads/datasets/employee_performance_20265.csv
+
+# =====================================================
+# 문제 데이터셋 업로드 / 연결 / 실행 확인
+# =====================================================
+
+### 1. 데이터셋 업로드 성공 - GCS 저장 확인
+# 사전 조건:
+# - @datasetFilePath 위치에 CSV 파일이 있어야 합니다.
+# - 성공하면 응답 data.datasetId를 @uploadedDatasetId에 복사해서 4번 연결 테스트에 사용하세요.
+# 확인할 것:
+# - fileUrl: https://storage.googleapis.com/codebombalms/problem_dataset/... 형태
+# - filePath: problem_dataset/... 형태
+# - GCS 버킷 codebombalms/problem_dataset 폴더에 UUID_파일명.csv 생성
+POST {{baseUrl}}/api/v1/problem-datasets
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="employee_performance.csv"
+Content-Type: text/csv
+
+< {{datasetFilePath}}
+--boundary--
+
+
+### 2. 데이터셋 업로드 실패 - 빈 파일
+# 기대 결과:
+# - 400 Bad Request
+# - PRB-DAT-004 또는 PROBLEM_DATASET_INVALID_FILE 계열
+POST {{baseUrl}}/api/v1/problem-datasets
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="empty.csv"
+Content-Type: text/csv
+
+< ../uploads/datasets/empty.csv
+--boundary--
+
+
+### 3. 데이터셋 업로드 실패 - CSV가 아닌 파일
+# 기대 결과:
+# - 400 Bad Request
+# - PRB-DAT-004 또는 PROBLEM_DATASET_INVALID_FILE 계열
+POST {{baseUrl}}/api/v1/problem-datasets
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="not_csv.txt"
+Content-Type: text/plain
+
+< ../uploads/datasets/not_csv.txt
+--boundary--
+
+
+# =====================================================
+# 문제-데이터셋 연결 확인
+# =====================================================
+
+### 4. 문제-데이터셋 연결 성공
+# 사전 조건:
+# - @uploadedDatasetId는 업로드만 되고 problem_id가 NULL인 datasetId여야 합니다.
+# - 더미데이터의 datasetId=3001은 이미 problemId=3001과 연결되어 있으므로 성공 테스트에는 쓰면 안 됩니다.
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
+Accept: application/json
+Content-Type: application/json
+
+{
+  "datasetId": {{uploadedDatasetId}}
+}
+
+
+### 5. 문제-데이터셋 연결 실패 - 존재하지 않는 문제
+# 기대 결과:
+# - 404 Not Found
+# - PROBLEM_NOT_FOUND
+POST {{baseUrl}}/api/v1/problems/{{notFoundProblemId}}/datasets
+Accept: application/json
+Content-Type: application/json
+
+{
+  "datasetId": {{datasetId}}
+}
+
+
+### 6. 문제-데이터셋 연결 실패 - 존재하지 않는 데이터셋
+# 기대 결과:
+# - 404 Not Found
+# - PROBLEM_DATASET_NOT_FOUND
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
+Accept: application/json
+Content-Type: application/json
+
+{
+  "datasetId": {{notFoundDatasetId}}
+}
+
+
+### 7. 문제-데이터셋 연결 실패 - 이미 연결된 데이터셋
+# 더미데이터 기준:
+# - datasetId=3001은 problemId=3001에 이미 연결되어 있습니다.
+# 기대 결과:
+# - 409 Conflict
+# - PROBLEM_DATASET_ALREADY_CONNECTED
+POST {{baseUrl}}/api/v1/problems/{{problemId}}/datasets
+Accept: application/json
+Content-Type: application/json
+
+{
+  "datasetId": {{datasetId}}
+}
+
+
+# =====================================================
+# 코드 문제 상세 / 실행 확인
+# =====================================================
+
+### 8. 문제 세트 진입 - 코드 문제와 시작 코드 확인
+# 확인할 것:
+# - problemId=3001 문제가 내려오는지
+# - startCode 또는 datasetUrl이 GCS URL 기반인지
+# - point 값이 내려오는지
+GET {{baseUrl}}/api/v1/problem-sets/3001?userId=3
+Accept: application/json
+
+
+### 9. 코드 실행 성공 - GCS CSV 읽기
+# 기대 결과:
+# - 200 OK
+# - data.output = "(행수, 열수)" 형태
+# - data.isSuccess = true
+POST {{baseUrl}}/api/v1/code-problems/3001/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\n\ndf = pd.read_csv(\"{{employeeDatasetUrl}}\")\nresult = df.shape"
+}
+
+
+### 10. 코드 실행 성공 - 평균 계산
+# 기대 결과:
+# - 200 OK
+# - data.output에 평균값 출력
+# - data.isSuccess = true
+POST {{baseUrl}}/api/v1/code-problems/3002/executions
+Accept: application/json
+Content-Type: application/json
+
+{
+  "code": "import pandas as pd\n\ndf = pd.read_csv(\"{{employeeDatasetUrl}}\")\nresult = df[\"performance_score\"].mean()"
+}

@@ -1,0 +1,86 @@
+package com.wanted.codebombalms.problems.execution.infrastructure.runner;
+
+import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
+@Component
+@ConditionalOnProperty(name = "code-runner.type", havingValue = "cloud-run")
+public class CloudRunCodeRunnerAdapter implements RunCodePort {
+
+    private final CloudRunCodeRunnerProperties properties;
+    private final RestClient restClient;
+
+    public CloudRunCodeRunnerAdapter(
+            CloudRunCodeRunnerProperties properties,
+            RestClient.Builder restClientBuilder
+    ) {
+        this.properties = properties;
+        this.restClient = restClientBuilder.build();
+    }
+
+    @Override
+    public CodeRunResult run(String code) {
+        long startTime = System.currentTimeMillis();
+
+        try {
+            CloudRunExecuteResponse response = restClient.post()
+                    .uri(properties.getEndpoint())
+                    .body(new CloudRunExecuteRequest(appendResultPrinter(code)))
+                    .retrieve()
+                    .body(CloudRunExecuteResponse.class);
+
+            long executionTimeMs = resolveExecutionTime(response, startTime);
+
+            if (response == null) {
+                return new CodeRunResult(
+                        null,
+                        "코드 실행 서버 응답이 비어 있습니다.",
+                        executionTimeMs,
+                        false
+                );
+            }
+
+            boolean success = Boolean.TRUE.equals(response.success());
+
+            return new CodeRunResult(
+                    response.stdout(),
+                    success ? null : response.stderr(),
+                    executionTimeMs,
+                    success
+            );
+        } catch (Exception e) {
+            return new CodeRunResult(
+                    null,
+                    "코드 실행 서버 호출에 실패했습니다.",
+                    System.currentTimeMillis() - startTime,
+                    false
+            );
+        }
+    }
+
+    private long resolveExecutionTime(CloudRunExecuteResponse response, long startTime) {
+        if (response != null && response.executionTimeMs() != null) {
+            return response.executionTimeMs();
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private String appendResultPrinter(String code) {
+        return code + System.lineSeparator()
+                + System.lineSeparator()
+                + "print(result)";
+    }
+
+    private record CloudRunExecuteRequest(String code) {
+    }
+
+    private record CloudRunExecuteResponse(
+            String stdout,
+            String stderr,
+            Boolean success,
+            Long executionTimeMs
+    ) {
+    }
+}
