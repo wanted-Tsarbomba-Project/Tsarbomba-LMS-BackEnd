@@ -56,9 +56,3 @@ badge
 | `reward` | 보상 정책에 따라 배지 지급 조건과 연결될 수 있음 |
 | `global` | 공통 응답, 예외, 파일 업로드 설정 사용 |
 
-## 참고 문서
-
-- `api-spec.md`: badge API 상세 명세
-- `clean_architecture_plan.md`: badge 도메인 클린 아키텍처 전환 계획
-- `convention.md`: badge 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

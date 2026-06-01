@@ -92,10 +92,3 @@ admin
 | `problems` | 문제/문제 세트 관련 운영 알림 대상 상세 조회 |
 | `learning` | 학습 진행률 기반 이상 징후 판단에 활용 가능 |
 | `global` | 공통 paging, cleanup, 예외, scheduling 설정 사용 |
-
-## 참고 문서
-
-- `api-spec.md`: admin API 상세 명세
-- `clean_architecture_plan.md`: admin 도메인 클린 아키텍처 전환 계획
-- `convention.md`: admin 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

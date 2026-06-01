@@ -86,10 +86,3 @@ auth
 | --- | --- |
 | `user` | 계정 생성, 사용자 조회, 사용자 상태 검증 |
 | `global` | JWT, Spring Security, 공통 예외 응답 사용 |
-
-## 참고 문서
-
-- `api-spec.md`: auth API 상세 명세
-- `clean_architecture_plan.md`: auth 도메인 클린 아키텍처 전환 계획
-- `convention.md`: auth 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

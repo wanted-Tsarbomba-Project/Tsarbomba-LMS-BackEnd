@@ -68,9 +68,3 @@ user
 | `submission` | 학생별 제출 이력 조회 |
 | `reward` | 사용자별 포인트 저장 기준 |
 
-## 참고 문서
-
-- `api-spec.md`: user API 상세 명세
-- `clean_architecture_plan.md`: user 도메인 클린 아키텍처 전환 계획
-- `convention.md`: user 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

@@ -47,9 +47,3 @@ reward
 | `ranking` | 누적 포인트와 이력을 랭킹 조회에 활용 |
 | `user` | 사용자별 포인트 저장 기준 |
 
-## 참고 문서
-
-- `api-spec.md`: reward 관련 API 또는 데이터 흐름 명세
-- `clean_architecture_plan.md`: reward 도메인 클린 아키텍처 전환 계획
-- `convention.md`: reward 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

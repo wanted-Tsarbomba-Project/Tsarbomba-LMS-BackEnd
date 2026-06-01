@@ -110,10 +110,4 @@ course
 | `enrollment` | 수강 신청은 별도 도메인에서 처리하지만 강좌 ID를 기준으로 연결된다 |
 | `learning` | 학습 진행률은 강좌와 강의를 기준으로 집계된다 |
 
-## 참고 문서
 
-- `api-spec.md`: course API 상세 명세
-- `clean_architecture_plan.md`: course 도메인 클린 아키텍처 전환 계획
-- `convention.md`: course 도메인 작업 컨벤션
-- `course_project_convention.md`: course 프로젝트 상세 컨벤션
-- `handoff.md`: 인수인계 문서

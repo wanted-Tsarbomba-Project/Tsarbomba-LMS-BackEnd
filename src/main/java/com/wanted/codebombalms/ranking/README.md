@@ -44,9 +44,3 @@ ranking
 | `reward` | 사용자 포인트와 포인트 이력 기준 랭킹 산출 |
 | `user` | 랭킹에 표시할 사용자 정보 조회 |
 
-## 참고 문서
-
-- `api-spec.md`: ranking API 상세 명세
-- `clean_architecture_plan.md`: ranking 도메인 클린 아키텍처 전환 계획
-- `convention.md`: ranking 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

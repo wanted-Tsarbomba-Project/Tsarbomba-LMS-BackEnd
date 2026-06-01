@@ -54,9 +54,3 @@ global
 | soft delete 도메인 | hard delete scheduler와 cleanup port 사용 |
 | 모든 application 계층 | 공통 도메인 예외와 logging annotation 사용 |
 
-## 참고 문서
-
-- `api-spec.md`: global 공통 API/응답 관련 명세
-- `clean_architecture_plan.md`: global 패키지 정리 계획
-- `convention.md`: global 공통 컨벤션
-- `handoff.md`: 인수인계 문서

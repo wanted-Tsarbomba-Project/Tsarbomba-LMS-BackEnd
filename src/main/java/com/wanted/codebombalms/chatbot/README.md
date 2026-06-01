@@ -84,10 +84,3 @@ chatbot
 | `learning` | 사용자의 문제 풀이 진행률과 학습 상태를 컨텍스트에 포함 |
 | `user` | 사용자 ID 기준으로 채팅방과 메시지 접근 범위 제한 |
 
-## 참고 문서
-
-- `api-spec.md`: chatbot API 상세 명세
-- `clean_architecture_plan.md`: chatbot 도메인 클린 아키텍처 전환 계획
-- `convention.md`: chatbot 도메인 작업 컨벤션
-- `fastapi_project_convention.md`: FastAPI 연동 프로젝트 컨벤션
-- `handoff.md`: 인수인계 문서

@@ -60,9 +60,3 @@ enrollment
 | `user` | 신청 사용자 존재 여부 확인 |
 | `learning` | 수강 신청 이후 학습 진행률 조회 기준으로 사용 |
 
-## 참고 문서
-
-- `api-spec.md`: enrollment API 상세 명세
-- `clean_architecture_plan.md`: enrollment 도메인 클린 아키텍처 전환 계획
-- `convention.md`: enrollment 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

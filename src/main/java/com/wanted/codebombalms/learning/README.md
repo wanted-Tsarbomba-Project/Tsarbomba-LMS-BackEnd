@@ -83,9 +83,3 @@ learning
 | `enrollment` | 수강 중인 사용자/강좌 기준 검증 |
 | `user` | 사용자별 학습 진행률 집계 |
 
-## 참고 문서
-
-- `api-spec.md`: learning API 상세 명세
-- `clean_architecture_plan.md`: learning 도메인 클린 아키텍처 전환 계획
-- `convention.md`: learning 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

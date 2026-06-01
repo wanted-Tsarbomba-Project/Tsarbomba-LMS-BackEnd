@@ -130,10 +130,3 @@ problems
 | `chatbot` | AI 학습 컨텍스트에 문제 세트와 문제 정보 제공 |
 | `admin` | 운영 알림 대상 상세 정보 제공 |
 | `reward` | 문제 해결 이벤트의 원천 데이터 제공 |
-
-## 참고 문서
-
-- `api-spec.md`: problems API 상세 명세
-- `clean_architecture_plan.md`: problems 도메인 클린 아키텍처 전환 계획
-- `convention.md`: problems 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

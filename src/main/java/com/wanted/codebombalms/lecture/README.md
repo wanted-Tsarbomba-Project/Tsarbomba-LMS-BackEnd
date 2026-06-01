@@ -62,10 +62,3 @@ lecture
 | `course` | 강의가 속할 강좌의 존재 여부와 상태 확인 |
 | `learning` | 강의 진행률 기록과 조회의 기준 |
 | `problems` | 강의에 연결된 문제 세트 조회 기준 |
-
-## 참고 문서
-
-- `api-spec.md`: lecture API 상세 명세
-- `clean_architecture_plan.md`: lecture 도메인 클린 아키텍처 전환 계획
-- `convention.md`: lecture 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서

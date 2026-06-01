@@ -74,9 +74,3 @@ submission
 | `reward` | 문제 해결 이벤트를 통한 포인트 지급 |
 | `ranking` | 포인트 변화가 랭킹에 반영 |
 
-## 참고 문서
-
-- `api-spec.md`: submission API 상세 명세
-- `clean_architecture_plan.md`: submission 도메인 클린 아키텍처 전환 계획
-- `convention.md`: submission 도메인 작업 컨벤션
-- `handoff.md`: 인수인계 문서
