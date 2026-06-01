@@ -50,7 +50,7 @@ public class EnrollmentController {
 
     @GetMapping("/users/{userId}/enrollments")
     @Operation(summary = "학생 수강 목록 조회")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and #userId == authentication.principal)")
     public ResponseEntity<ApiResponse<?>> findMyCourses(
             @PathVariable Long userId
     ) {
