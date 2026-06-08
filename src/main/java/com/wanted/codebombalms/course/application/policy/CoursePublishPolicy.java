@@ -19,6 +19,10 @@ public class CoursePublishPolicy {
             throw new ValidationException(CourseErrorCode.COURSE_NOT_PUBLISHABLE_STATUS);
         }
 
+        validateActivationRequirements(course);
+    }
+
+    public void validateActivationRequirements(Course course) {
         if (!lectureCatalogPort.existsLectureInCourse(course.getCourseId())) {
             throw new ValidationException(CourseErrorCode.COURSE_LECTURE_REQUIRED);
         }
