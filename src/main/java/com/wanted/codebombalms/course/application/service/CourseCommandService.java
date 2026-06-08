@@ -69,6 +69,9 @@ public class CourseCommandService implements CourseCommandUseCase {
         if (command.courseCategoryId() != null) {
             courseCategoryPolicy.validateActiveCategory(command.courseCategoryId());
         }
+        if (command.status() == CourseStatus.ACTIVE && course.getStatus() == CourseStatus.INACTIVE) {
+            coursePublishPolicy.validateActivationRequirements(course);
+        }
 
         course.update(
                 command.courseCategoryId(),

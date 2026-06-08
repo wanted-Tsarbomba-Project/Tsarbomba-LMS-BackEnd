@@ -204,6 +204,7 @@ class CourseServiceTest {
         Course result = courseCommandService.updateCourse(command);
 
         assertEquals(CourseStatus.ACTIVE, result.getStatus());
+        verify(coursePublishPolicy).validateActivationRequirements(course);
         verify(courseRepository).save(course);
     }
 
