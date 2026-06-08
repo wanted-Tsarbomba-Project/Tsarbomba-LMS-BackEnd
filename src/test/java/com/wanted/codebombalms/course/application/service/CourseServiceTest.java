@@ -193,6 +193,21 @@ class CourseServiceTest {
     }
 
     @Test
+    void updateCourse_allowsReactivatingInactiveCourse() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.INACTIVE);
+        UpdateCourseCommand command = new UpdateCourseCommand(courseId, null, null, null, null, CourseStatus.ACTIVE);
+
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        given(courseRepository.save(course)).willReturn(course);
+
+        Course result = courseCommandService.updateCourse(command);
+
+        assertEquals(CourseStatus.ACTIVE, result.getStatus());
+        verify(courseRepository).save(course);
+    }
+
+    @Test
     void updateCourse_throwsValidation_whenDeletingByStatus() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);

@@ -118,7 +118,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         if (requestedStatus == null) {
             return;
         }
-        if (requestedStatus == CourseStatus.ACTIVE && currentStatus != CourseStatus.ACTIVE) {
+        if (requestedStatus == CourseStatus.ACTIVE && currentStatus == CourseStatus.DRAFT) {
             throw new ValidationException(CourseErrorCode.COURSE_ACTIVE_STATUS_REQUIRES_PUBLISH);
         }
         if (requestedStatus == CourseStatus.DELETED) {
