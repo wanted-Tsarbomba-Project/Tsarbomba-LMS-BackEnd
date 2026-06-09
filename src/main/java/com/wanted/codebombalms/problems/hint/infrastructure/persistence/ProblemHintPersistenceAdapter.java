@@ -12,7 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -37,15 +38,26 @@ public class ProblemHintPersistenceAdapter implements
                 ))
                 .toList();
     }
-
     @Override
-    public Optional<HintForUpdateData> loadFirstHintForUpdate(Long problemId) {
-        return repository.findByProblem_ProblemIdAndProblem_StatusOrderByHintOrderAsc(problemId, ACTIVE_STATUS)
+    public Map<Long, HintForUpdateData> loadFirstHintsForUpdate(List<Long> problemIds) {
+        if (problemIds == null || problemIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return repository
+                .findByProblem_ProblemIdInAndProblem_StatusOrderByProblem_ProblemIdAscHintOrderAsc(
+                        problemIds,
+                        ACTIVE_STATUS
+                )
                 .stream()
-                .findFirst()
-                .map(hint -> new HintForUpdateData(
-                        hint.getHintId(),
-                        hint.getHintContent()
+                .collect(Collectors.toMap(
+                        hint -> hint.getProblem().getProblemId(),
+                        hint -> new HintForUpdateData(
+                                hint.getProblem().getProblemId(),
+                                hint.getHintId(),
+                                hint.getHintContent()
+                        ),
+                        (firstHint, ignoredHint) -> firstHint
                 ));
     }
 

@@ -38,9 +38,16 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
                 .toList();
         var testCasesByProblemId =
                 loadTestCasesForUpdatePort.loadActiveTestCasesForUpdate(problemIds);
+        var hintsByProblemId =
+                loadHintForUpdatePort.loadFirstHintsForUpdate(problemIds);
 
         var problems = problemData.stream()
-                .map(problem -> toProblemView(problem, dataset, testCasesByProblemId))
+                .map(problem -> toProblemView(
+                        problem,
+                        dataset,
+                        testCasesByProblemId,
+                        hintsByProblemId
+                ))
                 .toList();
 
         return new ProblemSetForUpdateView(
@@ -59,9 +66,12 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
     private ProblemForUpdateView toProblemView(
             LoadProblemsForUpdatePort.ProblemForUpdateData problem,
             Optional<LoadDatasetForUpdatePort.DatasetForUpdateData> dataset,
-            Map<Long, List<LoadTestCasesForUpdatePort.TestCaseForUpdateData>> testCasesByProblemId
+            Map<Long, List<LoadTestCasesForUpdatePort.TestCaseForUpdateData>> testCasesByProblemId,
+            Map<Long, LoadHintForUpdatePort.HintForUpdateData> hintsByProblemId
     ) {
-        var hint = loadHintForUpdatePort.loadFirstHintForUpdate(problem.problemId());
+        var hint = Optional.ofNullable(
+                hintsByProblemId.get(problem.problemId())
+        );
         var testCases = toTestCaseViews(testCasesByProblemId.getOrDefault(
                 problem.problemId(),
                 List.of()

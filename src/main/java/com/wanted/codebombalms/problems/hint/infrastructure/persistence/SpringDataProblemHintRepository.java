@@ -12,4 +12,10 @@ public interface SpringDataProblemHintRepository extends JpaRepository<ProblemHi
     );
 
     Optional<ProblemHintJpaEntity> findByHintIdAndProblem_ProblemId(Long hintId, Long problemId);
+
+    List<ProblemHintJpaEntity>
+    findByProblem_ProblemIdInAndProblem_StatusOrderByProblem_ProblemIdAscHintOrderAsc(
+            List<Long> problemIds,
+            String problemStatus
+    );
 }
