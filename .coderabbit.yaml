@@ -13,6 +13,10 @@ reviews:
   review_details: true
   poem: false
 
+  pre_merge_checks:
+    docstrings:
+      mode: off
+
   auto_review:
     enabled: true
     drafts: false
