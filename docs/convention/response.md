@@ -1,9 +1,19 @@
 # 성공 응답 컨벤션 (ApiResponse)
 
-> 성공 응답 포맷·ResponseCode/Message 구조. 결정·이유는 [`docs/adr/0004-error-response-standard.md`](../adr/0004-error-response-standard.md), 마이그레이션은 [`docs/adr/0005-responsedto-migration.md`](../adr/0005-responsedto-migration.md).
+> 성공 응답 포맷·ResponseCode/Message 규칙. 결정·이유는 [`docs/adr/0004-error-response-standard.md`](../adr/0004-error-response-standard.md).
 > 관련: 에러/예외는 [`exception.md`](exception.md), 코드 작성 규칙(private 생성자·네이밍)은 [`code.md`](code.md).
 
-## 새 컨트롤러 — ApiResponse 사용
+> 모든 컨트롤러가 `ApiResponse`로 통일됨(ResponseDTO 마이그레이션 완료 → [`docs/adr/0005`](../adr/0005-responsedto-migration.md)). 신규 컨트롤러도 `ApiResponse`만 쓴다.
+
+## 사용법
+
+`ApiResponse`(`global.presentation.api.common`) 정적 팩토리:
+
+| 메서드 | 용도 |
+|--------|------|
+| `success(code, message, data)` | 조회·수정 (200, 데이터 있음) |
+| `success(code, message)` | 데이터 없는 200 |
+| `created(code, message, data)` | 생성 (201) |
 
 ```java
 // 조회 / 수정 (200)
@@ -14,50 +24,28 @@ return ResponseEntity.ok(ApiResponse.success(
 ));
 
 // 생성 (201)
-return ResponseEntity.status(201).body(ApiResponse.created(
+return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(
     CourseResponseCode.CREATED,
     CourseResponseMessage.CREATED,
     response
 ));
 
-// 삭제 (204) — ApiResponse 사용하지 않음
-return ResponseEntity.noContent().build();
+// 삭제 (204) — ApiResponse 쓰지 않음
+return ResponseEntity.noContent().build();   // ResponseEntity<Void>
 ```
 
-## 기존 컨트롤러 — ResponseDTO 유지 (점진적 마이그레이션)
+## ResponseCode / ResponseMessage
 
-기존 컨트롤러는 `ResponseDTO` 패턴 그대로 유지. 새 컨트롤러 작성 시부터 `ApiResponse` 적용.
-
-## ResponseCode / ResponseMessage 파일 위치 및 구조
-
-**각 컨트롤러 패키지에** `XxxResponseCode.java` + `XxxResponseMessage.java` 두 파일을 함께 둔다.
+각 도메인 `presentation/api/` 패키지에 `XxxResponseCode` + `XxxResponseMessage` 두 클래스를 둔다(상수 모음).
 
 ```
-domain/course/controller/
+course/presentation/api/
 ├── CourseController.java
 ├── CourseResponseCode.java     ← 성공 코드 상수
 └── CourseResponseMessage.java  ← 성공 메시지 상수
 ```
 
-작성 규칙(상수 네이밍·private 생성자)은 [`code.md`](code.md) 참고.
-
-### 도메인별 코드/메시지 파일 현황
-
-| 도메인 | ResponseCode | ResponseMessage |
-|--------|-------------|-----------------|
-| course | `CourseResponseCode` | `CourseResponseMessage` |
-| lecture | `LectureResponseCode` | `LectureResponseMessage` |
-| enrollment | `EnrollmentResponseCode` | `EnrollmentResponseMessage` |
-| submission | `SubmissionResponseCode` | `SubmissionResponseMessage` |
-| problems.set | `ProblemSetResponseCode` | `ProblemSetResponseMessage` |
-| problems.category | `ProblemCategoryResponseCode` | `ProblemCategoryResponseMessage` |
-| problems.dataset | `ProblemDatasetResponseCode` | `ProblemDatasetResponseMessage` |
-| problems.hint | `ProblemHintResponseCode` | `ProblemHintResponseMessage` |
-| problems.problem | `ProblemResponseCode` | `ProblemResponseMessage` |
-| problems.progress | `ProgressResponseCode` | `ProgressResponseMessage` |
-| problems.result | `ResultResponseCode` | `ResultResponseMessage` |
-| admin.operation.rule | `AutomationRuleResponseCode` | `AutomationRuleResponseMessage` |
-| admin.operation.alert | `OperationAlertResponseCode` | `OperationAlertResponseMessage` |
+작성 규칙(상수 네이밍·private 생성자)은 [`code.md`](code.md).
 
 ## 성공 응답 포맷
 

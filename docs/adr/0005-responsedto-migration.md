@@ -1,5 +1,7 @@
 # 응답 포맷 점진 마이그레이션: ResponseDTO → ApiResponse
 
+> 상태: **완료** — 전 컨트롤러 `ApiResponse` 전환 끝. `ResponseDTO`는 `global.presentation.api.commonLegacy`에 미사용 잔존(제거 가능). 신규는 `ApiResponse`만.
+
 ## 맥락
 
 기존 컨트롤러는 옛 `ResponseDTO`를 쓰고, 신규 표준은 `ApiResponse`(→ ADR-0004)다.
@@ -12,9 +14,10 @@
 
 ## 근거
 
-- `docs/CONVENTION.md`가 "새 컨트롤러 — ApiResponse 사용 / 기존 컨트롤러 — ResponseDTO 유지(점진적 마이그레이션)"을 명시.
+- 모든 컨트롤러가 `ApiResponse`를 반환하고 `ResponseDTO` 참조는 0 (`commonLegacy` 잔존 클래스만 미사용).
+- 응답 포맷·사용법은 `docs/convention/response.md`(살아있는 문서)가 가진다.
 
 ## Consequences
 
-- 과도기 동안 응답 포맷이 혼재 → 프론트는 엔드포인트별로 확인 필요.
-- 마이그레이션 완료 시점(모든 ResponseDTO 제거)에 본 ADR을 superseded로 표시한다.
+- 응답 포맷이 단일 표준(`ApiResponse`)으로 통일됨.
+- 잔존 `commonLegacy.ResponseDTO`는 참조처가 없어 정리(삭제) 대상.
