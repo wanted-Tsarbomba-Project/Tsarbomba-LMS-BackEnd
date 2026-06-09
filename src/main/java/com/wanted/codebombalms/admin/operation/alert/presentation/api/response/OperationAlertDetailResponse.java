@@ -46,20 +46,13 @@ public class OperationAlertDetailResponse {
     public static class AlertInfo {
 
         private Long operationAlertId;
-        private Long operationRuleId;
-        private OperationTargetType targetType;
-        private Long targetId;
-        private BigDecimal detectedValue;
         private BigDecimal thresholdValueSnapshot;
         private OperationSeverity severity;
         private OperationAlertStatus status;
-        private Long assigneeId;
         private String reason;
         private String recommendedAction;
         private LocalDateTime firstDetectedAt;
         private LocalDateTime lastDetectedAt;
-        private Long resolvedBy;
-        private LocalDateTime resolvedAt;
         private String adminMemo;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
@@ -68,20 +61,13 @@ public class OperationAlertDetailResponse {
         public static AlertInfo from(OperationAlertDetail detail) {
             return new AlertInfo(
                     detail.operationAlertId(),
-                    detail.operationRuleId(),
-                    detail.targetType(),
-                    detail.targetId(),
-                    detail.detectedValue(),
                     detail.thresholdValueSnapshot(),
                     detail.severity(),
                     detail.status(),
-                    detail.assigneeId(),
                     detail.reason(),
                     detail.recommendedAction(),
                     detail.firstDetectedAt(),
                     detail.lastDetectedAt(),
-                    detail.resolvedBy(),
-                    detail.resolvedAt(),
                     detail.adminMemo(),
                     detail.createdAt(),
                     detail.updatedAt()

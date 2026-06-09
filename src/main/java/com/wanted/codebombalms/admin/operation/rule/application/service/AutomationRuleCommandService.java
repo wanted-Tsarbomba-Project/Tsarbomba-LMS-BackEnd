@@ -1,15 +1,12 @@
 package com.wanted.codebombalms.admin.operation.rule.application.service;
 
-import com.wanted.codebombalms.admin.operation.rule.application.command.CreateAutomationRuleCommand;
 import com.wanted.codebombalms.admin.operation.rule.application.command.UpdateAutomationRuleEnabledCommand;
 import com.wanted.codebombalms.admin.operation.rule.application.command.UpdateAutomationRuleCommand;
-import com.wanted.codebombalms.admin.operation.rule.application.usecase.CreateAutomationRuleUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleEnabledUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleUseCase;
 import com.wanted.codebombalms.admin.operation.rule.domain.exception.AutomationRuleErrorCode;
 import com.wanted.codebombalms.admin.operation.rule.domain.model.AutomationRule;
 import com.wanted.codebombalms.admin.operation.rule.domain.repository.AutomationRuleRepository;
-import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
@@ -23,29 +20,9 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class AutomationRuleCommandService implements CreateAutomationRuleUseCase, UpdateAutomationRuleUseCase, UpdateAutomationRuleEnabledUseCase {
+public class AutomationRuleCommandService implements UpdateAutomationRuleUseCase, UpdateAutomationRuleEnabledUseCase {
 
     private final AutomationRuleRepository automationRuleRepository;
-
-    @Override
-    public AutomationRule create(CreateAutomationRuleCommand command) {
-        validateCreateCommand(command);
-
-        if (automationRuleRepository.existsActiveByRuleCode(command.ruleCode())) {
-            throw new ConflictException(AutomationRuleErrorCode.DUPLICATED_RULE_CODE);
-        }
-
-        AutomationRule automationRule = AutomationRule.create(
-                command.createdBy(),
-                command.ruleCode(),
-                command.thresholdValue(),
-                command.minSampleCount(),
-                command.severity(),
-                command.enabled()
-        );
-
-        return automationRuleRepository.save(automationRule);
-    }
 
     //UpdateAutomationRuleUseCase의 구현체, 수정 요청된 규칙만 저장한다.
     @Override
@@ -78,12 +55,6 @@ public class AutomationRuleCommandService implements CreateAutomationRuleUseCase
         AutomationRule updatedRule = automationRule.updateEnabled(command.enabled());
 
         return automationRuleRepository.save(updatedRule);
-    }
-
-    private void validateCreateCommand(CreateAutomationRuleCommand command) {
-        if (command == null) {
-            throw new ValidationException(AutomationRuleErrorCode.INVALID_CREATE_REQUEST);
-        }
     }
 
     private void validateUpdateCommand(UpdateAutomationRuleCommand command) {

@@ -15,9 +15,6 @@ public enum AutomationRuleErrorCode implements ErrorCode {
     INVALID_UPDATE_REQUEST("ADM-ARL-005", "자동화 규칙 수정 요청이 올바르지 않습니다."),
     INVALID_ENABLED_UPDATE_REQUEST("ADM-ARL-007", "자동화 규칙 활성화 상태 변경 요청이 올바르지 않습니다."),
 
-    // 중복
-    DUPLICATED_RULE_CODE("ADM-ARL-004", "이미 등록된 자동화 규칙입니다."),
-
     // 조회
     AUTOMATION_RULE_NOT_FOUND("ADM-ARL-006", "자동화 규칙을 찾을 수 없습니다.");
 
