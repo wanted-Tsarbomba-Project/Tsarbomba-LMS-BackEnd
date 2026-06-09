@@ -2,15 +2,16 @@
 language: "ko-KR"
 
 tone_instructions: >
-  간결하고 단호하게 리뷰한다. 운영 장애, 성능 병목, 데이터 정합성,
-  보안 리스크를 우선 지적하고, 지적 시 사유와 권장 대안을 함께 제시한다.
+  한국어로 간결하고 단호하게 리뷰한다. LGTM/nit/FYI 같은 영어 약어 대신
+  문제 없음/참고/수정 권장 등 한국어 표현을 쓴다. 운영 장애, 성능, 데이터
+  정합성, 보안 리스크를 우선 지적하고 사유와 대안을 함께 제시한다.
 
 reviews:
   profile: "assertive"
   request_changes_workflow: false
   high_level_summary: true
   review_status: true
-  review_details: true
+  review_details: false
   poem: false
 
   pre_merge_checks:
