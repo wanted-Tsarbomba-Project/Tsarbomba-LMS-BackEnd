@@ -42,8 +42,3 @@
 - `badge` → `user`, `reward` [포트] — 사용자 배지 관리, 보상 연계
 - `admin` → `user`, `problems`, `learning` [포트] — 운영 알림 대상 조회
 - (전 도메인) → `global` — 공통 인프라
-
-## Flagged (드리프트·모호)
-
-- **chatbot 경계 누수(잔존)**: `ChatContextAdapter`가 `submissionQueryService.findLatestResult()`의 반환 타입 `submission.domain.model.LatestSubmission`을 직접 import. 어댑터 1줄에서 즉시 `submittedAnswer`(String)로 변환해 chatbot 자체 `ProblemInfo`로 매핑 → core엔 미유입(얕음). 정답은 submission `QueryService`가 도메인 모델 대신 자체 DTO를 반환하는 것(submission 오너 작업) → `docs/adr/0003-bc-communication.md`.
-- **광범위 SpringData 직접참조 위반(리팩토링 백로그)**: `learning`·`submission` 등의 일부 어댑터가 타 BC의 `application.service`가 아닌 `SpringData*Repository`/`JpaEntity`를 직접 주입·참조 중(ADR-0003 위반). 등급별 목록·근거는 `docs/adr/0003-bc-communication.md`의 "알려진 위반".

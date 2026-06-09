@@ -29,17 +29,4 @@
 - `chatbot`의 `ChatContextAdapter`가 상대 BC의 application service(`ProblemSetQueryService`·`SubmissionQueryService` 등)만 호출(직접 리포지토리 접근 없음).
 - `submission → reward`가 이벤트로 분리되어 있어 채점 트랜잭션과 적립이 결합되지 않는다.
 
-## 알려진 위반 (리팩토링 백로그)
-
-규칙은 accepted이나 기존 코드에 위반이 남아 있다. 점진 리팩토링 대상.
-
-- **등급1 — 타 BC `infrastructure`(SpringData Repository) 직접 주입**: `learning`의 어댑터들(`ProblemCatalogAdapter`, `LearningCourseAdapter`, `LearningLectureAdapter`, `LearningEnrollmentAdapter`, `LearningCourseProblemAdapter`, `LearningLectureProblemSetAdapter`), `submission`의 `ProblemSetResultPersistenceAdapter` 등이 상대 BC Service 대신 `SpringData*Repository`를 주입. → 상대 BC의 application service 경유로 교체. (Port/Adapter 구조 자체는 올바름, 주입 대상만 잘못됨)
-- **등급2 — 타 BC `JpaEntity` 직접 참조(@ManyToOne 등 DB 스키마 결합)**: `lecture`/`enrollment`의 JpaEntity·어댑터가 `course.CourseJpaEntity`, `submission`의 JpaEntity·어댑터가 `problems.problem.ProblemJpaEntity`·`problems.testcase.ProblemTestCaseJpaEntity` 참조. MSA 분리 시 ID 참조로 전환 필요(JPA 매핑이라 등급1보다 손 큼).
-- **등급3 — `problems` 서브도메인 간 결합**: `problems.hint/dataset/progress/testcase/result`의 어댑터·엔티티가 `problems.problem`/`set`/`category` infra 직접 참조. 같은 부모 BC라 우선순위 최하(ADR-0002 참조).
-- **경계 누수(잔존)**: `chatbot`의 `ChatContextAdapter`가 `submissionQueryService.findLatestResult()`의 반환 타입 `submission.domain.model.LatestSubmission`(상대 BC 도메인 모델)을 직접 import. 어댑터 1줄에서 String으로 변환해 chatbot core엔 미유입이나, "포트 DTO는 호출 BC 소유" 원칙 위반 → submission `QueryService`가 자체 DTO를 반환하도록 교정(submission 오너).
-
-### 위반 아님 (참고)
-
-- `global.infrastructure`(jwt/logging)에 대한 의존 → 공유 커널/횡단 관심사라 정상.
-- 모든 `@TransactionalEventListener`(reward.point, problems.set)·`publishEvent`(submission) → 이벤트 올바른 사용. 조회를 이벤트로 구현한 곳 없음.
-- 통합테스트의 교차 import → 제외.
+> 기존 코드의 규칙 위반(타 BC SpringData/JpaEntity 직접 참조 등)은 팀에 별도 전달·추적한다. 본 ADR은 결정만 기록한다.
