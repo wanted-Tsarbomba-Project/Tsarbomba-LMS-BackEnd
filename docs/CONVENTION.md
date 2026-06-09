@@ -8,4 +8,4 @@
 | 성공 응답(ApiResponse) · ResponseCode/Message | [`convention/response.md`](convention/response.md) |
 | 코드 작성 규칙(횡단) · Swagger | [`convention/code.md`](convention/code.md) |
 
-> 결정·이유는 `docs/adr/0004`(에러·응답 표준), `docs/adr/0005`(ResponseDTO 마이그레이션).
+> 결정·이유는 `docs/adr/0004`(에러·응답 표준).

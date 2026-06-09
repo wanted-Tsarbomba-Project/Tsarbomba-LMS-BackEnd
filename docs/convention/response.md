@@ -3,7 +3,7 @@
 > 성공 응답 포맷·ResponseCode/Message 규칙. 결정·이유는 [`docs/adr/0004-error-response-standard.md`](../adr/0004-error-response-standard.md).
 > 관련: 에러/예외는 [`exception.md`](exception.md), 코드 작성 규칙(private 생성자·네이밍)은 [`code.md`](code.md).
 
-> 모든 컨트롤러가 `ApiResponse`로 통일됨(ResponseDTO 마이그레이션 완료 → [`docs/adr/0005`](../adr/0005-responsedto-migration.md)). 신규 컨트롤러도 `ApiResponse`만 쓴다.
+> 모든 컨트롤러가 `ApiResponse`로 통일됨(ResponseDTO 마이그레이션 완료). 신규 컨트롤러도 `ApiResponse`만 쓴다.
 
 ## 사용법
 
