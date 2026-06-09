@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort {
 
     private static final long SIGNED_URL_DURATION_MINUTES = 30;
-    private final Storage storage;
+    private volatile Storage storage;
     private final GcpStorageProperties properties;
     private final ResourceLoader resourceLoader;
 
@@ -30,14 +30,6 @@ public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort 
     ) {
         this.properties = properties;
         this.resourceLoader = resourceLoader;
-
-        try {
-            this.storage = createStorage();
-        } catch (IOException e) {
-            throw new ExternalServiceException(
-                    ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED,e
-            );
-        }
     }
 
     @Override
@@ -52,7 +44,7 @@ public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort 
                     filePath
             ).build();
 
-            return storage
+            return getStorage()
                     .signUrl(
                             blobInfo,
                             SIGNED_URL_DURATION_MINUTES,
@@ -63,6 +55,25 @@ public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort 
         } catch (Exception e) {
             throw new ExternalServiceException(ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED, e);
         }
+    }
+
+    private Storage getStorage() {
+        if (storage == null) {
+            synchronized (this) {
+                if (storage == null) {
+                    try {
+                        storage = createStorage();
+                    } catch (Exception e) {
+                        throw new ExternalServiceException(
+                                ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED,
+                                e
+                        );
+                    }
+                }
+            }
+        }
+
+        return storage;
     }
 
     private Storage createStorage() throws IOException {
