@@ -152,8 +152,6 @@ domain-name/
 | 기능 | Method | URL |
 |---|---|---|
 | 운영 자동화 규칙 목록 조회 | GET | `/api/v1/admin/automation-rules` |
-| 운영 자동화 규칙 옵션 조회 | GET | `/api/v1/admin/automation-rules/options` |
-| 운영 자동화 규칙 등록 | POST | `/api/v1/admin/automation-rules` |
 | 운영 자동화 규칙 수정 | PATCH | `/api/v1/admin/automation-rules/{automationRuleId}` |
 | 운영 자동화 규칙 활성화 변경 | PATCH | `/api/v1/admin/automation-rules/{automationRuleId}/enabled` |
 | 운영 알림 목록 조회 | GET | `/api/v1/admin/operation-alerts` |

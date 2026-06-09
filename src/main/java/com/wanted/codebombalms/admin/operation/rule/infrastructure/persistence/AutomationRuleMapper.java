@@ -10,7 +10,6 @@ public class AutomationRuleMapper {
     public static AutomationRule toDomain(AutomationRuleJpaEntity entity) {
         return AutomationRule.restore(
                 entity.getOperationRuleId(),
-                entity.getCreatedBy(),
                 entity.getRuleCode(),
                 entity.getThresholdValue(),
                 entity.getMinSampleCount(),
@@ -24,7 +23,6 @@ public class AutomationRuleMapper {
     public static AutomationRuleJpaEntity toEntity(AutomationRule domain) {
         return new AutomationRuleJpaEntity(
                 domain.getOperationRuleId(),
-                domain.getCreatedBy(),
                 domain.getRuleCode(),
                 domain.getThresholdValue(),
                 domain.getMinSampleCount(),

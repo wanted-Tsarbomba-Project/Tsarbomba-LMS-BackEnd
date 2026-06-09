@@ -63,18 +63,8 @@ public class OperationAlertQueryAdapter implements OperationAlertQueryRepository
     private OperationAlertListItem toListItem(OperationAlertWithRuleProjection projection) {
         return new OperationAlertListItem(
                 projection.operationAlertId(),
-                projection.operationRuleId(),
-                projection.targetType(),
-                projection.targetId(),
-                projection.detectedValue(),
-                projection.thresholdValueSnapshot(),
-                projection.severity(),
                 projection.status(),
-                projection.assigneeId(),
-                projection.reason(),
-                projection.recommendedAction(),
-                projection.firstDetectedAt(),
-                projection.lastDetectedAt()
+                projection.recommendedAction()
         );
     }
 

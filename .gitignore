@@ -55,10 +55,12 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
+AGENTS.md
 CLAUDE.md
 CLAUREAD.md
 CLAUREAD-API.md
 CLAUEND.md
+.ai/
 .claude
 CONTEXT.md
 
