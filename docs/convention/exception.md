@@ -48,6 +48,8 @@
 | `UnauthorizedException` | 401 | 인증 실패 |
 | `ForbiddenException` | 403 | 권한 없음 |
 | `ConflictException` | 409 | 중복 / 충돌 |
+| `TooManyRequestsException` | 429 | 요청 한도 초과 |
+| `ExternalServiceException` | 502 | 외부 서비스 연동 실패 |
 
 ### 사용 예시
 
