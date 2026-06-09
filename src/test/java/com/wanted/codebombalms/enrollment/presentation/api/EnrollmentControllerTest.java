@@ -108,6 +108,31 @@ class EnrollmentControllerTest {
     }
 
     @Test
+    void findMyCoursesByMe_returnsApiResponse() throws Exception {
+        Long studentId = 10L;
+        Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+
+        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
+
+        try {
+            mockMvc.perform(get("/api/v1/users/me/enrollments")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                    .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
+                    .andExpect(jsonPath("$.data[0].studentId").value(studentId))
+                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Test
     void findAllEnrollments_returnsApiResponse() throws Exception {
         Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
 
@@ -138,6 +163,23 @@ class EnrollmentControllerTest {
 
         try {
             mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId))
+                    .andExpect(status().isNoContent());
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+
+        verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
+    }
+
+    @Test
+    void cancelMyEnrollment_returnsNoContent() throws Exception {
+        Long studentId = 10L;
+        Long enrollmentId = 1L;
+
+        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
+
+        try {
+            mockMvc.perform(delete("/api/v1/users/me/enrollments/{enrollmentId}", enrollmentId))
                     .andExpect(status().isNoContent());
         } finally {
             SecurityContextHolder.clearContext();

@@ -33,7 +33,7 @@ public class EnrollmentController {
 
     @PostMapping("/courses/{courseId}/enrollments")
     @Operation(summary = "수강신청 생성")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<?>> createEnrollment(
             @PathVariable Long courseId,
             @AuthenticationPrincipal Long userId
@@ -48,25 +48,26 @@ public class EnrollmentController {
                 ));
     }
 
+    @GetMapping("/users/me/enrollments")
+    @Operation(summary = "내 수강 목록 조회")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<?>> findMyCourses(
+            @AuthenticationPrincipal Long userId
+    ) {
+        log.info("[EnrollmentController] find my courses - userId: {}", userId);
+
+        return buildMyCoursesResponse(userId);
+    }
+
     @GetMapping("/users/{userId}/enrollments")
     @Operation(summary = "학생 수강 목록 조회")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and #userId == authentication.principal)")
-    public ResponseEntity<ApiResponse<?>> findMyCourses(
+    public ResponseEntity<ApiResponse<?>> findCoursesByUser(
             @PathVariable Long userId
     ) {
         log.info("[EnrollmentController] find my courses - userId: {}", userId);
 
-        return ResponseEntity.ok(ApiResponse.success(
-                EnrollmentResponseCode.RETRIEVED,
-                EnrollmentResponseMessage.RETRIEVED,
-                enrollmentQueryUseCase.findMyCourses(userId)
-                        .stream()
-                        .map(enrollment -> MyCourseResponse.from(
-                                enrollment,
-                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
-                        ))
-                        .toList()
-        ));
+        return buildMyCoursesResponse(userId);
     }
 
     @GetMapping("/enrollments")
@@ -88,6 +89,20 @@ public class EnrollmentController {
         ));
     }
 
+    @DeleteMapping("/users/me/enrollments/{enrollmentId}")
+    @Operation(summary = "내 수강신청 취소")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<Void> cancelMyEnrollment(
+            @PathVariable Long enrollmentId,
+            @AuthenticationPrincipal Long authenticatedUserId
+    ) {
+        log.info("[EnrollmentController] cancel enrollment - userId: {}, enrollmentId: {}", authenticatedUserId, enrollmentId);
+
+        enrollmentCommandUseCase.cancelEnrollment(new CancelEnrollmentCommand(authenticatedUserId, enrollmentId));
+
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     @Operation(summary = "수강신청 취소")
     @PreAuthorize("isAuthenticated()")
@@ -101,5 +116,19 @@ public class EnrollmentController {
         enrollmentCommandUseCase.cancelEnrollment(new CancelEnrollmentCommand(authenticatedUserId, enrollmentId));
 
         return ResponseEntity.noContent().build();
+    }
+
+    private ResponseEntity<ApiResponse<?>> buildMyCoursesResponse(Long userId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                EnrollmentResponseCode.RETRIEVED,
+                EnrollmentResponseMessage.RETRIEVED,
+                enrollmentQueryUseCase.findMyCourses(userId)
+                        .stream()
+                        .map(enrollment -> MyCourseResponse.from(
+                                enrollment,
+                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        ))
+                        .toList()
+        ));
     }
 }
