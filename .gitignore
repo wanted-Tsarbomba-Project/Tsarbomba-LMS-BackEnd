@@ -55,14 +55,22 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
-AGENTS.md
-###ai
-ai/
 
+.ai/
+AGENTS.md
+CLAUDE.md
+AGENTS.md
+.ai/
+.obsidian/
+_배포용*/
 .claude
 CONTEXT.md
 
 demo
+
+architecture-user-auth.html
+
+/docs/개발블로그_작성_가이드라인.md
 
 ## 모니터링
 MONITORING_GUIDE.md

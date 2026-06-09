@@ -53,19 +53,6 @@ public class AutomationRuleRepositoryAdapter implements AutomationRuleRepository
                 .toList();
     }
 
-    @Override
-    public boolean existsActiveByRuleCode(OperationRuleCode ruleCode) {
-        return springDataRepository.existsByRuleCode(ruleCode);
-    }
-
-    @Override
-    public List<OperationRuleCode> findActiveRuleCodes() {
-        return springDataRepository.findAllByOrderByOperationRuleIdAsc()
-                .stream()
-                .map(AutomationRuleJpaEntity::getRuleCode)
-                .toList();
-    }
-
     private List<OperationRuleCode> findRuleCodesByTargetType(OperationTargetType targetType) {
         return Arrays.stream(OperationRuleCode.values())
                 .filter(ruleCode -> ruleCode.getTargetType() == targetType)

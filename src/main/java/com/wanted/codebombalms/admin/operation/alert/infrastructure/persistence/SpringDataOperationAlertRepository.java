@@ -18,24 +18,12 @@ public interface SpringDataOperationAlertRepository
 
     @Query(
             value = """
-                    select new com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertWithRuleProjection(
+                    select new com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertListProjection(
                         oa.operationAlertId,
-                        oa.operationRuleId,
-                        oa.targetType,
-                        oa.targetId,
-                        oa.detectedValue,
-                        oa.thresholdValueSnapshot,
-                        ar.severity,
                         oa.status,
-                        oa.assigneeId,
-                        oa.reason,
-                        oa.recommendedAction,
-                        oa.firstDetectedAt,
-                        oa.lastDetectedAt
+                        oa.recommendedAction
                     )
                     from OperationAlertJpaEntity oa
-                    join AutomationRuleJpaEntity ar
-                        on ar.operationRuleId = oa.operationRuleId
                     where oa.deletedAt is null
                       and (:targetType is null or oa.targetType = :targetType)
                       and (:status is null or oa.status = :status)
@@ -43,14 +31,12 @@ public interface SpringDataOperationAlertRepository
             countQuery = """
                     select count(oa)
                     from OperationAlertJpaEntity oa
-                    join AutomationRuleJpaEntity ar
-                        on ar.operationRuleId = oa.operationRuleId
                     where oa.deletedAt is null
                       and (:targetType is null or oa.targetType = :targetType)
                       and (:status is null or oa.status = :status)
                     """
     )
-    Page<OperationAlertWithRuleProjection> findAlerts(
+    Page<OperationAlertListProjection> findAlerts(
             @Param("targetType") OperationTargetType targetType,
             @Param("status") OperationAlertStatus status,
             Pageable pageable

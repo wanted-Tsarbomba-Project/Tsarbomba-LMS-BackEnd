@@ -25,9 +25,6 @@ public class AutomationRuleJpaEntity {
     @Column(name = "operation_rule_id")
     private Long operationRuleId;
 
-    @Column(name = "created_by")
-    private Long createdBy;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "rule_code", nullable = false)
     private OperationRuleCode ruleCode;
@@ -53,7 +50,6 @@ public class AutomationRuleJpaEntity {
 
     public AutomationRuleJpaEntity(
             Long operationRuleId,
-            Long createdBy,
             OperationRuleCode ruleCode,
             BigDecimal thresholdValue,
             Integer minSampleCount,
@@ -63,7 +59,6 @@ public class AutomationRuleJpaEntity {
             LocalDateTime updatedAt
     ) {
         this.operationRuleId = operationRuleId;
-        this.createdBy = createdBy;
         this.ruleCode = ruleCode;
         this.thresholdValue = thresholdValue;
         this.minSampleCount = minSampleCount;

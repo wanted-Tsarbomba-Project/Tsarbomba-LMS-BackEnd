@@ -21,7 +21,7 @@ public record CourseProblemSetConfigureRequest(
     }
 
     public record ProblemSetRequest(
-            @NotNull Long lectureId,
+            Long lectureId,
             @NotNull Long problemSetId,
             @NotNull CourseProblemSetRole role,
             @NotNull Integer displayOrder

@@ -45,7 +45,7 @@ class CourseProblemControllerTest {
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
         given(courseProblemQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
                 CourseProblemSet.restore(6001L, 101L, 1001L, 2002L, CourseProblemSetRole.MAIN, 1),
-                CourseProblemSet.restore(6002L, 101L, 1003L, 2003L, CourseProblemSetRole.FINAL, 1)
+                CourseProblemSet.restore(6002L, 101L, null, 2003L, CourseProblemSetRole.FINAL, 1)
         ));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/problem-sets", 101L)
@@ -77,7 +77,7 @@ class CourseProblemControllerTest {
         given(courseProblemCommandUseCase.configureProblemSets(any(ConfigureCourseProblemSetsCommand.class)))
                 .willReturn(List.of(
                         CourseProblemSet.restore(6001L, 101L, 101L, 2002L, CourseProblemSetRole.MAIN, 1),
-                        CourseProblemSet.restore(6002L, 101L, 103L, 2003L, CourseProblemSetRole.FINAL, 1)
+                        CourseProblemSet.restore(6002L, 101L, null, 2003L, CourseProblemSetRole.FINAL, 1)
                 ));
 
         String request = """
@@ -90,7 +90,7 @@ class CourseProblemControllerTest {
                       "displayOrder": 1
                     },
                     {
-                      "lectureId": 103,
+                      "lectureId": null,
                       "problemSetId": 2003,
                       "role": "FINAL",
                       "displayOrder": 1

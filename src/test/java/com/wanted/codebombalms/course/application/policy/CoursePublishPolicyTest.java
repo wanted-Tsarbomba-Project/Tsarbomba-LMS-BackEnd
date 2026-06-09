@@ -76,6 +76,38 @@ class CoursePublishPolicyTest {
         assertEquals(CourseErrorCode.COURSE_LECTURE_REQUIRED, exception.getErrorCode());
     }
 
+    @Test
+    @DisplayName("INACTIVE 강좌도 강의가 있으면 활성화 조건을 만족한다.")
+    void inactiveCourseWithLectureSatisfiesActivationRequirements() {
+
+        // given
+        Course course = createCourse(1L, CourseStatus.INACTIVE);
+
+        given(lectureCatalogPort.existsLectureInCourse(1L)).willReturn(true);
+
+        // when & then
+        coursePublishPolicy.validateActivationRequirements(course);
+    }
+
+    @Test
+    @DisplayName("INACTIVE 강좌도 강의가 없으면 활성화할 수 없다.")
+    void inactiveCourseWithoutLectureThrowsValidation() {
+
+        // given
+        Course course = createCourse(1L, CourseStatus.INACTIVE);
+
+        given(lectureCatalogPort.existsLectureInCourse(1L)).willReturn(false);
+
+        // when
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> coursePublishPolicy.validateActivationRequirements(course)
+        );
+
+        // then
+        assertEquals(CourseErrorCode.COURSE_LECTURE_REQUIRED, exception.getErrorCode());
+    }
+
     private Course createCourse(Long courseId, CourseStatus status) {
         Course course = new Course();
         course.setCourseId(courseId);
