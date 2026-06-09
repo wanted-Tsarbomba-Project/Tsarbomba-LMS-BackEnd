@@ -7,9 +7,10 @@
 
 /AGENTS.md                  @suerovr
 /CLAUDE.md                  @suerovr
-/CONTEXT.md                 @suerovr
 /CONTEXT-MAP.md             @suerovr
 /docs/adr/                  @suerovr
 /docs/RESPONSE-STYLE.md     @suerovr
+/docs/CONVENTION.md         @suerovr
 
+# 도메인 README(src/.../<도메인>/README.md)는 각 도메인 오너 소유 — 오너 핸들 확정 후 추가.
 # .ai/ 전체는 개인 작업메모(.ai/local/, git-ignore)라 공용 소유 대상이 아니다.
