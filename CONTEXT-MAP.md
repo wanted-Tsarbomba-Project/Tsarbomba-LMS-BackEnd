@@ -34,11 +34,10 @@
 - `lecture` → `course` [포트] — 상위 강좌 유효성
 - `course` → `lecture`, `problems`, `user` [포트] — 강의 연결·문제세트 유효성·권한
 - `learning` → `course`, `lecture`, `problems`, `submission`, `enrollment`, `user` [포트] — 진행률 집계 원천 조회
-- `chatbot` → `problems`, `submission`, `learning`, `user` [포트] — AI 컨텍스트 조합 (`ChatContextAdapter`)
+- `chatbot` → `problems`, `submission` [포트] — AI 컨텍스트 조합 (`ChatContextAdapter`)
 - `submission` → `problems` [포트] — 채점 대상 문제·테스트케이스
-- `submission` → `reward` [이벤트] — `ProblemSolvedEvent` / `ProblemSetCompletedEvent` 발행
-- `submission` → `learning` — 진행률 갱신 *(방식 확인 필요: 포트/이벤트)*
-- `reward` ← `submission` [이벤트] — `PointRewardEventHandler`로 수신, 포인트 적립
+- `submission` → `reward` [이벤트] — `ProblemSolvedEvent` / `ProblemSetCompletedEvent` 발행 → `PointRewardEventHandler` 수신
+- `submission` → `problems.set` [이벤트] — `ProblemSetCompletedEvent` → `ProblemSetCompletedEventListener`로 세트 완료 카운트 갱신
 - `ranking` → `reward`, `user` [포트] — 포인트·이력 기반 랭킹 산출
 - `badge` → `user`, `reward` [포트] — 사용자 배지 관리, 보상 연계
 - `admin` → `user`, `problems`, `learning` [포트] — 운영 알림 대상 조회
@@ -46,6 +45,5 @@
 
 ## Flagged (드리프트·모호)
 
-- **chatbot → submission 누락**: chatbot README "다른 도메인과의 연동"엔 submission이 없으나, 코드(`ChatContextAdapter`)는 `SubmissionQueryService`·`LatestSubmission`을 사용 중. README가 코드보다 낡음 → 이 MAP은 코드 기준으로 포함.
-- **chatbot의 타 BC 도메인 모델 직접 참조**: `submission.domain.model.LatestSubmission`을 직접 import. 포트(application.service)는 경유하나 반환 타입으로 상대 BC의 도메인 모델이 새어 들어옴 → 경계 누수 여부 검토 대상.
-- **submission → learning 통신 방식 미확정**: 포트 호출인지 이벤트인지 코드 확인 필요.
+- **chatbot 경계 누수(잔존)**: `ChatContextAdapter`가 `submissionQueryService.findLatestResult()`의 반환 타입 `submission.domain.model.LatestSubmission`을 직접 import. 어댑터 1줄에서 즉시 `submittedAnswer`(String)로 변환해 chatbot 자체 `ProblemInfo`로 매핑 → core엔 미유입(얕음). 정답은 submission `QueryService`가 도메인 모델 대신 자체 DTO를 반환하는 것(submission 오너 작업) → `docs/adr/0003-bc-communication.md`.
+- **광범위 SpringData 직접참조 위반(리팩토링 백로그)**: `learning`·`submission` 등의 일부 어댑터가 타 BC의 `application.service`가 아닌 `SpringData*Repository`/`JpaEntity`를 직접 주입·참조 중(ADR-0003 위반). 등급별 목록·근거는 `docs/adr/0003-bc-communication.md`의 "알려진 위반".

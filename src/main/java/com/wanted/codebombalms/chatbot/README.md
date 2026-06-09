@@ -20,7 +20,7 @@
 
 ## 경계
 
-다른 도메인과의 연동(problems·submission·learning·user)은 루트 [`CONTEXT-MAP.md`](../../../../../../../CONTEXT-MAP.md)를 단일 소스로 본다.
+다른 도메인과의 연동(problems·submission)은 루트 [`CONTEXT-MAP.md`](../../../../../../../CONTEXT-MAP.md)를 단일 소스로 본다.
 
 ---
 
