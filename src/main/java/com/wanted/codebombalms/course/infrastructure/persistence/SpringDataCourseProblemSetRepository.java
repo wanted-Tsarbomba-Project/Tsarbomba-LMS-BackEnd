@@ -14,12 +14,12 @@ public interface SpringDataCourseProblemSetRepository extends JpaRepository<Cour
             from CourseProblemSetJpaEntity cps
             where cps.course.courseId = :courseId
               and cps.course.deletedAt is null
-              and exists (
+              and (cps.lectureId is null or exists (
                   select l.lectureId
                   from LectureJpaEntity l
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
-              )
+              ))
             """)
     List<CourseProblemSetJpaEntity> findActiveByCourseId(@Param("courseId") Long courseId);
 
@@ -29,12 +29,12 @@ public interface SpringDataCourseProblemSetRepository extends JpaRepository<Cour
             where cps.course.courseId = :courseId
               and cps.role = :role
               and cps.course.deletedAt is null
-              and exists (
+              and (cps.lectureId is null or exists (
                   select l.lectureId
                   from LectureJpaEntity l
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
-              )
+              ))
             """)
     List<CourseProblemSetJpaEntity> findActiveByCourseIdAndRole(
             @Param("courseId") Long courseId,
@@ -61,12 +61,12 @@ public interface SpringDataCourseProblemSetRepository extends JpaRepository<Cour
             from CourseProblemSetJpaEntity cps
             where cps.courseProblemSetId = :courseProblemSetId
               and cps.course.deletedAt is null
-              and exists (
+              and (cps.lectureId is null or exists (
                   select l.lectureId
                   from LectureJpaEntity l
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
-              )
+              ))
             """)
     Optional<CourseProblemSetJpaEntity> findActiveById(@Param("courseProblemSetId") Long courseProblemSetId);
 }

@@ -4,6 +4,7 @@ import com.wanted.codebombalms.course.application.command.ConfigureCourseProblem
 import com.wanted.codebombalms.course.application.port.LectureCatalogPort;
 import com.wanted.codebombalms.course.application.port.ProblemCatalogPort;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
+import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,14 +30,22 @@ public class CourseProblemPolicy {
             Long courseId,
             ConfigureCourseProblemSetsCommand.ProblemSetCommand problemSet
     ) {
-        if (problemSet.lectureId() == null
-                || problemSet.problemSetId() == null
+        if (problemSet.problemSetId() == null
                 || problemSet.role() == null
                 || problemSet.displayOrder() == null) {
             throw new ValidationException(CourseErrorCode.COURSE_PROBLEM_SET_REQUIRED);
         }
         if (!problemCatalogPort.existsProblemSet(problemSet.problemSetId())) {
             throw new ValidationException(CourseErrorCode.COURSE_PROBLEM_SET_NOT_FOUND);
+        }
+        if (problemSet.role() == CourseProblemSetRole.FINAL) {
+            if (problemSet.lectureId() != null) {
+                throw new ValidationException(CourseErrorCode.COURSE_FINAL_PROBLEM_LECTURE_NOT_ALLOWED);
+            }
+            return;
+        }
+        if (problemSet.lectureId() == null) {
+            throw new ValidationException(CourseErrorCode.COURSE_PROBLEM_LECTURE_REQUIRED);
         }
         if (!lectureCatalogPort.existsLectureInCourse(courseId, problemSet.lectureId())) {
             throw new ValidationException(CourseErrorCode.COURSE_PROBLEM_LECTURE_NOT_FOUND);

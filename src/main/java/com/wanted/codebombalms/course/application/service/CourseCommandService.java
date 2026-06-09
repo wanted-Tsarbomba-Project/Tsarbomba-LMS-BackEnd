@@ -69,6 +69,9 @@ public class CourseCommandService implements CourseCommandUseCase {
         if (command.courseCategoryId() != null) {
             courseCategoryPolicy.validateActiveCategory(command.courseCategoryId());
         }
+        if (command.status() == CourseStatus.ACTIVE && course.getStatus() == CourseStatus.INACTIVE) {
+            coursePublishPolicy.validateActivationRequirements(course);
+        }
 
         course.update(
                 command.courseCategoryId(),
@@ -118,7 +121,7 @@ public class CourseCommandService implements CourseCommandUseCase {
         if (requestedStatus == null) {
             return;
         }
-        if (requestedStatus == CourseStatus.ACTIVE && currentStatus != CourseStatus.ACTIVE) {
+        if (requestedStatus == CourseStatus.ACTIVE && currentStatus == CourseStatus.DRAFT) {
             throw new ValidationException(CourseErrorCode.COURSE_ACTIVE_STATUS_REQUIRES_PUBLISH);
         }
         if (requestedStatus == CourseStatus.DELETED) {
