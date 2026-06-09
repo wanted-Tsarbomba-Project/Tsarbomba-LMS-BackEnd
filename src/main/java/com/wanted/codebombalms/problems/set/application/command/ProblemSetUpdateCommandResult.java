@@ -4,6 +4,7 @@ public record ProblemSetUpdateCommandResult(
         Long problemSetId,
         String title,
         String categoryName,
-        Integer updatedProblemCount
+        Integer updatedProblemCount,
+        Integer updatedTestCaseCount
 ) {
 }

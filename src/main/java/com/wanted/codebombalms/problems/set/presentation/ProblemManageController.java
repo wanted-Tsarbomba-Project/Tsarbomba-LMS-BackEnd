@@ -1,6 +1,5 @@
 package com.wanted.codebombalms.problems.set.presentation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
@@ -27,6 +26,7 @@ import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetWith
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -62,7 +62,6 @@ public class ProblemManageController {
     private final UpdateProblemSetUseCase updateProblemSetUseCase;
     private final DeleteProblemSetUseCase deleteProblemSetUseCase;
     private final UpdateProblemSetWithDatasetUseCase updateProblemSetWithDatasetUseCase;
-    private final ObjectMapper objectMapper;
 
     @Operation(
             summary = "문제 세트 등록",
@@ -172,15 +171,71 @@ public class ProblemManageController {
 
     @Operation(
             summary = "데이터셋 포함 문제 세트 등록",
-            description = "문제 세트 등록 JSON 파트와 CSV 데이터셋 파일 파트를 multipart/form-data로 함께 받아 등록합니다."
+            description = """
+                    문제 세트 등록 JSON 파트(request)와 CSV 데이터셋 파일 파트(datasetFile)를 \
+                    multipart/form-data로 함께 받아 등록합니다.
+                    request의 problems[].testCases[]를 통해 각 문제의 테스트케이스도 함께 등록합니다.
+                    """
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             required = true,
             content = @Content(
                     mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                    schema = @Schema(implementation = ProblemSetWithDatasetCreateSwaggerRequest.class)
+                    schema = @Schema(implementation = ProblemSetWithDatasetCreateSwaggerRequest.class),
+                    encoding = {
+                            @Encoding(name = "request", contentType = MediaType.APPLICATION_JSON_VALUE),
+                            @Encoding(name = "datasetFile", contentType = "text/csv")
+                    }
             )
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "데이터셋 포함 문제 세트 등록 성공",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProblemSetWithDatasetCreateResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "timestamp": "2026-06-09T09:00:00Z",
+                                              "status": 201,
+                                              "code": "COMMON-CREATED",
+                                              "message": "리소스가 성공적으로 생성되었습니다.",
+                                              "data": {
+                                                "problemSetId": 3001,
+                                                "datasetId": 5001,
+                                                "title": "pandas 기초 분석 문제 세트",
+                                                "categoryName": "Python 데이터 분석",
+                                                "totalProblemCount": 1,
+                                                "createdProblemCount": 1,
+                                                "createdTestCaseCount": 2,
+                                                "datasetFileName": "employee_performance.csv",
+                                                "datasetUrl": "https://storage.googleapis.com/example-bucket/problem_dataset/example.csv",
+                                                "startCode": "import pandas as pd\\ndf = pd.read_csv(DATASET_PATH)"
+                                              }
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "PRB-INP-001 요청값 오류 / PRB-DAT-004 CSV 파일 형식 오류 / PRB-TC-002 테스트케이스 입력값 오류"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 토큰이 없거나 유효하지 않음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "문제 세트 등록 권한 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "PRB-DAT-005 데이터셋 업로드 실패 / PRB-DAT-006 문제 세트와 데이터셋 연결 실패"
+            )
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping(
             value = "/api/v1/problems/with-dataset",
@@ -188,7 +243,7 @@ public class ProblemManageController {
     )
     public ResponseEntity<ApiResponse<ProblemSetWithDatasetCreateResponse>> createProblemWithDataset(
             @AuthenticationPrincipal Long createdBy,
-            @Parameter(description = "문제 세트 등록 JSON 파트", required = true)
+            @Parameter(description = "문제와 testCases 목록을 포함한 문제 세트 등록 JSON 파트", required = true)
             @RequestPart("request") ProblemSetCreateRequest request,
             @Parameter(description = "문제 세트에 연결할 CSV 데이터셋 파일", required = true)
             @RequestPart("datasetFile") MultipartFile datasetFile
@@ -205,6 +260,7 @@ public class ProblemManageController {
                 result.categoryName(),
                 result.totalProblemCount(),
                 result.createdProblemCount(),
+                result.createdTestCaseCount(),
                 result.datasetFileName(),
                 result.datasetUrl(),
                 result.startCode()
@@ -248,15 +304,13 @@ public class ProblemManageController {
     )
     public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSetWithDataset(
             @PathVariable Long problemSetId,
-            @RequestPart("request") String requestJson,
-            @RequestPart("datasetFile") MultipartFile datasetFile
+            @RequestPart("request") ProblemSetUpdateRequest request,
+            @RequestPart(value = "datasetFile", required = false) MultipartFile datasetFile
     ) {
-        ProblemSetUpdateRequest request = parseProblemSetUpdateRequest(requestJson);
-
-        var result = updateProblemSetWithDatasetUseCase.handle(
-                toCommand(problemSetId, request),
-                toDatasetCommand(datasetFile)
-        );
+        var command = toCommand(problemSetId, request);
+        var result = datasetFile == null || datasetFile.isEmpty()
+                ? updateProblemSetUseCase.handle(command)
+                : updateProblemSetWithDatasetUseCase.handle(command, toDatasetCommand(datasetFile));
 
         var response = new ProblemSetUpdateResponse(result);
 
@@ -265,14 +319,6 @@ public class ProblemManageController {
                 ApiResponseMessage.SUCCESS,
                 response
         ));
-    }
-
-    private ProblemSetUpdateRequest parseProblemSetUpdateRequest(String requestJson) {
-        try {
-            return objectMapper.readValue(requestJson, ProblemSetUpdateRequest.class);
-        } catch (IOException e) {
-            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
-        }
     }
 
     private UploadProblemDatasetCommand toDatasetCommand(MultipartFile datasetFile) {
@@ -313,9 +359,17 @@ public class ProblemManageController {
                 request.content(),
                 request.point(),
                 request.startCode(),
-                request.answer(),
                 request.hint(),
-                request.explanation()
+                request.explanation(),
+                request.testCases() == null
+                        ? null
+                        : request.testCases().stream()
+                        .map(testCase -> new com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseRegistration(
+                                testCase.testCode(),
+                                testCase.isHidden(),
+                                testCase.timeoutMs()
+                        ))
+                        .toList()
         );
     }
 
@@ -345,10 +399,19 @@ public class ProblemManageController {
                 request.content(),
                 request.point(),
                 request.startCode(),
-                request.answer(),
                 request.hintId(),
                 request.hint(),
-                request.explanation()
+                request.explanation(),
+                request.testCases() == null
+                        ? null
+                        : request.testCases().stream()
+                        .map(testCase -> new com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseModification(
+                                testCase.testCaseId(),
+                                testCase.testCode(),
+                                testCase.isHidden(),
+                                testCase.timeoutMs()
+                        ))
+                        .toList()
         );
     }
 }

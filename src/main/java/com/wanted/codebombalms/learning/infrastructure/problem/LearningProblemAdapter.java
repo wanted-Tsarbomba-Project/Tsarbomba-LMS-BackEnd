@@ -18,7 +18,6 @@ public class LearningProblemAdapter implements LearningProblemPort {
         var problem = problemQueryService.findProblemForSubmission(problemId);
         return new ProblemForLearning(
                 problem.problemId(),
-                problem.answer(),
                 problem.explanation(),
                 problem.attemptLimit(),
                 problem.retriable()

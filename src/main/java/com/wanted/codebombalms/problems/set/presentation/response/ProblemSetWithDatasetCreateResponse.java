@@ -21,13 +21,16 @@ public record ProblemSetWithDatasetCreateResponse(
         @Schema(description = "생성된 소문제 수", example = "1")
         Integer createdProblemCount,
 
+        @Schema(description = "생성된 테스트케이스 수", example = "2")
+        Integer createdTestCaseCount,
+
         @Schema(description = "업로드한 원본 CSV 파일명", example = "employee_performance.csv")
         String datasetFileName,
 
-        @Schema(description = "GCS에 저장된 CSV 파일 URL", example = "https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv")
+        @Schema(description = "저장된 CSV 데이터셋 참조 URL. 실제 접근 방식은 GCS 보안 정책을 따름", example = "https://storage.googleapis.com/example-bucket/problem_dataset/example.csv")
         String datasetUrl,
 
-        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드")
+        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드", example = "import pandas as pd\ndf = pd.read_csv(DATASET_PATH)")
         String startCode
 ) {
 }

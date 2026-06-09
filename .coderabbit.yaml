@@ -1,0 +1,166 @@
+language: "ko-KR"
+
+tone_instructions: >
+  간결하고 단호하게 리뷰한다.
+  운영 장애 가능성, 성능 병목, 데이터 정합성, 보안 리스크를 우선 지적한다.
+  단순 스타일 지적보다 아키텍처 위반, 트랜잭션 경계, JPA 쿼리 문제, metric 누락을 우선한다.
+  지적 시 반드시 사유와 권장 대안을 함께 제시한다.
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "draft"
+
+  path_filters:
+    - "!build/**"
+    - "!.gradle/**"
+    - "!gradle/**"
+    - "!**/generated/**"
+    - "!**/*.lock"
+    - "src/main/**"
+    - "src/test/**"
+
+  path_instructions:
+    - path: "src/main/java/**/controller/**"
+      instructions: |
+        - 인증/인가 누락을 최우선으로 확인한다.
+        - request DTO 에 @Valid 누락 여부를 확인한다.
+        - pagination, sort, filter 파라미터의 기본값과 최대값 제한을 확인한다.
+        - idempotency 가 필요한 생성/결제/상태 변경 API 에 중복 요청 방어가 있는지 확인한다.
+        - API 응답 스펙이 CommonResponse 형식을 유지하는지 확인한다.
+        - Clean Architecture 관점에서 Controller 가 Entity, Repository, JPA 구현체에 직접 의존하지 않는지 확인한다.
+        - Controller 에 비즈니스 로직, 쿼리 조립, metric 계산 로직이 들어가지 않았는지 확인한다.
+
+    - path: "src/main/java/**/application/**"
+      instructions: |
+        - UseCase/Application Service 가 도메인 흐름을 조율하고 있는지 확인한다.
+        - Controller, Infrastructure, JPA Entity 에 직접 강하게 의존하지 않는지 확인한다.
+        - 트랜잭션 경계가 UseCase 단위로 적절한지 확인한다.
+        - 읽기 전용 UseCase 는 @Transactional(readOnly = true) 적용 여부를 확인한다.
+        - metric 수집/계산 로직이 도메인 규칙과 뒤섞이지 않았는지 확인한다.
+
+    - path: "src/main/java/**/service/**"
+      instructions: |
+        - @Transactional 경계가 적절한지 확인한다.
+        - readOnly 누락 여부를 확인한다.
+        - 동시성, 중복 처리, 재시도 시 부작용을 집중 리뷰한다.
+        - 외부 API 호출 실패, timeout, rollback 처리를 확인한다.
+        - BusinessException 사용 시 적절한 ErrorCode 를 사용하는지 확인한다.
+        - JPA lazy loading 이 트랜잭션 밖에서 발생할 가능성을 확인한다.
+        - metric 기록이 실패했을 때 핵심 비즈니스 로직까지 실패하지 않는지 확인한다.
+
+    - path: "src/main/java/**/domain/**"
+      instructions: |
+        - Clean Architecture 기준으로 도메인이 Spring, JPA, Web, DB 기술에 과도하게 의존하지 않는지 확인한다.
+        - 도메인 캡슐화를 확인한다.
+        - public setter, 무분별한 @Setter 사용을 지적한다.
+        - 상태 변경 로직이 도메인 내부에 있는지 확인한다.
+        - Tell, Don't Ask 원칙을 위반하는 서비스 중심 변경 로직을 지적한다.
+        - equals/hashCode 구현이 JPA 프록시, 식별자 생성 전략과 충돌하지 않는지 확인한다.
+        - 도메인 이벤트가 필요한 변경인데 단순 필드 수정으로 끝나지 않았는지 확인한다.
+
+    - path: "src/main/java/**/infrastructure/**"
+      instructions: |
+        - Infrastructure 가 Domain/Application 인터페이스를 구현하는 방향인지 확인한다.
+        - Domain 이 Infrastructure 구현체를 직접 참조하지 않는지 확인한다.
+        - DB, 외부 API, Metric, Messaging 구현 세부사항이 Application 밖으로 새지 않는지 확인한다.
+        - 장애 발생 시 timeout, retry, fallback, circuit breaker 필요성을 검토한다.
+
+    - path: "src/main/java/**/repository/**"
+      instructions: |
+        - N+1 query 가능성을 최우선으로 확인한다.
+        - Fetch Join, EntityGraph, BatchSize, IN 절 활용 여부를 확인한다.
+        - findAll() 의 무분별한 사용을 지적한다.
+        - pagination 과 정렬 기준이 안정적인지 확인한다.
+        - offset pagination 이 대용량 데이터에서 병목이 될 가능성을 지적한다.
+        - keyset pagination 적용 가능성을 검토한다.
+        - @Query JPQL 사용 시 파라미터 바인딩을 확인한다.
+        - native query 사용 시 SQL injection, DB 종속성, index 사용 가능성을 확인한다.
+        - count query 비용이 큰 pageable query 를 지적한다.
+
+    - path: "src/main/java/**/query/**"
+      instructions: |
+        - 조회 전용 Query 모델이 Command/Domain 변경 로직과 섞이지 않았는지 확인한다.
+        - 복잡한 조회는 fetch join, projection, DTO query, QueryDSL 사용이 적절한지 확인한다.
+        - 불필요한 Entity 로딩 대신 projection 을 사용할 수 있는지 검토한다.
+        - where 조건이 index 를 탈 수 있는지 확인한다.
+        - like '%keyword%' 등 index 를 무력화하는 조건을 지적한다.
+        - group by, join, subquery 의 실행 비용과 대용량 데이터 영향을 확인한다.
+        - query 결과의 정렬 기준이 유일하고 재현 가능한지 확인한다.
+
+    - path: "src/main/java/**/jpa/**"
+      instructions: |
+        - Entity 와 Domain 모델이 분리되어야 하는 구조라면 의존 방향 위반을 확인한다.
+        - 양방향 연관관계 편의 메서드 누락을 확인한다.
+        - cascade, orphanRemoval 사용이 데이터 삭제 위험을 만들지 않는지 확인한다.
+        - fetch = EAGER 사용을 지적한다.
+        - @ManyToOne, @OneToMany 관계에서 N+1 가능성을 확인한다.
+        - 컬렉션 fetch join + pagination 조합을 지적한다.
+        - dirty checking 에 의존한 변경이 명확한 도메인 메서드를 통해 수행되는지 확인한다.
+
+    - path: "src/main/java/**/metric/**"
+      instructions: |
+        - metric 이름, tag cardinality, 단위가 일관적인지 확인한다.
+        - userId, email, token, requestId 등 고카디널리티/민감정보 tag 사용을 지적한다.
+        - Counter, Gauge, Timer, DistributionSummary 선택이 적절한지 확인한다.
+        - 실패/성공/latency metric 이 함께 수집되는지 확인한다.
+        - 외부 API, DB query, batch, scheduler 작업의 latency 와 failure metric 누락을 확인한다.
+        - metric 수집 실패가 핵심 로직 장애로 전파되지 않도록 방어되어 있는지 확인한다.
+        - alert 로 이어질 수 없는 장식성 metric 추가를 지적한다.
+
+    - path: "src/main/java/**/dto/**"
+      instructions: |
+        - request/response DTO 는 record 사용을 우선 권장한다.
+        - 불필요한 가변 필드를 지적한다.
+        - @NotNull, @NotBlank, @Email, @Pattern, @Size 등 validation 누락을 확인한다.
+        - 응답 DTO 에 password, token, 내부 ID, PII 등 민감 정보가 노출되지 않는지 확인한다.
+        - Entity 를 API 응답으로 직접 반환하지 않는지 확인한다.
+
+    - path: "src/main/java/com/team23/common/security/**"
+      instructions: |
+        - 토큰 검증, 권한 체크, refresh flow, 민감정보 노출을 집중 리뷰한다.
+        - 로그에 credential, token, PII 가 남지 않는지 확인한다.
+        - SecurityConfig 의 requestMatchers 순서와 permitAll/hasRole 사용을 확인한다.
+        - JWT claim 추출 시 타입 변환 안전성, null 처리를 확인한다.
+
+    - path: "src/main/java/com/team23/common/**"
+      instructions: |
+        - 공통 인프라 변경은 모든 도메인에 영향을 미치므로 영향 범위를 확인한다.
+        - ErrorCode 추가 시 HTTP status, code prefix, message 일관성을 확인한다.
+        - GlobalExceptionHandler 변경 시 기존 예외 처리 흐름과 호환되는지 확인한다.
+        - 공통 응답, 예외, metric, logging 변경이 기존 클라이언트를 깨지 않는지 확인한다.
+
+    - path: "src/test/java/**"
+      instructions: |
+        - happy path 외 실패 케이스, 경계값, 권한 실패, 동시성 케이스가 있는지 확인한다.
+        - JPA query 테스트에서 N+1 여부를 검증하는지 확인한다.
+        - repository/query 테스트에서 pagination, sort 안정성을 검증하는지 확인한다.
+        - metric 이 필요한 흐름에서 성공/실패 metric 기록 여부를 검증하는지 확인한다.
+        - @BeforeEach 에서 테스트 격리가 보장되는지 확인한다.
+        - mock 이 실제 장애 상황을 충분히 반영하는지 확인한다.
+
+    - path: "**/application*.{yaml,yml,properties}"
+      instructions: |
+        - credentials, API key, secret 이 평문으로 노출되지 않는지 확인한다.
+        - 환경 변수 참조 (${VAR}) 누락이나 default 값의 보안 영향을 확인한다.
+        - profile 별 설정 분리가 적절한지 확인한다.
+        - datasource, hikari, jpa, logging, actuator, metrics 설정이 운영 환경에 안전한지 확인한다.
+        - show-sql, format_sql 이 운영 profile 에서 켜져 있지 않은지 확인한다.
+
+    - path: "**/build.gradle*"
+      instructions: |
+        - 의존성 추가 시 보안 취약점, 라이센스, 버전 충돌 가능성을 확인한다.
+        - JPA, QueryDSL, Micrometer, Actuator 관련 의존성 버전 호환성을 확인한다.
+        - 불필요하게 무거운 라이브러리 추가를 지적한다.
+
+    - path: "**/.env*"
+      instructions: |
+        - .env 파일이 .gitignore 에 포함되어 있는지 반드시 확인한다.
+        - 실제 credentials 가 커밋된 경우 즉시 지적한다.

@@ -6,7 +6,6 @@ public interface LearningProblemPort {
 
     record ProblemForLearning(
             Long problemId,
-            String answer,
             String explanation,
             Integer attemptLimit,
             Boolean retriable

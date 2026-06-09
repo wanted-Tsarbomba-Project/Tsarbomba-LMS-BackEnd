@@ -9,7 +9,6 @@ public interface LoadTestCasesForGradingPort {
     record TestCaseForGrading(
             Long testCaseId,
             String testCode,
-            String expectedResult,
             Boolean hidden,
             Integer timeoutMs
     ) {

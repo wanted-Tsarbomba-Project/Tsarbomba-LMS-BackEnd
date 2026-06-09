@@ -21,13 +21,17 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
     }
 
     @Override
-    public CodeRunResult run(String code) {
+    public CodeRunResult run(CodeRunCommand command)  {
         long startTime = System.currentTimeMillis();
 
         try {
             CloudRunExecuteResponse response = restClient.post()
                     .uri(properties.getEndpoint())
-                    .body(new CloudRunExecuteRequest(appendResultPrinter(code)))
+                    .body(new CloudRunExecuteRequest(
+                            appendResultPrinter(command.code()),
+                            command.datasetAccessUrl(),
+                            command.timeoutMs()
+                    ))
                     .retrieve()
                     .body(CloudRunExecuteResponse.class);
 
@@ -73,7 +77,11 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
                 + "print(result)";
     }
 
-    private record CloudRunExecuteRequest(String code) {
+    private record CloudRunExecuteRequest(
+            String code,
+            String datasetAccessUrl,
+            Integer timeoutMs
+    ) {
     }
 
     private record CloudRunExecuteResponse(

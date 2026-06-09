@@ -35,6 +35,8 @@ public interface SpringDataProblemRepository extends JpaRepository<ProblemJpaEnt
             Long problemSetId
     );
 
+    Optional<ProblemJpaEntity> findByProblemIdAndStatus(Long problemId, String status);
+
     @Query("""
             select new com.wanted.codebombalms.problems.problem.application.port.ProblemTargetDetailPort$ProblemTargetDetailView(
                 p.problemId,

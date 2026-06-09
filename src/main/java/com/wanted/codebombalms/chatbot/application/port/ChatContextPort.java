@@ -29,7 +29,6 @@ public interface ChatContextPort {
             String title,
             String content,
             String problemType,
-            String answer,
             String explanation,
             String submittedAnswer
     ) {}

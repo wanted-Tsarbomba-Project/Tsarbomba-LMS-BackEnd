@@ -21,12 +21,14 @@ public class ProblemHintPersistenceAdapter implements
         LoadHintForUpdatePort,
         ManageProblemSetHintsPort {
 
+    private static final String ACTIVE_STATUS = "ACTIVE";
+
     private final SpringDataProblemHintRepository repository;
     private final EntityManager entityManager;
 
     @Override
     public List<ProblemHint> findByProblemId(Long problemId) {
-        return repository.findByProblem_ProblemIdOrderByHintOrderAsc(problemId)
+        return repository.findByProblem_ProblemIdAndProblem_StatusOrderByHintOrderAsc(problemId, ACTIVE_STATUS)
                 .stream()
                 .map(entity -> ProblemHint.restore(
                         entity.getHintId(),
@@ -38,7 +40,7 @@ public class ProblemHintPersistenceAdapter implements
 
     @Override
     public Optional<HintForUpdateData> loadFirstHintForUpdate(Long problemId) {
-        return repository.findByProblem_ProblemIdOrderByHintOrderAsc(problemId)
+        return repository.findByProblem_ProblemIdAndProblem_StatusOrderByHintOrderAsc(problemId, ACTIVE_STATUS)
                 .stream()
                 .findFirst()
                 .map(hint -> new HintForUpdateData(

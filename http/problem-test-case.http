@@ -16,7 +16,7 @@
 ### 1. 테스트케이스 등록 성공
 # 기대 결과:
 # - 201 Created
-# - 채점 코드, 기대 결과, 순서, 히든 여부, 제한 시간이 저장됩니다.
+# - 채점 코드, 순서, 히든 여부, 제한 시간이 저장됩니다.
 POST {{baseUrl}}/api/v1/problems/{{problemId}}/test-cases
 Accept: application/json
 Content-Type: application/json
@@ -24,7 +24,6 @@ Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
-  "expectedResult": "df.shape",
   "testOrder": 3,
   "isHidden": false,
   "timeoutMs": 3000
@@ -45,7 +44,7 @@ Cookie: accessToken={{accessToken}}
 # - testCaseId=3001 존재
 # 기대 결과:
 # - 200 OK
-# - 테스트 코드, 기대 결과, 순서, 히든 여부, 제한 시간이 수정됩니다.
+# - 테스트 코드, 순서, 히든 여부, 제한 시간이 수정됩니다.
 PUT {{baseUrl}}/api/v1/test-cases/{{testCaseId}}
 Accept: application/json
 Content-Type: application/json
@@ -53,7 +52,6 @@ Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert isinstance(result, tuple)",
-  "expectedResult": "tuple",
   "testOrder": 1,
   "isHidden": true,
   "timeoutMs": 3000
@@ -84,7 +82,6 @@ Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
-  "expectedResult": "df.shape",
   "testOrder": 1,
   "isHidden": false,
   "timeoutMs": 3000
@@ -102,7 +99,6 @@ Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "",
-  "expectedResult": "df.shape",
   "testOrder": 1,
   "isHidden": false,
   "timeoutMs": 3000
@@ -120,7 +116,6 @@ Cookie: accessToken={{accessToken}}
 
 {
   "testCode": "assert result == df.shape",
-  "expectedResult": "df.shape",
   "testOrder": 1,
   "isHidden": false,
   "timeoutMs": 3000

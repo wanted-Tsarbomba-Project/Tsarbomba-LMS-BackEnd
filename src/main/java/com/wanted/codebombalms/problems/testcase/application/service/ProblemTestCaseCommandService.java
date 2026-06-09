@@ -34,7 +34,6 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
         ProblemTestCase testCase = ProblemTestCase.create(
                 command.problemId(),
                 command.testCode(),
-                command.expectedResult(),
                 command.testOrder(),
                 command.hidden(),
                 command.timeoutMs()
@@ -58,7 +57,6 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
                 existingTestCase.getTestCaseId(),
                 existingTestCase.getProblemId(),
                 command.testCode(),
-                command.expectedResult(),
                 command.testOrder(),
                 command.hidden(),
                 command.timeoutMs(),
@@ -79,7 +77,6 @@ public class ProblemTestCaseCommandService implements ProblemTestCaseCommandUseC
                 testCase.getTestCaseId(),
                 testCase.getProblemId(),
                 testCase.getTestCode(),
-                testCase.getExpectedResult(),
                 testCase.getTestOrder(),
                 testCase.getHidden(),
                 testCase.getTimeoutMs(),

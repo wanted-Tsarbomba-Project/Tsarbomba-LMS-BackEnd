@@ -70,7 +70,6 @@ public class ProblemTestCaseController {
                                             "testCaseId": 3001,
                                             "problemId": 3001,
                                             "testCode": "assert result == df.shape",
-                                            "expectedResult": "df.shape",
                                             "testOrder": 1,
                                             "isHidden": false,
                                             "timeoutMs": 3000,
@@ -163,7 +162,6 @@ public class ProblemTestCaseController {
         var view = commandUseCase.handle(new CreateProblemTestCaseCommand(
                 problemId,
                 request.testCode(),
-                request.expectedResult(),
                 request.testOrder(),
                 request.isHidden(),
                 request.timeoutMs()
@@ -180,7 +178,7 @@ public class ProblemTestCaseController {
     @Operation(
             summary = "테스트케이스 목록 조회",
             description = "특정 코드 문제에 등록된 테스트케이스 목록을 조회합니다. "
-                    + "운영자용 API이므로 히든 테스트케이스의 testCode와 expectedResult도 함께 반환됩니다. "
+                    + "운영자용 API이므로 히든 테스트케이스의 testCode도 함께 반환됩니다. "
                     + "성공 시 200을 반환합니다. 에러: PRB-PBL-001 문제 없음"
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -202,7 +200,6 @@ public class ProblemTestCaseController {
                                               "testCaseId": 3001,
                                               "problemId": 3001,
                                               "testCode": "assert result == df.shape",
-                                              "expectedResult": "df.shape",
                                               "testOrder": 1,
                                               "isHidden": false,
                                               "timeoutMs": 3000,
@@ -212,7 +209,6 @@ public class ProblemTestCaseController {
                                               "testCaseId": 3002,
                                               "problemId": 3001,
                                               "testCode": "assert result[0] > 0",
-                                              "expectedResult": "행 개수는 0보다 커야 함",
                                               "testOrder": 2,
                                               "isHidden": true,
                                               "timeoutMs": 3000,
@@ -264,7 +260,7 @@ public class ProblemTestCaseController {
 
     @Operation(
             summary = "테스트케이스 수정",
-            description = "테스트케이스의 검증 코드, 기대 결과, 순서, 히든 여부, 타임아웃을 수정합니다. "
+            description = "테스트케이스의 검증 코드, 순서, 히든 여부, 타임아웃을 수정합니다. "
                     + "성공 시 200을 반환합니다. 에러: PRB-TC-001 테스트케이스 입력값 오류, PRB-TC-002 테스트케이스 없음"
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -285,7 +281,6 @@ public class ProblemTestCaseController {
                                             "testCaseId": 3001,
                                             "problemId": 3001,
                                             "testCode": "assert result == df.shape",
-                                            "expectedResult": "df.shape",
                                             "testOrder": 1,
                                             "isHidden": true,
                                             "timeoutMs": 3000,
@@ -345,7 +340,6 @@ public class ProblemTestCaseController {
         var view = commandUseCase.handle(new UpdateProblemTestCaseCommand(
                 testCaseId,
                 request.testCode(),
-                request.expectedResult(),
                 request.testOrder(),
                 request.isHidden(),
                 request.timeoutMs()
@@ -381,7 +375,6 @@ public class ProblemTestCaseController {
                                             "testCaseId": 3001,
                                             "problemId": 3001,
                                             "testCode": "assert result == df.shape",
-                                            "expectedResult": "df.shape",
                                             "testOrder": 1,
                                             "isHidden": false,
                                             "timeoutMs": 3000,

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -81,7 +82,6 @@ public class ProblemPersistenceAdapter implements
                         problem.getTitle(),
                         problem.getContent(),
                         problem.getPoint(),
-                        problem.getAnswer(),
                         problem.getExplanation()
                 ))
                 .toList();
@@ -112,7 +112,6 @@ public class ProblemPersistenceAdapter implements
                 problem.getProblemId(),
                 problem.getProblemSet().getProblemSetId(),
                 problem.getProblemOrder(),
-                problem.getAnswer(),
                 problem.getExplanation(),
                 problem.getPoint(),
                 problem.getAttemptLimit(),
@@ -155,7 +154,6 @@ public class ProblemPersistenceAdapter implements
                 command.content(),
                 command.problemType(),
                 command.difficulty(),
-                command.answer(),
                 command.explanation(),
                 command.point(),
                 command.attemptLimit(),
@@ -166,7 +164,23 @@ public class ProblemPersistenceAdapter implements
     }
 
     @Override
-    public int deactivateActiveProblems(Long problemSetId) {
+    public List<Long> deactivateProblemsNotIn(Long problemSetId, Set<Long> retainedProblemIds) {
+        List<ProblemJpaEntity> problems = problemRepository.findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(
+                problemSetId,
+                ACTIVE_STATUS
+        ).stream()
+                .filter(problem -> !retainedProblemIds.contains(problem.getProblemId()))
+                .toList();
+
+        problems.forEach(ProblemJpaEntity::deactivate);
+
+        return problems.stream()
+                .map(ProblemJpaEntity::getProblemId)
+                .toList();
+    }
+
+    @Override
+    public List<Long> deactivateActiveProblems(Long problemSetId) {
         List<ProblemJpaEntity> problems = problemRepository.findByProblemSet_ProblemSetIdAndStatusOrderByProblemOrderAsc(
                 problemSetId,
                 ACTIVE_STATUS
@@ -174,7 +188,9 @@ public class ProblemPersistenceAdapter implements
 
         problems.forEach(ProblemJpaEntity::deactivate);
 
-        return problems.size();
+        return problems.stream()
+                .map(ProblemJpaEntity::getProblemId)
+                .toList();
     }
 
     private ProblemSetJpaEntity getProblemSetReference(Long problemSetId) {
@@ -192,7 +208,6 @@ public class ProblemPersistenceAdapter implements
                 command.content(),
                 command.problemType(),
                 command.difficulty(),
-                command.answer(),
                 command.explanation(),
                 command.point(),
                 command.attemptLimit(),
@@ -212,7 +227,6 @@ public class ProblemPersistenceAdapter implements
                 command.content(),
                 command.problemType(),
                 command.difficulty(),
-                command.answer(),
                 command.explanation(),
                 command.point(),
                 command.attemptLimit(),
@@ -234,7 +248,7 @@ public class ProblemPersistenceAdapter implements
 
     @Override
     public TestCaseProblemView loadByProblemId(Long problemId) {
-        ProblemJpaEntity problem = problemRepository.findById(problemId)
+        ProblemJpaEntity problem = problemRepository.findByProblemIdAndStatus(problemId, ACTIVE_STATUS)
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_NOT_FOUND));
 
         return new TestCaseProblemView(
@@ -304,7 +318,6 @@ public class ProblemPersistenceAdapter implements
                 entity.getTitle(),
                 entity.getContent(),
                 entity.getProblemType(),
-                entity.getAnswer(),
                 entity.getExplanation(),
                 entity.getPoint(),
                 entity.getAttemptLimit(),

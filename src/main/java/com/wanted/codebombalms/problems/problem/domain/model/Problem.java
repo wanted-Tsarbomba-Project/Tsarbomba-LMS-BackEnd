@@ -8,7 +8,6 @@ public class Problem {
     private final String title;
     private final String content;
     private final String problemType;
-    private final String answer;
     private final String explanation;
     private final Integer point;
     private final Integer attemptLimit;
@@ -21,7 +20,6 @@ public class Problem {
             String title,
             String content,
             String problemType,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,
@@ -33,7 +31,6 @@ public class Problem {
         this.title = title;
         this.content = content;
         this.problemType = problemType;
-        this.answer = answer;
         this.explanation = explanation;
         this.point = point;
         this.attemptLimit = attemptLimit;
@@ -47,7 +44,6 @@ public class Problem {
             String title,
             String content,
             String problemType,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,
@@ -60,7 +56,6 @@ public class Problem {
                 title,
                 content,
                 problemType,
-                answer,
                 explanation,
                 point,
                 attemptLimit,
@@ -90,10 +85,6 @@ public class Problem {
 
     public String getProblemType() {
         return problemType;
-    }
-
-    public String getAnswer() {
-        return answer;
     }
 
     public String getExplanation() {

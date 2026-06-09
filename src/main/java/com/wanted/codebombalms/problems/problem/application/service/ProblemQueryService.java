@@ -42,7 +42,6 @@ public class ProblemQueryService {
                 problem.getProblemId(),
                 problem.getProblemSetId(),
                 problem.getProblemOrder(),
-                problem.getAnswer(),
                 problem.getExplanation(),
                 problem.getPoint(),
                 problem.getAttemptLimit(),
@@ -77,7 +76,6 @@ public class ProblemQueryService {
                         p.getTitle(),
                         p.getContent(),
                         p.getProblemType(),
-                        p.getAnswer(),
                         p.getExplanation()))
                 .toList();
     }
@@ -88,7 +86,6 @@ public class ProblemQueryService {
             String title,
             String content,
             String problemType,
-            String answer,
             String explanation
     ) {}
 
@@ -130,7 +127,6 @@ public class ProblemQueryService {
             Long problemId,
             Long problemSetId,
             Integer problemOrder,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,

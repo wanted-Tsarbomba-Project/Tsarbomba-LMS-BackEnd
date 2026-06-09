@@ -55,11 +55,16 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
-CLAUDE.md
-CLAUREAD.md
-CLAUREAD-API.md
-CLAUEND.md
+AGENTS.md
+###ai
+ai/
+
 .claude
 CONTEXT.md
 
 demo
+
+## 모니터링
+MONITORING_GUIDE.md
+__pycache__/
+*.pyc

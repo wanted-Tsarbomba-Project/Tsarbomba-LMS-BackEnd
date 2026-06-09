@@ -17,7 +17,10 @@ public record ProblemSetCreateResponse(
         Integer totalProblemCount,
 
         @Schema(description = "생성된 소문제 수", example = "2")
-        Integer createdProblemCount
+        Integer createdProblemCount,
+
+        @Schema(description = "생성된 테스트케이스 개수", example = "4")
+        Integer createdTestCaseCount
 ) {
     public ProblemSetCreateResponse(ProblemSetCreateCommandResult result) {
         this(
@@ -25,7 +28,8 @@ public record ProblemSetCreateResponse(
                 result.title(),
                 result.categoryName(),
                 result.totalProblemCount(),
-                result.createdProblemCount()
+                result.createdProblemCount(),
+                result.createdTestCaseCount()
         );
     }
 }

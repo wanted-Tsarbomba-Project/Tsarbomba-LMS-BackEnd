@@ -39,7 +39,6 @@ public class ChatContextAdapter implements ChatContextPort {
                             p.title(),
                             p.content(),
                             p.problemType(),
-                            p.answer(),
                             p.explanation(),
                             submittedAnswer
                     );

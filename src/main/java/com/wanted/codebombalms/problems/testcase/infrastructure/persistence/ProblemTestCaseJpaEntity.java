@@ -28,9 +28,6 @@ public class ProblemTestCaseJpaEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String testCode;
 
-    @Column(columnDefinition = "TEXT")
-    private String expectedResult;
-
     @Column(nullable = false)
     private Integer testOrder;
 
@@ -55,7 +52,6 @@ public class ProblemTestCaseJpaEntity {
     public static ProblemTestCaseJpaEntity create(
             ProblemJpaEntity problem,
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs
@@ -63,7 +59,6 @@ public class ProblemTestCaseJpaEntity {
         ProblemTestCaseJpaEntity testCase = new ProblemTestCaseJpaEntity();
         testCase.problem = problem;
         testCase.testCode = testCode;
-        testCase.expectedResult = expectedResult;
         testCase.testOrder = testOrder;
         testCase.hidden = hidden;
         testCase.timeoutMs = timeoutMs;
@@ -75,13 +70,11 @@ public class ProblemTestCaseJpaEntity {
 
     public void update(
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs
     ) {
         this.testCode = testCode;
-        this.expectedResult = expectedResult;
         this.testOrder = testOrder;
         this.hidden = hidden;
         this.timeoutMs = timeoutMs;
@@ -90,6 +83,11 @@ public class ProblemTestCaseJpaEntity {
 
     public void deactivate() {
         this.status = "INACTIVE";
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void moveToOrder(Integer testOrder) {
+        this.testOrder = testOrder;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -103,10 +101,6 @@ public class ProblemTestCaseJpaEntity {
 
     public String getTestCode() {
         return testCode;
-    }
-
-    public String getExpectedResult() {
-        return expectedResult;
     }
 
     public Integer getTestOrder() {
