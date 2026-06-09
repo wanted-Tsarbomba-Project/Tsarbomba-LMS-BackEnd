@@ -1,0 +1,15 @@
+# CODEOWNERS — 팀 AI 협업 공용 문서는 PL(@suerovr)이 소유한다.
+# 아래 경로를 바꾸는 PR은 GitHub이 자동으로 @suerovr 를 리뷰어로 지정한다.
+#
+# ⚠️ "승인 없이 머지 차단"까지 강제하려면 레포 Settings > Branches(또는 Rulesets)에서
+#    "Require review from Code Owners" 를 켜야 한다.
+#    (CODEOWNERS 파일만으론 자동 리뷰어 지정까지고, 차단은 그 설정이 켜져야 작동.)
+
+/AGENTS.md                  @suerovr
+/CLAUDE.md                  @suerovr
+/CONTEXT.md                 @suerovr
+/CONTEXT-MAP.md             @suerovr
+/docs/adr/                  @suerovr
+/docs/RESPONSE-STYLE.md     @suerovr
+
+# .ai/ 전체는 개인 작업메모(.ai/local/, git-ignore)라 공용 소유 대상이 아니다.
