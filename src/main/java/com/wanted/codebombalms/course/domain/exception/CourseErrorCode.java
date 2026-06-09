@@ -20,7 +20,8 @@ public enum CourseErrorCode implements ErrorCode {
     COURSE_PROBLEM_SET_NOT_FOUND("CRS-010", "존재하지 않는 문제세트입니다."),
     COURSE_PROBLEM_NOT_FOUND("CRS-011", "선택한 문제세트에 존재하지 않는 문제입니다."),
     COURSE_PROBLEM_LECTURE_REQUIRED("CRS-012", "MAIN 문제 단계에는 강의가 필요합니다."),
-    COURSE_PROBLEM_LECTURE_NOT_FOUND("CRS-013", "선택한 강좌에 존재하지 않는 강의입니다.");
+    COURSE_PROBLEM_LECTURE_NOT_FOUND("CRS-013", "선택한 강좌에 존재하지 않는 강의입니다."),
+    COURSE_FINAL_PROBLEM_LECTURE_NOT_ALLOWED("CRS-014", "FINAL 문제 단계에는 강의를 지정할 수 없습니다.");
 
     private final String code;
     private final String message;

@@ -31,7 +31,7 @@ public class CourseProblemSetJpaEntity {
     @JoinColumn(name = "course_id", nullable = false)
     private CourseJpaEntity course;
 
-    @Column(name = "lecture_id", nullable = false)
+    @Column(name = "lecture_id")
     private Long lectureId;
 
     @Column(name = "problem_set_id", nullable = false)
