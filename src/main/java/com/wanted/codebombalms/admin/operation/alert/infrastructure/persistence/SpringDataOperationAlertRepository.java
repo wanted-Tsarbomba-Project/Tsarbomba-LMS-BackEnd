@@ -18,7 +18,7 @@ public interface SpringDataOperationAlertRepository
 
     @Query(
             value = """
-                    select new com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertWithRuleProjection(
+                    select new com.wanted.codebombalms.admin.operation.alert.infrastructure.persistence.OperationAlertListProjection(
                         oa.operationAlertId,
                         oa.status,
                         oa.recommendedAction
@@ -36,7 +36,7 @@ public interface SpringDataOperationAlertRepository
                       and (:status is null or oa.status = :status)
                     """
     )
-    Page<OperationAlertWithRuleProjection> findAlerts(
+    Page<OperationAlertListProjection> findAlerts(
             @Param("targetType") OperationTargetType targetType,
             @Param("status") OperationAlertStatus status,
             Pageable pageable

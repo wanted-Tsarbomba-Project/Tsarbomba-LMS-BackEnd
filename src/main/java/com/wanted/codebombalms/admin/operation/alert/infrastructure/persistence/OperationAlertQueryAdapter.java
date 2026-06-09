@@ -30,7 +30,7 @@ public class OperationAlertQueryAdapter implements OperationAlertQueryRepository
                         .and(Sort.by(Sort.Direction.DESC, "operationAlertId"))
         );
 
-        Page<OperationAlertWithRuleProjection> result = springDataRepository.findAlerts(
+        Page<OperationAlertListProjection> result = springDataRepository.findAlerts(
                 query.targetType(),
                 query.status(),
                 pageRequest
@@ -60,7 +60,7 @@ public class OperationAlertQueryAdapter implements OperationAlertQueryRepository
                 .map(this::toDetail);
     }
 
-    private OperationAlertListItem toListItem(OperationAlertWithRuleProjection projection) {
+    private OperationAlertListItem toListItem(OperationAlertListProjection projection) {
         return new OperationAlertListItem(
                 projection.operationAlertId(),
                 projection.status(),
