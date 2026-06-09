@@ -10,11 +10,11 @@
 ## 결정
 
 - **공용 문서**(`AGENTS.md`, `CLAUDE.md`, `CONTEXT-MAP.md`, `docs/adr/`, `docs/CONVENTION.md`,
-  `docs/PR-COMMIT.md`)는 **커밋**하고 PL(@suerovr)이 소유·머지한다(`.github/CODEOWNERS`).
+  `docs/PR-COMMIT.md`, `docs/response-style.md`)는 **커밋**하고 PL(@suerovr)이 소유·머지한다(`.github/CODEOWNERS`).
 - **개인 작업메모**(`STATE.md`·`API.md`·`WORKLOG.md` 등 도메인 개발하며 만든 라이브 노트 = 세컨드브레인)는
   `.ai/local/` 폴더에 두고 **통째로 git-ignore** 한다. 사람마다 다르고 자주 바뀌므로 공유하지 않는다.
 - `AGENTS.md`는 **도메인 중립**으로 유지한다(개인 담당 도메인·마일스톤은 STATE로). 길었던 응답 양식은
-  분리한다 — **팀 합의 양식(PR·커밋)은 `docs/PR-COMMIT.md`(공용), 개인 응답 취향(톤·이모지 등)은 `.ai/local/`(개인).**
+  분리한다 — **PR·커밋 양식은 `docs/PR-COMMIT.md`, AI 응답 형식은 `docs/response-style.md`(둘 다 팀 공용·커밋).**
 - PL 본인의 크로스머신(Windows/macOS) 개인메모는 레포 밖 `~/.claude` 메모리를 쓴다.
   (`.ai/local/` 은 ignore라 머신 간 git 동기화가 안 되므로.)
 

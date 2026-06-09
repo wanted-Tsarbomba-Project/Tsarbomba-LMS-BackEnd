@@ -13,6 +13,7 @@
 | 팀 결정·이유 | `docs/adr/` | 공용·커밋 (PL 소유) |
 | 팀 규약(에러코드 등) | `docs/CONVENTION.md` | 공용·커밋 |
 | PR·커밋 양식 | `docs/PR-COMMIT.md` | 공용·커밋 |
+| AI 응답 형식 | `docs/response-style.md` | 공용·커밋 |
 | 도메인 불변 핵심(역할·용어) | `src/.../<도메인>/README.md` | 공용·커밋 (오너) |
 | 개인 진행상황·도메인 상세 | `.ai/local/` | 개인·git-ignore |
 
@@ -101,8 +102,8 @@ Controller/Service/DTO/Repository 작성·수정, 엔드포인트 추가·변경
 
 ## 응답 스타일
 
-- **팀 공용 양식**: PR 본문 / 커밋 메시지는 `docs/PR-COMMIT.md`를 따른다(팀 합의 양식).
-- **개인 응답 취향**(톤·이모지·코드설명·트러블슈팅 표현 등)은 **공용 아님** → 각자 `.ai/local/`에 둔다. 강요하지 않는다.
+- **응답 형식**: `docs/response-style.md`를 따른다(팀 공용 — 톤·코드 제공·단계 분해·트러블슈팅 양식 등).
+- **PR·커밋 양식**: `docs/PR-COMMIT.md`를 따른다(팀 합의 양식).
 
 매번 적용하는 **불변 규칙**(이것만 항상 지킨다):
 
