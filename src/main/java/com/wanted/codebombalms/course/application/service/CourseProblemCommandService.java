@@ -9,6 +9,7 @@ import com.wanted.codebombalms.course.domain.repository.CourseProblemSetReposito
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,7 @@ public class CourseProblemCommandService implements CourseProblemCommandUseCase 
 
         for (ConfigureCourseProblemSetsCommand.ProblemSetCommand problemSetCommand : command.problemSets()) {
             Long existingId = existingProblemSets.stream()
-                    .filter(problemSet -> problemSet.getLectureId().equals(problemSetCommand.lectureId()))
+                    .filter(problemSet -> Objects.equals(problemSet.getLectureId(), problemSetCommand.lectureId()))
                     .filter(problemSet -> problemSet.getProblemSetId().equals(problemSetCommand.problemSetId()))
                     .map(CourseProblemSet::getCourseProblemSetId)
                     .findFirst()

@@ -43,13 +43,12 @@ class CourseProblemRepositoryTest {
     void saveAndFindProblemSetsByCourse() {
         Course course = courseRepository.save(createCourse());
         Lecture mainLecture = lectureRepository.save(createLecture(course, "Java 1", 1, LectureStatus.ACTIVE));
-        Lecture finalLecture = lectureRepository.save(createLecture(course, "Java 2", 2, LectureStatus.ACTIVE));
 
         CourseProblemSet mainProblemSet = courseProblemSetRepository.save(
                 CourseProblemSet.create(course.getCourseId(), mainLecture.getLectureId(), 2002L, CourseProblemSetRole.MAIN, 1)
         );
-        courseProblemSetRepository.save(
-                CourseProblemSet.create(course.getCourseId(), finalLecture.getLectureId(), 2003L, CourseProblemSetRole.FINAL, 1)
+        CourseProblemSet finalProblemSet = courseProblemSetRepository.save(
+                CourseProblemSet.create(course.getCourseId(), null, 2003L, CourseProblemSetRole.FINAL, 1)
         );
 
         List<CourseProblemSet> allProblemSets = courseProblemSetRepository.findByCourseId(course.getCourseId());
@@ -61,6 +60,12 @@ class CourseProblemRepositoryTest {
         assertEquals(2, allProblemSets.size());
         assertEquals(1, mainProblemSets.size());
         assertEquals(mainProblemSet.getCourseProblemSetId(), mainProblemSets.get(0).getCourseProblemSetId());
+        assertEquals(
+                finalProblemSet.getCourseProblemSetId(),
+                courseProblemSetRepository.findById(finalProblemSet.getCourseProblemSetId())
+                        .orElseThrow()
+                        .getCourseProblemSetId()
+        );
     }
 
     @Test
@@ -71,14 +76,14 @@ class CourseProblemRepositoryTest {
                 CourseProblemSet.create(course.getCourseId(), lecture.getLectureId(), 2002L, CourseProblemSetRole.MAIN, 2)
         );
         courseProblemSetRepository.save(
-                CourseProblemSet.create(course.getCourseId(), lecture.getLectureId(), 2003L, CourseProblemSetRole.FINAL, 1)
+                CourseProblemSet.create(course.getCourseId(), null, 2003L, CourseProblemSetRole.FINAL, 1)
         );
 
         List<CourseProblemSet> problemSets = courseProblemSetRepository.findByLectureId(lecture.getLectureId());
 
-        assertEquals(2, problemSets.size());
-        assertEquals(1, problemSets.get(0).getDisplayOrder());
-        assertEquals(2003L, problemSets.get(0).getProblemSetId());
+        assertEquals(1, problemSets.size());
+        assertEquals(2, problemSets.get(0).getDisplayOrder());
+        assertEquals(2002L, problemSets.get(0).getProblemSetId());
     }
 
     @Test
@@ -105,7 +110,7 @@ class CourseProblemRepositoryTest {
                 CourseProblemSet.create(course.getCourseId(), deletedLecture.getLectureId(), 2002L, CourseProblemSetRole.MAIN, 1)
         );
         CourseProblemSet remainingProblemSet = courseProblemSetRepository.save(
-                CourseProblemSet.create(course.getCourseId(), remainingLecture.getLectureId(), 2003L, CourseProblemSetRole.FINAL, 1)
+                CourseProblemSet.create(course.getCourseId(), remainingLecture.getLectureId(), 2003L, CourseProblemSetRole.MAIN, 1)
         );
 
         deletedLecture.delete();
