@@ -105,7 +105,7 @@ public class EnrollmentController {
 
     @DeleteMapping("/users/{userId}/enrollments/{enrollmentId}")
     @Operation(summary = "수강신청 취소")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('STUDENT') and #userId == authentication.principal")
     public ResponseEntity<Void> cancelEnrollment(
             @PathVariable Long userId,
             @PathVariable Long enrollmentId,
@@ -124,10 +124,7 @@ public class EnrollmentController {
                 EnrollmentResponseMessage.RETRIEVED,
                 enrollmentQueryUseCase.findMyCourses(userId)
                         .stream()
-                        .map(enrollment -> MyCourseResponse.from(
-                                enrollment,
-                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
-                        ))
+                        .map(MyCourseResponse::from)
                         .toList()
         ));
     }

@@ -4,6 +4,7 @@ import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCo
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
+import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
@@ -12,10 +13,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,12 +34,17 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(EnrollmentController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
+@ContextConfiguration(classes = {
+        EnrollmentController.class,
+        EnrollmentControllerTest.TestSecurityConfig.class
+})
 @DisplayName("EnrollmentController web test")
 class EnrollmentControllerTest {
 
@@ -48,6 +60,19 @@ class EnrollmentControllerTest {
     @MockitoBean
     private CourseCatalogPort courseCatalogPort;
 
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class TestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                    .build();
+        }
+    }
+
     @Test
     void createEnrollment_returnsApiResponse() throws Exception {
         Long courseId = 1L;
@@ -58,7 +83,7 @@ class EnrollmentControllerTest {
                 .willReturn(enrollment);
 
         mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", courseId)
-                        .principal(studentPrincipal(studentId))
+                        .with(authentication(studentPrincipal(studentId)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value(201))
@@ -88,23 +113,16 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(enrollment));
-        given(courseCatalogPort.getPublicationStatus(1L))
-                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(createMyCourseResult(enrollment)));
 
-        SecurityContextHolder.getContext().setAuthentication(adminPrincipal(1L));
-
-        try {
-            mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                    .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
-                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+        mockMvc.perform(get("/api/v1/users/{userId}/enrollments", studentId)
+                        .with(authentication(adminPrincipal(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
     }
 
     @Test
@@ -112,24 +130,17 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(enrollment));
-        given(courseCatalogPort.getPublicationStatus(1L))
-                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(createMyCourseResult(enrollment)));
 
-        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
-
-        try {
-            mockMvc.perform(get("/api/v1/users/me/enrollments")
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                    .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
-                    .andExpect(jsonPath("$.data[0].studentId").value(studentId))
-                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+        mockMvc.perform(get("/api/v1/users/me/enrollments")
+                        .with(authentication(studentPrincipal(studentId)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].studentId").value(studentId))
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
     }
 
     @Test
@@ -140,18 +151,36 @@ class EnrollmentControllerTest {
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
 
-        SecurityContextHolder.getContext().setAuthentication(operatorPrincipal(1L));
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .with(authentication(operatorPrincipal(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+    }
 
-        try {
-            mockMvc.perform(get("/api/v1/enrollments")
-                            .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.status").value(200))
-                    .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                    .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+    @Test
+    void createEnrollment_forbiddenForOperator() throws Exception {
+        mockMvc.perform(post("/api/v1/courses/{courseId}/enrollments", 1L)
+                        .with(authentication(operatorPrincipal(20L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void findMyCoursesByMe_forbiddenForAdmin() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/enrollments")
+                        .with(authentication(adminPrincipal(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cancelMyEnrollment_forbiddenForOperator() throws Exception {
+        mockMvc.perform(delete("/api/v1/users/me/enrollments/{enrollmentId}", 1L)
+                        .with(authentication(operatorPrincipal(20L))))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -159,16 +188,22 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Long enrollmentId = 1L;
 
-        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
-
-        try {
-            mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId))
-                    .andExpect(status().isNoContent());
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+        mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", studentId, enrollmentId)
+                        .with(authentication(studentPrincipal(studentId))))
+                .andExpect(status().isNoContent());
 
         verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
+    }
+
+    @Test
+    void cancelEnrollment_forbiddenWhenPathUserDiffersFromPrincipal() throws Exception {
+        Long studentId = 10L;
+        Long otherUserId = 11L;
+        Long enrollmentId = 1L;
+
+        mockMvc.perform(delete("/api/v1/users/{userId}/enrollments/{enrollmentId}", otherUserId, enrollmentId)
+                        .with(authentication(studentPrincipal(studentId))))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -176,14 +211,9 @@ class EnrollmentControllerTest {
         Long studentId = 10L;
         Long enrollmentId = 1L;
 
-        SecurityContextHolder.getContext().setAuthentication(studentPrincipal(studentId));
-
-        try {
-            mockMvc.perform(delete("/api/v1/users/me/enrollments/{enrollmentId}", enrollmentId))
-                    .andExpect(status().isNoContent());
-        } finally {
-            SecurityContextHolder.clearContext();
-        }
+        mockMvc.perform(delete("/api/v1/users/me/enrollments/{enrollmentId}", enrollmentId)
+                        .with(authentication(studentPrincipal(studentId))))
+                .andExpect(status().isNoContent());
 
         verify(enrollmentCommandUseCase).cancelEnrollment(eq(new CancelEnrollmentCommand(studentId, enrollmentId)));
     }
@@ -209,5 +239,19 @@ class EnrollmentControllerTest {
         enrollment.setStatus(status);
         enrollment.setEnrolledAt(LocalDateTime.now());
         return enrollment;
+    }
+
+    private MyCourseResult createMyCourseResult(Enrollment enrollment) {
+        return new MyCourseResult(
+                enrollment.getEnrollmentId(),
+                enrollment.getUserId(),
+                enrollment.getCourseId(),
+                1L,
+                "Java",
+                "description",
+                "java.png",
+                enrollment.getStatus(),
+                enrollment.getEnrolledAt()
+        );
     }
 }
