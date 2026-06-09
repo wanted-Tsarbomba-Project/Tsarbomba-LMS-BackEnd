@@ -9,7 +9,7 @@
 /CLAUDE.md                  @suerovr
 /CONTEXT-MAP.md             @suerovr
 /docs/adr/                  @suerovr
-/docs/RESPONSE-STYLE.md     @suerovr
+/docs/PR-COMMIT.md          @suerovr
 /docs/CONVENTION.md         @suerovr
 
 # 도메인 README(src/.../<도메인>/README.md)는 각 도메인 오너 소유 — 오너 핸들 확정 후 추가.
