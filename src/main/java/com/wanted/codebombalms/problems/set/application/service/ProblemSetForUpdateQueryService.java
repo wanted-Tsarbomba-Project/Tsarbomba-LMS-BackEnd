@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,33 +31,16 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
     public ProblemSetForUpdateView handle(GetProblemSetForUpdateQuery query) {
         var problemSet = loadProblemSetForUpdateBasePort.loadBase(query.problemSetId());
         var dataset = loadDatasetForUpdatePort.loadActiveDatasetForUpdate(query.problemSetId());
+        var problemData = loadProblemsForUpdatePort.loadProblemsForUpdate(query.problemSetId());
 
-        var problems = loadProblemsForUpdatePort.loadProblemsForUpdate(query.problemSetId())
-                .stream()
-                .map(problem -> {
-                    var hint = loadHintForUpdatePort.loadFirstHintForUpdate(problem.problemId());
-                    var testCases = loadTestCasesForUpdatePort.loadActiveTestCasesForUpdate(problem.problemId())
-                            .stream()
-                            .map(testCase -> new TestCaseForUpdateView(
-                                    testCase.testCaseId(),
-                                    testCase.testCode(),
-                                    testCase.hidden(),
-                                    testCase.timeoutMs()
-                            ))
-                            .toList();
+        var problemIds = problemData.stream()
+                .map(LoadProblemsForUpdatePort.ProblemForUpdateData::problemId)
+                .toList();
+        var testCasesByProblemId =
+                loadTestCasesForUpdatePort.loadActiveTestCasesForUpdate(problemIds);
 
-                    return new ProblemForUpdateView(
-                            problem.problemId(),
-                            problem.title(),
-                            problem.content(),
-                            problem.point(),
-                            createStartCode(dataset.map(LoadDatasetForUpdatePort.DatasetForUpdateData::fileUrl).orElse(null)),
-                            hint.map(LoadHintForUpdatePort.HintForUpdateData::hintId).orElse(null),
-                            hint.map(LoadHintForUpdatePort.HintForUpdateData::hintContent).orElse(null),
-                            problem.explanation(),
-                            testCases
-                    );
-                })
+        var problems = problemData.stream()
+                .map(problem -> toProblemView(problem, dataset, testCasesByProblemId))
                 .toList();
 
         return new ProblemSetForUpdateView(
@@ -67,6 +54,45 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
                 dataset.map(LoadDatasetForUpdatePort.DatasetForUpdateData::fileUrl).orElse(null),
                 problems
         );
+    }
+
+    private ProblemForUpdateView toProblemView(
+            LoadProblemsForUpdatePort.ProblemForUpdateData problem,
+            Optional<LoadDatasetForUpdatePort.DatasetForUpdateData> dataset,
+            Map<Long, List<LoadTestCasesForUpdatePort.TestCaseForUpdateData>> testCasesByProblemId
+    ) {
+        var hint = loadHintForUpdatePort.loadFirstHintForUpdate(problem.problemId());
+        var testCases = toTestCaseViews(testCasesByProblemId.getOrDefault(
+                problem.problemId(),
+                List.of()
+        ));
+
+        return new ProblemForUpdateView(
+                problem.problemId(),
+                problem.title(),
+                problem.content(),
+                problem.point(),
+                createStartCode(dataset.map(
+                        LoadDatasetForUpdatePort.DatasetForUpdateData::fileUrl
+                ).orElse(null)),
+                hint.map(LoadHintForUpdatePort.HintForUpdateData::hintId).orElse(null),
+                hint.map(LoadHintForUpdatePort.HintForUpdateData::hintContent).orElse(null),
+                problem.explanation(),
+                testCases
+        );
+    }
+
+    private List<TestCaseForUpdateView> toTestCaseViews(
+            List<LoadTestCasesForUpdatePort.TestCaseForUpdateData> testCases
+    ) {
+        return testCases.stream()
+                .map(testCase -> new TestCaseForUpdateView(
+                        testCase.testCaseId(),
+                        testCase.testCode(),
+                        testCase.hidden(),
+                        testCase.timeoutMs()
+                ))
+                .toList();
     }
 
     private String createStartCode(String datasetUrl) {

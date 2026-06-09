@@ -8,7 +8,6 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServ
 import com.wanted.codebombalms.problems.dataset.application.port.GenerateDatasetAccessUrlPort;
 import com.wanted.codebombalms.problems.dataset.infrastructure.storage.GcpStorageProperties;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -18,13 +17,28 @@ import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@RequiredArgsConstructor
 public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort {
 
     private static final long SIGNED_URL_DURATION_MINUTES = 30;
-
+    private final Storage storage;
     private final GcpStorageProperties properties;
     private final ResourceLoader resourceLoader;
+
+    public GcsDatasetAccessUrlAdapter(
+            GcpStorageProperties properties,
+            ResourceLoader resourceLoader
+    ) {
+        this.properties = properties;
+        this.resourceLoader = resourceLoader;
+
+        try {
+            this.storage = createStorage();
+        } catch (IOException e) {
+            throw new ExternalServiceException(
+                    ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED,e
+            );
+        }
+    }
 
     @Override
     public String generate(String filePath) {
@@ -38,7 +52,7 @@ public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort 
                     filePath
             ).build();
 
-            return createStorage()
+            return storage
                     .signUrl(
                             blobInfo,
                             SIGNED_URL_DURATION_MINUTES,
@@ -47,7 +61,7 @@ public class GcsDatasetAccessUrlAdapter implements GenerateDatasetAccessUrlPort 
                     )
                     .toString();
         } catch (Exception e) {
-            throw new ExternalServiceException(ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED);
+            throw new ExternalServiceException(ProblemErrorCode.PROBLEM_DATASET_ACCESS_URL_FAILED, e);
         }
     }
 

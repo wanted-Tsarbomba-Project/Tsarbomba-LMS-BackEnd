@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -71,7 +72,7 @@ public class ProblemManageController {
     @PostMapping("/api/v1/problems")
     public ResponseEntity<ApiResponse<ProblemSetCreateResponse>> createProblem(
             @AuthenticationPrincipal Long createdBy,
-            @RequestBody ProblemSetCreateRequest request
+            @RequestBody @Valid ProblemSetCreateRequest request
     ) {
         var result = registerProblemSetUseCase.handle(toCommand(createdBy, request));
         var response = new ProblemSetCreateResponse(result);
@@ -135,7 +136,7 @@ public class ProblemManageController {
     public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSet(
             @Parameter(description = "수정할 문제 세트 ID", example = "3001")
             @PathVariable Long problemSetId,
-            @RequestBody ProblemSetUpdateRequest request
+            @RequestBody @Valid ProblemSetUpdateRequest request
     ) {
         var result = updateProblemSetUseCase.handle(toCommand(problemSetId, request));
         var response = new ProblemSetUpdateResponse(result);
@@ -244,7 +245,7 @@ public class ProblemManageController {
     public ResponseEntity<ApiResponse<ProblemSetWithDatasetCreateResponse>> createProblemWithDataset(
             @AuthenticationPrincipal Long createdBy,
             @Parameter(description = "문제와 testCases 목록을 포함한 문제 세트 등록 JSON 파트", required = true)
-            @RequestPart("request") ProblemSetCreateRequest request,
+            @RequestPart("request") @Valid ProblemSetCreateRequest request,
             @Parameter(description = "문제 세트에 연결할 CSV 데이터셋 파일", required = true)
             @RequestPart("datasetFile") MultipartFile datasetFile
     ) {
@@ -304,7 +305,7 @@ public class ProblemManageController {
     )
     public ResponseEntity<ApiResponse<ProblemSetUpdateResponse>> updateProblemSetWithDataset(
             @PathVariable Long problemSetId,
-            @RequestPart("request") ProblemSetUpdateRequest request,
+            @RequestPart("request") @Valid ProblemSetUpdateRequest request,
             @RequestPart(value = "datasetFile", required = false) MultipartFile datasetFile
     ) {
         var command = toCommand(problemSetId, request);

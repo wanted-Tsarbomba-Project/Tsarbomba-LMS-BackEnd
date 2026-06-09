@@ -121,16 +121,27 @@ public class ProblemTestCasePersistenceAdapter implements
     }
 
     @Override
-    public List<TestCaseForUpdateData> loadActiveTestCasesForUpdate(Long problemId) {
-        return testCaseRepository.findByProblem_ProblemIdAndStatusOrderByTestOrderAsc(problemId, ACTIVE)
+    public Map<Long, List<TestCaseForUpdateData>> loadActiveTestCasesForUpdate(
+            List<Long> problemIds
+    ) {
+        if (problemIds == null || problemIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return testCaseRepository
+                .findByProblem_ProblemIdInAndStatusOrderByProblem_ProblemIdAscTestOrderAsc(
+                        problemIds,
+                        ACTIVE
+                )
                 .stream()
                 .map(testCase -> new TestCaseForUpdateData(
+                        testCase.getProblem().getProblemId(),
                         testCase.getTestCaseId(),
                         testCase.getTestCode(),
                         testCase.getHidden(),
                         testCase.getTimeoutMs()
                 ))
-                .toList();
+                .collect(Collectors.groupingBy(TestCaseForUpdateData::problemId));
     }
 
     @Override

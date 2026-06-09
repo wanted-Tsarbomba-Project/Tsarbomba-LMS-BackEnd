@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.problems.set.presentation.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
@@ -19,8 +21,8 @@ public record ProblemSetUpdateRequest(
 
         @Schema(description = "참고용 데이터 파일명", example = "employee_performance.csv", nullable = true)
         String dataFileName,
-
+        @NotEmpty(message = "소문제는 1개 이상 필요합니다.")
         @Schema(description = "수정할 소문제 목록")
-        List<ProblemUpdateRequest> problems
+        List<@Valid ProblemUpdateRequest> problems
 ) {
 }

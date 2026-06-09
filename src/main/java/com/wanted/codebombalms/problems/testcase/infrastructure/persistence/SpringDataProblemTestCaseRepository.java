@@ -33,4 +33,10 @@ public interface SpringDataProblemTestCaseRepository extends JpaRepository<Probl
             String status,
             Long testCaseId
     );
+
+    List<ProblemTestCaseJpaEntity>
+    findByProblem_ProblemIdInAndStatusOrderByProblem_ProblemIdAscTestOrderAsc(
+            List<Long> problemIds,
+            String status
+    );
 }

@@ -6,6 +6,8 @@ import com.wanted.codebombalms.problems.set.application.command.ProblemCreateCom
 import com.wanted.codebombalms.problems.set.application.command.ProblemUpdateCommand;
 import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.command.UpdateProblemSetCommand;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseModification;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseRegistration;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -107,10 +109,14 @@ public class ProblemSetCommandValidationPolicy {
         requireNotEmpty(testCases, ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
 
         for (Object value : testCases) {
-            if (value instanceof com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseRegistration testCase) {
+            if (value instanceof ProblemTestCaseRegistration testCase) {
                 validateTestCase(testCase.testCode(), testCase.hidden(), testCase.timeoutMs());
-            } else if (value instanceof com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseModification testCase) {
+            } else if (value instanceof ProblemTestCaseModification testCase) {
                 validateTestCase(testCase.testCode(), testCase.hidden(), testCase.timeoutMs());
+            } else {
+                throw new ValidationException(
+                        ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT
+                );
             }
         }
     }

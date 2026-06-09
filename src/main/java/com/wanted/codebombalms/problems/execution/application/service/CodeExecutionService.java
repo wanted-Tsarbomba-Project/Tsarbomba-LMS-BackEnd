@@ -7,6 +7,7 @@ import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
 import com.wanted.codebombalms.problems.execution.application.usecase.CodeExecutionUseCase;
 import com.wanted.codebombalms.problems.execution.application.port.LoadExecutionDatasetPort;
 import com.wanted.codebombalms.problems.execution.application.port.LoadExecutionProblemPort;
+import com.wanted.codebombalms.problems.execution.infrastructure.config.CodeExecutionProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ public class CodeExecutionService implements CodeExecutionUseCase {
     private final RunCodePort runCodePort;
     private final CodeExecutionPolicy codeExecutionPolicy;
     private final GenerateDatasetAccessUrlPort generateDatasetAccessUrlPort;
+    private final CodeExecutionProperties codeExecutionProperties;
 
     @Override
     @Transactional(readOnly = true)
@@ -37,7 +39,7 @@ public class CodeExecutionService implements CodeExecutionUseCase {
         var result = runCodePort.run(new RunCodePort.CodeRunCommand(
                 command.code(),
                 datasetAccessUrl,
-                5000
+                codeExecutionProperties.getDefaultTimeoutMs()
         ));
 
         return new CodeExecutionView(
