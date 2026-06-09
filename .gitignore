@@ -39,6 +39,7 @@ out/
 ### Secrets / Environment ###
 application-*.properties
 application-*.yml
+application-*.yaml
 *.env
 .env*
 /secrets/
@@ -55,12 +56,11 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
-
-.ai/
-/ai/
+AGENT.MD
 AGENTS.md
+API_WORKLOG.MD
 CLAUDE.md
-AGENTS.md
+.ai/
 .obsidian/
 _배포용*/
 .claude
