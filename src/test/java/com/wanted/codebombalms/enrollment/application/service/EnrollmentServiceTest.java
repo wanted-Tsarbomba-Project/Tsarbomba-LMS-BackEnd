@@ -6,6 +6,7 @@ import com.wanted.codebombalms.enrollment.application.command.EnrollCourseComman
 import com.wanted.codebombalms.enrollment.application.policy.EnrollmentEligibilityPolicy;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
+import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.service.EnrollmentCommandService;
 import com.wanted.codebombalms.enrollment.application.service.EnrollmentQueryService;
 import com.wanted.codebombalms.enrollment.domain.exception.EnrollmentErrorCode;
@@ -117,15 +118,19 @@ class EnrollmentServiceTest {
     void findMyCourses_returnsActiveEnrollments() {
         Long userId = 10L;
         Enrollment enrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+        CoursePublicationStatus course = createCourseStatus(1L);
 
         given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
                 .willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L)).willReturn(course);
 
-        List<Enrollment> results = enrollmentQueryService.findMyCourses(userId);
+        List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
 
         assertEquals(1, results.size());
-        assertEquals(userId, results.get(0).getUserId());
-        assertEquals(1L, results.get(0).getCourseId());
+        assertEquals(userId, results.get(0).studentId());
+        assertEquals(1L, results.get(0).courseId());
+        assertEquals("Java", results.get(0).courseTitle());
+        verify(courseCatalogPort).getPublicationStatus(1L);
     }
 
     @Test

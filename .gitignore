@@ -1,7 +1,7 @@
 HELP.md
 .gradle
 build/
-!../gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -39,6 +39,7 @@ out/
 ### Secrets / Environment ###
 application-*.properties
 application-*.yml
+application-*.yaml
 *.env
 .env*
 /secrets/
@@ -55,11 +56,10 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
-
-.ai/
+AGENT.MD
 AGENTS.md
+API_WORKLOG.MD
 CLAUDE.md
-AGENTS.md
 .ai/
 .obsidian/
 _배포용*/

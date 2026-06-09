@@ -1,13 +1,11 @@
-package com.wanted.codebombalms.enrollment.presentation.api.response;
+package com.wanted.codebombalms.enrollment.application.query;
 
-import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
-
 import java.time.LocalDateTime;
 
-public record MyCourseResponse(
+public record MyCourseResult(
         Long enrollmentId,
         Long studentId,
         Long courseId,
@@ -19,22 +17,8 @@ public record MyCourseResponse(
         LocalDateTime enrolledAt
 ) {
 
-    public static MyCourseResponse from(MyCourseResult result) {
-        return new MyCourseResponse(
-                result.enrollmentId(),
-                result.studentId(),
-                result.courseId(),
-                result.instructorId(),
-                result.courseTitle(),
-                result.courseDescription(),
-                result.courseThumbnailUrl(),
-                result.status(),
-                result.enrolledAt()
-        );
-    }
-
-    public static MyCourseResponse from(Enrollment enrollment, CoursePublicationStatus course) {
-        return new MyCourseResponse(
+    public static MyCourseResult from(Enrollment enrollment, CoursePublicationStatus course) {
+        return new MyCourseResult(
                 enrollment.getEnrollmentId(),
                 enrollment.getUserId(),
                 enrollment.getCourseId(),
