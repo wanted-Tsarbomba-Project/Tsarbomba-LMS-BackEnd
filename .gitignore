@@ -55,6 +55,7 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
+
 .ai/
 AGENTS.md
 CLAUDE.md

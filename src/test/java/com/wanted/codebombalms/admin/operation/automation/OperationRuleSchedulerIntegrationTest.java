@@ -174,7 +174,6 @@ class OperationRuleSchedulerIntegrationTest {
 
     private void seedRules() {
         automationRuleRepository.save(AutomationRule.create(
-                1L,
                 OperationRuleCode.COURSE_LOW_ENROLLMENT,
                 BigDecimal.ZERO,
                 null,
@@ -182,7 +181,6 @@ class OperationRuleSchedulerIntegrationTest {
                 true
         ));
         automationRuleRepository.save(AutomationRule.create(
-                1L,
                 OperationRuleCode.PROBLEM_HIGH_WRONG_RATE,
                 BigDecimal.valueOf(50),
                 3,
@@ -190,7 +188,6 @@ class OperationRuleSchedulerIntegrationTest {
                 true
         ));
         automationRuleRepository.save(AutomationRule.create(
-                1L,
                 OperationRuleCode.USER_INACTIVE_NO_COURSE,
                 BigDecimal.valueOf(10),
                 null,

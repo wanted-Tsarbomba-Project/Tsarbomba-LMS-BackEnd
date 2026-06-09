@@ -1,23 +1,17 @@
 package com.wanted.codebombalms.admin.operation.rule.presentation.api;
 
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
-import com.wanted.codebombalms.admin.operation.rule.application.usecase.CreateAutomationRuleUseCase;
-import com.wanted.codebombalms.admin.operation.rule.application.usecase.GetAutomationRuleOptionsUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.GetAutomationRulesUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleEnabledUseCase;
 import com.wanted.codebombalms.admin.operation.rule.application.usecase.UpdateAutomationRuleUseCase;
-import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleCreateRequest;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleEnabledUpdateRequest;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.request.AutomationRuleUpdateRequest;
-import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleOptionsResponse;
 import com.wanted.codebombalms.admin.operation.rule.presentation.api.response.AutomationRuleResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +22,6 @@ import java.util.List;
 public class AutomationRuleController {
 
     private final GetAutomationRulesUseCase getAutomationRulesUseCase;
-    private final GetAutomationRuleOptionsUseCase getAutomationRuleOptionsUseCase;
-    private final CreateAutomationRuleUseCase createAutomationRuleUseCase;
     private final UpdateAutomationRuleUseCase updateAutomationRuleUseCase;
     private final UpdateAutomationRuleEnabledUseCase updateAutomationRuleEnabledUseCase;
 
@@ -50,49 +42,6 @@ public class AutomationRuleController {
         return ResponseEntity.ok(ApiResponse.success(
                 AutomationRuleResponseCode.RETRIEVED,
                 AutomationRuleResponseMessage.RETRIEVED,
-                response
-        ));
-    }
-
-    //규칙 옵션 조회
-    @Operation(summary = "자동화 규칙 옵션 조회")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
-    })
-    @GetMapping("/options")
-    public ResponseEntity<ApiResponse<AutomationRuleOptionsResponse>> findAutomationRuleOptions() {
-        AutomationRuleOptionsResponse response = AutomationRuleOptionsResponse.from(
-                getAutomationRuleOptionsUseCase.getOptions()
-        );
-
-        return ResponseEntity.ok(ApiResponse.success(
-                AutomationRuleResponseCode.RETRIEVED,
-                AutomationRuleResponseMessage.RETRIEVED,
-                response
-        ));
-    }
-
-    // 규칙 등록
-    @Operation(summary = "자동화 규칙 등록")
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "등록 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-001: 자동화 규칙 등록 요청이 올바르지 않습니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-002: 임계값이 올바르지 않습니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "ADM-ARL-003: 최소 표본 수가 올바르지 않습니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "ADM-ARL-004: 이미 등록된 자동화 규칙입니다.")
-    })
-    @PostMapping
-    public ResponseEntity<ApiResponse<AutomationRuleResponse>> createAutomationRule(
-            @AuthenticationPrincipal Long createdBy,
-            @RequestBody AutomationRuleCreateRequest request
-    ) {
-        AutomationRuleResponse response = AutomationRuleResponse.from(
-                createAutomationRuleUseCase.create(request.toCommand(createdBy))
-        );
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(
-                AutomationRuleResponseCode.CREATED,
-                AutomationRuleResponseMessage.CREATED,
                 response
         ));
     }

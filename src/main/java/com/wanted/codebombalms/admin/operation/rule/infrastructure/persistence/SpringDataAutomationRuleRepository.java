@@ -12,7 +12,5 @@ public interface SpringDataAutomationRuleRepository extends JpaRepository<Automa
     // 활성화된 자동 규칙을 등록 순서대로 조회한다.
     List<AutomationRuleJpaEntity> findByEnabledTrueOrderByOperationRuleIdAsc();
 
-    boolean existsByRuleCode(OperationRuleCode ruleCode);
-
     List<AutomationRuleJpaEntity> findByRuleCodeIn(List<OperationRuleCode> ruleCodes);
 }
