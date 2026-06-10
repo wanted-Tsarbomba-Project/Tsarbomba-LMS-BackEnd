@@ -18,6 +18,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Gradle 설정 (캐싱 포함)
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Gradle 실행 권한 부여
         run: chmod +x ./gradlew
 
