@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -140,7 +141,7 @@ public class CodeExecutionController {
     public ResponseEntity<ApiResponse<CodeExecutionResponse>> executeCode(
             @Parameter(description = "실행할 코드 문제 ID", example = "3001")
             @PathVariable Long problemId,
-            @RequestBody CodeExecutionRequest request
+            @RequestBody @Valid CodeExecutionRequest request
     ) {
         var command = new ExecuteCodeCommand(request.getCode());
         var response = new CodeExecutionResponse(
