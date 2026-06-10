@@ -77,3 +77,6 @@ architecture-user-auth.html
 MONITORING_GUIDE.md
 __pycache__/
 *.pyc
+
+monitoring/k6/results/*.json
+!src/main/resources/application-loadtest.yml
