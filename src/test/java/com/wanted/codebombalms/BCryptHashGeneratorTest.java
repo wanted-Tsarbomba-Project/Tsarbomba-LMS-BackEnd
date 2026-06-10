@@ -1,5 +1,6 @@
 package com.wanted.codebombalms;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -9,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
  *
  * 실행: ./gradlew test --tests "com.wanted.codebombalms.BCryptHashGeneratorTest"
  */
+@Disabled("수동 해시 생성 유틸 - CI 자동 실행 제외 (필요 시 직접 실행)")
 class BCryptHashGeneratorTest {
 
     @Test

@@ -1,7 +1,9 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
@@ -14,11 +16,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -29,6 +34,7 @@ class WithdrawUserServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private WithdrawUserService withdrawUserService;
@@ -44,26 +50,44 @@ class WithdrawUserServiceTest {
     }
 
     @Test
-    @DisplayName("탈퇴 시 softDelete 처리 후 저장하고, Refresh Token을 전부 삭제한다.")
+    @DisplayName("비밀번호가 일치하면 softDelete 후 저장하고 Refresh Token을 전부 삭제한다.")
     void 탈퇴_성공() {
         // given
         User user = activeUser();
         given(userRepository.findByUserId(1L)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
 
         // when
-        withdrawUserService.withdraw(1L);
+        withdrawUserService.withdraw(1L, "Test1234!");
 
         // then — softDelete 반영된 User가 저장되는지 캡처해서 검증
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
         assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
-
-        // RT 전체 삭제 호출 검증
         verify(refreshTokenRepository).deleteByUserId(1L);
     }
 
     @Test
-    @DisplayName("존재하지 않는 회원이면 NotFoundException(USER_NOT_FOUND)을 던지고, 저장/RT삭제는 일어나지 않는다.")
+    @DisplayName("비밀번호가 불일치하면 ValidationException(AUTH_PASSWORD_MISMATCH)을 던지고, 저장/RT삭제는 일어나지 않는다.")
+    void 비밀번호_불일치_예외() {
+        // given
+        User user = activeUser();
+        given(userRepository.findByUserId(1L)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("wrong", "ENCODED_PW")).willReturn(false);
+
+        // when & then
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> withdrawUserService.withdraw(1L, "wrong")
+        );
+        assertEquals(AuthErrorCode.AUTH_PASSWORD_MISMATCH, ex.getErrorCode());
+
+        verify(userRepository, never()).save(any());
+        verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 회원이면 NotFoundException(USER_NOT_FOUND)을 던진다.")
     void 회원_없음_예외() {
         // given
         given(userRepository.findByUserId(99L)).willReturn(Optional.empty());
@@ -71,11 +95,11 @@ class WithdrawUserServiceTest {
         // when & then
         NotFoundException ex = assertThrows(
                 NotFoundException.class,
-                () -> withdrawUserService.withdraw(99L)
+                () -> withdrawUserService.withdraw(99L, "Test1234!")
         );
         assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
 
-        verify(userRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        verify(refreshTokenRepository, never()).deleteByUserId(org.mockito.ArgumentMatchers.anyLong());
+        verify(userRepository, never()).save(any());
+        verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
     }
 }
