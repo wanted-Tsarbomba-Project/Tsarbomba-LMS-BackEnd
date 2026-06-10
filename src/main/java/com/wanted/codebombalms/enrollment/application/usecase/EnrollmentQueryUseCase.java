@@ -10,4 +10,6 @@ public interface EnrollmentQueryUseCase {
     List<MyCourseResult> findMyCourses(Long userId);
 
     List<Enrollment> findAllActiveEnrollments();
+
+    List<Long> findActiveStudentIdsByCourse(Long courseId);
 }
