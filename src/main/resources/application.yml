@@ -60,6 +60,13 @@ code-execution:
   default-timeout-ms: ${CODE_EXECUTION_DEFAULT_TIMEOUT_MS:5000}
 
 
+# ===== 모니터링 (local/loadtest 프로파일에서만 메트릭 노출) =====
+---
+spring:
+  config:
+    activate:
+      on-profile: local, loadtest
+
 management:
   endpoints:
     web:
