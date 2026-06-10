@@ -53,19 +53,13 @@ public class AdminPermissionJpaEntity {
     private LocalDateTime updatedAt;
 
     public AdminPermissionJpaEntity(
-            Long adminPermissionId,
             Long adminUserId,
             AdminPermissionType permissionType,
-            Long grantedBy,
-            LocalDateTime createdAt,
-            LocalDateTime updatedAt
+            Long grantedBy
     ) {
-        this.adminPermissionId = adminPermissionId;
         this.adminUserId = adminUserId;
         this.permissionType = permissionType;
         this.grantedBy = grantedBy;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     @PrePersist
