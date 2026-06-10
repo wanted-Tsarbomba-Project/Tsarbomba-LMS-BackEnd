@@ -9,9 +9,6 @@ public interface UploadProblemDatasetUseCase {
     record UploadProblemDatasetView(
             Long datasetId,
             String originalFileName,
-            String storedFileName,
-            String fileUrl,
-            String filePath,
             String status
     ) {
     }

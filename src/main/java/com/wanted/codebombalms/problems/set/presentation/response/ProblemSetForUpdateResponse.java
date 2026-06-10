@@ -13,7 +13,6 @@ public record ProblemSetForUpdateResponse(
         String description,
         String dataFileName,
         Long datasetId,
-        String datasetUrl,
         List<ProblemForUpdateResponse> problems
 ) {
     public ProblemSetForUpdateResponse(ProblemSetForUpdateView view) {
@@ -25,7 +24,6 @@ public record ProblemSetForUpdateResponse(
                 view.description(),
                 view.dataFileName(),
                 view.datasetId(),
-                view.datasetUrl(),
                 view.problems().stream()
                         .map(ProblemForUpdateResponse::new)
                         .toList()

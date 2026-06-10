@@ -8,8 +8,7 @@ public interface LoadDatasetForUpdatePort {
 
     record DatasetForUpdateData(
             Long datasetId,
-            String originalFileName,
-            String fileUrl
+            String originalFileName
     ) {
     }
 }

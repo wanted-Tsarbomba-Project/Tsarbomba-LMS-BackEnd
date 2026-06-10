@@ -212,8 +212,7 @@ public class ProblemManageController {
                                                 "createdProblemCount": 1,
                                                 "createdTestCaseCount": 2,
                                                 "datasetFileName": "employee_performance.csv",
-                                                "datasetUrl": "https://storage.googleapis.com/example-bucket/problem_dataset/example.csv",
-                                                "startCode": "import pandas as pd\\ndf = pd.read_csv(DATASET_PATH)"
+                                                "startCode": "import os\\nimport pandas as pd\\n\\ndf = pd.read_csv(os.environ[\\"DATASET_PATH\\"])"
                                               }
                                             }
                                             """
@@ -263,7 +262,6 @@ public class ProblemManageController {
                 result.createdProblemCount(),
                 result.createdTestCaseCount(),
                 result.datasetFileName(),
-                result.datasetUrl(),
                 result.startCode()
         );
 
