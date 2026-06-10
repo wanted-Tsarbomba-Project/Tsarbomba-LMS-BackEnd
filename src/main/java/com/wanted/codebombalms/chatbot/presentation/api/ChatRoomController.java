@@ -142,7 +142,7 @@ public class ChatRoomController {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
+                    responseCode = "403",
                     description = "CHT-002 - 권한 없음",
                     content = @Content(
                             mediaType = "application/json",
@@ -151,7 +151,7 @@ public class ChatRoomController {
                                     value = """
                                             {
                                               "timestamp": "2026-05-28T12:00:00",
-                                              "status": 401,
+                                              "status": 403,
                                               "code": "CHT-002",
                                               "message": "채팅방에 접근 권한이 없습니다.",
                                               "path": "/api/v1/chat/list"
@@ -206,7 +206,7 @@ public class ChatRoomController {
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
+                    responseCode = "403",
                     description = "CHT-002 - 권한 없음",
                     content = @Content(
                             mediaType = "application/json",
@@ -215,7 +215,7 @@ public class ChatRoomController {
                                     value = """
                                             {
                                               "timestamp": "2026-05-28T12:00:00",
-                                              "status": 401,
+                                              "status": 403,
                                               "code": "CHT-002",
                                               "message": "채팅방에 접근 권한이 없습니다.",
                                               "path": "/api/v1/chat/1/messages"
@@ -297,7 +297,7 @@ public class ChatRoomController {
                     description = "채팅방 삭제 성공"
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
+                    responseCode = "403",
                     description = "CHT-002 - 권한 없음",
                     content = @Content(
                             mediaType = "application/json",
@@ -306,7 +306,7 @@ public class ChatRoomController {
                                     value = """
                                             {
                                               "timestamp": "2026-05-28T12:00:00",
-                                              "status": 401,
+                                              "status": 403,
                                               "code": "CHT-002",
                                               "message": "채팅방에 접근 권한이 없습니다.",
                                               "path": "/api/v1/chat/1"
