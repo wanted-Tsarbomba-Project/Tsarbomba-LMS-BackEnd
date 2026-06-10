@@ -53,9 +53,6 @@ public class ProblemDatasetController {
                                               "data": {
                                                 "datasetId": 3001,
                                                 "originalFileName": "employee_performance.csv",
-                                                "storedFileName": "uuid_employee_performance.csv",
-                                                "fileUrl": "https://storage.googleapis.com/codebombalms/problem_dataset/uuid_employee_performance.csv",
-                                                "filePath": "problem_dataset/uuid_employee_performance.csv",
                                                 "status": "ACTIVE"
                                               }
                                             }

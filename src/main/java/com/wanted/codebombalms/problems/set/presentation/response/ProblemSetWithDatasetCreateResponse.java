@@ -27,10 +27,7 @@ public record ProblemSetWithDatasetCreateResponse(
         @Schema(description = "업로드한 원본 CSV 파일명", example = "employee_performance.csv")
         String datasetFileName,
 
-        @Schema(description = "저장된 CSV 데이터셋 참조 URL. 실제 접근 방식은 GCS 보안 정책을 따름", example = "https://storage.googleapis.com/example-bucket/problem_dataset/example.csv")
-        String datasetUrl,
-
-        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드", example = "import pandas as pd\ndf = pd.read_csv(DATASET_PATH)")
+        @Schema(description = "학생 코드 에디터에 제공할 pandas 시작 코드", example = "import os\nimport pandas as pd\n\ndf = pd.read_csv(os.environ[\"DATASET_PATH\"])")
         String startCode
 ) {
 }
