@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
-import { BASE_URL, randomEmail, randomSleep } from "../lib/config.js";
-import { createSummaryHandler } from "../lib/summary.js";
+import { BASE_URL, randomEmail, randomSleep } from "../../lib/config.js";
+import { createSummaryHandler } from "../../lib/summary.js";
 
 export const options = {
     // 부하 단계: 0 → 50명까지 서서히 올렸다 유지 후 종료

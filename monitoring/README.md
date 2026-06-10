@@ -64,7 +64,7 @@ gradlew.bat bootRun --args="--spring.profiles.active=loadtest"
 ### 2. k6 실행
 
 ```bash
-docker compose run --rm k6 run -o experimental-prometheus-rw /scripts/<스크립트명>.js
+docker compose run --rm k6 run -o experimental-prometheus-rw /scripts/<도메인>/<스크립트명>.js   # 예: /scripts/auth/01-email-check.js
 ```
 
 결과는 3곳에서 확인:
@@ -78,9 +78,9 @@ docker compose run --rm k6 run -o experimental-prometheus-rw /scripts/<스크립
 `RESULT_NAME` 으로 결과 파일명을 바꿔 저장하면 덮어쓰지 않고 비교 가능:
 
 ```bash
-docker compose run --rm -e RESULT_NAME=login-before-index k6 run -o experimental-prometheus-rw /scripts/01-login.js
+docker compose run --rm -e RESULT_NAME=login-before-index k6 run -o experimental-prometheus-rw /scripts/auth/02-login.js
 # (개선 작업 후)
-docker compose run --rm -e RESULT_NAME=login-after-index k6 run -o experimental-prometheus-rw /scripts/01-login.js
+docker compose run --rm -e RESULT_NAME=login-after-index k6 run -o experimental-prometheus-rw /scripts/auth/02-login.js
 ```
 
 ---
