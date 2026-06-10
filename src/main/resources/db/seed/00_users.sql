@@ -15,7 +15,13 @@
         updated_at,
         deleted_at
     ) VALUES
+          ('MASTER', 'master@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '마스터관리자', 'master', '010-1000-0000', 'LOCAL', NULL, TRUE, FALSE, '최고 관리자 계정', 'LMS 최고 관리자', NOW(), NOW(), NULL),
           ('ADMIN', 'admin@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '관리자', 'admin', '010-1000-0001', 'LOCAL', NULL, TRUE, FALSE, '시스템 관리자 계정', 'LMS 관리자', NOW(), NOW(), NULL),
+          ('ADMIN', 'admin01@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '유저관리자', 'admin01', '010-1000-0011', 'LOCAL', NULL, TRUE, FALSE, '유저 관리 담당 관리자 계정', 'LMS 유저 관리', NOW(), NOW(), NULL),
+          ('ADMIN', 'admin02@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '규칙관리자', 'admin02', '010-1000-0012', 'LOCAL', NULL, TRUE, FALSE, '운영 규칙 관리 담당 관리자 계정', 'LMS 규칙 관리', NOW(), NOW(), NULL),
+          ('ADMIN', 'admin03@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '통합관리자', 'admin03', '010-1000-0013', 'LOCAL', NULL, TRUE, FALSE, '유저 및 규칙 관리 담당 관리자 계정', 'LMS 통합 관리', NOW(), NOW(), NULL),
+          ('ADMIN', 'admin04@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '대기관리자', 'admin04', '010-1000-0014', 'LOCAL', NULL, TRUE, FALSE, '권한 부여 대기 관리자 계정', 'LMS 관리자 대기', NOW(), NOW(), NULL),
+          ('ADMIN', 'admin05@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '보조관리자', 'admin05', '010-1000-0015', 'LOCAL', NULL, TRUE, FALSE, '보조 관리자 계정', 'LMS 보조 관리', NOW(), NOW(), NULL),
           ('OPERATOR', 'op@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '운영자', 'operator', '010-1000-0002', 'LOCAL', NULL, TRUE, FALSE, '운영 담당자 계정', 'LMS 운영자', NOW(), NOW(), NULL),
           ('STUDENT', 'u01@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '김학생', 'user01', '010-2000-0001', 'LOCAL', NULL, TRUE, FALSE, '데이터 분석 입문 학습자', '비전공자 입문', NOW(), NOW(), NULL),
           ('STUDENT', 'u02@test.com', '$2a$10$oUxELBLbZtfCM8XqGQHqVub7HGaxVJC58IqhH..g97m8A1HNXhxJy', '이학생', 'user02', '010-2000-0002', 'LOCAL', NULL, TRUE, FALSE, 'SQL 학습 중인 학생', 'SQL 입문', NOW(), NOW(), NULL),
