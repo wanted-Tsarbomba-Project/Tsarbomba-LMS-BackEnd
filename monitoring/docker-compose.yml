@@ -53,8 +53,10 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=loadtest
+      - MYSQL_ROOT_PASSWORD=loadtest-root
       - MYSQL_DATABASE=lms_loadtest
+      - MYSQL_USER=lms_loadtest
+      - MYSQL_PASSWORD=loadtest
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql-data:/var/lib/mysql
