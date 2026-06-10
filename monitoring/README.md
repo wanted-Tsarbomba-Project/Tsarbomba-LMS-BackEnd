@@ -28,6 +28,7 @@ k6 ──부하──▶ Spring Boot 앱 (호스트, :8080)
 ### 사전 준비
 
 - Docker Desktop 실행 중일 것
+- (부하테스트 시) 앱이 사용하는 Redis(6379)는 기존 개발 환경대로 각자 실행 — 이 스택에는 포함되지 않음
 
 ### 스택 실행 / 종료
 
@@ -47,7 +48,14 @@ k6 ──부하──▶ Spring Boot 앱 (호스트, :8080)
 ### 1. 앱을 loadtest 프로파일로 실행 (중요!)
 
 ```bash
+# macOS / Linux
 ./gradlew bootRun --args='--spring.profiles.active=loadtest'
+
+# Windows PowerShell
+.\gradlew.bat bootRun --args='--spring.profiles.active=loadtest'
+
+# Windows CMD (큰따옴표 필수!)
+gradlew.bat bootRun --args="--spring.profiles.active=loadtest"
 ```
 
 > 🚨 **반드시 loadtest 프로파일로!** local 프로파일로 부하를 주면 **AWS RDS로 트래픽이 가서 과금/장애 위험**이 있습니다.
@@ -94,6 +102,7 @@ docker compose run --rm -e RESULT_NAME=login-after-index k6 run -o experimental-
 
 | 증상 | 원인 / 해결 |
 |------|------------|
+| `no configuration file provided: not found` | `monitoring/` 폴더 밖에서 실행함 → `cd monitoring` 후 실행 (또는 루트에서 `docker compose -f monitoring/docker-compose.yml up -d`) |
 | Grafana 포트 3000 충돌 (`address already in use`) | 로컬에 brew 등으로 설치한 grafana가 점유 중 → `brew services stop grafana prometheus` |
 | Prometheus 타겟 `lms-app` DOWN | 앱이 안 떠 있거나 Actuator 미설정 — 앱 실행 + `/actuator/prometheus` 200 확인 |
 | Grafana에 데이터소스 없음 | `grafana/provisioning/datasources/datasources.yml` 내용 확인 후 `docker compose restart grafana` |
