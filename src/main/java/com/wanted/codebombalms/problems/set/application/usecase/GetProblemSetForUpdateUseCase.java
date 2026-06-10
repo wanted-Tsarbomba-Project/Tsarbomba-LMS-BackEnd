@@ -14,7 +14,6 @@ public interface GetProblemSetForUpdateUseCase {
             String description,
             String dataFileName,
             Long datasetId,
-            String datasetUrl,
             java.util.List<ProblemForUpdateView> problems
     ) {
     }

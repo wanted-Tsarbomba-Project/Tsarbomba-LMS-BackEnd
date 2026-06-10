@@ -89,8 +89,7 @@ public class ProblemDatasetPersistenceAdapter implements
                 .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
                 .map(dataset -> new DatasetForUpdateData(
                         dataset.getDatasetId(),
-                        dataset.getOriginalFileName(),
-                        dataset.getFileUrl()
+                        dataset.getOriginalFileName()
                 ));
     }
 

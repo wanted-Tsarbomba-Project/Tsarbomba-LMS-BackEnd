@@ -7,6 +7,7 @@ import com.wanted.codebombalms.problems.set.application.port.LoadProblemsForUpda
 import com.wanted.codebombalms.problems.set.application.port.LoadTestCasesForUpdatePort;
 import com.wanted.codebombalms.problems.set.application.query.GetProblemSetForUpdateQuery;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetForUpdateUseCase;
+import com.wanted.codebombalms.problems.set.application.policy.DatasetStartCodePolicy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,7 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
     private final LoadHintForUpdatePort loadHintForUpdatePort;
     private final LoadDatasetForUpdatePort loadDatasetForUpdatePort;
     private final LoadTestCasesForUpdatePort loadTestCasesForUpdatePort;
-
+    private final DatasetStartCodePolicy datasetStartCodePolicy;
 
     @Override
     public ProblemSetForUpdateView handle(GetProblemSetForUpdateQuery query) {
@@ -58,7 +59,6 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
                 problemSet.description(),
                 dataset.map(LoadDatasetForUpdatePort.DatasetForUpdateData::originalFileName).orElse(null),
                 dataset.map(LoadDatasetForUpdatePort.DatasetForUpdateData::datasetId).orElse(null),
-                dataset.map(LoadDatasetForUpdatePort.DatasetForUpdateData::fileUrl).orElse(null),
                 problems
         );
     }
@@ -82,9 +82,7 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
                 problem.title(),
                 problem.content(),
                 problem.point(),
-                createStartCode(dataset.map(
-                        LoadDatasetForUpdatePort.DatasetForUpdateData::fileUrl
-                ).orElse(null)),
+                datasetStartCodePolicy.createIfDatasetExists(dataset.isPresent()),
                 hint.map(LoadHintForUpdatePort.HintForUpdateData::hintId).orElse(null),
                 hint.map(LoadHintForUpdatePort.HintForUpdateData::hintContent).orElse(null),
                 problem.explanation(),
@@ -103,14 +101,5 @@ public class ProblemSetForUpdateQueryService implements GetProblemSetForUpdateUs
                         testCase.timeoutMs()
                 ))
                 .toList();
-    }
-
-    private String createStartCode(String datasetUrl) {
-        if (datasetUrl == null || datasetUrl.isBlank()) {
-            return null;
-        }
-
-        return "import pandas as pd\n\n"
-                + "df = pd.read_csv(\"" + datasetUrl + "\")";
     }
 }
