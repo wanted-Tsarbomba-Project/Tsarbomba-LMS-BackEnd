@@ -33,23 +33,31 @@ public class LearningLectureAdapter implements LearningLecturePort {
         try {
             return lectureQueryUseCase.findLectureById(lectureId).getCourse().getCourseId();
         } catch (NotFoundException e) {
-            throw new NotFoundException(LearningErrorCode.LECTURE_NOT_FOUND);
+            throw new NotFoundException(LearningErrorCode.LECTURE_NOT_FOUND, e);
         }
     }
 
     @Override
     public List<Long> findLectureIdsByCourse(Long courseId) {
-        return lectureQueryUseCase.findLecturesByCourseId(courseId)
-                .stream()
-                .map(Lecture::getLectureId)
-                .toList();
+        try {
+            return lectureQueryUseCase.findLecturesByCourseId(courseId)
+                    .stream()
+                    .map(Lecture::getLectureId)
+                    .toList();
+        } catch (NotFoundException e) {
+            throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND, e);
+        }
     }
 
     @Override
     public List<LearningLecture> findLecturesByCourse(Long courseId) {
-        return lectureQueryUseCase.findLecturesByCourseId(courseId)
-                .stream()
-                .map(lecture -> new LearningLecture(lecture.getLectureId(), lecture.getTitle()))
-                .toList();
+        try {
+            return lectureQueryUseCase.findLecturesByCourseId(courseId)
+                    .stream()
+                    .map(lecture -> new LearningLecture(lecture.getLectureId(), lecture.getTitle()))
+                    .toList();
+        } catch (NotFoundException e) {
+            throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND, e);
+        }
     }
 }

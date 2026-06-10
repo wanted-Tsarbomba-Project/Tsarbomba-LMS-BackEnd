@@ -31,7 +31,7 @@ public class LearningCourseAdapter implements LearningCoursePort {
         try {
             return toLearningCourse(courseQueryUseCase.findCourseById(courseId));
         } catch (NotFoundException e) {
-            throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND);
+            throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND, e);
         }
     }
 
