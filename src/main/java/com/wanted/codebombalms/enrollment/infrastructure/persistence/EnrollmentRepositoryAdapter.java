@@ -54,6 +54,14 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
     }
 
     @Override
+    public List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.findByCourse_CourseIdAndStatus(courseId, status)
+                .stream()
+                .map(EnrollmentJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<Enrollment> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status) {
         return springDataEnrollmentRepository.findByEnrollmentIdAndStatus(enrollmentId, status)
                 .map(EnrollmentJpaEntity::toDomain);
