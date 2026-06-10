@@ -55,3 +55,54 @@ Cookie: accessToken={{rt}}
     });
 %}
 
+
+
+
+### ===== 회원 탈퇴 (#198) =====
+### C0 → C1 → C2 순서대로 실행
+
+### C0. (사전) 로그인 — 탈퇴할 계정으로 쿠키 발급
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### C1. 회원 탈퇴 — 비번 틀림 (400 기대)
+DELETE http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "password": "wrongpassword!"
+}
+
+> {%
+    client.test("비번 불일치 400", function () {
+        client.assert(response.status === 400, "기대 400, 실제 " + response.status);
+    });
+%}
+
+### C2. 회원 탈퇴 — 정상 (비번 일치, 200 기대)
+DELETE http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "password": "Test1234!"
+}
+
+> {%
+    client.test("탈퇴 성공 200", function () {
+        client.assert(response.status === 200, "기대 200, 실제 " + response.status);
+    });
+%}
+
+### C3. 탈퇴 후 내 정보 조회 — 401 기대 (쿠키 만료)
+GET http://localhost:8080/api/v1/users/me
+
+> {%
+    client.test("탈퇴 후 401", function () {
+        client.assert(response.status === 401, "기대 401, 실제 " + response.status);
+    });
+%}
