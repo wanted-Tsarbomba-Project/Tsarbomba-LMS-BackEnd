@@ -38,10 +38,10 @@ public record ProblemSetForUpdateResponse(
             String content,
             Integer point,
             String startCode,
-            String answer,
             Long hintId,
             String hint,
-            String explanation
+            String explanation,
+            List<TestCaseForUpdateResponse> testCases
     ) {
         public ProblemForUpdateResponse(ProblemForUpdateView view) {
             this(
@@ -50,11 +50,26 @@ public record ProblemSetForUpdateResponse(
                     view.content(),
                     view.point(),
                     view.startCode(),
-                    view.answer(),
                     view.hintId(),
                     view.hint(),
-                    view.explanation()
+                    view.explanation(),
+                    view.testCases().stream()
+                            .map(TestCaseForUpdateResponse::new)
+                            .toList()
             );
+        }
+    }
+
+    public record TestCaseForUpdateResponse(
+            Long testCaseId,
+            String testCode,
+            Boolean isHidden,
+            Integer timeoutMs
+    ) {
+        public TestCaseForUpdateResponse(
+                com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetForUpdateUseCase.TestCaseForUpdateView view
+        ) {
+            this(view.testCaseId(), view.testCode(), view.isHidden(), view.timeoutMs());
         }
     }
 }

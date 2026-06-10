@@ -8,6 +8,10 @@ public class ExternalServiceException extends DomainException {
         super(errorCode);
     }
 
+    public ExternalServiceException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
+
     @Override
     public int getHttpStatus() {
         return 502;

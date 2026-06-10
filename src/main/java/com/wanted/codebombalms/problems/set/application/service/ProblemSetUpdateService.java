@@ -50,10 +50,10 @@ public class ProblemSetUpdateService implements UpdateProblemSetUseCase {
                         problem.point(),
                         DEFAULT_ATTEMPT_LIMIT,
                         DEFAULT_RETRIABLE,
-                        problem.answer(),
                         problem.hintId(),
                         problem.hint(),
-                        problem.explanation()
+                        problem.explanation(),
+                        problem.testCases()
                 ))
                 .toList();
 
@@ -72,7 +72,8 @@ public class ProblemSetUpdateService implements UpdateProblemSetUseCase {
                 result.problemSetId(),
                 result.title(),
                 result.categoryName(),
-                result.updatedProblemCount()
+                result.updatedProblemCount(),
+                result.updatedTestCaseCount()
         );
     }
 }

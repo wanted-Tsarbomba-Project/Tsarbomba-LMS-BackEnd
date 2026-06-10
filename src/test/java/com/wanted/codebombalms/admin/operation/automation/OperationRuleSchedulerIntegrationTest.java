@@ -315,7 +315,6 @@ class OperationRuleSchedulerIntegrationTest {
                 "What is 1 + 1?",
                 "TEXT",
                 "EASY",
-                "2",
                 "Basic arithmetic problem",
                 10,
                 10,

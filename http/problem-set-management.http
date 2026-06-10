@@ -1,0 +1,137 @@
+@baseUrl = http://localhost:8080
+@problemSetId = 3001
+@problemId = 3001
+@hintId = 2001
+@testCaseId = 3001
+@datasetFilePath = ../uploads/datasets/employee_performance_20265.csv
+
+### 운영자 로그인
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "op@test.com",
+  "password": "Test1234!"
+}
+
+### 문제세트 + 테스트케이스 일괄 등록
+POST {{baseUrl}}/api/v1/problems
+Accept: application/json
+Content-Type: application/json
+
+{
+  "title": "pandas 기초 분석 문제 세트",
+  "categoryName": "Python 데이터 분석",
+  "description": "CSV 데이터를 활용한 코드 실행형 문제 세트입니다.",
+  "difficulty": "EASY",
+  "problems": [
+    {
+      "title": "데이터 행과 열 개수 확인",
+      "content": "DataFrame의 행과 열 개수를 result에 저장하세요.",
+      "point": 10,
+      "startCode": "result = None",
+      "hint": "shape 속성을 사용하세요.",
+      "explanation": "df.shape는 행과 열 개수를 튜플로 반환합니다.",
+      "testCases": [
+        {
+          "testCode": "assert result == df.shape",
+          "isHidden": false,
+          "timeoutMs": 3000
+        },
+        {
+          "testCode": "assert isinstance(result, tuple)",
+          "isHidden": true,
+          "timeoutMs": 3000
+        }
+      ]
+    }
+  ]
+}
+
+### 수정 화면 데이터 조회 - problems[].testCases 포함 확인
+GET {{baseUrl}}/api/v1/problems/{{problemSetId}}
+
+### 문제세트 + 테스트케이스 + CSV multipart 동시 수정
+PUT {{baseUrl}}/api/v1/problems/{{problemSetId}}/with-dataset
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "title": "pandas 기초 분석 문제 세트 수정",
+  "categoryName": "Python 데이터 분석",
+  "description": "CSV와 테스트케이스를 함께 수정합니다.",
+  "difficulty": "MEDIUM",
+  "problems": [
+    {
+      "problemId": {{problemId}},
+      "title": "데이터 행과 열 개수 확인",
+      "content": "DataFrame의 행과 열 개수를 result에 저장하세요.",
+      "point": 15,
+      "startCode": "result = None",
+      "hintId": {{hintId}},
+      "hint": "shape 속성을 사용하세요.",
+      "explanation": "df.shape는 행과 열 개수를 튜플로 반환합니다.",
+      "testCases": [
+        {
+          "testCaseId": {{testCaseId}},
+          "testCode": "assert result == df.shape",
+          "isHidden": false,
+          "timeoutMs": 3000
+        },
+        {
+          "testCaseId": null,
+          "testCode": "assert result[0] > 0",
+          "isHidden": true,
+          "timeoutMs": 3000
+        }
+      ]
+    }
+  ]
+}
+--boundary
+Content-Disposition: form-data; name="datasetFile"; filename="employee_performance.csv"
+Content-Type: text/csv
+
+< {{datasetFilePath}}
+--boundary--
+
+### 문제세트 + 테스트케이스만 multipart 수정 - CSV 유지
+PUT {{baseUrl}}/api/v1/problems/{{problemSetId}}/with-dataset
+Accept: application/json
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="request"
+Content-Type: application/json
+
+{
+  "title": "pandas 기초 분석 문제 세트 수정",
+  "categoryName": "Python 데이터 분석",
+  "description": "기존 CSV는 유지하고 문제와 테스트케이스만 수정합니다.",
+  "difficulty": "MEDIUM",
+  "problems": [
+    {
+      "problemId": {{problemId}},
+      "title": "데이터 행과 열 개수 확인",
+      "content": "DataFrame의 행과 열 개수를 result에 저장하세요.",
+      "point": 15,
+      "startCode": "result = None",
+      "hintId": {{hintId}},
+      "hint": "shape 속성을 사용하세요.",
+      "explanation": "df.shape는 행과 열 개수를 튜플로 반환합니다.",
+      "testCases": [
+        {
+          "testCaseId": {{testCaseId}},
+          "testCode": "assert result == df.shape",
+          "isHidden": false,
+          "timeoutMs": 3000
+        }
+      ]
+    }
+  ]
+}
+--boundary--

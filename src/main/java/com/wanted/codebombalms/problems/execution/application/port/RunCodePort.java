@@ -2,7 +2,14 @@ package com.wanted.codebombalms.problems.execution.application.port;
 
 public interface RunCodePort {
 
-    CodeRunResult run(String code);
+    CodeRunResult run(CodeRunCommand command);
+
+    record CodeRunCommand(
+            String code,
+            String datasetAccessUrl,
+            Integer timeoutMs
+    ) {
+    }
 
     record CodeRunResult(
             String output,

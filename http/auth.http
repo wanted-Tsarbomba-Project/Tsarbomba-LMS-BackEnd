@@ -3,8 +3,8 @@ POST http://localhost:8080/api/v1/auth/signup
 Content-Type: application/json
 
 {
-  "email": "test1@example.com",
-  "password": "Test1234!",
+  "email": "op@test.com",
+  "password": "test1234!",
   "name": "홍길동",
   "nickname": "길동이",
   "phone": "010-1234-5678"

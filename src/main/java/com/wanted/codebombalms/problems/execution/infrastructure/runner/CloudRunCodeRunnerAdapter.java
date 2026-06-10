@@ -1,10 +1,13 @@
 package com.wanted.codebombalms.problems.execution.infrastructure.runner;
 
 import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
+@Slf4j
 @Component
 @ConditionalOnProperty(name = "code-runner.type", havingValue = "cloud-run")
 public class CloudRunCodeRunnerAdapter implements RunCodePort {
@@ -15,19 +18,32 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
     public CloudRunCodeRunnerAdapter(
             CloudRunCodeRunnerProperties properties,
             RestClient.Builder restClientBuilder
+
     ) {
+        SimpleClientHttpRequestFactory requestFactory =
+                new SimpleClientHttpRequestFactory();
+
+        requestFactory.setConnectTimeout(properties.getConnectTimeoutMs());
+        requestFactory.setReadTimeout(properties.getReadTimeoutMs());
+
         this.properties = properties;
-        this.restClient = restClientBuilder.build();
+        this.restClient = restClientBuilder
+                .requestFactory(requestFactory)
+                .build();
     }
 
     @Override
-    public CodeRunResult run(String code) {
+    public CodeRunResult run(CodeRunCommand command)  {
         long startTime = System.currentTimeMillis();
 
         try {
             CloudRunExecuteResponse response = restClient.post()
                     .uri(properties.getEndpoint())
-                    .body(new CloudRunExecuteRequest(appendResultPrinter(code)))
+                    .body(new CloudRunExecuteRequest(
+                            appendResultPrinter(command.code()),
+                            command.datasetAccessUrl(),
+                            command.timeoutMs()
+                    ))
                     .retrieve()
                     .body(CloudRunExecuteResponse.class);
 
@@ -51,6 +67,9 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
                     success
             );
         } catch (Exception e) {
+            log.error("Cloud Run 코드 실행 서버 호출에 실패했습니다. endpoint={}",
+                    properties.getEndpoint(), e);
+
             return new CodeRunResult(
                     null,
                     "코드 실행 서버 호출에 실패했습니다.",
@@ -73,7 +92,11 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
                 + "print(result)";
     }
 
-    private record CloudRunExecuteRequest(String code) {
+    private record CloudRunExecuteRequest(
+            String code,
+            String datasetAccessUrl,
+            Integer timeoutMs
+    ) {
     }
 
     private record CloudRunExecuteResponse(

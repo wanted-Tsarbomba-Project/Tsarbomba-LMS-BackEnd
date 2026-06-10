@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.problems.set.domain.model;
 
+import java.util.List;
+
 public record ProblemRegistration(
         String title,
         String content,
@@ -8,8 +10,8 @@ public record ProblemRegistration(
         Integer point,
         Integer attemptLimit,
         Boolean isRetriable,
-        String answer,
         String hint,
-        String explanation
+        String explanation,
+        List<ProblemTestCaseRegistration> testCases
 ) {
 }

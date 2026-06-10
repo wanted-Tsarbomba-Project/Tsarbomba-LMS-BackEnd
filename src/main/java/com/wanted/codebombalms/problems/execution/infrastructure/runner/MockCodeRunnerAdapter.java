@@ -11,7 +11,9 @@ public class MockCodeRunnerAdapter implements RunCodePort {
     private static final long MOCK_EXECUTION_TIME_MS = 1L;
 
     @Override
-    public CodeRunResult run(String code) {
+    public CodeRunResult run(CodeRunCommand command) {
+        String code = command.code();
+
         if (code.contains("raise") || code.contains("error")) {
             return new CodeRunResult(
                     null,

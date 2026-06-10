@@ -15,7 +15,6 @@ public interface ProblemTestCaseCommandUseCase {
             Long testCaseId,
             Long problemId,
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs,

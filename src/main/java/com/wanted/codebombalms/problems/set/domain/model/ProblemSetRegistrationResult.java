@@ -5,6 +5,7 @@ public record ProblemSetRegistrationResult(
         String title,
         String categoryName,
         Integer totalProblemCount,
-        Integer createdProblemCount
+        Integer createdProblemCount,
+        Integer createdTestCaseCount
 ) {
 }

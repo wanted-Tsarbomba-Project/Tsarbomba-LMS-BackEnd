@@ -17,7 +17,6 @@ public enum ProblemErrorCode implements ErrorCode {
     PROBLEM_NOT_IN_SET("PRB-PBL-005", "해당 문제 세트에 속한 문제가 아닙니다."),
     PROBLEM_TITLE_REQUIRED("PRB-PBL-006", "소문제 제목은 필수입니다."),
     PROBLEM_CONTENT_REQUIRED("PRB-PBL-007", "소문제 내용은 필수입니다."),
-    PROBLEM_ANSWER_REQUIRED("PRB-PBL-008", "소문제 정답은 필수입니다."),
     PROBLEM_REQUIRED("PRB-PBL-009", "소문제는 1개 이상 필요합니다."),
     PROBLEM_POINT_REQUIRED("PRB-PBL-010", "문제 포인트는 1 이상이어야 합니다."),
 
@@ -44,6 +43,7 @@ public enum ProblemErrorCode implements ErrorCode {
     PROBLEM_DATASET_INVALID_PROBLEM_TYPE("PRB-DAT-003", "코드 실행형 문제에만 데이터셋을 연결할 수 있습니다."),
     PROBLEM_DATASET_INVALID_FILE("PRB-DAT-004", "CSV 파일만 업로드할 수 있습니다."),
     PROBLEM_DATASET_UPLOAD_FAILED("PRB-DAT-005", "데이터셋 업로드에 실패했습니다."),
+    PROBLEM_DATASET_ACCESS_URL_FAILED("PRB-DAT-007", "데이터셋 접근 URL 생성에 실패했습니다."),
 
     // 테스트케이스 (PRB-TC)
     PROBLEM_TEST_CASE_NOT_FOUND("PRB-TC-001", "테스트케이스를 찾을 수 없습니다."),

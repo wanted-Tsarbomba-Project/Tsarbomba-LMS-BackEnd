@@ -1,7 +1,7 @@
 HELP.md
 .gradle
 build/
-!gradle/wrapper/gradle-wrapper.jar
+!../gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -61,6 +61,7 @@ AGENTS.md
 API_WORKLOG.MD
 CLAUDE.md
 .ai/
+/ai/
 .obsidian/
 _배포용*/
 .claude
@@ -71,3 +72,8 @@ demo
 architecture-user-auth.html
 
 /docs/개발블로그_작성_가이드라인.md
+
+## 모니터링
+MONITORING_GUIDE.md
+__pycache__/
+*.pyc

@@ -14,14 +14,18 @@ public record ProblemSetUpdateResponse(
         String categoryName,
 
         @Schema(description = "수정된 소문제 수", example = "2")
-        Integer updatedProblemCount
+        Integer updatedProblemCount,
+
+        @Schema(description = "수정·생성된 테스트케이스 개수", example = "4")
+        Integer updatedTestCaseCount
 ) {
     public ProblemSetUpdateResponse(ProblemSetUpdateCommandResult result) {
         this(
                 result.problemSetId(),
                 result.title(),
                 result.categoryName(),
-                result.updatedProblemCount()
+                result.updatedProblemCount(),
+                result.updatedTestCaseCount()
         );
     }
 }

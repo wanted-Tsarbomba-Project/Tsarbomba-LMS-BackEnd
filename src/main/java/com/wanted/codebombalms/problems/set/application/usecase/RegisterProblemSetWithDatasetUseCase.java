@@ -17,6 +17,7 @@ public interface RegisterProblemSetWithDatasetUseCase {
             String categoryName,
             Integer totalProblemCount,
             Integer createdProblemCount,
+            Integer createdTestCaseCount,
             String datasetFileName,
             String datasetUrl,
             String startCode

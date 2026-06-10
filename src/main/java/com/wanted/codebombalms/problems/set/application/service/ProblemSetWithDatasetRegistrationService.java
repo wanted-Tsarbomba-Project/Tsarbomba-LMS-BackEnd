@@ -52,6 +52,7 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
                     problemSet.categoryName(),
                     problemSet.totalProblemCount(),
                     problemSet.createdProblemCount(),
+                    problemSet.createdTestCaseCount(),
                     dataset.getOriginalFileName(),
                     dataset.getFileUrl(),
                     startCode(dataset.getFileUrl())

@@ -11,6 +11,11 @@ public interface SpringDataProblemTestCaseRepository extends JpaRepository<Probl
             String status
     );
 
+    List<ProblemTestCaseJpaEntity> findByProblem_ProblemIdInAndStatus(
+            List<Long> problemIds,
+            String status
+    );
+
     Optional<ProblemTestCaseJpaEntity> findByTestCaseIdAndStatus(
             Long testCaseId,
             String status
@@ -27,5 +32,11 @@ public interface SpringDataProblemTestCaseRepository extends JpaRepository<Probl
             Integer testOrder,
             String status,
             Long testCaseId
+    );
+
+    List<ProblemTestCaseJpaEntity>
+    findByProblem_ProblemIdInAndStatusOrderByProblem_ProblemIdAscTestOrderAsc(
+            List<Long> problemIds,
+            String status
     );
 }
