@@ -13,7 +13,7 @@ public interface SpringDataLectureProblemSubmissionRepository
     );
 
     List<LectureProblemSubmissionJpaEntity>
-    findByUserIdAndLectureProblemSetIdOrderBySubmittedAtDesc(
+    findByUserIdAndLectureProblemSetIdOrderBySubmittedAtDescLectureProblemSubmissionIdDesc(
             Long userId,
             Long lectureProblemSetId
     );

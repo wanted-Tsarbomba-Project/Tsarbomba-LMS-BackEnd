@@ -22,8 +22,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,6 +103,10 @@ class LectureProblemSetServiceTest {
         );
         given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
                 .willReturn(Optional.of(currentProgress));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetIdForUpdate(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(currentProgress));
         given(lectureProblemSubmissionRepository.countAttempts(userId, lectureProblemSetId, problemId))
                 .willReturn(0);
         given(learningProblemGradingPort.grade(problemSetId, problemId, "answer"))
@@ -151,6 +157,120 @@ class LectureProblemSetServiceTest {
         assertEquals(lectureProblemSetId, submissionCaptor.getValue().lectureProblemSetId());
         assertEquals(problemId, submissionCaptor.getValue().problemId());
         verify(lectureProblemProgressCommandUseCase).recordProgress(any());
+    }
+
+    @Test
+    void submit_wrongAnswer_doesNotAdvanceLectureProgress() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 1, false);
+        givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 0, 3);
+        given(learningProblemGradingPort.grade(problemSetId, problemId, "wrong"))
+                .willReturn(new LearningProblemGradingPort.GradingResult(
+                        false,
+                        1,
+                        2,
+                        "WRONG_ANSWER",
+                        "failed"
+                ));
+        given(lectureProblemSubmissionRepository.save(any(LectureProblemSubmission.class)))
+                .willReturn(submission(9001L, userId, lectureProblemSetId, problemId, false, 1));
+
+        var result = lectureProblemSetService.submit(
+                lectureProblemSetId,
+                problemId,
+                new SubmitCodeCommand(userId, "wrong")
+        );
+
+        assertFalse(result.correct());
+        assertEquals(2, result.remainingAttemptCount());
+        assertEquals(null, result.nextProblemId());
+        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+    }
+
+    @Test
+    void submit_attemptLimitExceeded_doesNotGradeOrSave() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 1, false);
+        givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 3, 3);
+
+        assertThrows(
+                com.wanted.codebombalms.global.domain.common.error.exception.ValidationException.class,
+                () -> lectureProblemSetService.submit(
+                        lectureProblemSetId,
+                        problemId,
+                        new SubmitCodeCommand(userId, "answer")
+                )
+        );
+
+        verify(learningProblemGradingPort, never()).grade(any(), any(), any());
+        verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+    }
+
+    @Test
+    void submit_gradingFailure_doesNotSaveSubmissionOrProgress() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 1, false);
+        givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 0, 3);
+        given(learningProblemGradingPort.grade(problemSetId, problemId, "answer"))
+                .willThrow(new IllegalStateException("grading failed"));
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> lectureProblemSetService.submit(
+                        lectureProblemSetId,
+                        problemId,
+                        new SubmitCodeCommand(userId, "answer")
+                )
+        );
+
+        verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+    }
+
+    private void givenSubmitContext(
+            Long userId,
+            Long lectureProblemSetId,
+            Long problemSetId,
+            Long problemId,
+            LectureProblemProgress progress,
+            int previousAttemptCount,
+            int attemptLimit
+    ) {
+        given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
+                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 101L, problemSetId));
+        given(learningProblemPort.existsProblem(problemId)).willReturn(true);
+        given(learningProblemPort.existsProblemInSet(problemSetId, problemId)).willReturn(true);
+        given(learningProblemPort.loadProblem(problemId)).willReturn(
+                new LearningProblemPort.ProblemForLearning(
+                        problemId,
+                        problemSetId,
+                        1,
+                        "explanation",
+                        10,
+                        attemptLimit,
+                        true
+                )
+        );
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(progress));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetIdForUpdate(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(progress));
+        given(lectureProblemSubmissionRepository.countAttempts(userId, lectureProblemSetId, problemId))
+                .willReturn(previousAttemptCount);
     }
 
     private LearningProblemPort.ProblemSetForLearning problemSet(Long problemSetId) {

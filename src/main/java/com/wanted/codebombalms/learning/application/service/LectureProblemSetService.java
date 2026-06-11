@@ -125,7 +125,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         }
 
         var problem = learningProblemPort.loadProblem(problemId);
-        LectureProblemProgress progress = findOrCreateProgress(command.userId(), lectureProblemSetId);
+        LectureProblemProgress progress = lockProgress(command.userId(), lectureProblemSetId);
         validateSubmissionProgress(progress, problem.problemNumber());
 
         int previousAttemptCount = lectureProblemSubmissionRepository.countAttempts(
@@ -133,7 +133,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 lectureProblemSetId,
                 problemId
         );
-        validateAttempt(problem.retriable(), previousAttemptCount);
+        validateAttempt(problem.attemptLimit(), problem.retriable(), previousAttemptCount);
 
         var gradingResult = learningProblemGradingPort.grade(
                 lectureProblemSet.problemSetId(),
@@ -205,6 +205,13 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 ));
     }
 
+    private LectureProblemProgress lockProgress(Long userId, Long lectureProblemSetId) {
+        LectureProblemProgress progress = findOrCreateProgress(userId, lectureProblemSetId);
+        return lectureProblemProgressRepository
+                .findByUserIdAndLectureProblemSetIdForUpdate(userId, lectureProblemSetId)
+                .orElse(progress);
+    }
+
     private Map<Long, LectureProblemSubmission> findLatestSubmissions(
             Long userId,
             Long lectureProblemSetId
@@ -260,9 +267,12 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         }
     }
 
-    private void validateAttempt(Boolean retriable, int previousAttemptCount) {
+    private void validateAttempt(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {
         if (!Boolean.TRUE.equals(retriable) && previousAttemptCount > 0) {
             throw new ValidationException(SubmissionErrorCode.PROBLEM_NOT_RETRIABLE);
+        }
+        if (attemptLimit != null && previousAttemptCount >= attemptLimit) {
+            throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
         }
     }
 

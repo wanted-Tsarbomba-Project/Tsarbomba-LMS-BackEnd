@@ -40,6 +40,16 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
     }
 
     @Override
+    public Optional<LectureProblemProgress> findByUserIdAndLectureProblemSetIdForUpdate(
+            Long userId,
+            Long lectureProblemSetId
+    ) {
+        return springDataLectureProblemProgressRepository
+                .findByUserIdAndLectureProblemSetIdForUpdate(userId, lectureProblemSetId)
+                .map(LectureProblemProgressJpaEntity::toDomain);
+    }
+
+    @Override
     public long countCompletedByUserIdAndLectureProblemSetIds(Long userId, List<Long> lectureProblemSetIds) {
         if (lectureProblemSetIds.isEmpty()) {
             return 0;

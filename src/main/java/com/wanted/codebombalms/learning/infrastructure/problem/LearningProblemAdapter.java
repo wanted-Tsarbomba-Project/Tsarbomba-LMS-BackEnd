@@ -24,7 +24,11 @@ public class LearningProblemAdapter implements LearningProblemPort {
     @Override
     public ProblemSetForLearning loadProblemSet(Long problemSetId) {
         var problemSet = loadProblemSetEntryPort.loadProblemSetEntry(problemSetId);
-        var problems = loadProblemForEntryPort.loadProblems(problemSetId)
+        var loadedProblems = loadProblemForEntryPort.loadProblems(problemSetId);
+        String startCode = loadedProblems.isEmpty()
+                ? null
+                : loadProblemStartCodePort.loadStartCode(loadedProblems.get(0).getProblemId());
+        var problems = loadedProblems
                 .stream()
                 .map(problem -> new ProblemDetailForLearning(
                         problem.getProblemId(),
@@ -33,7 +37,7 @@ public class LearningProblemAdapter implements LearningProblemPort {
                         problem.getContent(),
                         problem.getProblemType(),
                         problem.getPoint(),
-                        loadProblemStartCodePort.loadStartCode(problem.getProblemId())
+                        startCode
                 ))
                 .toList();
 
