@@ -61,9 +61,10 @@ uploads/
 .ai/local/
 .obsidian/
 _배포용*/
-# .claude 개인 설정(settings.local.json 등)은 ignore, 팀 공유 스킬만 커밋
+# .claude 개인 설정(settings.local.json 등)은 ignore, 팀 공유 스킬·에이전트는 커밋
 .claude/*
 !.claude/skills/
+!.claude/agents/
 
 demo
 

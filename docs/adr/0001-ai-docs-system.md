@@ -1,5 +1,7 @@
 # AI 협업 문서: 공용은 커밋·PL 소유, 개인 작업메모는 ignore
 
+> ⚠️ **갱신 (2026-06-10)**: 본문이 언급하는 `docs/PR-COMMIT.md`는 **삭제**되었다. 커밋·PR 양식과 실행은 git 전용 서브에이전트(`.claude/agents/` — `committer`/`pr-creator`/`pusher`/`issue-creator`)로 이관했고, PR 본문 골격은 `.github/pull_request_template.md`가 담당한다. 아래 본문은 당시 결정의 역사 기록으로 보존한다.
+
 ## 맥락
 
 14인 모노레포(LMS)에 1인 개발자용 4종 파일 체계(AGENTS / STATE / API / WORKLOG)를 얹으면서
