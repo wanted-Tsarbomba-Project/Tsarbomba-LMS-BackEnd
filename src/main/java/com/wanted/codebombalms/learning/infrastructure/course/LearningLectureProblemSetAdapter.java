@@ -1,12 +1,12 @@
 package com.wanted.codebombalms.learning.infrastructure.course;
 
+import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
 import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
-import com.wanted.codebombalms.course.domain.repository.CourseProblemSetRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
-import com.wanted.codebombalms.problems.problem.infrastructure.persistence.SpringDataProblemRepository;
+import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,13 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LearningLectureProblemSetAdapter implements LearningLectureProblemSetPort {
 
-    private final CourseProblemSetRepository courseProblemSetRepository;
-    private final SpringDataProblemRepository problemRepository;
+    private final CourseProblemQueryUseCase courseProblemQueryUseCase;
+    private final ProblemQueryService problemQueryService;
 
     @Override
     public LearningLectureProblemSet findLectureProblemSet(Long lectureProblemSetId) {
-        CourseProblemSet lectureProblemSet = courseProblemSetRepository.findById(lectureProblemSetId)
-                .orElseThrow(() -> new NotFoundException(LearningErrorCode.LECTURE_PROBLEM_SET_NOT_FOUND));
+        CourseProblemSet lectureProblemSet;
+        try {
+            lectureProblemSet = courseProblemQueryUseCase.findProblemSetById(lectureProblemSetId);
+        } catch (NotFoundException e) {
+            throw new NotFoundException(LearningErrorCode.LECTURE_PROBLEM_SET_NOT_FOUND, e);
+        }
 
         return new LearningLectureProblemSet(
                 lectureProblemSet.getCourseProblemSetId(),
@@ -33,7 +37,10 @@ public class LearningLectureProblemSetAdapter implements LearningLectureProblemS
 
     @Override
     public boolean existsProblemInSet(Long problemSetId, Long problemId) {
-        return problemRepository.findByProblemIdAndProblemSet_ProblemSetId(problemId, problemSetId)
-                .isPresent();
+        try {
+            return problemSetId.equals(problemQueryService.findProblemForSubmission(problemId).problemSetId());
+        } catch (NotFoundException e) {
+            return false;
+        }
     }
 }

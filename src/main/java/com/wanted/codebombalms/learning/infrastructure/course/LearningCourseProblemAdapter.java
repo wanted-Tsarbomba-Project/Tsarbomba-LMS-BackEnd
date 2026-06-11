@@ -1,8 +1,8 @@
 package com.wanted.codebombalms.learning.infrastructure.course;
 
+import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
+import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
 import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseProblemSetJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseProblemSetRepository;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,24 +14,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
 
-    private final SpringDataCourseProblemSetRepository courseProblemSetRepository;
+    private final CourseProblemQueryUseCase courseProblemQueryUseCase;
 
     @Override
     public List<Long> findMainLectureProblemSetIdsByCourse(Long courseId) {
-        return courseProblemSetRepository.findActiveByCourseIdAndRole(
+        return courseProblemQueryUseCase.findProblemSetsByCourseAndRole(
                         courseId,
                         CourseProblemSetRole.MAIN
                 )
                 .stream()
-                .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
+                .map(CourseProblemSet::getCourseProblemSetId)
                 .toList();
     }
 
     @Override
     public List<Long> findLectureProblemSetIdsByLecture(Long lectureId) {
-        return courseProblemSetRepository.findActiveByLectureIdOrderByDisplayOrderAsc(lectureId)
+        return courseProblemQueryUseCase.findProblemSetsByLecture(lectureId)
                 .stream()
-                .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
+                .map(CourseProblemSet::getCourseProblemSetId)
                 .toList();
     }
 }
