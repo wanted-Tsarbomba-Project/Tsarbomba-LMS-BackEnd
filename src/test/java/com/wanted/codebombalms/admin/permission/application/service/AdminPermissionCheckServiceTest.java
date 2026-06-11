@@ -66,4 +66,18 @@ class AdminPermissionCheckServiceTest {
         assertEquals(AdminAuthErrorCode.RULE_MANAGEMENT_PERMISSION_REQUIRED, exception.getErrorCode());
         assertTrue(exception.getMessage().contains("MASTER 관리자에게 권한 부여를 요청해주세요."));
     }
+
+    @Test
+    @DisplayName("권한 타입이 null이면 관리자 권한 없음 403 예외를 던진다.")
+    void null_permission_type_throws_forbidden() {
+        // when
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> adminPermissionCheckService.requirePermission(2L, null)
+        );
+
+        // then
+        assertEquals(403, exception.getHttpStatus());
+        assertEquals(AdminAuthErrorCode.ADMIN_PERMISSION_REQUIRED, exception.getErrorCode());
+    }
 }

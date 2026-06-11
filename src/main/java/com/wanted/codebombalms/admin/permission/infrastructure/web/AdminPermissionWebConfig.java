@@ -2,7 +2,6 @@ package com.wanted.codebombalms.admin.permission.infrastructure.web;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -11,17 +10,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class AdminPermissionWebConfig implements WebMvcConfigurer {
 
-    private final ObjectProvider<AdminPermissionCheckService> adminPermissionCheckServiceProvider;
+    private final AdminPermissionCheckService adminPermissionCheckService;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        AdminPermissionCheckService adminPermissionCheckService =
-                adminPermissionCheckServiceProvider.getIfAvailable();
-
-        if (adminPermissionCheckService == null) {
-            return;
-        }
-
         registry.addInterceptor(new AdminPermissionInterceptor(adminPermissionCheckService))
                 .addPathPatterns(
                         "/api/v1/users",

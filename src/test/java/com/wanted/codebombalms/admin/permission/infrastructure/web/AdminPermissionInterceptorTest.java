@@ -133,10 +133,35 @@ class AdminPermissionInterceptorTest {
         assertTrue(exception.getMessage().contains("MASTER 관리자에게 권한 부여를 요청해주세요."));
     }
 
+    @Test
+    @DisplayName("ROLE_ADMIN principal에서 userId를 추출할 수 없으면 403으로 차단한다.")
+    void admin_with_invalid_principal_throws_forbidden() {
+        // given
+        authenticate("admin@test.com", "ROLE_ADMIN");
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "GET",
+                "/api/v1/admin/automation-rules"
+        );
+
+        // when
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> interceptor.preHandle(request, new MockHttpServletResponse(), new Object())
+        );
+
+        // then
+        assertEquals(AdminAuthErrorCode.ADMIN_PERMISSION_REQUIRED, exception.getErrorCode());
+        verifyNoInteractions(adminPermissionCheckService);
+    }
+
     private void authenticate(Long userId, String role) {
+        authenticate((Object) userId, role);
+    }
+
+    private void authenticate(Object principal, String role) {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
-                        userId,
+                        principal,
                         null,
                         List.of(new SimpleGrantedAuthority(role))
                 )

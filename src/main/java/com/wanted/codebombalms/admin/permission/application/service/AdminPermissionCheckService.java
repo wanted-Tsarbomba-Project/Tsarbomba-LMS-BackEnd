@@ -19,6 +19,10 @@ public class AdminPermissionCheckService {
             Long adminUserId,
             AdminPermissionType permissionType
     ) {
+        if (adminUserId == null || permissionType == null) {
+            throw new ForbiddenException(AdminAuthErrorCode.ADMIN_PERMISSION_REQUIRED);
+        }
+
         boolean hasPermission = adminPermissionRepository.existsByAdminUserIdAndPermissionType(
                 adminUserId,
                 permissionType

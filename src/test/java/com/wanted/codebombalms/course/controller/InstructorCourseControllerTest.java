@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.course.controller;
 
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
@@ -33,6 +34,9 @@ class InstructorCourseControllerTest {
 
     @MockitoBean
     private CourseQueryUseCase courseQueryUseCase;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
 
     @Test
     void findCoursesByInstructor_returnsApiResponse() throws Exception {

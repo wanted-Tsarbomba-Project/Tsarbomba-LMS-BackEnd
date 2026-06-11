@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AdminAuthErrorCode implements ErrorCode {
 
+    ADMIN_PERMISSION_REQUIRED(
+            "ADM-AUTH-001",
+            "관리자 권한이 없습니다."
+    ),
     USER_MANAGEMENT_PERMISSION_REQUIRED(
             "ADM-AUTH-002",
             "유저 관리 권한이 없습니다. MASTER 관리자에게 권한 부여를 요청해주세요."

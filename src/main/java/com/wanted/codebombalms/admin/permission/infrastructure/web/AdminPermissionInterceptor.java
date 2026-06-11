@@ -1,7 +1,9 @@
 package com.wanted.codebombalms.admin.permission.infrastructure.web;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
+import com.wanted.codebombalms.admin.permission.domain.exception.AdminAuthErrorCode;
 import com.wanted.codebombalms.admin.permission.domain.model.AdminPermissionType;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +72,7 @@ public class AdminPermissionInterceptor implements HandlerInterceptor {
 
         Long adminUserId = extractUserId(authentication.getPrincipal());
         if (adminUserId == null) {
-            return true;
+            throw new ForbiddenException(AdminAuthErrorCode.ADMIN_PERMISSION_REQUIRED);
         }
 
         adminPermissionCheckService.requirePermission(
