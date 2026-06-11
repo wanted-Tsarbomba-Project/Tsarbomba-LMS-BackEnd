@@ -7,10 +7,11 @@ import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,13 +36,19 @@ public class LectureRepositoryAdapter implements LectureRepository {
 
     @Override
     public List<Lecture> findByDeletedAtIsNull() {
-        Map<Long, Course> courses = new HashMap<>();
-        return springDataLectureRepository.findByDeletedAtIsNull()
+        List<LectureJpaEntity> entities = springDataLectureRepository.findByDeletedAtIsNull();
+        if (entities.isEmpty()) {
+            return List.of();
+        }
+
+        Set<Long> courseIds = entities.stream()
+                .map(LectureJpaEntity::getCourseId)
+                .collect(Collectors.toSet());
+        Map<Long, Course> courses = courseCatalogPort.findCourses(courseIds);
+
+        return entities
                 .stream()
-                .map(entity -> entity.toDomain(courses.computeIfAbsent(
-                        entity.getCourseId(),
-                        courseCatalogPort::findCourse
-                )))
+                .map(entity -> entity.toDomain(courses.get(entity.getCourseId())))
                 .toList();
     }
 

@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @ToString
-@Table(name = "lecture")
+@Table(
+        name = "lecture",
+        indexes = @Index(name = "idx_lecture_course_id", columnList = "course_id")
+)
 public class LectureJpaEntity {
 
     @Id

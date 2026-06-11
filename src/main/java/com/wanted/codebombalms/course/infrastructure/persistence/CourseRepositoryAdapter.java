@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -73,6 +74,14 @@ public class CourseRepositoryAdapter implements CourseRepository {
     public Optional<Course> findByCourseIdAndDeletedAtIsNull(Long courseId) {
         return springDataCourseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
                 .map(CourseJpaEntity::toDomain);
+    }
+
+    @Override
+    public List<Course> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds) {
+        return springDataCourseRepository.findByCourseIdInAndDeletedAtIsNull(courseIds)
+                .stream()
+                .map(CourseJpaEntity::toDomain)
+                .toList();
     }
 
     @Override

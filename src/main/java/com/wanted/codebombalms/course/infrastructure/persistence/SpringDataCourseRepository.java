@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +26,8 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     List<CourseJpaEntity> findByCourseCategory_CourseCategoryIdAndDeletedAtIsNull(Long courseCategoryId);
 
     Optional<CourseJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    List<CourseJpaEntity> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds);
 
     Optional<CourseJpaEntity> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
 

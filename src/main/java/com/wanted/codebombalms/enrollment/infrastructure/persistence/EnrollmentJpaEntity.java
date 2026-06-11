@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @ToString
 @Table(
         name = "enrollment",
+        indexes = @Index(name = "idx_enrollment_course_id", columnList = "course_id"),
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_enrollment_user_course",
                 columnNames = {"user_id", "course_id"}
