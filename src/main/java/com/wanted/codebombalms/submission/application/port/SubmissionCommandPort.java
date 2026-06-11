@@ -12,4 +12,6 @@ public interface SubmissionCommandPort {
     Long saveCodeSubmission(CodeSubmission submission);
 
     void saveTestResults(Long submissionId, List<SubmissionTestResult> testResults);
+
+    boolean existsCorrectSubmission(Long userId, Long problemId);
 }

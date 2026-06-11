@@ -59,7 +59,7 @@ public class FastApiChatClient implements AiChatClient {
                         .content(p.content())
                         .problemType(p.problemType())
                         .explanation(p.explanation())
-                        .submittedAnswer(p.submittedAnswer())
+                        .submittedCode(p.submittedCode())
                         .build())
                 .collect(Collectors.toList());
 

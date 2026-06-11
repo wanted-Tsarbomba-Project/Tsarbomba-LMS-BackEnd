@@ -17,8 +17,8 @@ public record ProblemSubmissionResultResponse(
         @Schema(description = "문제 내용", example = "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.")
         String content,
 
-        @Schema(description = "학생이 제출한 텍스트 답안. 코드 실행형 문제에서는 null일 수 있습니다.", example = "재방문율", nullable = true)
-        String submittedAnswer,
+        @Schema(description = "학생이 제출한 코드", example = "result = df.shape", nullable = true)
+        String submittedCode,
 
         @Schema(description = "정답 여부", example = "true")
         Boolean isCorrect,
@@ -35,7 +35,7 @@ public record ProblemSubmissionResultResponse(
                 submission.problemNumber(),
                 submission.title(),
                 submission.content(),
-                submission.submittedAnswer(),
+                submission.submittedCode(),
                 submission.isCorrect(),
                 submission.submittedAt(),
                 submission.explanation()

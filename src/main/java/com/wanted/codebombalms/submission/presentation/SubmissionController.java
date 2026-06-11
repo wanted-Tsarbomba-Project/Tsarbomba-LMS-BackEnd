@@ -152,20 +152,20 @@ public class SubmissionController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "409",
-                    description = "PRB-PBL-003 - 이전 문제를 먼저 풀어야 함",
+                    description = "SUB-006 - 이미 정답 처리된 문제입니다.",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
-                                    name = "이전 문제 미해결",
+                                    name = "정답 문제 중복 제출",
                                     value = """
-                                            {
-                                              "timestamp": "2026-05-27T12:00:00",
-                                              "status": 409,
-                                              "code": "PRB-PBL-003",
-                                              "message": "이전 문제를 먼저 풀어야 합니다.",
-                                              "path": "/api/v1/problems/3002/submissions"
-                                            }
-                                            """
+                                {
+                                  "timestamp": "2026-06-11T12:00:00",
+                                  "status": 409,
+                                  "code": "SUB-006",
+                                  "message": "이미 정답 처리된 문제입니다.",
+                                  "path": "/api/v1/problems/5001/submissions"
+                                }
+                                """
                             )
                     )
             ),

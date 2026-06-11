@@ -37,6 +37,7 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
         return new CodeSubmissionResult(
                 submission.getSubmissionId(),
                 submission.getProblem().getProblemId(),
+                submission.getSubmittedCode(),
                 submission.getCorrect(),
                 submission.getPassedTestCount(),
                 submission.getTotalTestCount(),
