@@ -11,7 +11,7 @@ public class ChatRoom {
     private final Long userId;
     private final Long problemSetId;
     private final Long problemId;
-    private final String title;
+    private String title;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -42,6 +42,11 @@ public class ChatRoom {
     }
 
     public void updateTimestamp(Instant now) {
+        this.updatedAt = now;
+    }
+
+    public void rename(String newTitle, Instant now) {
+        this.title = newTitle;
         this.updatedAt = now;
     }
 

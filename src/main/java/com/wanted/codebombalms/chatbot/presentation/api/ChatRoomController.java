@@ -25,6 +25,8 @@ import com.wanted.codebombalms.chatbot.presentation.api.request.ChatMessageReque
 import com.wanted.codebombalms.chatbot.presentation.api.response.AiChatResponse;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.wanted.codebombalms.chatbot.presentation.api.request.RenameChatRoomRequest;
+import com.wanted.codebombalms.chatbot.presentation.api.response.RenameChatRoomResponse;
 
 @Tag(name = "Chatbot - 채팅방", description = "AI 채팅방 생성/조회/삭제 및 메시지 전송 API")
 @PreAuthorize("isAuthenticated()")  // ← 추가
@@ -282,6 +284,38 @@ public class ChatRoomController {
                 ApiResponse.success(
                         ChatResponseCode.MESSAGE_SENT,
                         ChatResponseMessage.MESSAGE_SENT,
+                        response
+                )
+        );
+    }
+
+    @Operation(
+            summary = "채팅방 제목 수정",
+            description = "채팅방 제목을 변경합니다. 본인 채팅방만 가능합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200", description = "제목 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403", description = "CHT-002 - 권한 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404", description = "CHT-001 - 채팅방 없음")
+    })
+    @PatchMapping("/{roomId}")
+    public ResponseEntity<ApiResponse<RenameChatRoomResponse>> renameChatRoom(
+            @Parameter(description = "제목을 수정할 채팅방 ID", example = "1")
+            @PathVariable Long roomId,
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody RenameChatRoomRequest request
+    ) {
+        RenameChatRoomResponse response = RenameChatRoomResponse.from(
+                chatRoomCommandUseCase.rename(roomId, userId, request.title())
+        );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        ChatResponseCode.ROOM_RENAMED,
+                        ChatResponseMessage.ROOM_RENAMED,
                         response
                 )
         );
