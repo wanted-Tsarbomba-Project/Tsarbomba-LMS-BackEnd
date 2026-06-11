@@ -4,6 +4,8 @@ public interface LearningProblemPort {
 
     ProblemForLearning loadProblem(Long problemId);
 
+    boolean existsProblem(Long problemId);
+
     boolean existsProblemInSet(Long problemSetId, Long problemId);
 
     record ProblemForLearning(

@@ -116,6 +116,10 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
 
+        if (!learningProblemPort.existsProblem(problemId)) {
+            throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_FOUND);
+        }
+
         if (!learningProblemPort.existsProblemInSet(lectureProblemSet.problemSetId(), problemId)) {
             throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_IN_LECTURE_PROBLEM_SET);
         }

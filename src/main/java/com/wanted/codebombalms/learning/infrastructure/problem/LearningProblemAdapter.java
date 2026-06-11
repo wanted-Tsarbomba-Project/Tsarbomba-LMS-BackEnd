@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.learning.infrastructure.problem;
 
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.course.application.port.ProblemCatalogPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemPort;
 import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LearningProblemAdapter implements LearningProblemPort {
 
     private final ProblemQueryService problemQueryService;
+    private final ProblemCatalogPort problemCatalogPort;
 
     @Override
     public ProblemForLearning loadProblem(Long problemId) {
@@ -26,11 +27,12 @@ public class LearningProblemAdapter implements LearningProblemPort {
     }
 
     @Override
+    public boolean existsProblem(Long problemId) {
+        return problemCatalogPort.existsProblem(problemId);
+    }
+
+    @Override
     public boolean existsProblemInSet(Long problemSetId, Long problemId) {
-        try {
-            return problemSetId.equals(problemQueryService.findProblemForSubmission(problemId).problemSetId());
-        } catch (NotFoundException e) {
-            return false;
-        }
+        return problemCatalogPort.existsProblemInSet(problemSetId, problemId);
     }
 }
