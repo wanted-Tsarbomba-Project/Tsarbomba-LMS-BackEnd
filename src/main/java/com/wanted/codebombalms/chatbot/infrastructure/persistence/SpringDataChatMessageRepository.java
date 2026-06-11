@@ -17,4 +17,5 @@ public interface SpringDataChatMessageRepository extends JpaRepository<ChatMessa
 
     // roomId로 메시지 전체 삭제
     void deleteByRoomId(Long roomId);
+
 }
