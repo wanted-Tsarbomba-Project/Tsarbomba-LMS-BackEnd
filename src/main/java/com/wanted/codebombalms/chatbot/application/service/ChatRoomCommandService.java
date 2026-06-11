@@ -13,6 +13,8 @@ import com.wanted.codebombalms.chatbot.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.wanted.codebombalms.chatbot.application.result.RenameChatRoomResult;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +67,15 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
         }
         String trimmed = message.strip();
         return trimmed.length() <= 20 ? trimmed : trimmed.substring(0, 20) + "…";
+    }
+
+    @Override
+    public RenameChatRoomResult rename(Long roomId, Long userId, String title) {
+        ChatRoom room = chatRoomRepository.getById(roomId);
+        room.verifyOwner(userId);
+        room.rename(title, Instant.now());
+        ChatRoom saved = chatRoomRepository.save(room);
+        return new RenameChatRoomResult(saved.getId(), saved.getTitle(), saved.getUpdatedAt());
     }
 
     @Override
