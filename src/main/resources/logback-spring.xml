@@ -82,7 +82,7 @@
     </logger>
 
     <!-- 프로파일별 분기 -->
-    <springProfile name="local,dev">
+    <springProfile name="local,dev,loadtest">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="APP_FILE"/>

@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        // 모니터링 (Prometheus 스크레이핑)
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         // 인증 불필요
                         .requestMatchers("/api/v1/auth/**").permitAll()

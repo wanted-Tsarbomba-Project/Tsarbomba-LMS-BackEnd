@@ -63,7 +63,6 @@ CLAUDE.md
 .ai/
 /ai/
 .obsidian/
-_배포용*/
 .claude
 CONTEXT.md
 
@@ -80,3 +79,7 @@ __pycache__/
 
 monitoring/k6/results/*.json
 !src/main/resources/application-loadtest.yml
+
+##개인 이그노어
+forme/
+_배포용*/
