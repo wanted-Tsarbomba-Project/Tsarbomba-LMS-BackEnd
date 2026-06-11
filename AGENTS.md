@@ -77,25 +77,28 @@ Controller/Service/DTO/Repository 작성·수정, 엔드포인트 추가·변경
 ## 응답 스타일
 
 - **응답 형식**: `docs/response-style.md`를 따른다(팀 공용 — 톤·코드 제공·단계 분해·트러블슈팅 양식 등).
-- **PR·커밋 양식**: `docs/PR-COMMIT.md`를 따른다(팀 합의 양식).
+- **커밋·PR 양식**: git 전용 서브에이전트(`.claude/agents/`)에 내장. PR 본문 골격은 `.github/pull_request_template.md`.
 
 매번 적용하는 **불변 규칙**(이것만 항상 지킨다):
 
 - **한국어**로 답한다.
 - **결론 먼저**, 설명 나중. 한 응답에 너무 많은 단계를 묶지 말고 한 번에 한 단계씩.
 - 코드만 던지지 말고 **경로·설명**을 함께. 매 코드 변경 후 "빌드 확인" 권유.
-- **Git(커밋·푸시·PR·이슈)은 AI가 직접 수행**한다 → 아래 `## Git 워크플로우` 참조.
+- **Git(커밋·푸시·PR·이슈)은 전용 서브에이전트로만 수행**한다 → 아래 `## Git 워크플로우` 참조.
 
 ---
 
 ## Git 워크플로우
 
-AI가 git/`gh`를 **직접 실행할 수 있다**(과거 "AI는 텍스트만 제공" 규칙은 폐기). 단, 아래 시점 규칙을 지킨다.
+커밋·푸시·PR·이슈 생성은 **전용 서브에이전트로만 수행**한다(`.claude/agents/`). 구체 절차·가드(브랜치 가드, force 금지, 중복확인, 라벨, issue type 등)는 **각 에이전트 정의가 단일 소스**이며 여기서 중복 기술하지 않는다.
 
-- **커밋·푸시**: **사용자가 요청할 때만** 수행한다. **자동 커밋·푸시 금지** — 사용자 글로벌 규칙 "커밋·푸시는 요청할 때만"을 준수한다. 요청 시 커밋 메시지는 `docs/PR-COMMIT.md` 양식(`feat:`/`fix:`/`refactor:`/`test:`/`chore:` + 이슈번호), 푸시는 작업(feature) 브랜치로 — `develop`/`main` 등 보호 브랜치 직접 커밋·푸시 금지(브랜치 없으면 먼저 분기).
-- **PR**: `.github/pull_request_template.md` 양식 그대로 채워 `gh pr create`로 생성한다. base는 `develop`. 제목·본문은 `docs/PR-COMMIT.md` 규칙.
-- **이슈**: `.github/ISSUE_TEMPLATE/`(`task`·`feature`·`bug_report`) 양식 그대로 채워 `gh issue create`로 생성한다. **생성 전 `gh issue list`로 중복을 확인**하고, 같은 작업의 이슈가 이미 있으면 새로 만들지 말고 그 번호를 쓴다.
-- **issue type**: 이슈에 GitHub **issue type**(`Feature`/`Refactor`/`Bug`/`Chore`/`Task`)을 제목 성격에 맞게 설정한다. gh엔 `--type` 플래그가 없으므로 GraphQL `updateIssue(input:{id, issueTypeId})`로 설정한다(타입 id는 org `issueTypes` 조회).
-- **issue type**: 이슈에 GitHub **issue type**(`Feature`/`Refactor`/`Bug`/`Chore`/`Task`)을 제목 성격에 맞게 설정한다. gh엔 `--type` 플래그가 없으므로 GraphQL `updateIssue(input:{id, issueTypeId})`로 설정한다(타입 id는 org `issueTypes` 조회).
-- **라벨·담당자**: 담당자는 `@me`. 라벨은 **레포에 이미 있는 라벨**만 쓰고(작업 도메인 라벨, 예: 챗봇 → `D: ChatBot`), **새 라벨을 만들지 않는다.** 사용자가 명시 요청하기 전까지 라벨 구성을 임의로 바꾸지 않는다(기존 관례 그대로).
-- **금지**: 파괴적·이력 변경(`reset --hard`, force push, hook/서명 우회)은 **명시 요청 없이 금지**. 머지는 CODEOWNERS(PL)가 수행 — AI는 PR 생성까지.
+| 작업 | 에이전트 | 트리거 (명시 요청 시에만 위임) |
+|------|----------|--------------------------------|
+| 커밋 | `committer` | "커밋해" |
+| 푸시 | `pusher` | "푸시해" |
+| PR 생성 | `pr-creator` | "PR 올려" |
+| 이슈 생성 | `issue-creator` | "이슈 만들어" |
+
+- **커밋·푸시는 사용자가 요청할 때만** — 자동·선제 실행 금지(사용자 글로벌 규칙 준수).
+- 커밋 메시지·PR 제목/본문 **양식**은 각 에이전트 정의에 내장(PR 본문 골격은 `.github/pull_request_template.md`).
+- 머지는 CODEOWNERS(PL)가 수행 — 에이전트는 PR 생성까지.

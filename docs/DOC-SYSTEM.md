@@ -12,7 +12,7 @@
 | 교차 도메인 경계·관계 | `CONTEXT-MAP.md` (루트) | 공용·커밋 (PL 소유) |
 | 팀 결정·이유 | `docs/adr/` | 공용·커밋 (PL 소유) |
 | 팀 규약(에러코드 등) | `docs/CONVENTION.md` | 공용·커밋 |
-| PR·커밋 양식 | `docs/PR-COMMIT.md` | 공용·커밋 |
+| 커밋·PR 양식·실행 | git 서브에이전트 `.claude/agents/` + `.github/pull_request_template.md` | 공용·커밋 |
 | AI 응답 형식 | `docs/response-style.md` | 공용·커밋 |
 | 도메인 불변 핵심(역할·용어) | `src/.../<도메인>/README.md` | 공용·커밋 (오너) |
 | 개인 진행상황·도메인 상세 | `.ai/local/` | 개인·git-ignore |
@@ -38,7 +38,7 @@
 # 도메인 README 슬림화 가이드 (오너용)
 
 > 대상: 각 도메인 오너. 자기 도메인 `README.md`를 **불변 핵심만** 남기고 줄이는 작업.
-> 근거: 위 owns-what + [`CONTEXT-MAP.md`](../CONTEXT-MAP.md). 본보기: [`chatbot/README.md`](../src/main/java/com/wanted/codebombalms/chatbot/README.md) (28줄).
+> 근거: 위 owns-what + [`CONTEXT-MAP.md`](CONTEXT-MAP.md). 본보기: [`chatbot/README.md`](../src/main/java/com/wanted/codebombalms/chatbot/README.md) (28줄).
 
 **왜 슬림화하나** — README에 패키지 구조·서비스 목록·API 표·흐름을 적으면 코드가 바뀔 때마다 같이 썩는다(드리프트). 그래서 위 owns-what 표대로 성질별로 나눈다.
 
@@ -79,7 +79,7 @@
 
 1. 위 표대로 패키지구조/서비스/API 섹션 **삭제**.
 2. `핵심 흐름`이 아까우면 도메인 폴더 밖 개인 `.ai/local/`로 옮긴다(커밋 안 됨).
-3. `다른 도메인과의 연동` 표 → `## 경계` 한 줄로 교체. 네 도메인의 실제 엣지가 [`CONTEXT-MAP.md`](../CONTEXT-MAP.md)에 맞는지 확인하고, 틀리면 PL(또는 PR)로 교정 요청.
+3. `다른 도메인과의 연동` 표 → `## 경계` 한 줄로 교체. 네 도메인의 실제 엣지가 [`CONTEXT-MAP.md`](CONTEXT-MAP.md)에 맞는지 확인하고, 틀리면 PL(또는 PR)로 교정 요청.
 4. `주요 모델` 용어가 CONTEXT-MAP·이웃 도메인과 같은 단어인지 확인(같은 개념 다른 이름 금지).
 5. 슬림 후 20~30줄 내외면 정상. chatbot(28줄) 기준.
 

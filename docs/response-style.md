@@ -1,6 +1,6 @@
 # 응답 스타일 (팀 공용)
 
-> 팀 AI 어시스턴트(Claude/Codex 등)가 따르는 응답 형식 가이드. PR/커밋 양식은 `docs/PR-COMMIT.md`(번호 2·3은 그쪽으로 분리됨).
+> 팀 AI 어시스턴트(Claude/Codex 등)가 따르는 응답 형식 가이드. 커밋/PR 양식·실행은 git 전용 서브에이전트(`.claude/agents/` — `committer`/`pr-creator`), PR 본문 골격은 `.github/pull_request_template.md`.
 
 ---
 ## 🎨 응답 스타일 가이드
