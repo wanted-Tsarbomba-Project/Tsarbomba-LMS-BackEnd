@@ -1,7 +1,5 @@
 package com.wanted.codebombalms.enrollment.infrastructure.persistence;
 
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
@@ -16,33 +14,29 @@ import java.util.Optional;
 public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     private final SpringDataEnrollmentRepository springDataEnrollmentRepository;
-    private final SpringDataCourseRepository springDataCourseRepository;
 
     @Override
     public Enrollment save(Enrollment enrollment) {
-        CourseJpaEntity courseEntity = springDataCourseRepository.findById(enrollment.getCourseId())
-                .orElseThrow();
-
         EnrollmentJpaEntity entity = enrollment.getEnrollmentId() == null
-                ? EnrollmentJpaEntity.from(enrollment, courseEntity)
+                ? EnrollmentJpaEntity.from(enrollment)
                 : springDataEnrollmentRepository.findById(enrollment.getEnrollmentId())
                 .map(found -> {
-                    found.apply(enrollment, courseEntity);
+                    found.apply(enrollment);
                     return found;
                 })
-                .orElseGet(() -> EnrollmentJpaEntity.from(enrollment, courseEntity));
+                .orElseGet(() -> EnrollmentJpaEntity.from(enrollment));
 
         return springDataEnrollmentRepository.save(entity).toDomain();
     }
 
     @Override
     public boolean existsByCourseIdAndUserIdAndStatus(Long courseId, Long userId, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.existsByCourse_CourseIdAndUserIdAndStatus(courseId, userId, status);
+        return springDataEnrollmentRepository.existsByCourseIdAndUserIdAndStatus(courseId, userId, status);
     }
 
     @Override
     public boolean existsByCourseIdAndUserId(Long courseId, Long userId) {
-        return springDataEnrollmentRepository.existsByCourse_CourseIdAndUserId(courseId, userId);
+        return springDataEnrollmentRepository.existsByCourseIdAndUserId(courseId, userId);
     }
 
     @Override
@@ -55,7 +49,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
 
     @Override
     public List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status) {
-        return springDataEnrollmentRepository.findByCourse_CourseIdAndStatus(courseId, status)
+        return springDataEnrollmentRepository.findByCourseIdAndStatus(courseId, status)
                 .stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
@@ -73,7 +67,7 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
             Long userId,
             EnrollmentStatus status
     ) {
-        return springDataEnrollmentRepository.findByCourse_CourseIdAndUserIdAndStatus(courseId, userId, status)
+        return springDataEnrollmentRepository.findByCourseIdAndUserIdAndStatus(courseId, userId, status)
                 .map(EnrollmentJpaEntity::toDomain);
     }
 

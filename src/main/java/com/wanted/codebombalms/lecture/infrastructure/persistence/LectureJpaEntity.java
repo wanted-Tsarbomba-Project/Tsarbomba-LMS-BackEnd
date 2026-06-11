@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.lecture.infrastructure.persistence;
 
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
+import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import jakarta.persistence.*;
@@ -14,7 +14,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @ToString
-@Table(name = "lecture")
+@Table(
+        name = "lecture",
+        indexes = @Index(name = "idx_lecture_course_id", columnList = "course_id")
+)
 public class LectureJpaEntity {
 
     @Id
@@ -22,10 +25,8 @@ public class LectureJpaEntity {
     @Column(name = "lecture_id")
     private Long lectureId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false)
-    @ToString.Exclude
-    private CourseJpaEntity course;
+    @Column(name = "course_id", nullable = false)
+    private Long courseId;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -56,7 +57,7 @@ public class LectureJpaEntity {
     private LocalDateTime deletedAt;
 
     public LectureJpaEntity(
-            CourseJpaEntity course,
+            Long courseId,
             String title,
             String description,
             String videoUrl,
@@ -64,7 +65,7 @@ public class LectureJpaEntity {
             LectureStatus status,
             Integer lectureOrder
     ) {
-        this.course = course;
+        this.courseId = courseId;
         this.title = title;
         this.description = description;
         this.videoUrl = videoUrl;
@@ -73,9 +74,9 @@ public class LectureJpaEntity {
         this.lectureOrder = lectureOrder;
     }
 
-    public static LectureJpaEntity from(Lecture lecture, CourseJpaEntity course) {
+    public static LectureJpaEntity from(Lecture lecture) {
         LectureJpaEntity entity = new LectureJpaEntity(
-                course,
+                lecture.getCourse().getCourseId(),
                 lecture.getTitle(),
                 lecture.getDescription(),
                 lecture.getVideoUrl(),
@@ -90,8 +91,8 @@ public class LectureJpaEntity {
         return entity;
     }
 
-    public void apply(Lecture lecture, CourseJpaEntity course) {
-        this.course = course;
+    public void apply(Lecture lecture) {
+        this.courseId = lecture.getCourse().getCourseId();
         this.title = lecture.getTitle();
         this.description = lecture.getDescription();
         this.videoUrl = lecture.getVideoUrl();
@@ -101,10 +102,10 @@ public class LectureJpaEntity {
         this.deletedAt = lecture.getDeletedAt();
     }
 
-    public Lecture toDomain() {
+    public Lecture toDomain(Course course) {
         return Lecture.restore(
                 lectureId,
-                course.toDomain(),
+                course,
                 title,
                 description,
                 videoUrl,

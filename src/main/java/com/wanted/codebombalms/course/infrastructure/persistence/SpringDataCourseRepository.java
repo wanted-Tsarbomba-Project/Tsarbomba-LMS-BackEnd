@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,6 +26,8 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     List<CourseJpaEntity> findByCourseCategory_CourseCategoryIdAndDeletedAtIsNull(Long courseCategoryId);
 
     Optional<CourseJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    List<CourseJpaEntity> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds);
 
     Optional<CourseJpaEntity> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
 
@@ -64,7 +67,7 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     @Query("""
             select l.lectureId
             from LectureJpaEntity l
-            where l.course.courseId in :courseIds
+            where l.courseId in :courseIds
             """)
     List<Long> findLectureIdsByCourseIds(@Param("courseIds") List<Long> courseIds);
 
@@ -101,14 +104,14 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             delete from LectureJpaEntity l
-            where l.course.courseId in :courseIds
+            where l.courseId in :courseIds
             """)
     int deleteLecturesByCourseIds(@Param("courseIds") List<Long> courseIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             delete from EnrollmentJpaEntity e
-            where e.course.courseId in :courseIds
+            where e.courseId in :courseIds
             """)
     int deleteEnrollmentsByCourseIds(@Param("courseIds") List<Long> courseIds);
 

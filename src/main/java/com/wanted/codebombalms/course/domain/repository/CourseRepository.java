@@ -5,6 +5,7 @@ import com.wanted.codebombalms.course.domain.model.CourseStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface CourseRepository {
 
@@ -19,6 +20,8 @@ public interface CourseRepository {
     List<Course> findByCourseCategoryIdAndDeletedAtIsNull(Long courseCategoryId);
 
     Optional<Course> findByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    List<Course> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds);
 
     Optional<Course> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
 
