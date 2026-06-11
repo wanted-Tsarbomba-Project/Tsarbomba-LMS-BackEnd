@@ -6,7 +6,6 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
-import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class LearningLectureProblemSetAdapter implements LearningLectureProblemSetPort {
 
     private final CourseProblemQueryUseCase courseProblemQueryUseCase;
-    private final ProblemQueryService problemQueryService;
 
     @Override
     public LearningLectureProblemSet findLectureProblemSet(Long lectureProblemSetId) {
@@ -33,14 +31,5 @@ public class LearningLectureProblemSetAdapter implements LearningLectureProblemS
                 lectureProblemSet.getLectureId(),
                 lectureProblemSet.getProblemSetId()
         );
-    }
-
-    @Override
-    public boolean existsProblemInSet(Long problemSetId, Long problemId) {
-        try {
-            return problemSetId.equals(problemQueryService.findProblemForSubmission(problemId).problemSetId());
-        } catch (NotFoundException e) {
-            return false;
-        }
     }
 }

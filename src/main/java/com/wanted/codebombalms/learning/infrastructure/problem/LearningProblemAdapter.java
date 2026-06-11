@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.learning.infrastructure.problem;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.learning.application.port.LearningProblemPort;
 import com.wanted.codebombalms.problems.problem.application.service.ProblemQueryService;
 import lombok.RequiredArgsConstructor;
@@ -22,5 +23,14 @@ public class LearningProblemAdapter implements LearningProblemPort {
                 problem.attemptLimit(),
                 problem.retriable()
         );
+    }
+
+    @Override
+    public boolean existsProblemInSet(Long problemSetId, Long problemId) {
+        try {
+            return problemSetId.equals(problemQueryService.findProblemForSubmission(problemId).problemSetId());
+        } catch (NotFoundException e) {
+            return false;
+        }
     }
 }
