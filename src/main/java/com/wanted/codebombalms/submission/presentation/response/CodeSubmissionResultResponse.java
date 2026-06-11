@@ -13,6 +13,9 @@ public record CodeSubmissionResultResponse(
         @Schema(description = "문제 ID", example = "3001")
         Long problemId,
 
+        @Schema(description = "학생이 제출한 코드", example = "result = df.shape")
+        String submittedCode,
+
         @Schema(description = "정답 여부", example = "true")
         Boolean isCorrect,
 
@@ -39,6 +42,7 @@ public record CodeSubmissionResultResponse(
         this(
                 result.submissionId(),
                 result.problemId(),
+                result.submittedCode(),
                 result.correct(),
                 result.passedTestCount(),
                 result.totalTestCount(),

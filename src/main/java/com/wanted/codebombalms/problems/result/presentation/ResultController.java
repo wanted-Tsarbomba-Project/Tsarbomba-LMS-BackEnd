@@ -60,7 +60,7 @@ public class ResultController {
                                                 "problemNumber": 1,
                                                 "title": "데이터 행과 열 개수 확인",
                                                 "content": "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.",
-                                                "submittedAnswer": null,
+                                                "submittedCode": "result = df.shape",
                                                 "isCorrect": true,
                                                 "submittedAt": "2026-05-27T11:30:00",
                                                 "explanation": "df.shape는 (행 개수, 열 개수) 튜플을 반환합니다."
@@ -70,7 +70,7 @@ public class ResultController {
                                                 "problemNumber": 2,
                                                 "title": "평균 점수 계산",
                                                 "content": "score 컬럼의 평균값을 구하세요.",
-                                                "submittedAnswer": null,
+                                                "submittedCode": "result = df['score'].mean()",
                                                 "isCorrect": false,
                                                 "submittedAt": "2026-05-27T11:40:00",
                                                 "explanation": "mean() 함수를 사용하면 숫자 컬럼의 평균을 계산할 수 있습니다."
