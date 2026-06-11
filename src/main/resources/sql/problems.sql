@@ -11,10 +11,6 @@ START TRANSACTION;
 --
 -- created_by로 사용할 user_id = 30이 반드시 존재해야 합니다.
 -- =====================================================
-SELECT user_id, email, name, role
-FROM users
-WHERE user_id = 30;
-
 
 -- =====================================================
 -- 1. 문제 카테고리
