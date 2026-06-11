@@ -44,6 +44,7 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
         List<Long> lectureProblemSetIds = findLectureProblemSetIdsByCourseIds(courseIds);
 
         if (!lectureProblemSetIds.isEmpty()) {
+            deleteLectureProblemSubmissionsByLectureProblemSetIds(lectureProblemSetIds);
             deleteLectureProblemProgressesByLectureProblemSetIds(lectureProblemSetIds);
         }
         if (!lectureIds.isEmpty()) {
@@ -77,6 +78,15 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
             where cps.course.courseId in :courseIds
             """)
     List<Long> findLectureProblemSetIdsByCourseIds(@Param("courseIds") List<Long> courseIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from LectureProblemSubmissionJpaEntity s
+            where s.lectureProblemSetId in :lectureProblemSetIds
+            """)
+    int deleteLectureProblemSubmissionsByLectureProblemSetIds(
+            @Param("lectureProblemSetIds") List<Long> lectureProblemSetIds
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
