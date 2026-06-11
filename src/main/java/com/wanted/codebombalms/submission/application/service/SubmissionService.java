@@ -44,6 +44,8 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
         Long problemSetId = problem.problemSetId();
 
+        validateNotAlreadySolved(command.userId(), problemId);
+
         problemProgressPort.validateCurrentProblem(
                 command.userId(),
                 problemSetId,
@@ -51,7 +53,10 @@ public class SubmissionService implements SubmissionCommandUseCase {
         );
 
         int previousAttemptCount =
-                submissionCommandPort.countAttempts(command.userId(), problemId);
+                submissionCommandPort.countAttempts(
+                        command.userId(),
+                        problemId
+                );
 
         submissionAttemptPolicy.validateAttemptLimit(
                 problem.attemptLimit(),
@@ -159,7 +164,15 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 isCorrect ? problem.explanation() : null
         );
     }
+    private void validateNotAlreadySolved(Long userId, Long problemId) {
+        boolean alreadySolved =
+                submissionCommandPort.existsCorrectSubmission(
+                        userId,
+                        problemId
+                );
 
+        submissionAttemptPolicy.validateNotAlreadySolved(alreadySolved);
+    }
     private String generateDatasetAccessUrl(Long problemSetId) {
         String filePath =
                 loadActiveDatasetFilePathPort.loadActiveDatasetFilePath(problemSetId);

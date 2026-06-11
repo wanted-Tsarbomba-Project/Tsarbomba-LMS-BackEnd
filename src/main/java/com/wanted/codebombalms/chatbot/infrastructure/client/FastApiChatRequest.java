@@ -61,7 +61,7 @@ public class FastApiChatRequest {
         private String explanation;
 
         @JsonProperty("submitted_answer")
-        private String submittedAnswer;
+        private String submittedCode;
     }
 
     @Getter

@@ -46,7 +46,7 @@ public class ProblemSetResultQueryService implements GetProblemSetResultUseCase 
                 submission.getProblemNumber(),
                 submission.getTitle(),
                 submission.getContent(),
-                submission.getSubmittedAnswer(),
+                submission.getSubmittedCode(),
                 submission.getCorrect(),
                 submission.getSubmittedAt(),
                 submission.getExplanation()

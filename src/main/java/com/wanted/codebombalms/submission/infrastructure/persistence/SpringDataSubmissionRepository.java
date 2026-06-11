@@ -33,6 +33,11 @@ public interface SpringDataSubmissionRepository extends JpaRepository<Submission
             Pageable pageable
     );
 
+    boolean existsByUserIdAndProblem_ProblemIdAndIsCorrectTrue(
+            Long userId,
+            Long problemId
+    );
+
     @Query("""
             select new com.wanted.codebombalms.submission.application.port.ProblemSubmissionMetricPort$ProblemWrongRateMetric(
                 s.problem.problemId,

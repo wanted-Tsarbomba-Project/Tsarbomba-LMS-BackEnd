@@ -29,6 +29,15 @@ public class SubmissionCommandPersistenceAdapter implements SubmissionCommandPor
     }
 
     @Override
+    public boolean existsCorrectSubmission(Long userId, Long problemId) {
+        return submissionRepository
+                .existsByUserIdAndProblem_ProblemIdAndIsCorrectTrue(
+                        userId,
+                        problemId
+                );
+    }
+
+    @Override
     public Long saveCodeSubmission(CodeSubmission submission) {
         ProblemJpaEntity problem = entityManager.getReference(
                 ProblemJpaEntity.class,

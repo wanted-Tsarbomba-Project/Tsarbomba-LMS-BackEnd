@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.submission.application.policy;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.submission.exception.SubmissionErrorCode;
 import org.springframework.stereotype.Component;
@@ -31,5 +32,13 @@ public class SubmissionAttemptPolicy {
         }
 
         return remainingAttemptCount == null || remainingAttemptCount > 0;
+    }
+
+    public void validateNotAlreadySolved(boolean alreadySolved) {
+        if (alreadySolved) {
+            throw new ConflictException(
+                    SubmissionErrorCode.PROBLEM_ALREADY_SOLVED
+            );
+        }
     }
 }

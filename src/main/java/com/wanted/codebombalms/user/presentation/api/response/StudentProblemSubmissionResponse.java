@@ -49,9 +49,6 @@ public record StudentProblemSubmissionResponse(
         @Schema(description = "제출 ID", example = "5001")
         Long submissionId,
 
-        @Schema(description = "사용자가 제출한 텍스트 답안", example = "정답 수와 전체 제출 수", nullable = true)
-        String submittedAnswer,
-
         @Schema(description = "사용자가 제출한 코드", example = "result = df.shape", nullable = true)
         String submittedCode,
 
@@ -88,7 +85,6 @@ public record StudentProblemSubmissionResponse(
                 item.retriable(),
 
                 item.submissionId(),
-                item.submittedAnswer(),
                 item.submittedCode(),
                 item.correct(),
                 item.earnedPoint(),
