@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.learning.controller;
 
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
 import com.wanted.codebombalms.learning.application.usecase.AdminLearningProgressQueryUseCase;
@@ -68,6 +69,9 @@ class LearningControllerTest {
 
     @MockitoBean
     private AdminLearningProgressQueryUseCase adminLearningProgressQueryUseCase;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
 
     @Test
     void recordLectureProgressReturnsApiResponse() throws Exception {

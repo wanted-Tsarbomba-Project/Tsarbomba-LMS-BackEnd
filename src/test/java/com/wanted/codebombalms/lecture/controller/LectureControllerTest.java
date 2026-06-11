@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.lecture.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
@@ -51,6 +52,9 @@ class LectureControllerTest {
 
     @MockitoBean
     private LectureQueryUseCase lectureQueryUseCase;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
 
     @Test
     void findLecturesByCourseId_returnsApiResponse() throws Exception {
