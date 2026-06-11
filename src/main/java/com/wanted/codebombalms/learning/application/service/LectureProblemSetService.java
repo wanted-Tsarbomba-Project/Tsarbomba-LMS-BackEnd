@@ -4,6 +4,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
+import com.wanted.codebombalms.learning.application.port.LearningProblemPort;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemProgressCommandUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemSetQueryUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemSubmissionUseCase;
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LectureProblemSetService implements LectureProblemSetQueryUseCase, LectureProblemSubmissionUseCase {
 
     private final LearningLectureProblemSetPort learningLectureProblemSetPort;
+    private final LearningProblemPort learningProblemPort;
     private final EnterProblemSetUseCase enterProblemSetUseCase;
     private final GetProblemProgressUseCase getProblemProgressUseCase;
     private final SubmissionCommandUseCase submissionCommandUseCase;
@@ -114,7 +116,11 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
 
-        if (!learningLectureProblemSetPort.existsProblemInSet(lectureProblemSet.problemSetId(), problemId)) {
+        if (!learningProblemPort.existsProblem(problemId)) {
+            throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_FOUND);
+        }
+
+        if (!learningProblemPort.existsProblemInSet(lectureProblemSet.problemSetId(), problemId)) {
             throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_IN_LECTURE_PROBLEM_SET);
         }
 
