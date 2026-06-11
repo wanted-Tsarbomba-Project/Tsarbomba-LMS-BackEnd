@@ -16,13 +16,13 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
     Optional<LectureJpaEntity> findByLectureIdAndDeletedAtIsNull(Long lectureId);
 
-    List<LectureJpaEntity> findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
+    List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
-    List<LectureJpaEntity> findByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
+    List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
 
-    boolean existsByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
+    boolean existsByCourseIdAndDeletedAtIsNull(Long courseId);
 
-    boolean existsByCourse_CourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
+    boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
 
     @Transactional
     default int hardDeleteByDeletedAtBefore(LocalDateTime threshold) {

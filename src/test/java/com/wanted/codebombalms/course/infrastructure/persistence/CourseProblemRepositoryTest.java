@@ -9,6 +9,7 @@ import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.lecture.infrastructure.course.CourseCatalogAdapter;
 import com.wanted.codebombalms.lecture.infrastructure.persistence.LectureRepositoryAdapter;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Import({
         CourseRepositoryAdapter.class,
         CourseProblemSetRepositoryAdapter.class,
+        CourseCatalogAdapter.class,
         LectureRepositoryAdapter.class
 })
 @DisplayName("Course problem repository test")

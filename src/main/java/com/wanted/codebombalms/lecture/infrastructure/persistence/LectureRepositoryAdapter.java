@@ -1,13 +1,15 @@
 package com.wanted.codebombalms.lecture.infrastructure.persistence;
 
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -15,53 +17,60 @@ import java.util.Optional;
 public class LectureRepositoryAdapter implements LectureRepository {
 
     private final SpringDataLectureRepository springDataLectureRepository;
-    private final SpringDataCourseRepository springDataCourseRepository;
+    private final CourseCatalogPort courseCatalogPort;
 
     @Override
     public Lecture save(Lecture lecture) {
-        CourseJpaEntity courseEntity = springDataCourseRepository.findById(lecture.getCourse().getCourseId())
-                .orElseThrow();
         LectureJpaEntity entity = lecture.getLectureId() == null
-                ? LectureJpaEntity.from(lecture, courseEntity)
+                ? LectureJpaEntity.from(lecture)
                 : springDataLectureRepository.findById(lecture.getLectureId())
                 .map(found -> {
-                    found.apply(lecture, courseEntity);
+                    found.apply(lecture);
                     return found;
                 })
-                .orElseGet(() -> LectureJpaEntity.from(lecture, courseEntity));
+                .orElseGet(() -> LectureJpaEntity.from(lecture));
 
-        return springDataLectureRepository.save(entity).toDomain();
+        return springDataLectureRepository.save(entity).toDomain(lecture.getCourse());
     }
 
     @Override
     public List<Lecture> findByDeletedAtIsNull() {
+        Map<Long, Course> courses = new HashMap<>();
         return springDataLectureRepository.findByDeletedAtIsNull()
                 .stream()
-                .map(LectureJpaEntity::toDomain)
+                .map(entity -> entity.toDomain(courses.computeIfAbsent(
+                        entity.getCourseId(),
+                        courseCatalogPort::findCourse
+                )))
                 .toList();
     }
 
     @Override
     public Optional<Lecture> findByLectureIdAndDeletedAtIsNull(Long lectureId) {
         return springDataLectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .map(LectureJpaEntity::toDomain);
+                .map(this::toDomain);
     }
 
     @Override
     public List<Lecture> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId) {
-        return springDataLectureRepository.findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
+        Course course = courseCatalogPort.findCourse(courseId);
+        return springDataLectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
                 .stream()
-                .map(LectureJpaEntity::toDomain)
+                .map(entity -> entity.toDomain(course))
                 .toList();
     }
 
     @Override
     public boolean existsByCourseIdAndDeletedAtIsNull(Long courseId) {
-        return springDataLectureRepository.existsByCourse_CourseIdAndDeletedAtIsNull(courseId);
+        return springDataLectureRepository.existsByCourseIdAndDeletedAtIsNull(courseId);
     }
 
     @Override
     public boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId) {
-        return springDataLectureRepository.existsByCourse_CourseIdAndLectureIdAndDeletedAtIsNull(courseId, lectureId);
+        return springDataLectureRepository.existsByCourseIdAndLectureIdAndDeletedAtIsNull(courseId, lectureId);
+    }
+
+    private Lecture toDomain(LectureJpaEntity entity) {
+        return entity.toDomain(courseCatalogPort.findCourse(entity.getCourseId()));
     }
 }

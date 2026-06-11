@@ -20,6 +20,7 @@ import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLec
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.lecture.infrastructure.course.CourseCatalogAdapter;
 import com.wanted.codebombalms.lecture.infrastructure.persistence.LectureRepositoryAdapter;
 import com.wanted.codebombalms.lecture.infrastructure.persistence.SpringDataLectureRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 })
 @Import({
         CourseRepositoryAdapter.class,
+        CourseCatalogAdapter.class,
         LectureRepositoryAdapter.class,
         CourseProblemSetRepositoryAdapter.class,
         EnrollmentRepositoryAdapter.class
