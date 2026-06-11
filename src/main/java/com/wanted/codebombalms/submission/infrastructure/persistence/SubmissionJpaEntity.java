@@ -28,9 +28,6 @@ public class SubmissionJpaEntity {
     private ProblemJpaEntity problem;
 
     @Column(columnDefinition = "TEXT")
-    private String submittedAnswer;
-
-    @Column(columnDefinition = "TEXT")
     private String submittedCode;
 
     private Boolean isCorrect;
@@ -58,14 +55,13 @@ public class SubmissionJpaEntity {
     public SubmissionJpaEntity(
             Long userId,
             ProblemJpaEntity problem,
-            String submittedAnswer,
+            String submittedCode,
             Boolean isCorrect,
             Integer attemptNo
     ) {
         this.userId = userId;
         this.problem = problem;
-        this.submittedAnswer = submittedAnswer;
-        this.submittedCode = null;
+        this.submittedCode = submittedCode;
         this.isCorrect = isCorrect;
         this.attemptNo = attemptNo;
         this.passedTestCount = 0;
@@ -88,7 +84,6 @@ public class SubmissionJpaEntity {
     ) {
         this.userId = userId;
         this.problem = problem;
-        this.submittedAnswer = null;
         this.submittedCode = submittedCode;
         this.isCorrect = isCorrect;
         this.attemptNo = attemptNo;
@@ -109,10 +104,6 @@ public class SubmissionJpaEntity {
 
     public ProblemJpaEntity getProblem() {
         return problem;
-    }
-
-    public String getSubmittedAnswer() {
-        return submittedAnswer;
     }
 
     public String getSubmittedCode() {

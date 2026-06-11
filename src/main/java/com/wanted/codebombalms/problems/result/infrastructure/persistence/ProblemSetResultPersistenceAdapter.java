@@ -68,7 +68,7 @@ public class ProblemSetResultPersistenceAdapter implements
                         problem.getProblemOrder(),
                         problem.getTitle(),
                         problem.getContent(),
-                        submission.getSubmittedAnswer(),
+                        submission.getSubmittedCode(),
                         submission.getCorrect(),
                         submission.getSubmittedAt(),
                         problem.getExplanation()

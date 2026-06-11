@@ -10,6 +10,7 @@ public interface CodeSubmissionResultQueryUseCase {
     record CodeSubmissionResultView(
             Long submissionId,
             Long problemId,
+            String submittedCode,
             Boolean correct,
             Integer passedTestCount,
             Integer totalTestCount,

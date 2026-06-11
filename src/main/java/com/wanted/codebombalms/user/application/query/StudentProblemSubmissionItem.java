@@ -19,7 +19,6 @@ public record StudentProblemSubmissionItem(
         Boolean retriable,
 
         Long submissionId,
-        String submittedAnswer,
         String submittedCode,
         Boolean correct,
         Integer earnedPoint,

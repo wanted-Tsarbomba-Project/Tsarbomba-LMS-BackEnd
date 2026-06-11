@@ -24,6 +24,7 @@ public class CodeSubmissionResultQueryService implements CodeSubmissionResultQue
         return new CodeSubmissionResultView(
                 result.submissionId(),
                 result.problemId(),
+                result.submittedCode(),
                 result.correct(),
                 result.passedTestCount(),
                 result.totalTestCount(),

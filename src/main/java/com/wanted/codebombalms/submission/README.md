@@ -1,6 +1,6 @@
 # Submission Domain
 
-`submission` 도메인은 문제 답안 제출과 코드 제출 채점 결과 관리를 담당한다. 텍스트 답안 채점, 코드 테스트 케이스 채점, 제출 이력 조회, 문제별 오답률 조회, 문제 해결 이벤트 발행이 포함된다.
+`submission` 도메인은 코드 제출 채점 결과 관리를 담당한다. 코드 테스트 케이스 채점, 제출 이력 조회, 문제별 오답률 조회, 문제 해결 이벤트 발행이 포함된다.
 
 ## 주요 역할
 
@@ -38,7 +38,6 @@ submission
 
 | 모델 | 설명 |
 | --- | --- |
-| `TextSubmission` | 일반 답안 제출 |
 | `CodeSubmission` | 코드 문제 제출 |
 | `SubmissionTestResult` | 테스트 케이스별 채점 결과 |
 | `CodeSubmissionResult` | 코드 제출 최종 결과 |
@@ -51,7 +50,6 @@ submission
 | --- | --- |
 | `SubmissionService` | 문제 제출 명령 처리 |
 | `SubmissionQueryService` | 제출 조회 |
-| `AnswerGradingService` | 일반 답안 채점 |
 | `CodeGradingService` | 코드 제출 테스트 케이스 채점 |
 | `CodeSubmissionResultQueryService` | 코드 제출 결과 상세 조회 |
 | `CodeSubmissionListQueryService` | 코드 제출 목록 조회 |

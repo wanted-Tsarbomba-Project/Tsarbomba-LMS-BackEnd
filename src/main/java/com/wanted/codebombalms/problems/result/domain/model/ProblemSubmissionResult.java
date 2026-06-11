@@ -8,7 +8,7 @@ public class ProblemSubmissionResult {
     private final Integer problemNumber;
     private final String title;
     private final String content;
-    private final String submittedAnswer;
+    private final String submittedCode;
     private final Boolean correct;
     private final LocalDateTime submittedAt;
     private final String explanation;
@@ -18,7 +18,7 @@ public class ProblemSubmissionResult {
             Integer problemNumber,
             String title,
             String content,
-            String submittedAnswer,
+            String submittedCode,
             Boolean correct,
             LocalDateTime submittedAt,
             String explanation
@@ -27,7 +27,7 @@ public class ProblemSubmissionResult {
         this.problemNumber = problemNumber;
         this.title = title;
         this.content = content;
-        this.submittedAnswer = submittedAnswer;
+        this.submittedCode = submittedCode;
         this.correct = correct;
         this.submittedAt = submittedAt;
         this.explanation = explanation;
@@ -38,7 +38,7 @@ public class ProblemSubmissionResult {
             Integer problemNumber,
             String title,
             String content,
-            String submittedAnswer,
+            String submittedCode,
             Boolean correct,
             LocalDateTime submittedAt,
             String explanation
@@ -48,7 +48,7 @@ public class ProblemSubmissionResult {
                 problemNumber,
                 title,
                 content,
-                submittedAnswer,
+                submittedCode,
                 correct,
                 submittedAt,
                 explanation
@@ -71,8 +71,8 @@ public class ProblemSubmissionResult {
         return content;
     }
 
-    public String getSubmittedAnswer() {
-        return submittedAnswer;
+    public String getSubmittedCode() {
+        return submittedCode;
     }
 
     public Boolean getCorrect() {

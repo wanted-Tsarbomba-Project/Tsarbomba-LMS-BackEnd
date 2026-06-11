@@ -6,6 +6,7 @@ import java.util.List;
 public record CodeSubmissionResult(
         Long submissionId,
         Long problemId,
+        String submittedCode,
         Boolean correct,
         Integer passedTestCount,
         Integer totalTestCount,

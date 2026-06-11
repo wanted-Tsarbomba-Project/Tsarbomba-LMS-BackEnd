@@ -25,7 +25,7 @@ public interface GetProblemSetResultUseCase {
             Integer problemNumber,
             String title,
             String content,
-            String submittedAnswer,
+            String submittedCode,
             Boolean isCorrect,
             LocalDateTime submittedAt,
             String explanation

@@ -37,7 +37,6 @@ public class StudentProblemSubmissionQueryAdapter implements StudentProblemSubmi
                     p.isRetriable as retriable,
 
                     s.submissionId as submissionId,
-                    s.submittedAnswer as submittedAnswer,
                     s.submittedCode as submittedCode,
                     s.isCorrect as correct,
                     coalesce(ph.point, 0) as earnedPoint,
@@ -119,7 +118,6 @@ public class StudentProblemSubmissionQueryAdapter implements StudentProblemSubmi
                 tuple.get("retriable", Boolean.class),
 
                 tuple.get("submissionId", Long.class),
-                tuple.get("submittedAnswer", String.class),
                 tuple.get("submittedCode", String.class),
                 tuple.get("correct", Boolean.class),
                 tuple.get("earnedPoint", Integer.class),

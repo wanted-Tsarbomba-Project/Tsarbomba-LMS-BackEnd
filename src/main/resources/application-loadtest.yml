@@ -1,4 +1,4 @@
-spring:
+docker info | Select-String -Pattern "Proxy"spring:
   datasource:
     url: jdbc:mysql://localhost:3307/lms_loadtest?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: lms_loadtest
