@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.course.controller;
 
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.course.application.command.ConfigureCourseProblemSetsCommand;
 import com.wanted.codebombalms.course.application.usecase.CourseProblemCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
@@ -40,6 +41,9 @@ class CourseProblemControllerTest {
 
     @MockitoBean
     private CourseProblemCommandUseCase courseProblemCommandUseCase;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
 
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {

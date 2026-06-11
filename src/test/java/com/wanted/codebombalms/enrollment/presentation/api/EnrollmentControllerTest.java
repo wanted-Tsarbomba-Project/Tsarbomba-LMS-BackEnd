@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.enrollment.presentation.api;
 
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
@@ -59,6 +60,9 @@ class EnrollmentControllerTest {
 
     @MockitoBean
     private CourseCatalogPort courseCatalogPort;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
 
     @TestConfiguration
     @EnableMethodSecurity
