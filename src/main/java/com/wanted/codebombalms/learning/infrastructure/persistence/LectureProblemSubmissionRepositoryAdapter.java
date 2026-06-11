@@ -31,7 +31,7 @@ public class LectureProblemSubmissionRepositoryAdapter implements LectureProblem
             Long userId,
             Long lectureProblemSetId
     ) {
-        return repository.findByUserIdAndLectureProblemSetIdOrderBySubmittedAtDesc(
+        return repository.findByUserIdAndLectureProblemSetIdOrderBySubmittedAtDescLectureProblemSubmissionIdDesc(
                         userId,
                         lectureProblemSetId
                 )
