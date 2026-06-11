@@ -5,6 +5,8 @@ import com.wanted.codebombalms.admin.permission.domain.repository.AdminPermissio
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
 public class AdminPermissionRepositoryAdapter implements AdminPermissionRepository {
@@ -20,5 +22,32 @@ public class AdminPermissionRepositoryAdapter implements AdminPermissionReposito
                 adminUserId,
                 permissionType
         );
+    }
+
+    @Override
+    public List<AdminPermissionType> findPermissionTypesByAdminUserId(Long adminUserId) {
+        return springDataRepository.findAllByAdminUserId(adminUserId)
+                .stream()
+                .map(AdminPermissionJpaEntity::getPermissionType)
+                .toList();
+    }
+
+    @Override
+    public void grant(Long adminUserId, AdminPermissionType permissionType, Long grantedBy) {
+        if (existsByAdminUserIdAndPermissionType(adminUserId, permissionType)) {
+            return;
+        }
+
+        springDataRepository.save(new AdminPermissionJpaEntity(
+                adminUserId,
+                permissionType,
+                grantedBy
+        ));
+    }
+
+    @Override
+    public void revoke(Long adminUserId, AdminPermissionType permissionType) {
+        springDataRepository.findByAdminUserIdAndPermissionType(adminUserId, permissionType)
+                .ifPresent(springDataRepository::delete);
     }
 }
