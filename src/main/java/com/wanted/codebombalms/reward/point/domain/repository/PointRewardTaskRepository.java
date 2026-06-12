@@ -10,7 +10,7 @@ public interface PointRewardTaskRepository {
 
     PointRewardTask save(PointRewardTask task);
 
-    Optional<PointRewardTask> findBySubmissionId(Long submissionId);
+    Optional<PointRewardTask> findBySubmissionIdForUpdate(Long submissionId);
 
     List<PointRewardTask> findRecoverableTasks(
             LocalDateTime now,

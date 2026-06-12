@@ -29,12 +29,12 @@ public class PendingPointRewardRecoveryService
                 RECOVERY_BATCH_SIZE
         );
 
-        int attemptedCount = 0;
+        int processedCount = 0;
 
         for (var task : tasks) {
             try {
                 processPointRewardTaskUseCase.process(task.submissionId());
-                attemptedCount++;
+                processedCount++;
             } catch (Exception e) {
                 log.error(
                         "포인트 지급 작업 재처리 호출에 실패했습니다. submissionId={}",
@@ -44,6 +44,6 @@ public class PendingPointRewardRecoveryService
             }
         }
 
-        return attemptedCount;
+        return processedCount;
     }
 }

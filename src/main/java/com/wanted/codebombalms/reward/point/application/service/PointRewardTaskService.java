@@ -7,6 +7,7 @@ import com.wanted.codebombalms.reward.point.application.usecase.ProcessPointRewa
 import com.wanted.codebombalms.reward.point.application.usecase.SchedulePointRewardTaskUseCase;
 import com.wanted.codebombalms.reward.point.domain.exception.RewardErrorCode;
 import com.wanted.codebombalms.reward.point.domain.model.PointRewardTask;
+import com.wanted.codebombalms.reward.point.domain.model.PointRewardTaskStatus;
 import com.wanted.codebombalms.reward.point.domain.repository.PointRewardTaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -48,12 +49,12 @@ public class PointRewardTaskService
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void process(Long submissionId) {
         PointRewardTask task = pointRewardTaskRepository
-                .findBySubmissionId(submissionId)
+                .findBySubmissionIdForUpdate(submissionId)
                 .orElseThrow(() -> new NotFoundException(
                         RewardErrorCode.REWARD_POINT_TASK_NOT_FOUND
                 ));
 
-        if (task.status() != com.wanted.codebombalms.reward.point.domain.model.PointRewardTaskStatus.PENDING) {
+        if (task.status() != PointRewardTaskStatus.PENDING) {
             return;
         }
 
@@ -79,7 +80,7 @@ public class PointRewardTaskService
             return;
         }
 
-        long retryDelayMinutes = task.retryCount() + 1L;
+        long retryDelayMinutes = 1L << task.retryCount();
 
         pointRewardTaskRepository.save(task.retry(
                 exception.getMessage(),
