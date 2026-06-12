@@ -1,7 +1,7 @@
 HELP.md
 .gradle
 build/
-!../gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -56,30 +56,28 @@ uploads/
 .DS_Store
 
 ### Local Dev Notes ###
-AGENT.MD
-AGENTS.md
-API_WORKLOG.MD
-CLAUDE.md
-.ai/
-/ai/
+# 공용 AI 문서(AGENTS.md, CLAUDE.md, .ai/* , CONTEXT.md, ADR)는 커밋한다 — PL이 소유/머지(CODEOWNERS).
+# 개인 작업메모(세컨드브레인)만 ignore.
+.ai/local/
 .obsidian/
-.claude
-CONTEXT.md
+_배포용*/
+# .claude 개인 설정(settings.local.json 등)은 ignore, 팀 공유 스킬·에이전트는 커밋
+.claude/*
+!.claude/skills/
+!.claude/agents/
 
+
+# docs는 통째로 ignore하되, develop의 공용 팀 문서 2개는 예외(계속 추적)
+docs/*
+!docs/CONVENTION.md
+!docs/README.md
+AGENTS.md
+CLAUDE.md
+.github/CODEOWNERS
+.claude/*
+.ai/local/
 demo
 
 architecture-user-auth.html
 
 /docs/개발블로그_작성_가이드라인.md
-
-## 모니터링
-MONITORING_GUIDE.md
-__pycache__/
-*.pyc
-
-monitoring/k6/results/*.json
-!src/main/resources/application-loadtest.yml
-
-##개인 이그노어
-forme/
-_배포용*/
