@@ -9,10 +9,13 @@ import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.course.infrastructure.persistence.CourseProblemSetRepositoryAdapter;
 import com.wanted.codebombalms.course.infrastructure.persistence.CourseRepositoryAdapter;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
+import com.wanted.codebombalms.learning.domain.model.LectureProblemSubmission;
 import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.infrastructure.persistence.LectureProblemProgressJpaEntity;
+import com.wanted.codebombalms.learning.infrastructure.persistence.LectureProblemSubmissionJpaEntity;
 import com.wanted.codebombalms.learning.infrastructure.persistence.LectureProgressJpaEntity;
 import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLectureProblemProgressRepository;
+import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLectureProblemSubmissionRepository;
 import com.wanted.codebombalms.learning.infrastructure.persistence.SpringDataLectureProgressRepository;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
@@ -60,6 +63,9 @@ class LectureRepositoryTest {
 
     @Autowired
     private SpringDataLectureProblemProgressRepository lectureProblemProgressRepository;
+
+    @Autowired
+    private SpringDataLectureProblemSubmissionRepository lectureProblemSubmissionRepository;
 
     @Test
     void saveAndFindByLectureId() {
@@ -157,6 +163,20 @@ class LectureRepositoryTest {
         lectureProblemProgressRepository.save(LectureProblemProgressJpaEntity.from(
                 LectureProblemProgress.create(1L, lectureProblemSet.getCourseProblemSetId())
         ));
+        lectureProblemSubmissionRepository.save(LectureProblemSubmissionJpaEntity.from(
+                LectureProblemSubmission.create(
+                        1L,
+                        lectureProblemSet.getCourseProblemSetId(),
+                        3001L,
+                        "answer",
+                        true,
+                        1,
+                        1,
+                        1,
+                        "SUCCESS",
+                        null
+                )
+        ));
 
         int deletedCount = springDataLectureRepository.hardDeleteByDeletedAtBefore(threshold);
 
@@ -167,6 +187,7 @@ class LectureRepositoryTest {
         assertEquals(0, courseProblemSetRepository.findByLectureId(oldDeletedLecture.getLectureId()).size());
         assertEquals(0, lectureProgressRepository.findAll().size());
         assertEquals(0, lectureProblemProgressRepository.findAll().size());
+        assertEquals(0, lectureProblemSubmissionRepository.findAll().size());
     }
 
     private Course createCourse() {
