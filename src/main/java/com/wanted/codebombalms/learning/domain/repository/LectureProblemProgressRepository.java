@@ -10,6 +10,11 @@ public interface LectureProblemProgressRepository {
 
     Optional<LectureProblemProgress> findByUserIdAndLectureProblemSetId(Long userId, Long lectureProblemSetId);
 
+    Optional<LectureProblemProgress> findByUserIdAndLectureProblemSetIdForUpdate(
+            Long userId,
+            Long lectureProblemSetId
+    );
+
     long countCompletedByUserIdAndLectureProblemSetIds(Long userId, List<Long> lectureProblemSetIds);
 
     long countCompletedByLectureProblemSetIds(List<Long> lectureProblemSetIds);
