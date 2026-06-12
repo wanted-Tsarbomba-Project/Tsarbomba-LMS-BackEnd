@@ -18,12 +18,12 @@ public class PointRewardRecoveryScheduler {
             initialDelayString = "${reward.point.recovery.initial-delay-ms:60000}"
     )
     public void recoverPendingTasks() {
-        int attemptedCount = recoverUseCase.recover();
+        int processedCount = recoverUseCase.recover();
 
-        if (attemptedCount > 0) {
+        if (processedCount > 0) {
             log.info(
-                    "포인트 지급 작업 재처리를 시도했습니다. attemptedCount={}",
-                    attemptedCount
+                    "포인트 지급 작업 재처리를 완료했습니다. processedCount={}",
+                    processedCount
             );
         }
     }

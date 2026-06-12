@@ -13,7 +13,23 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "point_reward_task")
+@Table(
+        name = "point_reward_task",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_point_reward_task_user_problem",
+                        columnNames = {"user_id", "problem_id"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_point_reward_task_submission",
+                        columnNames = "submission_id"
+                )
+        },
+        indexes = @Index(
+                name = "idx_point_reward_task_recovery",
+                columnList = "status, next_retry_at, created_at"
+        )
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -30,7 +46,7 @@ public class PointRewardTaskJpaEntity {
     @Column(name = "problem_id", nullable = false)
     private Long problemId;
 
-    @Column(name = "submission_id", nullable = false, unique = true)
+    @Column(name = "submission_id", nullable = false)
     private Long submissionId;
 
     @Column(nullable = false)

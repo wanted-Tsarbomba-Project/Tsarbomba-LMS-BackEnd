@@ -24,8 +24,8 @@ public class PointRewardTaskPersistenceAdapter
     }
 
     @Override
-    public Optional<PointRewardTask> findBySubmissionId(Long submissionId) {
-        return repository.findBySubmissionId(submissionId)
+    public Optional<PointRewardTask> findBySubmissionIdForUpdate(Long submissionId) {
+        return repository.findBySubmissionIdForUpdate(submissionId)
                 .map(PointRewardTaskJpaEntity::toDomain);
     }
 
@@ -35,7 +35,7 @@ public class PointRewardTaskPersistenceAdapter
             int limit
     ) {
         return repository
-                .findByStatusAndNextRetryAtLessThanEqualOrderByCreatedAtAsc(
+                .findByStatusAndNextRetryAtLessThanEqualOrderByNextRetryAtAscCreatedAtAsc(
                         PointRewardTaskStatus.PENDING,
                         now,
                         PageRequest.of(0, limit)
