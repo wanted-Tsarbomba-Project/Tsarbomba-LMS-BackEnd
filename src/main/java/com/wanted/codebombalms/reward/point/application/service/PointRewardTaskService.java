@@ -27,6 +27,7 @@ public class PointRewardTaskService
     private final PointRewardTaskRepository pointRewardTaskRepository;
     private final GrantProblemPointUseCase grantProblemPointUseCase;
     private final Clock clock;
+    private static final long MAX_RETRY_DELAY_MINUTES = 16L;
 
     @Override
     @Transactional
@@ -68,10 +69,24 @@ public class PointRewardTaskService
 
             pointRewardTaskRepository.save(task.complete());
         } catch (DomainException e) {
-            handleFailure(task, e);
+            handleDomainFailure(task, e);
         } catch (Exception e) {
             handleFailure(task, e);
         }
+    }
+
+    private void handleDomainFailure(
+            PointRewardTask task,
+            DomainException exception
+    ) {
+        if (isAlreadyGranted(exception)) {
+            pointRewardTaskRepository.save(task.complete());
+            return;
+        }
+
+        pointRewardTaskRepository.save(
+                task.failPermanently(exception.getMessage())
+        );
     }
 
     private void handleFailure(PointRewardTask task, Exception exception) {
@@ -80,7 +95,10 @@ public class PointRewardTaskService
             return;
         }
 
-        long retryDelayMinutes = 1L << task.retryCount();
+        long retryDelayMinutes = Math.min(
+                MAX_RETRY_DELAY_MINUTES,
+                1L << task.retryCount()
+        );
 
         pointRewardTaskRepository.save(task.retry(
                 exception.getMessage(),

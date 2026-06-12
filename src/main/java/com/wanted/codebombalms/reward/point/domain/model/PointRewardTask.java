@@ -39,6 +39,15 @@ public record PointRewardTask(
         );
     }
 
+    public PointRewardTask failPermanently(String errorMessage) {
+        return update(
+                PointRewardTaskStatus.FAILED,
+                retryCount,
+                truncate(errorMessage),
+                null
+        );
+    }
+
     public PointRewardTask complete() {
         return update(
                 PointRewardTaskStatus.COMPLETED,
