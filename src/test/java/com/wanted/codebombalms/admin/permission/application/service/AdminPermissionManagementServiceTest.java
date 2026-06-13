@@ -111,6 +111,19 @@ class AdminPermissionManagementServiceTest {
         assertEquals(AdminAuthErrorCode.INVALID_ADMIN_PERMISSION_REQUEST, exception.getErrorCode());
     }
 
+    @Test
+    @DisplayName("페이지 크기가 최대값을 초과하면 ADM-AUTH-005 예외를 던진다.")
+    void too_large_page_size_throws_validation_exception() {
+        // when
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> adminPermissionManagementService.getAdminAccounts(null, 0, 101)
+        );
+
+        // then
+        assertEquals(AdminAuthErrorCode.INVALID_ADMIN_PERMISSION_REQUEST, exception.getErrorCode());
+    }
+
     // 테스트용 사용자 도메인 객체를 만든다.
     private User createUser(Long userId, UserRole role) {
         return User.restore(

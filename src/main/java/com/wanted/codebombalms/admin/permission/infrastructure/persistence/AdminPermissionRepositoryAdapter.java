@@ -3,6 +3,7 @@ package com.wanted.codebombalms.admin.permission.infrastructure.persistence;
 import com.wanted.codebombalms.admin.permission.domain.model.AdminPermissionType;
 import com.wanted.codebombalms.admin.permission.domain.repository.AdminPermissionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,11 +39,18 @@ public class AdminPermissionRepositoryAdapter implements AdminPermissionReposito
             return;
         }
 
-        springDataRepository.save(new AdminPermissionJpaEntity(
-                adminUserId,
-                permissionType,
-                grantedBy
-        ));
+        try {
+            springDataRepository.saveAndFlush(new AdminPermissionJpaEntity(
+                    adminUserId,
+                    permissionType,
+                    grantedBy
+            ));
+        } catch (DataIntegrityViolationException e) {
+            if (existsByAdminUserIdAndPermissionType(adminUserId, permissionType)) {
+                return;
+            }
+            throw e;
+        }
     }
 
     @Override
