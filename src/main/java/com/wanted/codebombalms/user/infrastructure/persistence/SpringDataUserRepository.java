@@ -37,7 +37,7 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
                     OR LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                     OR LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
               )
-            ORDER BY u.createdAt DESC
+            ORDER BY u.createdAt DESC, u.userId DESC
             """)
     Page<UserJpaEntity> findActiveByRoleAndKeyword(
             @Param("role") UserRole role,

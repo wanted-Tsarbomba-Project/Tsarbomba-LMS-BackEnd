@@ -49,6 +49,37 @@
 
 ---
 
+## [2026-06-13] #379 #381 Admin 권한 관리 PR 리뷰 보정 ✅
+
+### 변경 파일
+
+| 파일 | 변경 |
+|------|------|
+| `src/main/java/com/wanted/codebombalms/admin/permission/application/service/AdminPermissionManagementService.java` | 수정 |
+| `src/main/java/com/wanted/codebombalms/admin/permission/infrastructure/persistence/AdminPermissionRepositoryAdapter.java` | 수정 |
+| `src/main/java/com/wanted/codebombalms/user/infrastructure/persistence/SpringDataUserRepository.java` | 수정 |
+| `src/test/java/com/wanted/codebombalms/admin/permission/application/service/AdminPermissionManagementServiceTest.java` | 수정 |
+| `src/test/java/com/wanted/codebombalms/admin/permission/infrastructure/persistence/AdminPermissionRepositoryAdapterTest.java` | 생성 |
+
+### 주요 작업 내용
+
+- admin 계정 목록 조회의 page size 상한을 100으로 제한함
+- admin permission grant 동시 요청 시 unique 충돌을 멱등 성공으로 처리하도록 보정함
+- admin 목록 조회 정렬 기준에 `userId DESC`를 추가해 페이지네이션 정렬 안정성을 보강함
+- page size 초과와 중복 grant 충돌 처리 테스트를 추가함
+
+### 트러블슈팅
+
+- **문제**: sandbox 환경에서 Gradle wrapper 다운로드가 네트워크 제한으로 실패함
+- **원인**: wrapper 배포 zip 다운로드에 외부 네트워크 접근이 필요함
+- **해결**: 승인 후 `.\gradlew.bat test --tests "com.wanted.codebombalms.admin.permission.*"`를 실행해 테스트 통과 확인
+
+### 부수 결정
+
+- PR 리뷰 중 `PATCH`/DTO validation/FK 검토 항목은 이번 최소 수정 범위에서 제외하고, 실서비스 영향이 있는 size 제한/동시성/정렬 안정성만 우선 반영함
+
+---
+
 ## [2026-06-07] #확인필요 Course / Lecture / Enrollment / Learning API 문서 정리 ✅
 
 ### 변경 파일

@@ -28,6 +28,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AdminPermissionManagementService implements GetAdminAccountsUseCase, ToggleAdminPermissionUseCase {
 
+    private static final int MAX_PAGE_SIZE = 100;
+
     private final UserRepository userRepository;
     private final AdminPermissionRepository adminPermissionRepository;
     private final AdminAccountQueryRepository adminAccountQueryRepository;
@@ -76,7 +78,7 @@ public class AdminPermissionManagementService implements GetAdminAccountsUseCase
 
     // 페이지 요청 값이 JPA PageRequest에 들어갈 수 있는 범위인지 확인한다.
     private void validatePageRequest(int page, int size) {
-        if (page < 0 || size < 1) {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
             throw new ValidationException(AdminAuthErrorCode.INVALID_ADMIN_PERMISSION_REQUEST);
         }
     }
