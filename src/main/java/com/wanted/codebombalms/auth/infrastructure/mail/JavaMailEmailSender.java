@@ -30,6 +30,18 @@ public class JavaMailEmailSender implements EmailSender {
         log.info("[EmailSender] 인증 코드 발송 완료 - to: {}", to);
     }
 
+    @Override
+    public void sendPasswordResetCode(String to, String code) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
+        message.setTo(to);
+        message.setSubject("[Code-Bomba LMS] 비밀번호 재설정 코드");
+        message.setText(buildResetBody(code));
+
+        mailSender.send(message);
+        log.info("[EmailSender] 비밀번호 재설정 코드 발송 완료 - to: {}", to);
+    }
+
     private String buildBody(String code) {
         return """
                 Code-Bomba LMS 이메일 인증 코드입니다.
@@ -38,6 +50,17 @@ public class JavaMailEmailSender implements EmailSender {
 
                 코드 유효 시간: 3분
                 본 메일을 요청하지 않으셨다면 무시해주세요.
+                """.formatted(code);
+    }
+
+    private String buildResetBody(String code) {
+        return """
+                Code-Bomba LMS 비밀번호 재설정 코드입니다.
+
+                재설정 코드: %s
+
+                코드 유효 시간: 10분
+                본인이 요청하지 않으셨다면 즉시 비밀번호를 변경해주세요.
                 """.formatted(code);
     }
 }
