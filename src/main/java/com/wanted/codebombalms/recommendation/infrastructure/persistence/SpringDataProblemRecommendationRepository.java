@@ -1,7 +1,5 @@
 package com.wanted.codebombalms.recommendation.infrastructure.persistence;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,16 +15,19 @@ public interface SpringDataProblemRecommendationRepository
                     SELECT
                         pr.recommendation_id AS recommendationId,
                         pr.problem_set_id AS problemSetId,
-                        ps.category_id AS categoryId,
-                        ps.created_by AS creatorId,
-                        pr.support AS support,
-                        pr.confidence AS confidence,
-                        pr.lift AS lift,
-                        pr.rank_no AS rankNo,
-                        pr.algorithm AS algorithm,
-                        pr.created_at AS createdAt
+                        ps.title AS title,
+                        ps.description AS description,
+                        ps.difficulty AS difficulty,
+                        CASE
+                            WHEN ps.started_user_count = 0 THEN 0.0
+                            ELSE ROUND(ps.completed_user_count * 100.0 / ps.started_user_count, 1)
+                        END AS accuracyRate,
+                        pc.category_id AS categoryId,
+                        pc.category_name AS categoryName,
+                        pr.rank_no AS rankNo
                     FROM problem_recommendation pr
                     JOIN problem_set ps ON ps.problem_set_id = pr.problem_set_id
+                    JOIN problem_category pc ON pc.category_id = ps.category_id
                     LEFT JOIN problem_progress pp
                         ON pp.user_id = pr.user_id
                         AND pp.problem_set_id = pr.problem_set_id
@@ -34,8 +35,9 @@ public interface SpringDataProblemRecommendationRepository
                     WHERE pr.user_id = :userId
                         AND pr.status = 'ACTIVE'
                         AND ps.status = 'ACTIVE'
+                        AND pc.status = 'ACTIVE'
                         AND pp.progress_id IS NULL
-                    ORDER BY pr.rank_no ASC
+                    ORDER BY pr.rank_no ASC, pr.recommendation_id ASC
                     LIMIT :limit
                     """,
             nativeQuery = true
@@ -52,20 +54,18 @@ public interface SpringDataProblemRecommendationRepository
 
         Long getProblemSetId();
 
+        String getTitle();
+
+        String getDescription();
+
+        String getDifficulty();
+
+        Double getAccuracyRate();
+
         Long getCategoryId();
 
-        Long getCreatorId();
-
-        BigDecimal getSupport();
-
-        BigDecimal getConfidence();
-
-        BigDecimal getLift();
+        String getCategoryName();
 
         Integer getRankNo();
-
-        String getAlgorithm();
-
-        LocalDateTime getCreatedAt();
     }
 }

@@ -3,10 +3,8 @@ package com.wanted.codebombalms.recommendation.application.service;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationQueryPort;
 import com.wanted.codebombalms.recommendation.application.port.RecommendationHidePort;
 import com.wanted.codebombalms.recommendation.domain.model.ProblemSetRecommendation;
-import com.wanted.codebombalms.recommendation.domain.model.RecommendationAlgorithm;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHide;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHideType;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -109,14 +107,13 @@ class ProblemRecommendationQueryServiceTest {
         return new ProblemSetRecommendation(
                 recommendationId,
                 problemSetId,
-                10L,
-                7L,
-                BigDecimal.valueOf(0.034),
-                BigDecimal.valueOf(0.72),
-                BigDecimal.valueOf(1.85),
                 rankNo,
-                RecommendationAlgorithm.APRIORI,
-                LocalDateTime.now()
+                "pandas 기초 분석 문제 세트",
+                "CSV 데이터를 불러와 기본 정보를 확인하는 문제 세트입니다.",
+                "EASY",
+                75.5,
+                10L,
+                "데이터 분석"
         );
     }
 }
