@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.wanted.codebombalms.chatbot.application.result.RenameChatRoomResult;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +29,27 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
 
     @Override
     public SendFirstMessageResult sendFirst(SendFirstMessageCommand command) {
-        ChatRoom room = createRoom(
-                command.userId(), command.problemSetId(), command.problemId(), command.userMessage());
+        ChatRoom room = getOrCreateRoom(command);
 
         AiChatResult aiResult = chatMessageCommandUseCase.send(
                 new SendMessageCommand(command.userId(), room.getId(), command.userMessage())
         );
 
         return new SendFirstMessageResult(room.getId(), aiResult.answer());
+    }
+
+    private ChatRoom getOrCreateRoom(SendFirstMessageCommand command) {
+        // 문제 채팅방(problemSetId+problemId 둘 다 있음)이면 기존 방 재사용
+        if (command.problemSetId() != null && command.problemId() != null) {
+            Optional<ChatRoom> existing = chatRoomRepository.findByUserIdAndProblem(
+                    command.userId(), command.problemSetId(), command.problemId());
+            if (existing.isPresent()) {
+                return existing.get();
+            }
+        }
+        // 자유대화 방(null) 또는 신규 문제 방은 새로 생성
+        return createRoom(
+                command.userId(), command.problemSetId(), command.problemId(), command.userMessage());
     }
 
     private ChatRoom createRoom(Long userId, Long problemSetId, Long problemId, String userMessage) {

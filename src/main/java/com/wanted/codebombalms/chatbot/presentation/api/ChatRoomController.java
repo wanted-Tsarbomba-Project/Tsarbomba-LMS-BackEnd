@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import com.wanted.codebombalms.chatbot.presentation.api.request.RenameChatRoomRequest;
 import com.wanted.codebombalms.chatbot.presentation.api.response.RenameChatRoomResponse;
+import com.wanted.codebombalms.chatbot.presentation.api.response.ChatRoomIdResponse;
 
 @Tag(name = "Chatbot - 채팅방", description = "AI 채팅방 생성/조회/삭제 및 메시지 전송 API")
 @PreAuthorize("isAuthenticated()")  // ← 추가
@@ -320,6 +321,34 @@ public class ChatRoomController {
                 )
         );
     }
+
+    @Operation(
+            summary = "문제 채팅방 단건 조회",
+            description = "문제 풀이 진입 시 해당 문제의 기존 채팅방을 조회합니다. 없으면 204."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200", description = "기존 방 존재 → roomId 반환"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "204", description = "해당 문제의 방 없음")
+    })
+    @GetMapping("/room")
+    public ResponseEntity<ApiResponse<ChatRoomIdResponse>> findProblemRoom(
+            @AuthenticationPrincipal Long userId,
+            @RequestParam Long problemSetId,
+            @RequestParam Long problemId
+    ) {
+        return chatRoomQueryUseCase.findProblemRoomId(userId, problemSetId, problemId)
+                .map(roomId -> ResponseEntity.ok(
+                        ApiResponse.success(
+                                ChatResponseCode.ROOM_RETRIEVED,
+                                ChatResponseMessage.ROOM_FOUND,
+                                new ChatRoomIdResponse(roomId)
+                        )
+                ))
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
 
     @Operation(
             summary = "채팅방 삭제",
