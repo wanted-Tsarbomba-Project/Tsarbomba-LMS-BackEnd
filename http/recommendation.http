@@ -1,0 +1,11 @@
+### 내 문제 세트 추천 목록 조회
+GET http://localhost:8080/api/v1/recommendations/problem-sets/me?limit=3
+Authorization: Bearer {{accessToken}}
+
+### 내 문제 세트 추천 목록 조회 - limit은 최대 3개로 제한
+GET http://localhost:8080/api/v1/recommendations/problem-sets/me?limit=10
+Authorization: Bearer {{accessToken}}
+
+### 내 문제 세트 추천 오늘 하루 숨김
+POST http://localhost:8080/api/v1/recommendations/problem-sets/hide-today
+Authorization: Bearer {{accessToken}}
