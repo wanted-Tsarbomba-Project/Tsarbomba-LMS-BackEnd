@@ -27,7 +27,7 @@ public class JavaMailEmailSender implements EmailSender {
         message.setText(buildBody(code));
 
         mailSender.send(message);
-        log.info("[EmailSender] 인증 코드 발송 완료 - to: {}", to);
+        log.info("[EmailSender] 인증 코드 발송 완료 - to: {}", maskEmail(to));
     }
 
     @Override
@@ -39,7 +39,19 @@ public class JavaMailEmailSender implements EmailSender {
         message.setText(buildResetBody(code));
 
         mailSender.send(message);
-        log.info("[EmailSender] 비밀번호 재설정 코드 발송 완료 - to: {}", to);
+        log.info("[EmailSender] 비밀번호 재설정 코드 발송 완료 - to: {}", maskEmail(to));
+    }
+
+    /** 로그에 이메일 평문(PII) 노출 방지 — 앞 1글자 + *** + 도메인만 남긴다. (예: j***@gmail.com) */
+    private String maskEmail(String email) {
+        if (email == null) {
+            return "null";
+        }
+        int at = email.indexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        return email.charAt(0) + "***" + email.substring(at);
     }
 
     private String buildBody(String code) {

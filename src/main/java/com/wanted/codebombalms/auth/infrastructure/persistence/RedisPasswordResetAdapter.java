@@ -23,8 +23,9 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
     private static final Duration TTL_SEND_COUNT  = Duration.ofMinutes(10);
 
     @Override
-    public void saveCode(String email, String code) {
-        redisTemplate.opsForValue().set(KEY_CODE + code, email, TTL_CODE);
+    public boolean saveCodeIfAbsent(String email, String code) {
+        Boolean saved = redisTemplate.opsForValue().setIfAbsent(KEY_CODE + code, email, TTL_CODE);
+        return Boolean.TRUE.equals(saved);
     }
 
     @Override
@@ -33,8 +34,9 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
     }
 
     @Override
-    public void deleteByCode(String code) {
-        redisTemplate.delete(KEY_CODE + code);
+    public Optional<String> findAndDeleteByCode(String code) {
+        // GETDEL — 조회와 삭제를 단일 원자 연산으로 수행 (TOCTOU 제거, 단일 사용 보장)
+        return Optional.ofNullable(redisTemplate.opsForValue().getAndDelete(KEY_CODE + code));
     }
 
     @Override

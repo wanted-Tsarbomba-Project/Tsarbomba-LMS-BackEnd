@@ -29,8 +29,8 @@ public class ResetPasswordService implements ResetPasswordUseCase {
     @Override
     public void resetPassword(String code, String newPassword) {
 
-        // 1. 코드로 저장된 이메일 역조회 (없으면 만료)
-        String email = passwordResetRepository.findEmailByCode(code)
+        // 1. 코드로 이메일 역조회 + 즉시 삭제 (원자적 소비 — 동시 요청 중복 사용 차단)
+        String email = passwordResetRepository.findAndDeleteByCode(code)
                 .orElseThrow(() -> new ValidationException(AuthErrorCode.AUTH_PASSWORD_RESET_CODE_EXPIRED));
 
         // 2. 이메일로 사용자 조회 (없으면 404 — 코드 발급 후 탈퇴 등 엣지 케이스)
@@ -41,10 +41,7 @@ public class ResetPasswordService implements ResetPasswordUseCase {
         user.changePassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // 4. 재설정 코드 삭제 (단일 사용 보장)
-        passwordResetRepository.deleteByCode(code);
-
-        // 5. Refresh Token 전체 삭제 (강제 재로그인)
+        // 4. Refresh Token 전체 삭제 (강제 재로그인)
         refreshTokenRepository.deleteByUserId(user.getUserId());
 
         log.info("비밀번호 재설정 완료 - userId={}", user.getUserId());

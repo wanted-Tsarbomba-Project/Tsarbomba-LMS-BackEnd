@@ -9,11 +9,17 @@ import java.util.Optional;
  */
 public interface PasswordResetRepository {
 
-    void saveCode(String email, String code);        // password:reset:{code} = email (TTL 10분)
+    /**
+     * 재설정 코드 저장 (SET NX). 이미 동일 코드가 존재하면 저장하지 않고 false 반환.
+     * 6자리 코드 충돌 시 기존 code → email 매핑 덮어쓰기를 방지한다. (TTL 10분)
+     */
+    boolean saveCodeIfAbsent(String email, String code);
 
-    Optional<String> findEmailByCode(String code);   // 코드로 이메일 역조회
+    /** 코드로 이메일 비파괴 조회 (verify-code 단계 — 코드 유지) */
+    Optional<String> findEmailByCode(String code);
 
-    void deleteByCode(String code);                   // 재설정 완료 후 단일 사용 보장
+    /** 코드로 이메일 조회 + 즉시 삭제 (reset 단계 — 원자적 단일 사용 보장) */
+    Optional<String> findAndDeleteByCode(String code);
 
     void markRecentlySent(String email);              // 재발송 쿨다운 (TTL 1분)
 

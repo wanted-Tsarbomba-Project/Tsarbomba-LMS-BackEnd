@@ -26,6 +26,7 @@ public class SendPasswordResetCodeService implements SendPasswordResetCodeUseCas
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int MAX_SEND_COUNT_PER_10MIN = 5;
+    private static final int MAX_CODE_GEN_ATTEMPTS = 5;
 
     @Override
     public void sendResetCode(String email) {
@@ -50,17 +51,26 @@ public class SendPasswordResetCodeService implements SendPasswordResetCodeUseCas
             throw new TooManyRequestsException(AuthErrorCode.AUTH_EMAIL_SEND_TOO_MANY);
         }
 
-        // 5. 6자리 재설정 코드 생성
-        String code = generateSixDigitCode();
+        // 5. 충돌 없는 6자리 재설정 코드 생성 + Redis 저장 (SET NX, TTL 10분)
+        String code = generateAndSaveUniqueCode(email);
 
-        // 6. Redis 저장 (code → email, TTL 10분)
-        passwordResetRepository.saveCode(email, code);
-
-        // 7. 재발송 쿨다운 마킹 (TTL 1분)
-        passwordResetRepository.markRecentlySent(email);
-
-        // 8. 재설정 코드 이메일 발송
+        // 6. 재설정 코드 이메일 발송
         emailSender.sendPasswordResetCode(email, code);
+
+        // 7. 발송 성공 후 재발송 쿨다운 마킹 (TTL 1분)
+        passwordResetRepository.markRecentlySent(email);
+    }
+
+    /** 충돌 없는 코드를 생성해 Redis 에 저장 후 반환. 충돌 시 최대 N회 재생성. */
+    private String generateAndSaveUniqueCode(String email) {
+        for (int attempt = 0; attempt < MAX_CODE_GEN_ATTEMPTS; attempt++) {
+            String code = generateSixDigitCode();
+            if (passwordResetRepository.saveCodeIfAbsent(email, code)) {
+                return code;
+            }
+        }
+        // 극히 드문 연속 충돌 — 잠시 후 재시도하도록 안내
+        throw new TooManyRequestsException(AuthErrorCode.AUTH_EMAIL_SEND_TOO_MANY);
     }
 
     /** 000000 ~ 999999 (6자리, 0 패딩 포함) */
