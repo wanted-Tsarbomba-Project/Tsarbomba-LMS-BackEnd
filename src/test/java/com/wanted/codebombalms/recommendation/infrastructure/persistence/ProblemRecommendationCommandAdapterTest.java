@@ -125,6 +125,62 @@ class ProblemRecommendationCommandAdapterTest {
         assertRecommendationRow(otherUserRows.get(0), otherUserId, 9001L, "ACTIVE", 1);
     }
 
+    /** INACTIVE 상태이고 기준 시각보다 오래된 추천 row만 하드 딜리트됩니다. */
+    @Test
+    @DisplayName("updated_at이 기준 시각 이전인 INACTIVE 추천 row만 hard delete한다.")
+    void hardDeleteInactiveByUpdatedAtBefore_deletesOldInactiveRowsOnly() {
+        Long userId = 10L;
+        LocalDateTime threshold = LocalDateTime.of(2026, 6, 15, 3, 0);
+
+        repository.saveAll(List.of(
+                ProblemRecommendationJpaEntity.active(
+                        userId,
+                        1001L,
+                        BigDecimal.valueOf(0.01),
+                        BigDecimal.valueOf(0.40),
+                        BigDecimal.valueOf(1.10),
+                        1,
+                        RecommendationAlgorithm.APRIORI,
+                        threshold.minusMonths(4)
+                ),
+                ProblemRecommendationJpaEntity.active(
+                        userId,
+                        1002L,
+                        BigDecimal.valueOf(0.02),
+                        BigDecimal.valueOf(0.50),
+                        BigDecimal.valueOf(1.20),
+                        2,
+                        RecommendationAlgorithm.APRIORI,
+                        threshold.minusMonths(2)
+                ),
+                ProblemRecommendationJpaEntity.active(
+                        userId,
+                        1003L,
+                        BigDecimal.valueOf(0.03),
+                        BigDecimal.valueOf(0.60),
+                        BigDecimal.valueOf(1.30),
+                        3,
+                        RecommendationAlgorithm.APRIORI,
+                        threshold.minusMonths(4)
+                )
+        ));
+        repository.flush();
+
+        updateStatusAndUpdatedAt(1001L, "INACTIVE", threshold.minusDays(1));
+        updateStatusAndUpdatedAt(1002L, "INACTIVE", threshold.plusDays(1));
+        updateStatusAndUpdatedAt(1003L, "ACTIVE", threshold.minusDays(1));
+
+        int deletedCount = repository.hardDeleteInactiveByUpdatedAtBefore(threshold);
+        repository.flush();
+
+        List<Map<String, Object>> rows = findRowsByUserId(userId);
+
+        assertEquals(1, deletedCount);
+        assertEquals(2, rows.size());
+        assertEquals("INACTIVE", statusByProblemSetId(rows, 1002L));
+        assertEquals("ACTIVE", statusByProblemSetId(rows, 1003L));
+    }
+
     /** 테스트용 Python 추천 결과 한 건을 생성합니다. */
     private GeneratedProblemSetRecommendation generatedRecommendation(Long problemSetId, int rankNo) {
         return new GeneratedProblemSetRecommendation(
@@ -158,6 +214,21 @@ class ProblemRecommendationCommandAdapterTest {
                         ORDER BY recommendation_id ASC
                         """,
                 userId
+        );
+    }
+
+    /** 테스트 데이터의 상태와 updated_at을 삭제 조건에 맞게 조정합니다. */
+    private void updateStatusAndUpdatedAt(Long problemSetId, String status, LocalDateTime updatedAt) {
+        jdbcTemplate.update(
+                """
+                        UPDATE problem_recommendation
+                        SET status = ?,
+                            updated_at = ?
+                        WHERE problem_set_id = ?
+                        """,
+                status,
+                updatedAt,
+                problemSetId
         );
     }
 
