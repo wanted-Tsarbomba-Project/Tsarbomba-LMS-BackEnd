@@ -5,7 +5,9 @@ import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
+import com.wanted.codebombalms.problems.dataset.application.usecase.IssueDatasetDownloadUrlUseCase;
 import com.wanted.codebombalms.problems.dataset.application.usecase.UploadProblemDatasetUseCase;
+import com.wanted.codebombalms.problems.dataset.presentation.api.response.DatasetDownloadUrlResponse;
 import com.wanted.codebombalms.problems.dataset.presentation.api.response.ProblemDatasetUploadResponse;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,6 +35,7 @@ import java.io.IOException;
 public class ProblemDatasetController {
 
     private final UploadProblemDatasetUseCase uploadProblemDatasetUseCase;
+    private final IssueDatasetDownloadUrlUseCase issueDatasetDownloadUrlUseCase;
 
     @Operation(
             summary = "데이터셋 단독 업로드",
@@ -131,5 +136,75 @@ public class ProblemDatasetController {
         } catch (IOException e) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
         }
+    }
+
+    @Operation(
+            summary = "문제세트 데이터셋 다운로드 URL 발급",
+            description = """
+                로그인한 사용자가 문제세트에 연결된 CSV 데이터셋을 다운로드할 수 있도록
+                일정 시간 동안 유효한 Signed URL을 발급합니다.
+
+                다운로드 버튼을 다시 누르면 새로운 Signed URL이 발급됩니다.
+                """
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "다운로드 URL 발급 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "다운로드 URL 발급 성공",
+                                    value = """
+                                        {
+                                          "timestamp": "2026-06-14T12:00:00Z",
+                                          "status": 200,
+                                          "code": "COMMON-SUCCESS",
+                                          "message": "데이터셋 다운로드 URL이 발급되었습니다.",
+                                          "data": {
+                                            "fileName": "employee_performance.csv",
+                                            "downloadUrl": "https://storage.googleapis.com/codebombalms/problem_dataset/example.csv?X-Goog-Signature=example"
+                                          }
+                                        }
+                                        """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "PRB-DAT-001 - 활성 데이터셋을 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "502",
+                    description = "PRB-DAT-007 - Signed URL 생성 실패"
+            )
+    })
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/api/v1/problem-sets/{problemSetId}/dataset/download-url")
+    public ResponseEntity<ApiResponse<DatasetDownloadUrlResponse>> issueDownloadUrl(
+            @Parameter(
+                    description = "데이터셋이 연결된 문제세트 ID",
+                    required = true,
+                    example = "4001"
+            )
+            @PathVariable Long problemSetId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        var response = DatasetDownloadUrlResponse.from(
+                issueDatasetDownloadUrlUseCase.issueDownloadUrl(
+                        userId,
+                        problemSetId
+                )
+        );
+
+        return ResponseEntity.ok(ApiResponse.success(
+                ApiResponseCode.SUCCESS,
+                "데이터셋 다운로드 URL이 발급되었습니다.",
+                response
+        ));
     }
 }
