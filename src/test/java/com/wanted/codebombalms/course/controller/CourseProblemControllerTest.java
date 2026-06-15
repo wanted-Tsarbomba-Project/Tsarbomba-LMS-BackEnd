@@ -152,7 +152,8 @@ class CourseProblemControllerTest {
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("COMMON-BAD-REQUEST"));
     }
 
     private Authentication operatorUser(Long userId) {
