@@ -7,6 +7,8 @@ public record ChatRoomResult(
         Long problemSetId,
         Long problemId,
         String title,
+        String problemSetTitle,
+        String problemTitle,
         Instant createdAt,
         Instant updatedAt
 ) {}
