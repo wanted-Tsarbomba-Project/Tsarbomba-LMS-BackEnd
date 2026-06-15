@@ -73,6 +73,7 @@ docs/*
 !docs/README.md
 AGENTS.md
 CLAUDE.md
+.ai/
 .github/CODEOWNERS
 .claude/*
 .ai/local/

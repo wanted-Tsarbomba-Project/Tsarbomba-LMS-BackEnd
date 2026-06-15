@@ -86,7 +86,7 @@ Content-Type: application/json
       "displayOrder": 1
     },
     {
-      "lectureId": 102,
+      "lectureId": null,
       "problemSetId": 2002,
       "role": "FINAL",
       "displayOrder": 1
