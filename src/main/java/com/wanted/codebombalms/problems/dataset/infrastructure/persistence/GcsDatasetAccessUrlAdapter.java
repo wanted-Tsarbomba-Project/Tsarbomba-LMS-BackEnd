@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class GcsDatasetAccessUrlAdapter implements
         GenerateDatasetAccessUrlPort,
         GenerateDatasetDownloadUrlPort {
-    private static final long DOWNLOAD_URL_DURATION_MINUTES = 5;
+    private static final long DOWNLOAD_URL_DURATION_MINUTES = 1;
     private static final long SIGNED_URL_DURATION_MINUTES = 30;
     private volatile Storage storage;
     private final GcpStorageProperties properties;
@@ -74,11 +74,13 @@ public class GcsDatasetAccessUrlAdapter implements
             return GoogleCredentials.fromStream(inputStream);
         }
     }
-
+    // Runner 접근 URL
     @Override
     public String generate(String filePath) {
         if (filePath == null || filePath.isBlank()) {
-            return null;
+            throw new NotFoundException(
+                    ProblemErrorCode.PROBLEM_DATASET_NOT_FOUND
+            );
         }
 
         return createSignedUrl(
@@ -86,7 +88,7 @@ public class GcsDatasetAccessUrlAdapter implements
                 SIGNED_URL_DURATION_MINUTES
         );
     }
-
+    // 사용자 다운로드 URL
     @Override
     public String generate(String filePath, String originalFileName) {
         if (filePath == null || filePath.isBlank()

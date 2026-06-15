@@ -8,6 +8,7 @@ import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetU
 import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetProgressState;
+import com.wanted.codebombalms.problems.set.application.usecase.ValidateProblemSetAccessUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,11 +27,17 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final LoadProblemStartCodePort loadProblemStartCodePort;
     private final LoadProgressProblemPort loadProgressProblemPort;
     private final IncreaseProblemSetStartedCountPort increaseProblemSetStartedCountPort;
+    private final ValidateProblemSetAccessUseCase validateProblemSetAccessUseCase;
 
     @Override
     @Transactional
     public ProblemSetEntryView handle(EnterProblemSetQuery query) {
-        ProblemSetEntry problemSet = loadProblemSetEntryPort.loadProblemSetEntry(query.problemSetId());
+        validateProblemSetAccessUseCase.validate(
+                query.userId(),
+                query.problemSetId()
+        );
+        ProblemSetEntry problemSet =
+                loadProblemSetEntryPort.loadProblemSetEntry(query.problemSetId());
 
         ProblemSetProgressState progress =
                 findOrCreateProblemSetProgressPort.findOrCreateProgress(query.userId(), query.problemSetId());

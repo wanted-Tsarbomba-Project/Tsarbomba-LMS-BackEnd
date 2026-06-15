@@ -53,6 +53,10 @@ public class ProblemSetJpaEntity {
     protected ProblemSetJpaEntity() {
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public ProblemSetJpaEntity(
             ProblemCategoryJpaEntity category,
             String title,

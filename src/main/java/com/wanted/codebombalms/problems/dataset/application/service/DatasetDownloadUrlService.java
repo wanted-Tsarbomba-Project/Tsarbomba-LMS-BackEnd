@@ -6,6 +6,7 @@ import com.wanted.codebombalms.problems.dataset.application.port.GenerateDataset
 import com.wanted.codebombalms.problems.dataset.application.port.LoadDatasetDownloadInfoPort;
 import com.wanted.codebombalms.problems.dataset.application.usecase.IssueDatasetDownloadUrlUseCase;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.problems.set.application.usecase.ValidateProblemSetAccessUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,14 +14,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class DatasetDownloadUrlService implements IssueDatasetDownloadUrlUseCase {
+public
+class DatasetDownloadUrlService implements IssueDatasetDownloadUrlUseCase {
 
     private final LoadDatasetDownloadInfoPort loadDatasetDownloadInfoPort;
     private final GenerateDatasetDownloadUrlPort generateDatasetDownloadUrlPort;
+    private final ValidateProblemSetAccessUseCase validateProblemSetAccessUseCase;
 
     @Override
-    public DatasetDownloadUrlResult issueDownloadUrl(Long problemSetId) {
+    public DatasetDownloadUrlResult issueDownloadUrl(
+            Long userId,
+            Long problemSetId
+    ) {
         validateProblemSetId(problemSetId);
+        validateProblemSetAccessUseCase.validate(userId, problemSetId);
 
         var dataset = loadDatasetDownloadInfoPort
                 .loadActiveDataset(problemSetId)
