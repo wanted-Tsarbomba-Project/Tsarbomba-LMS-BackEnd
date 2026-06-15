@@ -66,7 +66,7 @@ _배포용*/
 !.claude/skills/
 !.claude/agents/
 
-
+/ai/
 # docs는 통째로 ignore하되, develop의 공용 팀 문서 2개는 예외(계속 추적)
 docs/*
 !docs/CONVENTION.md

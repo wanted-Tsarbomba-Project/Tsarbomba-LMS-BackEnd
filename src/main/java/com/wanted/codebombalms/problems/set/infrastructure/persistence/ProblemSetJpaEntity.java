@@ -1,15 +1,9 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryJpaEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetStatus;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,8 +25,9 @@ public class ProblemSetJpaEntity {
 
     private String difficulty;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ProblemSetStatus status;
 
     @Column(nullable = false)
     private Integer totalProblemCount;
@@ -53,6 +48,10 @@ public class ProblemSetJpaEntity {
     protected ProblemSetJpaEntity() {
     }
 
+    public ProblemSetStatus getStatus() {
+        return status;
+    }
+
     public ProblemSetJpaEntity(
             ProblemCategoryJpaEntity category,
             String title,
@@ -65,7 +64,7 @@ public class ProblemSetJpaEntity {
         this.title = title;
         this.description = description;
         this.difficulty = difficulty;
-        this.status = "ACTIVE";
+        this.status = ProblemSetStatus.ACTIVE;
         this.totalProblemCount = totalProblemCount;
         this.completedUserCount = 0;
         this.startedUserCount = 0;
@@ -90,7 +89,7 @@ public class ProblemSetJpaEntity {
     }
 
     public void deactivate() {
-        this.status = "INACTIVE";
+        this.status = ProblemSetStatus.INACTIVE;
         this.deletedAt = LocalDateTime.now();
     }
 

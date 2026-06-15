@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.persistence;
 import com.wanted.codebombalms.problems.dataset.application.port.LoadActiveDatasetFilePathPort;
+import com.wanted.codebombalms.problems.dataset.application.port.LoadDatasetDownloadInfoPort;
 import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
@@ -18,7 +19,8 @@ public class ProblemDatasetPersistenceAdapter implements
         ProblemDatasetPersistencePort,
         LoadExecutionDatasetPort,
         LoadDatasetForUpdatePort,
-        LoadActiveDatasetFilePathPort {
+        LoadActiveDatasetFilePathPort,
+        LoadDatasetDownloadInfoPort {
 
     private final SpringDataProblemDatasetRepository problemDatasetRepository;
     private final EntityManager entityManager;
@@ -98,5 +100,18 @@ public class ProblemDatasetPersistenceAdapter implements
         problemDatasetRepository
                 .findAllByProblemSet_ProblemSetIdAndStatus(problemSetId, "ACTIVE")
                 .forEach(ProblemDatasetJpaEntity::deactivate);
+    }
+
+    @Override
+    public Optional<DatasetDownloadInfo> loadActiveDataset(Long problemSetId) {
+        return problemDatasetRepository
+                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(
+                        problemSetId,
+                        "ACTIVE"
+                )
+                .map(dataset -> new DatasetDownloadInfo(
+                        dataset.getOriginalFileName(),
+                        dataset.getFilePath()
+                ));
     }
 }

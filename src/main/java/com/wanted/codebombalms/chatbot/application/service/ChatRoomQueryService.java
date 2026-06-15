@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,12 @@ public class ChatRoomQueryService implements ChatRoomQueryUseCase {
                 .stream()
                 .map(this::toResult)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Long> findProblemRoomId(Long userId, Long problemSetId, Long problemId) {
+        return chatRoomRepository.findByUserIdAndProblem(userId, problemSetId, problemId)
+                .map(ChatRoom::getId);
     }
 
     private ChatRoomResult toResult(ChatRoom chatRoom) {
