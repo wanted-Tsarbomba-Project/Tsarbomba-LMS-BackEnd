@@ -58,4 +58,29 @@ public class ProblemRecommendationJpaEntity {
     /** JPA가 엔티티를 생성할 때 사용하는 기본 생성자입니다. */
     protected ProblemRecommendationJpaEntity() {
     }
+
+    /** 추천 생성 결과를 ACTIVE 상태의 신규 저장 엔티티로 만듭니다. */
+    public static ProblemRecommendationJpaEntity active(
+            Long userId,
+            Long problemSetId,
+            BigDecimal support,
+            BigDecimal confidence,
+            BigDecimal lift,
+            Integer rankNo,
+            RecommendationAlgorithm algorithm,
+            LocalDateTime now
+    ) {
+        ProblemRecommendationJpaEntity entity = new ProblemRecommendationJpaEntity();
+        entity.userId = userId;
+        entity.problemSetId = problemSetId;
+        entity.support = support;
+        entity.confidence = confidence;
+        entity.lift = lift;
+        entity.rankNo = rankNo;
+        entity.status = RecommendationStatus.ACTIVE;
+        entity.algorithm = algorithm;
+        entity.createdAt = now;
+        entity.updatedAt = now;
+        return entity;
+    }
 }
