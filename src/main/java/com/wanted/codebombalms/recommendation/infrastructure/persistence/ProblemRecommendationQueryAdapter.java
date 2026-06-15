@@ -2,7 +2,6 @@ package com.wanted.codebombalms.recommendation.infrastructure.persistence;
 
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationQueryPort;
 import com.wanted.codebombalms.recommendation.domain.model.ProblemSetRecommendation;
-import com.wanted.codebombalms.recommendation.domain.model.RecommendationAlgorithm;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,14 +21,13 @@ public class ProblemRecommendationQueryAdapter implements ProblemRecommendationQ
                 .map(row -> new ProblemSetRecommendation(
                         row.getRecommendationId(),
                         row.getProblemSetId(),
-                        row.getCategoryId(),
-                        row.getCreatorId(),
-                        row.getSupport(),
-                        row.getConfidence(),
-                        row.getLift(),
                         row.getRankNo(),
-                        RecommendationAlgorithm.valueOf(row.getAlgorithm()),
-                        row.getCreatedAt()
+                        row.getTitle(),
+                        row.getDescription(),
+                        row.getDifficulty(),
+                        row.getAccuracyRate(),
+                        row.getCategoryId(),
+                        row.getCategoryName()
                 ))
                 .toList();
     }
