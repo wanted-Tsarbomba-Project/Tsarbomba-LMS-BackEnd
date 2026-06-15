@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class RecommendationBatchLockExecutor {
 
     private static final int LOCK_TIMEOUT_SECONDS = 0;
+    private static final int LOCK_QUERY_TIMEOUT_SECONDS = 5;
 
     private final DataSource dataSource;
 
@@ -25,10 +26,22 @@ public class RecommendationBatchLockExecutor {
                 return OptionalInt.empty();
             }
 
+            Exception taskException = null;
             try {
                 return OptionalInt.of(task.getAsInt());
+            } catch (Exception e) {
+                taskException = e;
+                throw e;
             } finally {
-                releaseLock(connection, lockName);
+                try {
+                    releaseLock(connection, lockName);
+                } catch (Exception releaseException) {
+                    if (taskException != null) {
+                        taskException.addSuppressed(releaseException);
+                    } else {
+                        throw releaseException;
+                    }
+                }
             }
         } catch (Exception e) {
             throw new IllegalStateException("추천 생성 배치 락 처리 중 예외가 발생했습니다.", e);
@@ -38,6 +51,7 @@ public class RecommendationBatchLockExecutor {
     /** MySQL named lock을 같은 커넥션에서 획득합니다. */
     private boolean tryAcquireLock(Connection connection, String lockName) throws Exception {
         try (PreparedStatement statement = connection.prepareStatement("SELECT GET_LOCK(?, ?)")) {
+            statement.setQueryTimeout(LOCK_QUERY_TIMEOUT_SECONDS);
             statement.setString(1, lockName);
             statement.setInt(2, LOCK_TIMEOUT_SECONDS);
 
@@ -50,6 +64,7 @@ public class RecommendationBatchLockExecutor {
     /** MySQL named lock은 커넥션 단위라 획득한 커넥션에서 직접 해제합니다. */
     private void releaseLock(Connection connection, String lockName) throws Exception {
         try (PreparedStatement statement = connection.prepareStatement("SELECT RELEASE_LOCK(?)")) {
+            statement.setQueryTimeout(LOCK_QUERY_TIMEOUT_SECONDS);
             statement.setString(1, lockName);
             statement.executeQuery();
         }
