@@ -6,6 +6,7 @@ import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.progress.application.port.CheckProgressProblemSetPort;
 import com.wanted.codebombalms.problems.set.application.port.IncreaseProblemSetCompletedCountPort;
 import com.wanted.codebombalms.problems.set.application.port.IncreaseProblemSetStartedCountPort;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetStatus;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetPort;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +28,17 @@ public class ProblemSetPersistenceAdapter implements
 
     @Override
     public List<ProblemSetSummary> loadActiveProblemSetsByCategory(Long categoryId) {
-        var problemSets = problemSetRepository
-                .findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(categoryId, "ACTIVE");
+        var problemSets =
+                problemSetRepository.findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
+                        categoryId,
+                        ProblemSetStatus.ACTIVE
+                );
 
         return IntStream.range(0, problemSets.size())
-                .mapToObj(index -> ProblemSetMapper.toSummary(problemSets.get(index), index + 1))
+                .mapToObj(index -> ProblemSetMapper.toSummary(
+                        problemSets.get(index),
+                        index + 1
+                ))
                 .toList();
     }
 
@@ -64,10 +71,15 @@ public class ProblemSetPersistenceAdapter implements
 
     @Override
     public List<ProblemSetSummary> loadActiveProblemSets() {
-        var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc("ACTIVE");
+        var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc(
+                ProblemSetStatus.ACTIVE
+        );
 
         return IntStream.range(0, problemSets.size())
-                .mapToObj(index -> ProblemSetMapper.toSummary(problemSets.get(index), index + 1))
+                .mapToObj(index -> ProblemSetMapper.toSummary(
+                        problemSets.get(index),
+                        index + 1
+                ))
                 .toList();
     }
 
