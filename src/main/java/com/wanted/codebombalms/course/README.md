@@ -1,6 +1,6 @@
 # Course Domain
 
-`course` 도메인은 LMS에서 강의 상품의 상위 단위인 강좌를 관리한다. 강좌 목록/상세 조회, 강좌 생성/수정/공개/삭제, 카테고리 조회, 강좌와 문제 세트 연결, 강사별 강좌 조회를 담당한다.
+`course` 도메인은 LMS에서 강의 상품의 상위 단위인 강좌를 관리한다. 강좌 목록/상세 조회, 강좌 생성/수정/공개/삭제, 카테고리 조회, 강사별 강좌 조회를 담당한다.
 
 ## 주요 역할
 
@@ -8,7 +8,7 @@
 - 운영자에게 초안, 활성, 삭제 전 상태를 포함한 강좌 관리 기능을 제공한다.
 - 강좌 카테고리 기준으로 강좌를 필터링한다.
 - 강좌 썸네일 이미지를 업로드하고 저장 경로를 반환한다.
-- 강좌에 포함될 문제 세트를 강의 단위로 연결한다.
+- 기존 강좌 문제세트 REST API를 제공하고 실제 연결 처리는 `lecture` 유스케이스에 위임한다.
 - 특정 강사에게 연결된 강좌 목록을 조회한다.
 
 ## 패키지 구조
@@ -16,14 +16,14 @@
 ```text
 course
 ├── application
-│   ├── command      # 강좌 생성, 수정, 공개, 문제 세트 연결 명령 객체
-│   ├── policy       # 강사 권한, 카테고리, 공개 조건, 문제 세트 연결 검증
+│   ├── command      # 강좌 생성, 수정, 공개 명령 객체
+│   ├── policy       # 강사 권한, 카테고리, 공개 조건 검증
 │   ├── port         # lecture, problem 등 외부 도메인 연동 포트
 │   ├── service      # 유스케이스 구현체
 │   └── usecase      # presentation 계층이 의존하는 입력 포트
 ├── domain
 │   ├── exception    # CourseErrorCode
-│   ├── model        # Course, CourseCategory, CourseProblemSet 등
+│   ├── model        # Course, CourseCategory 등
 │   └── repository   # 도메인 저장소 인터페이스
 ├── infrastructure
 │   ├── lecture      # lecture 도메인 연동 어댑터
@@ -39,9 +39,7 @@ course
 | --- | --- |
 | `Course` | 강좌의 기본 정보, 강사 ID, 카테고리, 썸네일, 상태, 삭제 시각을 가진 중심 모델 |
 | `CourseCategory` | 강좌 분류 정보와 활성/비활성 상태를 표현 |
-| `CourseProblemSet` | 강좌, 강의, 문제 세트의 연결 관계와 역할, 노출 순서를 표현 |
 | `CourseStatus` | 강좌 상태. 생성 시 `DRAFT`, 공개 시 `ACTIVE`, 삭제 시 `DELETED`로 전환 |
-| `CourseProblemSetRole` | 강좌에 연결된 문제 세트의 역할 구분 |
 
 ## 주요 서비스
 
@@ -50,8 +48,6 @@ course
 | `CourseCommandService` | 강좌 생성, 수정, 공개, 삭제 처리 |
 | `CourseQueryService` | 강좌 목록, 카테고리별 목록, 상세, 강사별 목록 조회 |
 | `CourseCategoryQueryService` | 강좌 카테고리 목록 조회 |
-| `CourseProblemCommandService` | 강좌와 문제 세트 연결 설정 |
-| `CourseProblemQueryService` | 강좌/강의 기준 문제 세트 연결 목록 조회 |
 
 ## API 목록
 
@@ -96,16 +92,16 @@ course
 ### 강좌 문제 세트 연결
 
 1. 운영자가 `/api/v1/courses/{courseId}/problem-sets`에 연결 목록을 전달한다.
-2. `CourseProblemCommandService`가 강좌 존재 여부를 확인한다.
-3. `CourseProblemPolicy`가 강의, 문제 세트, 중복, 순서 등의 연결 조건을 검증한다.
+2. `LectureProblemSetCommandService`가 강좌 존재 여부를 확인한다.
+3. `LectureProblemSetPolicy`가 강의, 문제 세트, 역할 등의 연결 조건을 검증한다.
 4. 기존 연결이 있으면 식별자를 재사용하고, 없으면 새 연결로 저장한다.
 
 ## 다른 도메인과의 연동
 
 | 대상 도메인 | 연동 내용 |
 | --- | --- |
-| `lecture` | 강좌 삭제 시 하위 강의 삭제 처리, 강좌 문제 세트 연결 시 강의 유효성 확인 |
-| `problems` | 강좌/강의에 연결할 문제 세트 유효성 확인 |
+| `lecture` | 강좌 삭제 시 하위 강의 삭제 처리, 문제세트 연결 유스케이스 제공 |
+| `problems` | 학습 흐름에서 문제와 문제세트 존재 여부 확인 |
 | `user` | 강좌 생성 시 운영자/강사 권한 검증, 강사별 강좌 조회 |
 | `enrollment` | 수강 신청은 별도 도메인에서 처리하지만 강좌 ID를 기준으로 연결된다 |
 | `learning` | 학습 진행률은 강좌와 강의를 기준으로 집계된다 |

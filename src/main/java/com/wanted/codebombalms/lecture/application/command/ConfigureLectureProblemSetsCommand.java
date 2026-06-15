@@ -1,9 +1,9 @@
-package com.wanted.codebombalms.course.application.command;
+package com.wanted.codebombalms.lecture.application.command;
 
-import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 import java.util.List;
 
-public record ConfigureCourseProblemSetsCommand(
+public record ConfigureLectureProblemSetsCommand(
         Long courseId,
         List<ProblemSetCommand> problemSets
 ) {
@@ -11,7 +11,7 @@ public record ConfigureCourseProblemSetsCommand(
     public record ProblemSetCommand(
             Long lectureId,
             Long problemSetId,
-            CourseProblemSetRole role,
+            LectureProblemSetRole role,
             Integer displayOrder
     ) {
     }

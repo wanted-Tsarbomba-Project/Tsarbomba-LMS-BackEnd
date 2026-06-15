@@ -1,28 +1,28 @@
-package com.wanted.codebombalms.course.domain.model;
+package com.wanted.codebombalms.lecture.domain.model;
 
 import lombok.Getter;
 import lombok.ToString;
 
 @Getter
 @ToString
-public class CourseProblemSet {
+public class LectureProblemSet {
 
-    private Long courseProblemSetId;
+    private Long lectureProblemSetId;
     private Long courseId;
     private Long lectureId;
     private Long problemSetId;
-    private CourseProblemSetRole role;
+    private LectureProblemSetRole role;
     private Integer displayOrder;
 
-    private CourseProblemSet(
-            Long courseProblemSetId,
+    private LectureProblemSet(
+            Long lectureProblemSetId,
             Long courseId,
             Long lectureId,
             Long problemSetId,
-            CourseProblemSetRole role,
+            LectureProblemSetRole role,
             Integer displayOrder
     ) {
-        this.courseProblemSetId = courseProblemSetId;
+        this.lectureProblemSetId = lectureProblemSetId;
         this.courseId = courseId;
         this.lectureId = lectureId;
         this.problemSetId = problemSetId;
@@ -30,24 +30,24 @@ public class CourseProblemSet {
         this.displayOrder = displayOrder;
     }
 
-    public static CourseProblemSet create(
+    public static LectureProblemSet create(
             Long courseId,
             Long lectureId,
             Long problemSetId,
-            CourseProblemSetRole role,
+            LectureProblemSetRole role,
             Integer displayOrder
     ) {
-        return new CourseProblemSet(null, courseId, lectureId, problemSetId, role, displayOrder);
+        return new LectureProblemSet(null, courseId, lectureId, problemSetId, role, displayOrder);
     }
 
-    public static CourseProblemSet restore(
-            Long courseProblemSetId,
+    public static LectureProblemSet restore(
+            Long lectureProblemSetId,
             Long courseId,
             Long lectureId,
             Long problemSetId,
-            CourseProblemSetRole role,
+            LectureProblemSetRole role,
             Integer displayOrder
     ) {
-        return new CourseProblemSet(courseProblemSetId, courseId, lectureId, problemSetId, role, displayOrder);
+        return new LectureProblemSet(lectureProblemSetId, courseId, lectureId, problemSetId, role, displayOrder);
     }
 }

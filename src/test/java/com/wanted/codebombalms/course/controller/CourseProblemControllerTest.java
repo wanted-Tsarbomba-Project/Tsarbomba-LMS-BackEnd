@@ -1,13 +1,13 @@
 package com.wanted.codebombalms.course.controller;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
-import com.wanted.codebombalms.course.application.command.ConfigureCourseProblemSetsCommand;
-import com.wanted.codebombalms.course.application.usecase.CourseProblemCommandUseCase;
-import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
 import com.wanted.codebombalms.course.presentation.api.CourseProblemController;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
-import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
-import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
+import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
+import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetCommandUseCase;
+import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,19 +37,19 @@ class CourseProblemControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private CourseProblemQueryUseCase courseProblemQueryUseCase;
+    private LectureProblemSetQueryUseCase lectureProblemSetQueryUseCase;
 
     @MockitoBean
-    private CourseProblemCommandUseCase courseProblemCommandUseCase;
+    private LectureProblemSetCommandUseCase lectureProblemSetCommandUseCase;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
 
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
-        given(courseProblemQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
-                CourseProblemSet.restore(6001L, 101L, 1001L, 2002L, CourseProblemSetRole.MAIN, 1),
-                CourseProblemSet.restore(6002L, 101L, null, 2003L, CourseProblemSetRole.FINAL, 1)
+        given(lectureProblemSetQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
+                LectureProblemSet.restore(6001L, 101L, 1001L, 2002L, LectureProblemSetRole.MAIN, 1),
+                LectureProblemSet.restore(6002L, 101L, null, 2003L, LectureProblemSetRole.FINAL, 1)
         ));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/problem-sets", 101L)
@@ -63,8 +63,8 @@ class CourseProblemControllerTest {
 
     @Test
     void findProblemSetsByLectureReturnsApiResponse() throws Exception {
-        given(courseProblemQueryUseCase.findProblemSetsByLecture(101L)).willReturn(List.of(
-                CourseProblemSet.restore(6001L, 101L, 101L, 2002L, CourseProblemSetRole.MAIN, 1)
+        given(lectureProblemSetQueryUseCase.findProblemSetsByLecture(101L)).willReturn(List.of(
+                LectureProblemSet.restore(6001L, 101L, 101L, 2002L, LectureProblemSetRole.MAIN, 1)
         ));
 
         mockMvc.perform(get("/api/v1/lectures/{lectureId}/problem-sets", 101L)
@@ -78,10 +78,10 @@ class CourseProblemControllerTest {
 
     @Test
     void configureProblemSetsReturnsApiResponse() throws Exception {
-        given(courseProblemCommandUseCase.configureProblemSets(any(ConfigureCourseProblemSetsCommand.class)))
+        given(lectureProblemSetCommandUseCase.configureProblemSets(any(ConfigureLectureProblemSetsCommand.class)))
                 .willReturn(List.of(
-                        CourseProblemSet.restore(6001L, 101L, 101L, 2002L, CourseProblemSetRole.MAIN, 1),
-                        CourseProblemSet.restore(6002L, 101L, null, 2003L, CourseProblemSetRole.FINAL, 1)
+                        LectureProblemSet.restore(6001L, 101L, 101L, 2002L, LectureProblemSetRole.MAIN, 1),
+                        LectureProblemSet.restore(6002L, 101L, null, 2003L, LectureProblemSetRole.FINAL, 1)
                 ));
 
         String request = """

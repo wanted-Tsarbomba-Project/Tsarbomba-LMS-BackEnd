@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.course.presentation.api.request;
 
-import com.wanted.codebombalms.course.application.command.ConfigureCourseProblemSetsCommand;
-import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
+import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -11,8 +11,8 @@ public record CourseProblemSetConfigureRequest(
         @NotEmpty List<@Valid ProblemSetRequest> problemSets
 ) {
 
-    public ConfigureCourseProblemSetsCommand toCommand(Long courseId) {
-        return new ConfigureCourseProblemSetsCommand(
+    public ConfigureLectureProblemSetsCommand toCommand(Long courseId) {
+        return new ConfigureLectureProblemSetsCommand(
                 courseId,
                 problemSets.stream()
                         .map(ProblemSetRequest::toCommand)
@@ -23,11 +23,11 @@ public record CourseProblemSetConfigureRequest(
     public record ProblemSetRequest(
             Long lectureId,
             @NotNull Long problemSetId,
-            @NotNull CourseProblemSetRole role,
+            @NotNull LectureProblemSetRole role,
             @NotNull Integer displayOrder
     ) {
-        private ConfigureCourseProblemSetsCommand.ProblemSetCommand toCommand() {
-            return new ConfigureCourseProblemSetsCommand.ProblemSetCommand(
+        private ConfigureLectureProblemSetsCommand.ProblemSetCommand toCommand() {
+            return new ConfigureLectureProblemSetsCommand.ProblemSetCommand(
                     lectureId,
                     problemSetId,
                     role,
