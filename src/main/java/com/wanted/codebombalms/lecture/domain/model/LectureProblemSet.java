@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.lecture.domain.model;
 
+import java.util.Objects;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -48,6 +49,13 @@ public class LectureProblemSet {
             LectureProblemSetRole role,
             Integer displayOrder
     ) {
-        return new LectureProblemSet(lectureProblemSetId, courseId, lectureId, problemSetId, role, displayOrder);
+        return new LectureProblemSet(
+                Objects.requireNonNull(lectureProblemSetId, "lectureProblemSetId must not be null"),
+                courseId,
+                lectureId,
+                problemSetId,
+                role,
+                displayOrder
+        );
     }
 }

@@ -17,6 +17,7 @@
 lecture
 ├── application
 │   ├── command      # 강의 생성/수정, 문제세트 연결 명령
+│   ├── policy       # 문제세트 역할, 중복, 강의 소속 검증
 │   ├── port         # course, problems 도메인 연동 포트
 │   ├── service      # 강의 및 문제세트 연결 명령/조회 서비스
 │   └── usecase      # 입력 포트

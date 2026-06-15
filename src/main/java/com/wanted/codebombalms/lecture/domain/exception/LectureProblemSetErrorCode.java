@@ -13,7 +13,8 @@ public enum LectureProblemSetErrorCode implements ErrorCode {
     PROBLEM_SET_NOT_FOUND("CRS-010", "존재하지 않는 문제세트입니다."),
     MAIN_LECTURE_REQUIRED("CRS-012", "MAIN 문제 단계에는 강의가 필요합니다."),
     LECTURE_NOT_IN_COURSE("CRS-013", "선택한 강좌에 존재하지 않는 강의입니다."),
-    FINAL_LECTURE_NOT_ALLOWED("CRS-014", "FINAL 문제 단계에는 강의를 지정할 수 없습니다.");
+    FINAL_LECTURE_NOT_ALLOWED("CRS-014", "FINAL 문제 단계에는 강의를 지정할 수 없습니다."),
+    DUPLICATE_PROBLEM_SET("CRS-015", "동일한 강의와 문제세트 연결을 중복해서 지정할 수 없습니다.");
 
     private final String code;
     private final String message;

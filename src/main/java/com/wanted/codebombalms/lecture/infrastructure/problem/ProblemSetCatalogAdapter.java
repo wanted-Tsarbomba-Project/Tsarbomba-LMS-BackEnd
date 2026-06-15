@@ -15,6 +15,8 @@ public class ProblemSetCatalogAdapter implements ProblemSetCatalogPort {
 
     @Override
     public boolean existsProblemSet(Long problemSetId) {
-        return problemSetRepository.existsById(problemSetId);
+        return problemSetRepository.findById(problemSetId)
+                .filter(problemSet -> problemSet.getDeletedAt() == null)
+                .isPresent();
     }
 }

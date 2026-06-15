@@ -25,6 +25,13 @@ public interface SpringDataLectureProblemSetRepository extends JpaRepository<Lec
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
               ))
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = cps.problemSetId
+                    and ps.deletedAt is null
+              )
+            order by cps.displayOrder asc, cps.lectureProblemSetId asc
             """)
     List<LectureProblemSetJpaEntity> findActiveByCourseId(@Param("courseId") Long courseId);
 
@@ -45,6 +52,13 @@ public interface SpringDataLectureProblemSetRepository extends JpaRepository<Lec
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
               ))
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = cps.problemSetId
+                    and ps.deletedAt is null
+              )
+            order by cps.displayOrder asc, cps.lectureProblemSetId asc
             """)
     List<LectureProblemSetJpaEntity> findActiveByCourseIdAndRole(
             @Param("courseId") Long courseId,
@@ -67,7 +81,13 @@ public interface SpringDataLectureProblemSetRepository extends JpaRepository<Lec
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
               )
-            order by cps.displayOrder asc
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = cps.problemSetId
+                    and ps.deletedAt is null
+              )
+            order by cps.displayOrder asc, cps.lectureProblemSetId asc
             """)
     List<LectureProblemSetJpaEntity> findActiveByLectureIdOrderByDisplayOrderAsc(@Param("lectureId") Long lectureId);
 
@@ -87,6 +107,12 @@ public interface SpringDataLectureProblemSetRepository extends JpaRepository<Lec
                   where l.lectureId = cps.lectureId
                     and l.deletedAt is null
               ))
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = cps.problemSetId
+                    and ps.deletedAt is null
+              )
             """)
     Optional<LectureProblemSetJpaEntity> findActiveById(@Param("lectureProblemSetId") Long lectureProblemSetId);
 }
