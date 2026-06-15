@@ -10,8 +10,8 @@ import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
@@ -78,10 +78,15 @@ public class FastApiProblemRecommendationGenerationClient implements ProblemReco
         private GeneratedUserProblemSetRecommendations toCommand() {
             return new GeneratedUserProblemSetRecommendations(
                     userId,
-                    problemSets.stream()
+                    normalizedProblemSets().stream()
                             .map(PythonProblemSetRecommendation::toCommand)
                             .toList()
             );
+        }
+
+        /** 외부 응답의 null 목록은 서비스 계층의 개수 검증으로 넘기기 위해 빈 목록으로 정규화합니다. */
+        private List<PythonProblemSetRecommendation> normalizedProblemSets() {
+            return problemSets == null ? List.of() : problemSets;
         }
     }
 

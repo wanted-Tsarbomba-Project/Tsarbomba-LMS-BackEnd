@@ -2,6 +2,7 @@ package com.wanted.codebombalms.recommendation.infrastructure.persistence;
 
 import com.wanted.codebombalms.recommendation.application.command.GeneratedUserProblemSetRecommendations;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationCommandPort;
+import com.wanted.codebombalms.recommendation.domain.model.RecommendationStatus;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,8 @@ public class ProblemRecommendationCommandAdapter implements ProblemRecommendatio
     public void replaceActiveRecommendations(GeneratedUserProblemSetRecommendations recommendations) {
         LocalDateTime now = LocalDateTime.now(SEOUL_ZONE);
 
-        problemRecommendationRepository.deactivateActiveByUserId(recommendations.userId());
+        problemRecommendationRepository.lockByUserIdAndStatus(recommendations.userId(), RecommendationStatus.ACTIVE);
+        problemRecommendationRepository.deactivateActiveByUserId(recommendations.userId(), now);
         problemRecommendationRepository.saveAll(recommendations.problemSets()
                 .stream()
                 .map(problemSet -> ProblemRecommendationJpaEntity.active(

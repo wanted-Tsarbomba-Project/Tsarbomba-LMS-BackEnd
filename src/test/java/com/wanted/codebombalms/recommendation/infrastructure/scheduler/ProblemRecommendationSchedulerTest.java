@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
@@ -38,7 +39,19 @@ class ProblemRecommendationSchedulerTest {
 
         assertNotNull(scheduled);
         assertNotNull(async);
+        assertEquals("recommendationTaskExecutor", async.value());
         assertEquals("0 0 5 * * *", scheduled.cron());
         assertEquals("Asia/Seoul", scheduled.zone());
+    }
+
+    /** 추천 생성 중 예외가 발생해도 스케줄러 메서드는 예외를 외부로 전파하지 않습니다. */
+    @Test
+    void generateDailyProblemSetRecommendations_whenUseCaseThrows_doesNotPropagateException() {
+        GenerateProblemSetRecommendationsUseCase useCase = mock(GenerateProblemSetRecommendationsUseCase.class);
+        when(useCase.generate()).thenThrow(new RuntimeException("Python server error"));
+        ProblemRecommendationScheduler scheduler = new ProblemRecommendationScheduler(useCase);
+
+        assertDoesNotThrow(scheduler::generateDailyProblemSetRecommendations);
+        verify(useCase).generate();
     }
 }

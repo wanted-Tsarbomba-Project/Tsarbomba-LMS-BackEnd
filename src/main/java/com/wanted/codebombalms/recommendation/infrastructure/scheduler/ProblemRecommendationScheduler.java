@@ -16,7 +16,7 @@ public class ProblemRecommendationScheduler {
     private final GenerateProblemSetRecommendationsUseCase generateUseCase;
 
     /** 매일 새벽 5시(Asia/Seoul)에 비동기로 추천 생성 배치를 실행합니다. */
-    @Async
+    @Async("recommendationTaskExecutor")
     @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Seoul")
     public void generateDailyProblemSetRecommendations() {
         try {

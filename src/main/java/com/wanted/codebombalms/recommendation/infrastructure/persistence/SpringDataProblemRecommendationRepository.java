@@ -1,7 +1,11 @@
 package com.wanted.codebombalms.recommendation.infrastructure.persistence;
 
+import com.wanted.codebombalms.recommendation.domain.model.RecommendationStatus;
+import jakarta.persistence.LockModeType;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -48,19 +52,35 @@ public interface SpringDataProblemRecommendationRepository
             @Param("limit") int limit
     );
 
+    /** 사용자별 활성 추천 row를 잠가 같은 트랜잭션 안의 교체 저장 경합을 줄입니다. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT pr
+            FROM ProblemRecommendationJpaEntity pr
+            WHERE pr.userId = :userId
+                AND pr.status = :status
+            """)
+    List<ProblemRecommendationJpaEntity> lockByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") RecommendationStatus status
+    );
+
     /** 지정 사용자에게 기존에 노출 중이던 추천 row를 모두 비활성화합니다. */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(
             value = """
                     UPDATE problem_recommendation
                     SET status = 'INACTIVE',
-                        updated_at = CURRENT_TIMESTAMP
+                        updated_at = :updatedAt
                     WHERE user_id = :userId
                         AND status = 'ACTIVE'
                     """,
             nativeQuery = true
     )
-    int deactivateActiveByUserId(@Param("userId") Long userId);
+    int deactivateActiveByUserId(
+            @Param("userId") Long userId,
+            @Param("updatedAt") LocalDateTime updatedAt
+    );
 
     /** native query 결과를 추천 응답 구성에 필요한 필드로 투영합니다. */
     interface ProblemSetRecommendationProjection {
