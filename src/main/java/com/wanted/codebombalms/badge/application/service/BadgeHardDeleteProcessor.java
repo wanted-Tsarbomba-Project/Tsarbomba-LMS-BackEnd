@@ -30,12 +30,13 @@ public class BadgeHardDeleteProcessor {
 
             return true;
         } catch (ExternalServiceException e) {
-            log.error(
-                    "배지 GCS 이미지 삭제 실패로 하드 삭제를 건너뜁니다. badgeId={}, objectName={}",
-                    badge.getBadgeId(),
-                    badge.getObjectName(),
-                    e
-            );
+            log.atError()
+                    .setCause(e)
+                    .log(
+                            "배지 GCS 이미지 삭제 실패로 하드 삭제를 건너뜁니다. badgeId={}, objectName={}",
+                            badge.getBadgeId(),
+                            badge.getObjectName()
+                    );
 
             return false;
         }
