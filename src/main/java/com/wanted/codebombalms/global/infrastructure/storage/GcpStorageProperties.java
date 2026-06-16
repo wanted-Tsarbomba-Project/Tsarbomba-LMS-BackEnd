@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.problems.dataset.infrastructure.storage;
+package com.wanted.codebombalms.global.infrastructure.storage;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -26,8 +26,10 @@ public class GcpStorageProperties {
     }
 
     public static class Storage {
+
         private String bucket;
         private String datasetPrefix = "problem_dataset";
+        private String badgeImagePrefix = "badge_image";
 
         public String getBucket() {
             return bucket;
@@ -44,6 +46,14 @@ public class GcpStorageProperties {
         public void setDatasetPrefix(String datasetPrefix) {
             this.datasetPrefix = datasetPrefix;
         }
+
+        public String getBadgeImagePrefix() {
+            return badgeImagePrefix;
+        }
+
+        public void setBadgeImagePrefix(String badgeImagePrefix) {
+            this.badgeImagePrefix = badgeImagePrefix;
+        }
     }
 
     public static class Credentials {
@@ -57,4 +67,6 @@ public class GcpStorageProperties {
             this.location = location;
         }
     }
+
+
 }

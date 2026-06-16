@@ -8,7 +8,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServ
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.dataset.application.port.GenerateDatasetAccessUrlPort;
 import com.wanted.codebombalms.problems.dataset.application.port.GenerateDatasetDownloadUrlPort;
-import com.wanted.codebombalms.problems.dataset.infrastructure.storage.GcpStorageProperties;
+import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;

@@ -17,6 +17,7 @@ public interface UserRepository {
     boolean existsByNickname(String nickname);
 
     User save(User user);
+    User saveAndFlush(User user);
 
     List<User> findAllByRole(UserRole role, int page, int size);
 

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 /** problem_recommendation 조회용 Spring Data JPA repository입니다. */
 public interface SpringDataProblemRecommendationRepository
@@ -81,6 +82,19 @@ public interface SpringDataProblemRecommendationRepository
             @Param("userId") Long userId,
             @Param("updatedAt") LocalDateTime updatedAt
     );
+
+    /** 비활성화된 지 오래된 추천 row를 하드 딜리트합니다. */
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(
+            value = """
+                    DELETE FROM problem_recommendation
+                    WHERE status = 'INACTIVE'
+                        AND updated_at < :threshold
+                    """,
+            nativeQuery = true
+    )
+    int hardDeleteInactiveByUpdatedAtBefore(@Param("threshold") LocalDateTime threshold);
 
     /** native query 결과를 추천 응답 구성에 필요한 필드로 투영합니다. */
     interface ProblemSetRecommendationProjection {

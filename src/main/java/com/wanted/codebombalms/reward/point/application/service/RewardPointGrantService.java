@@ -2,6 +2,7 @@ package com.wanted.codebombalms.reward.point.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.reward.point.application.port.PointGrantedEventPort;
 import com.wanted.codebombalms.reward.point.application.usecase.GrantProblemPointUseCase;
 import com.wanted.codebombalms.reward.point.domain.exception.RewardErrorCode;
 import com.wanted.codebombalms.reward.point.domain.model.PointHistory;
@@ -18,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RewardPointGrantService implements GrantProblemPointUseCase {
 
     private static final String PROBLEM_CORRECT_REASON = "문제 정답 제출";
-
+    private final PointGrantedEventPort pointGrantedEventPort;
     private final UserPointRepository userPointRepository;
     private final PointHistoryRepository pointHistoryRepository;
 
@@ -32,7 +33,7 @@ public class RewardPointGrantService implements GrantProblemPointUseCase {
                 .map(existingPoint -> existingPoint.addPoint(point))
                 .orElseGet(() -> UserPoint.create(userId, point));
 
-        userPointRepository.save(userPoint);
+        UserPoint savedUserPoint = userPointRepository.save(userPoint);
 
         pointHistoryRepository.save(PointHistory.create(
                 userId,
@@ -41,6 +42,11 @@ public class RewardPointGrantService implements GrantProblemPointUseCase {
                 point,
                 PROBLEM_CORRECT_REASON
         ));
+
+        pointGrantedEventPort.publish(
+                savedUserPoint.userId(),
+                savedUserPoint.totalPoint()
+        );
     }
 
     private void validatePoint(Integer point) {
