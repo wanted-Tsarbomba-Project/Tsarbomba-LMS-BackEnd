@@ -6,6 +6,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ValidationEx
 import com.wanted.codebombalms.user.application.usecase.VerifyPasswordUseCase;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.repository.ProfileEditVerificationRepository;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ public class VerifyPasswordService implements VerifyPasswordUseCase {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ProfileEditVerificationRepository profileEditVerificationRepository;
 
     @Override
     public void verify(Long userId, String rawPassword) {
@@ -30,5 +32,8 @@ public class VerifyPasswordService implements VerifyPasswordUseCase {
         if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
             throw new ValidationException(AuthErrorCode.AUTH_PASSWORD_MISMATCH);
         }
+
+        // 3. 재인증 도장 찍기 (TTL 10분 — 이후 정보수정/비번변경 허용)
+        profileEditVerificationRepository.markVerified(userId);
     }
 }
