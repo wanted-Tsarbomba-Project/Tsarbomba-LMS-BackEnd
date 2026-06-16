@@ -1,9 +1,15 @@
 package com.wanted.codebombalms.user.presentation.api.request;
 
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record UpdateMyInfoRequest(
 
+        @Size(max = 50, message = "닉네임은 50자 이하여야 합니다.")
+        @Pattern(
+                regexp = "^(?!\\s*$).+",
+                message = "닉네임은 공백일 수 없습니다."
+        )
         String nickname,
 
         @Pattern(
