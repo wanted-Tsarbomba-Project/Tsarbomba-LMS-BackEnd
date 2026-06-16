@@ -32,6 +32,7 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
                 .findByUserIdAndLectureId(command.userId(), command.lectureId())
                 .orElseGet(() -> LectureProgress.create(command.userId(), command.lectureId()));
 
+        validateDuration(command.durationSec(), progress.getDurationSec());
         validateLastPosition(command.lastPositionSec(), command.durationSec(), progress.getDurationSec());
         progress.recordVideoProgress(command.lastPositionSec(), command.durationSec(), command.watchedDeltaSec());
         return lectureProgressRepository.save(progress);
@@ -68,6 +69,12 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
             throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
         }
         if (command.durationSec() != null && command.durationSec() <= 0) {
+            throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
+        }
+    }
+
+    private void validateDuration(Integer requestedDurationSec, Integer savedDurationSec) {
+        if (requestedDurationSec != null && savedDurationSec != null && !requestedDurationSec.equals(savedDurationSec)) {
             throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
         }
     }

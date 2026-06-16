@@ -273,6 +273,100 @@ class LearningServiceTest {
     }
 
     @Test
+    void recordProgress_throwsValidation_whenRequestedDurationDiffersFromSavedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                100,
+                600,
+                100,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 120, 300, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void completeProgress_completesLectureProgress() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)).willReturn(Optional.empty());
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.completeProgress(userId, lectureId);
+
+        assertTrue(result.isCompleted());
+        assertNotNull(result.getCompletedAt());
+        verify(lectureProgressRepository).save(any(LectureProgress.class));
+    }
+
+    @Test
+    void completeProgress_keepsCompletedAt_whenAlreadyCompleted() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LocalDateTime completedAt = LocalDateTime.now().minusDays(1);
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                true,
+                completedAt,
+                LocalDateTime.now().minusDays(1),
+                0,
+                null,
+                0,
+                LocalDateTime.now().minusDays(2),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.completeProgress(userId, lectureId);
+
+        assertTrue(result.isCompleted());
+        assertEquals(completedAt, result.getCompletedAt());
+        verify(lectureProgressRepository).save(any(LectureProgress.class));
+    }
+
+    @Test
+    void completeProgress_throwsNotFound_whenLectureMissing() {
+        Long lectureId = 999L;
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(false);
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> lectureProgressService.completeProgress(10L, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
     void findProgress_throwsNotFound_whenLectureMissing() {
         Long lectureId = 999L;
         given(learningLecturePort.existsLecture(lectureId)).willReturn(false);
