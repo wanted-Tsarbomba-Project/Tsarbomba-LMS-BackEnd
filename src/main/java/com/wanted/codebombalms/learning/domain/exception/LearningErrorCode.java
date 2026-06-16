@@ -16,7 +16,8 @@ public enum LearningErrorCode implements ErrorCode {
     PROBLEM_NOT_IN_LECTURE_PROBLEM_SET("LRN-006", "Problem does not belong to the lecture problem set."),
     PROBLEM_NOT_FOUND("LRN-007", "Problem was not found."),
     LECTURE_PROBLEM_NOT_UNLOCKED("LRN-008", "Lecture problem is not unlocked."),
-    LECTURE_PROBLEM_SET_ALREADY_COMPLETED("LRN-009", "Lecture problem set is already completed.");
+    LECTURE_PROBLEM_SET_ALREADY_COMPLETED("LRN-009", "Lecture problem set is already completed."),
+    INVALID_LECTURE_PROGRESS("LRN-010", "Lecture progress value is invalid.");
 
     private final String code;
     private final String message;

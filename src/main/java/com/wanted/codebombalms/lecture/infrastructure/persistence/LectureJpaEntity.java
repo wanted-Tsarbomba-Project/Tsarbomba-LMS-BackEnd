@@ -40,11 +40,14 @@ public class LectureJpaEntity {
     @Column(name = "thumbnail_url", length = 500)
     private String thumbnailUrl;
 
+    @Column(name = "problem_category_id")
+    private Long problemCategoryId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private LectureStatus status;
 
-    @Column(name = "lecture_order", nullable = false)
+    @Column(name = "lecture_order")
     private Integer lectureOrder;
 
     @Column(name = "created_at", nullable = false)
@@ -62,6 +65,7 @@ public class LectureJpaEntity {
             String description,
             String videoUrl,
             String thumbnailUrl,
+            Long problemCategoryId,
             LectureStatus status,
             Integer lectureOrder
     ) {
@@ -70,6 +74,7 @@ public class LectureJpaEntity {
         this.description = description;
         this.videoUrl = videoUrl;
         this.thumbnailUrl = thumbnailUrl;
+        this.problemCategoryId = problemCategoryId;
         this.status = status;
         this.lectureOrder = lectureOrder;
     }
@@ -81,6 +86,7 @@ public class LectureJpaEntity {
                 lecture.getDescription(),
                 lecture.getVideoUrl(),
                 lecture.getThumbnailUrl(),
+                lecture.getProblemCategoryId(),
                 lecture.getStatus(),
                 lecture.getLectureOrder()
         );
@@ -97,6 +103,7 @@ public class LectureJpaEntity {
         this.description = lecture.getDescription();
         this.videoUrl = lecture.getVideoUrl();
         this.thumbnailUrl = lecture.getThumbnailUrl();
+        this.problemCategoryId = lecture.getProblemCategoryId();
         this.status = lecture.getStatus();
         this.lectureOrder = lecture.getLectureOrder();
         this.deletedAt = lecture.getDeletedAt();
@@ -110,6 +117,7 @@ public class LectureJpaEntity {
                 description,
                 videoUrl,
                 thumbnailUrl,
+                problemCategoryId,
                 status,
                 createdAt,
                 updatedAt,

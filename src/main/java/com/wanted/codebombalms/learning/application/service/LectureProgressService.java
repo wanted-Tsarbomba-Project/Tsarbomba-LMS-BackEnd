@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.port.LearningLecturePort;
 import com.wanted.codebombalms.learning.application.usecase.LectureProgressCommandUseCase;
@@ -25,12 +26,28 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
         if (!learningLecturePort.existsLecture(command.lectureId())) {
             throw new NotFoundException(LearningErrorCode.LECTURE_NOT_FOUND);
         }
+        validateProgress(command);
 
         LectureProgress progress = lectureProgressRepository
                 .findByUserIdAndLectureId(command.userId(), command.lectureId())
                 .orElseGet(() -> LectureProgress.create(command.userId(), command.lectureId()));
 
-        progress.record(command.completed());
+        progress.recordVideoProgress(command.lastPositionSec(), command.durationSec(), command.watchedDeltaSec());
+        return lectureProgressRepository.save(progress);
+    }
+
+    @Override
+    @Transactional
+    public LectureProgress completeProgress(Long userId, Long lectureId) {
+        if (!learningLecturePort.existsLecture(lectureId)) {
+            throw new NotFoundException(LearningErrorCode.LECTURE_NOT_FOUND);
+        }
+
+        LectureProgress progress = lectureProgressRepository
+                .findByUserIdAndLectureId(userId, lectureId)
+                .orElseGet(() -> LectureProgress.create(userId, lectureId));
+
+        progress.complete();
         return lectureProgressRepository.save(progress);
     }
 
@@ -43,5 +60,17 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
 
         return lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)
                 .orElseGet(() -> LectureProgress.create(userId, lectureId));
+    }
+
+    private void validateProgress(RecordLectureProgressCommand command) {
+        if (command.lastPositionSec() < 0 || command.watchedDeltaSec() < 0) {
+            throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
+        }
+        if (command.durationSec() != null && command.durationSec() <= 0) {
+            throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
+        }
+        if (command.durationSec() != null && command.lastPositionSec() > command.durationSec()) {
+            throw new ValidationException(LearningErrorCode.INVALID_LECTURE_PROGRESS);
+        }
     }
 }

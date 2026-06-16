@@ -6,4 +6,6 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 public interface LectureProgressCommandUseCase {
 
     LectureProgress recordProgress(RecordLectureProgressCommand command);
+
+    LectureProgress completeProgress(Long userId, Long lectureId);
 }

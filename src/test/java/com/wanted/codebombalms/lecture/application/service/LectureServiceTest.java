@@ -59,13 +59,55 @@ class LectureServiceTest {
         given(lectureRepository.save(any(Lecture.class))).willReturn(savedLecture);
 
         Lecture result = lectureCommandService.createLecture(
-                new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+                new CreateLectureCommand(courseId, "Java 1", "description", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "java-1.png", 1, LectureStatus.ACTIVE)
         );
 
         assertEquals(1L, result.getLectureId());
         assertEquals(courseId, result.getCourse().getCourseId());
         assertEquals("Java 1", result.getTitle());
         verify(lectureCreationPolicy).validate(course);
+    }
+
+    @Test
+    void createLecture_throwsValidation_whenVideoUrlIsNotYoutube() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
+    void createLecture_acceptsYoutubeShortsUrl() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+        Lecture savedLecture = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+        given(lectureRepository.save(any(Lecture.class))).willReturn(savedLecture);
+
+        Lecture result = lectureCommandService.createLecture(
+                new CreateLectureCommand(
+                        courseId,
+                        "Java 1",
+                        "description",
+                        "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+                        "java-1.png",
+                        1,
+                        LectureStatus.ACTIVE
+                )
+        );
+
+        assertEquals(1L, result.getLectureId());
+        verify(lectureRepository).save(any(Lecture.class));
     }
 
     @Test
@@ -77,7 +119,7 @@ class LectureServiceTest {
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
                 () -> lectureCommandService.createLecture(
-                        new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+                        new CreateLectureCommand(courseId, "Java 1", "description", "https://youtu.be/dQw4w9WgXcQ", "java-1.png", 1, LectureStatus.ACTIVE)
                 )
         );
 
@@ -123,12 +165,37 @@ class LectureServiceTest {
         given(lectureRepository.save(lecture)).willReturn(lecture);
 
         Lecture result = lectureCommandService.updateLecture(
-                new UpdateLectureCommand(lectureId, "Updated Java", "updated", "updated.mp4", "updated.png", 2, LectureStatus.INACTIVE)
+                new UpdateLectureCommand(lectureId, "Updated Java", "updated", "https://www.youtube.com/embed/dQw4w9WgXcQ", "updated.png", 2, LectureStatus.INACTIVE)
         );
 
         assertEquals("Updated Java", result.getTitle());
         assertEquals(LectureStatus.INACTIVE, result.getStatus());
         verify(lectureRepository).save(lecture);
+    }
+
+    @Test
+    void updateLecture_throwsValidation_whenVideoUrlIsNotYoutube() {
+        Long lectureId = 1L;
+        Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.updateLecture(
+                        new UpdateLectureCommand(
+                                lectureId,
+                                "Updated Java",
+                                "updated",
+                                "https://example.com/video.mp4",
+                                "updated.png",
+                                2,
+                                LectureStatus.INACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
     }
 
     @Test
@@ -178,7 +245,7 @@ class LectureServiceTest {
         lecture.setCourse(course);
         lecture.setTitle(title);
         lecture.setDescription("lecture description");
-        lecture.setVideoUrl("video.mp4");
+        lecture.setVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         lecture.setThumbnailUrl("lecture.png");
         lecture.setStatus(status);
         lecture.setLectureOrder(lectureOrder);

@@ -19,12 +19,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.regex.Pattern;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class LectureCommandService implements LectureCommandUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(LectureCommandService.class);
+    private static final Pattern YOUTUBE_URL_PATTERN = Pattern.compile(
+            "^https?://(www\\.|m\\.)?(youtube\\.com/(watch\\?v=|embed/|shorts/)|youtu\\.be/).+"
+    );
 
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
@@ -37,6 +42,7 @@ public class LectureCommandService implements LectureCommandUseCase {
         Course course = courseCatalogPort.findCourse(command.courseId());
         lectureCreationPolicy.validate(course);
         validateLectureOrder(command.courseId(), null, command.lectureOrder());
+        validateYoutubeVideoUrl(command.videoUrl());
 
         Lecture lecture = Lecture.create(
                 course,
@@ -66,6 +72,7 @@ public class LectureCommandService implements LectureCommandUseCase {
                 lecture.getLectureId(),
                 command.lectureOrder()
         );
+        validateYoutubeVideoUrl(command.videoUrl());
 
         lecture.update(
                 command.title(),
@@ -102,6 +109,15 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         if (duplicated) {
             throw new ConflictException(LectureErrorCode.LECTURE_ORDER_DUPLICATED);
+        }
+    }
+
+    private void validateYoutubeVideoUrl(String videoUrl) {
+        if (videoUrl == null || videoUrl.isBlank()) {
+            return;
+        }
+        if (!YOUTUBE_URL_PATTERN.matcher(videoUrl).matches()) {
+            throw new ValidationException(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL);
         }
     }
 }

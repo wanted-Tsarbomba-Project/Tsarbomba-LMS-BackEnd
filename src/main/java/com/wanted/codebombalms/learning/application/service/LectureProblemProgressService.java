@@ -1,7 +1,6 @@
 package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
-import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemProgressCommandUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProgressCommandUseCase;
@@ -31,11 +30,10 @@ public class LectureProblemProgressService implements LectureProblemProgressComm
 
         if (command.completed()) {
             var lectureProblemSet = learningLectureProblemSetPort.findLectureProblemSet(command.lectureProblemSetId());
-            lectureProgressCommandUseCase.recordProgress(new RecordLectureProgressCommand(
+            lectureProgressCommandUseCase.completeProgress(
                     command.userId(),
-                    lectureProblemSet.lectureId(),
-                    true
-            ));
+                    lectureProblemSet.lectureId()
+            );
         }
 
         return savedProgress;
