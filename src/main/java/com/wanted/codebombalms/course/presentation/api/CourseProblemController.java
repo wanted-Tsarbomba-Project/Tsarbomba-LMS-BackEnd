@@ -1,10 +1,10 @@
 package com.wanted.codebombalms.course.presentation.api;
 
-import com.wanted.codebombalms.course.application.usecase.CourseProblemCommandUseCase;
-import com.wanted.codebombalms.course.application.usecase.CourseProblemQueryUseCase;
 import com.wanted.codebombalms.course.presentation.api.request.CourseProblemSetConfigureRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseProblemSetResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetCommandUseCase;
+import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,8 +28,8 @@ public class CourseProblemController {
 
     private static final Logger log = LoggerFactory.getLogger(CourseProblemController.class);
 
-    private final CourseProblemCommandUseCase courseProblemCommandUseCase;
-    private final CourseProblemQueryUseCase courseProblemQueryUseCase;
+    private final LectureProblemSetCommandUseCase lectureProblemSetCommandUseCase;
+    private final LectureProblemSetQueryUseCase lectureProblemSetQueryUseCase;
 
     @GetMapping("/courses/{courseId}/problem-sets")
     @Operation(summary = "강좌 문제세트 목록 조회")
@@ -39,7 +39,7 @@ public class CourseProblemController {
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseProblemQueryUseCase.findProblemSetsByCourse(courseId)
+                lectureProblemSetQueryUseCase.findProblemSetsByCourse(courseId)
                         .stream()
                         .map(CourseProblemSetResponse::from)
                         .toList()
@@ -54,7 +54,7 @@ public class CourseProblemController {
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                courseProblemQueryUseCase.findProblemSetsByLecture(lectureId)
+                lectureProblemSetQueryUseCase.findProblemSetsByLecture(lectureId)
                         .stream()
                         .map(CourseProblemSetResponse::from)
                         .toList()
@@ -73,7 +73,7 @@ public class CourseProblemController {
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.UPDATED,
                 CourseResponseMessage.UPDATED,
-                courseProblemCommandUseCase.configureProblemSets(request.toCommand(courseId))
+                lectureProblemSetCommandUseCase.configureProblemSets(request.toCommand(courseId))
                         .stream()
                         .map(CourseProblemSetResponse::from)
                         .toList()
