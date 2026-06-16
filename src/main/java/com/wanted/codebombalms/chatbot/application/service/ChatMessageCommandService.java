@@ -1,51 +1,46 @@
 package com.wanted.codebombalms.chatbot.application.service;
 
 import com.wanted.codebombalms.chatbot.application.command.SendMessageCommand;
+import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
-import com.wanted.codebombalms.chatbot.application.result.AiChatResult;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatMessageCommandUseCase;
-import com.wanted.codebombalms.chatbot.domain.model.ChatMessage;
-import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
-import com.wanted.codebombalms.chatbot.domain.repository.ChatMessageRepository;
-import com.wanted.codebombalms.chatbot.domain.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ChatMessageCommandService implements ChatMessageCommandUseCase {
 
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
-    private final ChatContextBuilder chatContextBuilder;
     private final AiChatClient aiChatClient;
+    private final ChatMessageTransactionService txService;
 
     @Override
-    public AiChatResult send(SendMessageCommand command) {
-        ChatRoom chatRoom = chatRoomRepository.getById(command.roomId());
+    public Flux<AiChatStreamChunk> send(SendMessageCommand command) {
+        // 1) 스트림 전 동기 구간(블로킹 tx) — 호출 스레드에서 먼저 끝낸다
+        ChatContext context = txService.prepare(command);
 
-        chatRoom.verifyOwner(command.userId());
+        // 2) 스트리밍: 토큰을 누적하며 그대로 흘린다
+        StringBuilder accumulated = new StringBuilder();
 
-        chatMessageRepository.save(
-                ChatMessage.createUserMessage(command.roomId(), command.userMessage())
-        );
-
-        ChatContext context = chatContextBuilder.build(command, chatRoom);
-
-        AiChatClient.AiChatClientResponse aiResponse = aiChatClient.call(context);
-
-        chatMessageRepository.save(
-                ChatMessage.createAiMessage(command.roomId(), aiResponse.answer())
-        );
-
-        chatRoom.updateTimestamp(Instant.now());
-        chatRoomRepository.save(chatRoom);
-
-        return new AiChatResult(aiResponse.answer());
+        return aiChatClient.stream(context)
+                .doOnNext(chunk -> {
+                    if (chunk instanceof AiChatStreamChunk.Token token) {
+                        accumulated.append(token.text());
+                    }
+                })
+                .concatMap(chunk -> {
+                    // 3) Done 수신 = 정상 완료 → 완성된 답만 저장(부분답·취소는 저장 안 됨)
+                    if (chunk instanceof AiChatStreamChunk.Done) {
+                        return Mono.fromRunnable(
+                                        () -> txService.saveAiAnswer(command.roomId(), accumulated.toString()))
+                                .subscribeOn(Schedulers.boundedElastic())
+                                .thenReturn((AiChatStreamChunk) chunk);
+                    }
+                    return Mono.just(chunk);
+                });
     }
 }
