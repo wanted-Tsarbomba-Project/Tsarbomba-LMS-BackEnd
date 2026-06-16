@@ -11,6 +11,7 @@ import com.wanted.codebombalms.user.domain.repository.ProfileEditVerificationRep
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,9 +41,14 @@ public class UpdateMyInfoService implements UpdateMyInfoUseCase {
             throw new ValidationException(UserErrorCode.USER_NICKNAME_DUPLICATED);
         }
 
-        // 3. 부분 수정 적용 (전달된 필드만)
+        // 3. 부분 수정 적용 (전달된 필드만) + 즉시 flush
         user.updateProfile(nickname, phone);
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user); // 즉시 flush — 제약 위반을 이 자리에서 포착
+        } catch (DataIntegrityViolationException e) {
+            // 사전 체크 통과했어도 동시성 레이스로 닉네임 unique 충돌 가능 → 닉네임 중복으로 정밀 매핑
+            throw new ValidationException(UserErrorCode.USER_NICKNAME_DUPLICATED);
+        }
 
         log.info("개인정보 수정 완료 - userId={}, nicknameChanged={}", userId, nicknameChanged);
 

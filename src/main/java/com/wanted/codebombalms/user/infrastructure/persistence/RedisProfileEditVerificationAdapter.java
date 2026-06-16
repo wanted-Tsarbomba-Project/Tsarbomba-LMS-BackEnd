@@ -14,7 +14,7 @@ public class RedisProfileEditVerificationAdapter implements ProfileEditVerificat
     private final StringRedisTemplate redisTemplate;
 
     private static final String KEY_VERIFIED = "profile:verified:"; // + {userId}
-    private static final Duration TTL_VERIFIED = Duration.ofMinutes(10);
+    private static final Duration TTL_VERIFIED = Duration.ofMinutes(3);
 
     @Override
     public void markVerified(Long userId) {

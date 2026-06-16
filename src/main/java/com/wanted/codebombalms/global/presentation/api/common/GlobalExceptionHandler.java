@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -98,20 +97,6 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(403)
                     .body(ApiErrorResponse.of(403, "AUT-015", "접근 권한이 없습니다.", request.getRequestURI()));
         }
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
-            DataIntegrityViolationException e, HttpServletRequest request) {
-        log.warn("[409] 데이터 무결성 위반(unique 충돌 추정) - path: {}, message: {}",
-                request.getRequestURI(), e.getMostSpecificCause().getMessage());
-        return ResponseEntity.status(409)
-                .body(ApiErrorResponse.of(
-                        409,
-                        "COMMON-CONFLICT",
-                        "이미 사용 중인 값입니다.",
-                        request.getRequestURI()
-                ));
     }
 }
 
