@@ -34,9 +34,8 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     private final LoadUserTotalPointPort loadUserTotalPointPort;
 
     @Override
+    @Transactional(readOnly = true)
     public List<MyBadgeResult> getMyBadges(Long userId) {
-        syncBadges(userId);
-
         List<UserBadge> userBadges =
                 userBadgePersistencePort.findAllByUserId(userId);
 
@@ -99,6 +98,10 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
                 .orElseThrow(() -> new NotFoundException(
                         BadgeErrorCode.USER_BADGE_NOT_FOUND
                 ));
+
+        if (selectedBadge.isEquipped()) {
+            return toMyBadgeResult(selectedBadge, badge);
+        }
 
         List<UserBadge> equippedBadges =
                 userBadgePersistencePort.findAllEquippedByUserId(userId);

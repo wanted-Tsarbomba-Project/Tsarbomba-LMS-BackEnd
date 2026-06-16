@@ -7,9 +7,6 @@ import java.util.List;
 
 @Schema(description = "내 배지 동기화 응답")
 public record BadgeSyncResponse(
-        @Schema(description = "사용자 ID", example = "16")
-        Long userId,
-
         @Schema(description = "사용자의 현재 누적 포인트", example = "120")
         Integer totalPoint,
 
@@ -21,7 +18,6 @@ public record BadgeSyncResponse(
 ) {
     public static BadgeSyncResponse from(BadgeSyncResult result) {
         return new BadgeSyncResponse(
-                result.userId(),
                 result.totalPoint(),
                 result.newlyEarnedBadgeCount(),
                 result.newlyEarnedBadges().stream()

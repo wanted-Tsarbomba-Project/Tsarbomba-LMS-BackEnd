@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -102,11 +103,12 @@ public class AdminBadgeController {
 
         var badge = adminBadgeUseCase.createBadge(command);
 
-        return ResponseEntity.ok(ApiResponse.created(
-                ApiResponseCode.CREATED,
-                "배지 등록에 성공했습니다.",
-                BadgeResponse.from(badge)
-        ));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(
+                        ApiResponseCode.CREATED,
+                        "배지 등록에 성공했습니다.",
+                        BadgeResponse.from(badge)
+                ));
     }
 
     @Operation(
@@ -169,7 +171,10 @@ public class AdminBadgeController {
         try {
             return objectMapper.readValue(requestJson, CreateBadgeRequest.class);
         } catch (JsonProcessingException e) {
-            throw new ValidationException(BadgeErrorCode.BADGE_INVALID_INPUT);
+            throw new ValidationException(
+                    BadgeErrorCode.BADGE_INVALID_INPUT,
+                    e
+            );
         }
     }
 
@@ -177,7 +182,10 @@ public class AdminBadgeController {
         try {
             return objectMapper.readValue(requestJson, UpdateBadgeRequest.class);
         } catch (JsonProcessingException e) {
-            throw new ValidationException(BadgeErrorCode.BADGE_INVALID_INPUT);
+            throw new ValidationException(
+                    BadgeErrorCode.BADGE_INVALID_INPUT,
+                    e
+            );
         }
     }
 }

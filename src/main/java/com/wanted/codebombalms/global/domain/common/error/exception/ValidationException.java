@@ -5,8 +5,17 @@ import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 
 public class ValidationException extends DomainException {
-    public ValidationException(ErrorCode errorCode) { super(errorCode); }
+
+    public ValidationException(ErrorCode errorCode) {
+        super(errorCode);
+    }
+
+    public ValidationException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode, cause);
+    }
 
     @Override
-    public int getHttpStatus() { return 400; }
+    public int getHttpStatus() {
+        return 400;
+    }
 }
