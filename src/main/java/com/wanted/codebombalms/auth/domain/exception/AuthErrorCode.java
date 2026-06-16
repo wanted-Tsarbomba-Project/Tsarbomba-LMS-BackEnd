@@ -36,7 +36,8 @@ public enum AuthErrorCode implements ErrorCode {
     // 기타
     AUTH_EMAIL_SEND_TOO_MANY("AUT-014", "이메일 발송 횟수를 초과했습니다."),
     AUTH_FORBIDDEN("AUT-015", "접근 권한이 없습니다."),
-    AUTH_REQUIRED("AUT-016", "인증이 필요합니다.");
+    AUTH_REQUIRED("AUT-016", "인증이 필요합니다."),
+    AUTH_PASSWORD_RESET_TOO_MANY("AUT-017", "비밀번호 재설정 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
 
     private final String code;
     private final String message;

@@ -26,4 +26,13 @@ public interface PasswordResetRepository {
     boolean isRecentlySent(String email);
 
     long incrementSendCount(String email);            // 발송 횟수 1 증가 (TTL 10분)
+
+    long getFailCount(String email);      // 재설정 시도 실패 횟수 조회 (verify-code / reset 무차별 대입 차단용)
+
+
+    long incrementFailCount(String email);     // 재설정 시도 실패 횟수 1 증가 (TTL 10분)
+
+
+    void clearFailCount(String email);    // 재설정 시도 실패 횟수 초기화 (성공 또는 새 코드 발급 시)
+
 }

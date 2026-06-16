@@ -23,15 +23,16 @@ public class PasswordResetController {
 
     @Operation(
             summary = "비밀번호 재설정",
-            description = "6자리 코드로 사용자 식별 후 새 비밀번호로 교체. 처리 후 코드 삭제 + RT 전체 삭제(강제 재로그인)."
+            description = "email + 6자리 코드 짝맞춤으로 본인 확인 후 새 비밀번호로 교체. 처리 후 코드 삭제 + RT 전체 삭제(강제 재로그인)."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "재설정 성공")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "AUT-011 유효하지 않은 코드 / AUT-012 만료된 코드 / USR-004 비밀번호 형식 오류")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "AUT-014 재설정 시도 횟수 초과")
     @PutMapping("/reset")
     public ResponseEntity<ApiResponse<Void>> reset(
             @Valid @RequestBody PasswordResetRequest request
     ) {
-        resetPasswordUseCase.resetPassword(request.code(), request.newPassword());
+        resetPasswordUseCase.resetPassword(request.email(), request.code(), request.newPassword());
 
         return ResponseEntity.ok(ApiResponse.success(
                 AuthResponseCode.PASSWORD_RESET_COMPLETED,
