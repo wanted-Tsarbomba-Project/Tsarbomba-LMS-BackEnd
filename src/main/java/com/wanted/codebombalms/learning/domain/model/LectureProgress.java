@@ -97,11 +97,11 @@ public class LectureProgress {
     }
 
     private int calculateWatchedSec(int watchedDeltaSec) {
-        int nextWatchedSec = this.watchedSec + watchedDeltaSec;
+        long nextWatchedSec = (long) this.watchedSec + watchedDeltaSec;
         if (durationSec == null) {
-            return nextWatchedSec;
+            return nextWatchedSec > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) nextWatchedSec;
         }
-        return Math.min(nextWatchedSec, durationSec);
+        return (int) Math.min(nextWatchedSec, durationSec);
     }
 
     private boolean isCompletionConditionSatisfied() {

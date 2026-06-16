@@ -224,6 +224,55 @@ class LearningServiceTest {
     }
 
     @Test
+    void recordProgress_throwsValidation_whenLastPositionExceedsRequestedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 601, 600, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsValidation_whenLastPositionExceedsSavedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                100,
+                600,
+                100,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 601, null, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
     void findProgress_throwsNotFound_whenLectureMissing() {
         Long lectureId = 999L;
         given(learningLecturePort.existsLecture(lectureId)).willReturn(false);

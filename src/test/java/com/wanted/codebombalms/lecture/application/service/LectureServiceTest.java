@@ -86,6 +86,23 @@ class LectureServiceTest {
     }
 
     @Test
+    void createLecture_throwsValidation_whenVideoUrlIsBlank() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(courseId, "Java 1", "description", "   ", "java-1.png", 1, LectureStatus.ACTIVE)
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
     void createLecture_acceptsYoutubeShortsUrl() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java");
@@ -188,6 +205,31 @@ class LectureServiceTest {
                                 "Updated Java",
                                 "updated",
                                 "https://example.com/video.mp4",
+                                "updated.png",
+                                2,
+                                LectureStatus.INACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
+    void updateLecture_throwsValidation_whenVideoUrlIsBlank() {
+        Long lectureId = 1L;
+        Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.updateLecture(
+                        new UpdateLectureCommand(
+                                lectureId,
+                                "Updated Java",
+                                "updated",
+                                "   ",
                                 "updated.png",
                                 2,
                                 LectureStatus.INACTIVE

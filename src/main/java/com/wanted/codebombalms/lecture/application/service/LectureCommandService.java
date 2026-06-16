@@ -113,10 +113,10 @@ public class LectureCommandService implements LectureCommandUseCase {
     }
 
     private void validateYoutubeVideoUrl(String videoUrl) {
-        if (videoUrl == null || videoUrl.isBlank()) {
+        if (videoUrl == null) {
             return;
         }
-        if (!YOUTUBE_URL_PATTERN.matcher(videoUrl).matches()) {
+        if (videoUrl.isBlank() || !YOUTUBE_URL_PATTERN.matcher(videoUrl).matches()) {
             throw new ValidationException(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL);
         }
     }
