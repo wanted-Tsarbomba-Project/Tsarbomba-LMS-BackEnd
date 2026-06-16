@@ -69,13 +69,12 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
     }
 
     @Override
-    public long incrementFailCount(String email) {
+    public void incrementFailCount(String email) {
         String key = KEY_FAIL_COUNT + email;
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1L) {
             redisTemplate.expire(key, TTL_FAIL_COUNT);
         }
-        return count == null ? 0L : count;
     }
 
     @Override

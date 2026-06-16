@@ -8,8 +8,6 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ValidationEx
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
 public class VerifyPasswordResetCodeService implements VerifyPasswordResetCodeUseCase {
