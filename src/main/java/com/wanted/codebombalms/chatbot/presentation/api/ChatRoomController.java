@@ -135,6 +135,8 @@ public class ChatRoomController {
                                                   "problemSetId": 10,
                                                   "problemId": 100,
                                                   "title": "문제 100 채팅방",
+                                                  "problemSetTitle": "직원 성과 데이터 기초 분석",
+                                                  "problemTitle": "데이터 행 개수 확인",
                                                   "createdAt": "2026-05-28T12:00:00Z",
                                                   "updatedAt": "2026-05-28T12:00:00Z"
                                                 }

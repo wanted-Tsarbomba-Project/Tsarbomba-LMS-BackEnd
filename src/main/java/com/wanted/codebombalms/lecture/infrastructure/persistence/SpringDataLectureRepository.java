@@ -51,8 +51,8 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
     List<Long> findHardDeleteTargetIds(@Param("threshold") LocalDateTime threshold);
 
     @Query("""
-            select cps.courseProblemSetId
-            from CourseProblemSetJpaEntity cps
+            select cps.lectureProblemSetId
+            from LectureProblemSetJpaEntity cps
             where cps.lectureId in :lectureIds
             """)
     List<Long> findLectureProblemSetIdsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
@@ -77,7 +77,7 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from CourseProblemSetJpaEntity cps
+            delete from LectureProblemSetJpaEntity cps
             where cps.lectureId in :lectureIds
             """)
     int deleteLectureProblemSetsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
