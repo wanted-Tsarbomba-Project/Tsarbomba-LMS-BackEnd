@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.chatbot.application.service;
 
+import com.wanted.codebombalms.chatbot.application.port.ChatContextPort;
+import com.wanted.codebombalms.chatbot.application.port.ProblemTitlePort;
 import com.wanted.codebombalms.chatbot.application.result.ChatRoomResult;
 import com.wanted.codebombalms.chatbot.application.usecase.ChatRoomQueryUseCase;
 import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
@@ -18,6 +20,8 @@ import java.util.Optional;
 public class ChatRoomQueryService implements ChatRoomQueryUseCase {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final ProblemTitlePort problemTitlePort;   // 주입 추가
+
 
     @Override
     public List<ChatRoomResult> listRooms(Long userId) {
@@ -33,12 +37,15 @@ public class ChatRoomQueryService implements ChatRoomQueryUseCase {
                 .map(ChatRoom::getId);
     }
 
+
     private ChatRoomResult toResult(ChatRoom chatRoom) {
         return new ChatRoomResult(
                 chatRoom.getId(),
                 chatRoom.getProblemSetId(),
                 chatRoom.getProblemId(),
                 chatRoom.getTitle(),
+                problemTitlePort.findProblemSetTitleOrNull(chatRoom.getProblemSetId()),
+                problemTitlePort.findProblemTitleOrNull(chatRoom.getProblemId()),
                 chatRoom.getCreatedAt(),
                 chatRoom.getUpdatedAt()
         );
