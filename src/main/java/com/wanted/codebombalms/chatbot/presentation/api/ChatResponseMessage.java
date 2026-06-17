@@ -4,10 +4,8 @@ public class ChatResponseMessage {
 
     private ChatResponseMessage() {}
 
-    public static final String FIRST_MESSAGE_SENT = "채팅방이 생성되고 메시지가 전송되었습니다.";
     public static final String ROOM_RETRIEVED = "채팅방 목록 조회에 성공했습니다.";
     public static final String MESSAGES_RETRIEVED = "채팅 내역 조회에 성공했습니다.";
-    public static final String MESSAGE_SENT = "메시지 전송에 성공했습니다.";
     public static final String ROOM_RENAMED = "채팅방 제목이 변경되었습니다.";
     public static final String ROOM_FOUND = "채팅방 조회에 성공했습니다.";
 

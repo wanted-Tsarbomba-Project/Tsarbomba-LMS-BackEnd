@@ -1,16 +1,20 @@
 package com.wanted.codebombalms.chatbot.infrastructure.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
 import com.wanted.codebombalms.chatbot.application.port.ChatContextPort;
 import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
-import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,27 +25,59 @@ import java.util.stream.Collectors;
 @Profile("!mock")
 public class FastApiChatClient implements AiChatClient {
 
+    private static final String EVENT_DONE = "done";
+    private static final String EVENT_ERROR = "error";
+
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
 
     @Override
-    public AiChatClientResponse call(ChatContext context) {
+    public Flux<AiChatStreamChunk> stream(ChatContext context) {
         FastApiChatRequest request = toRequest(context);
 
-        try {
-            FastApiChatResponse response = webClient.post()
-                    .uri("/chat")
-                    .bodyValue(request)
-                    .retrieve()
-                    .bodyToMono(FastApiChatResponse.class)
-                    .block();
+        return webClient.post()
+                .uri("/chat")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {})
+                .map(this::toChunk)
+                .onErrorResume(e -> {
+                    log.error("FastAPI 스트리밍 호출 실패", e);
+                    return Flux.just(new AiChatStreamChunk.Error(
+                            ChatErrorCode.AI_RESPONSE_FAILED.getCode(),
+                            ChatErrorCode.AI_RESPONSE_FAILED.getMessage()
+                    ));
+                });
+    }
 
-            return toClientResponse(response);
-        } catch (WebClientResponseException e) {
-            log.error("FastAPI 호출 실패 - status: {}, body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ExternalServiceException(ChatErrorCode.AI_RESPONSE_FAILED);
+    /** FastAPI SSE 프레임 한 개 → 도메인 청크. event 이름으로 분기(없으면 토큰). */
+    private AiChatStreamChunk toChunk(ServerSentEvent<String> sse) {
+        String event = sse.event();
+        String data = sse.data() == null ? "" : sse.data();
+        try {
+            if (EVENT_DONE.equals(event)) {
+                JsonNode n = objectMapper.readTree(data);
+                return new AiChatStreamChunk.Done(new AiChatStreamChunk.TokenUsage(
+                        n.path("promptTokens").asInt(0),
+                        n.path("completionTokens").asInt(0),
+                        n.path("totalTokens").asInt(0)
+                ));
+            }
+            if (EVENT_ERROR.equals(event)) {
+                JsonNode n = objectMapper.readTree(data);
+                return new AiChatStreamChunk.Error(
+                        n.path("code").asText(ChatErrorCode.AI_RESPONSE_FAILED.getCode()),
+                        n.path("message").asText(ChatErrorCode.AI_RESPONSE_FAILED.getMessage())
+                );
+            }
+            // event 없음 = 본문 토큰: {"t":"..."}
+            return new AiChatStreamChunk.Token(objectMapper.readTree(data).path("t").asText(""));
         } catch (Exception e) {
-            log.error("FastAPI 호출 중 예외 발생", e);
-            throw new ExternalServiceException(ChatErrorCode.AI_RESPONSE_FAILED);
+            log.error("FastAPI SSE 프레임 파싱 실패 - event={}, data={}", event, data, e);
+            return new AiChatStreamChunk.Error(
+                    ChatErrorCode.AI_RESPONSE_FAILED.getCode(),
+                    ChatErrorCode.AI_RESPONSE_FAILED.getMessage()
+            );
         }
     }
 
@@ -91,18 +127,5 @@ public class FastApiChatClient implements AiChatClient {
                 .dataset(datasetDto)
                 .conversationHistory(history)
                 .build();
-    }
-
-    private AiChatClientResponse toClientResponse(FastApiChatResponse response) {
-        return new AiChatClientResponse(
-                response.getAnswer(),
-                response.isAnswerDetected(),
-                response.getRetryCount(),
-                new TokenUsage(
-                        response.getPromptTokens(),
-                        response.getCompletionTokens(),
-                        response.getTotalTokens()
-                )
-        );
     }
 }

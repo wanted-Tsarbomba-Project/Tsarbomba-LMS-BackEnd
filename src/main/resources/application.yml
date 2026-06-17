@@ -3,6 +3,9 @@ spring:
     name: Code-Bomba-LMS
   profiles:
     active: local
+  mvc:
+    async:
+      request-timeout: 120000      # SSE: WebClient responseTimeout(100s)보다 길게 둬야 error 이벤트 전송 가능
   datasource:
     url: jdbc:mysql://localhost:3306/wanted_lms?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME}
