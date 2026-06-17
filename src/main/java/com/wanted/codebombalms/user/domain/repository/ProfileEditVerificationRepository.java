@@ -7,7 +7,7 @@ package com.wanted.codebombalms.user.domain.repository;
  */
 public interface ProfileEditVerificationRepository {
 
-    /** 재인증 완료 플래그 저장 (TTL 10분 자동) */
+    /** 재인증 완료 플래그 저장 (TTL 3분 자동) */
     void markVerified(Long userId);
 
     /** 재인증 플래그 존재 여부 확인 — 삭제하지 않음(페이지 내 여러 작업 허용) */

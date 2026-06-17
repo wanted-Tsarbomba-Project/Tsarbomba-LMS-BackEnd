@@ -33,7 +33,7 @@ public class VerifyPasswordService implements VerifyPasswordUseCase {
             throw new ValidationException(AuthErrorCode.AUTH_PASSWORD_MISMATCH);
         }
 
-        // 3. 재인증 도장 찍기 (TTL 10분 — 이후 정보수정/비번변경 허용)
+        // 3. 재인증 도장 찍기 (TTL 3분 — 이후 정보수정/비번변경 허용)
         profileEditVerificationRepository.markVerified(userId);
     }
 }
