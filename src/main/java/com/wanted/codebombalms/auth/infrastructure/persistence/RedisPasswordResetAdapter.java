@@ -22,6 +22,9 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
     private static final Duration TTL_RECENT_SENT = Duration.ofMinutes(1);
     private static final Duration TTL_SEND_COUNT  = Duration.ofMinutes(10);
 
+    private static final String KEY_FAIL_COUNT = "password:reset:fail:"; //
+    private static final Duration TTL_FAIL_COUNT = Duration.ofMinutes(10);
+
     @Override
     public boolean saveCodeIfAbsent(String email, String code) {
         Boolean saved = redisTemplate.opsForValue().setIfAbsent(KEY_CODE + code, email, TTL_CODE);
@@ -57,5 +60,33 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
             redisTemplate.expire(key, TTL_SEND_COUNT);
         }
         return count == null ? 0L : count;
+    }
+
+    @Override
+    public long getFailCount(String email) {
+        String value = redisTemplate.opsForValue().get(KEY_FAIL_COUNT + email);
+        if (value == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            // Redis에 비정상 값이 들어간 경우 — 카운트 미적용으로 폴백
+            return 0L;
+        }
+    }
+
+    @Override
+    public void incrementFailCount(String email) {
+        String key = KEY_FAIL_COUNT + email;
+        Long count = redisTemplate.opsForValue().increment(key);
+        if (count != null && count == 1L) {
+            redisTemplate.expire(key, TTL_FAIL_COUNT);
+        }
+    }
+
+    @Override
+    public void clearFailCount(String email) {
+        redisTemplate.delete(KEY_FAIL_COUNT + email);
     }
 }

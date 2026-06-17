@@ -8,7 +8,10 @@ public record LectureProgressResponse(
         Long lectureId,
         boolean completed,
         LocalDateTime completedAt,
-        LocalDateTime lastWatchedAt
+        LocalDateTime lastWatchedAt,
+        int lastPositionSec,
+        Integer durationSec,
+        int watchedSec
 ) {
 
     public static LectureProgressResponse from(LectureProgress progress) {
@@ -17,7 +20,10 @@ public record LectureProgressResponse(
                 progress.getLectureId(),
                 progress.isCompleted(),
                 progress.getCompletedAt(),
-                progress.getLastWatchedAt()
+                progress.getLastWatchedAt(),
+                progress.getLastPositionSec(),
+                progress.getDurationSec(),
+                progress.getWatchedSec()
         );
     }
 }

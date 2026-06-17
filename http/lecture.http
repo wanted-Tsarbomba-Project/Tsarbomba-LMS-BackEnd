@@ -15,7 +15,7 @@ Content-Type: application/json
 {
   "title": "Java 1강",
   "description": "Java 기본 문법을 학습하는 강의입니다.",
-  "videoUrl": "java-1.mp4",
+  "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "thumbnailUrl": "java-1.png",
   "lectureOrder":6,
   "status": "ACTIVE"
@@ -31,7 +31,7 @@ Content-Type: application/json
 {
   "title": "수정된 Java 1강",
   "description": "수정된 강의 설명입니다.",
-  "videoUrl": "updated-java-1.mp4",
+  "videoUrl": "https://youtu.be/dQw4w9WgXcQ",
   "thumbnailUrl": "updated-java-1.png",
   "lectureOrder": 2,
   "status": "INACTIVE"
@@ -42,7 +42,9 @@ PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
 Content-Type: application/json
 
 {
-  "completed": true
+  "lastPositionSec": 120,
+  "durationSec": 600,
+  "watchedDeltaSec": 10
 }
 
 ### 6. 강의 학습 진행 조회

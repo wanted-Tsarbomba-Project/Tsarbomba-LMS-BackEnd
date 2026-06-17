@@ -92,7 +92,7 @@ class LectureControllerTest {
         LectureCreateRequest request = new LectureCreateRequest(
                 "Java 1",
                 "description",
-                "java-1.mp4",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "java-1.png",
                 1,
                 LectureStatus.ACTIVE
@@ -117,7 +117,7 @@ class LectureControllerTest {
         LectureUpdateRequest request = new LectureUpdateRequest(
                 "Updated Java",
                 "updated",
-                "updated.mp4",
+                "https://youtu.be/dQw4w9WgXcQ",
                 "updated.png",
                 2,
                 LectureStatus.INACTIVE
@@ -169,7 +169,7 @@ class LectureControllerTest {
         lecture.setCourse(course);
         lecture.setTitle(title);
         lecture.setDescription("description");
-        lecture.setVideoUrl("java-1.mp4");
+        lecture.setVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         lecture.setThumbnailUrl("java-1.png");
         lecture.setStatus(LectureStatus.ACTIVE);
         lecture.setLectureOrder(1);

@@ -14,7 +14,9 @@ PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
 Content-Type: application/json
 
 {
-  "completed": true
+  "lastPositionSec": 120,
+  "durationSec": 600,
+  "watchedDeltaSec": 10
 }
 
 ### 2. 강의 진행 상태 조회

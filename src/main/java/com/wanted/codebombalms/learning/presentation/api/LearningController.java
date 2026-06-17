@@ -65,7 +65,9 @@ public class LearningController {
                 lectureProgressCommandUseCase.recordProgress(new RecordLectureProgressCommand(
                         userId,
                         lectureId,
-                        request.completed()
+                        request.lastPositionSec(),
+                        request.durationSec(),
+                        request.watchedDeltaSec()
                 ))
         );
 
