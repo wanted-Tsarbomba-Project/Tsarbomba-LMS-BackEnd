@@ -128,6 +128,31 @@ class LectureServiceTest {
     }
 
     @Test
+    void createLecture_throwsValidation_whenWatchUrlHasMultipleVideoIds() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(
+                                courseId,
+                                "Java 1",
+                                "description",
+                                "https://www.youtube.com/watch?v=short&v=dQw4w9WgXcQ",
+                                "java-1.png",
+                                1,
+                                LectureStatus.ACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
     void createLecture_acceptsYoutubeShortsUrl() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java");

@@ -397,6 +397,24 @@ class LearningServiceTest {
     }
 
     @Test
+    void completeProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.completeProgress(userId, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
     void findProgress_throwsNotFound_whenLectureMissing() {
         Long lectureId = 999L;
         given(learningLecturePort.existsLecture(lectureId)).willReturn(false);
@@ -407,6 +425,24 @@ class LearningServiceTest {
         );
 
         assertEquals(LearningErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void findProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.findProgress(userId, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
     }
 
     @Test
