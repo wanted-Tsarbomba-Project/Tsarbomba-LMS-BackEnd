@@ -1,0 +1,14 @@
+apiVersion: 1
+
+# provisioning 폴더 안의 .json 대시보드를 자동 로드한다.
+# (docker-compose 가 ./grafana/provisioning 을 컨테이너에 마운트 → 별도 마운트 불필요)
+providers:
+  - name: lms-dashboards
+    orgId: 1
+    folder: LMS
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true       # UI 에서 수정·저장 가능 (export 해서 다시 커밋)
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false
