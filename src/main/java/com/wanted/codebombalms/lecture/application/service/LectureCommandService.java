@@ -28,7 +28,7 @@ public class LectureCommandService implements LectureCommandUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(LectureCommandService.class);
     private static final Pattern YOUTUBE_URL_PATTERN = Pattern.compile(
-            "^https?://(www\\.|m\\.)?(youtube\\.com/(watch\\?v=|embed/|shorts/)|youtu\\.be/).+"
+            "^https?://(www\\.|m\\.)?(youtube\\.com/(watch\\?(?:.*&)?v=[A-Za-z0-9_-]{11}(?:&.*)?|embed/[A-Za-z0-9_-]{11}(?:\\?.*)?|shorts/[A-Za-z0-9_-]{11}(?:\\?.*)?)|youtu\\.be/[A-Za-z0-9_-]{11}(?:\\?.*)?)$"
     );
 
     private final LectureRepository lectureRepository;

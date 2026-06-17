@@ -2,6 +2,7 @@ package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
@@ -22,6 +23,7 @@ import com.wanted.codebombalms.learning.domain.repository.LectureProgressReposit
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,6 +72,12 @@ class LearningServiceTest {
 
     @InjectMocks
     private AdminLearningProgressQueryService adminLearningProgressQueryService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(learningLecturePort.findCourseIdByLecture(anyLong())).thenReturn(1L);
+        lenient().when(learningEnrollmentPort.isActiveStudentOfCourse(anyLong(), anyLong())).thenReturn(true);
+    }
 
     @Test
     void recordProgress_completesLectureProgress() {
@@ -221,6 +231,26 @@ class LearningServiceTest {
         );
 
         assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 120, 600, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
     }
 
     @Test
