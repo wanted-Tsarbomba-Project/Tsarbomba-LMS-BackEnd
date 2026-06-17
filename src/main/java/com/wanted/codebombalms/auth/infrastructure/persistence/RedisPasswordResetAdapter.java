@@ -65,7 +65,15 @@ public class RedisPasswordResetAdapter implements PasswordResetRepository {
     @Override
     public long getFailCount(String email) {
         String value = redisTemplate.opsForValue().get(KEY_FAIL_COUNT + email);
-        return value == null ? 0L : Long.parseLong(value);
+        if (value == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            // Redis에 비정상 값이 들어간 경우 — 카운트 미적용으로 폴백
+            return 0L;
+        }
     }
 
     @Override

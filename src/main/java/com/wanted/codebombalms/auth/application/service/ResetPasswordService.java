@@ -2,6 +2,7 @@ package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.usecase.ResetPasswordUseCase;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.auth.domain.policy.PasswordResetPolicy;
 import com.wanted.codebombalms.auth.domain.repository.PasswordResetRepository;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
@@ -27,14 +28,11 @@ public class ResetPasswordService implements ResetPasswordUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private static final int MAX_FAIL_ATTEMPTS = 5;   // email당 10분 내 최대 실패 횟수
-
     @Override
     public void resetPassword(String email, String code, String newPassword) {
 
         // 0. 시도 횟수 제한 (email 단위) — 무차별 대입 차단 (429)
-        if (passwordResetRepository.getFailCount(email) >= MAX_FAIL_ATTEMPTS) {
-            throw new TooManyRequestsException(AuthErrorCode.AUTH_PASSWORD_RESET_TOO_MANY);
+        if (passwordResetRepository.getFailCount(email) >= PasswordResetPolicy.MAX_FAIL_ATTEMPTS) {            throw new TooManyRequestsException(AuthErrorCode.AUTH_PASSWORD_RESET_TOO_MANY);
         }
 
         // 1. 코드 비파괴 조회 (짝 안 맞으면 코드 보존 → 타인 코드 무효화 DoS 방지)

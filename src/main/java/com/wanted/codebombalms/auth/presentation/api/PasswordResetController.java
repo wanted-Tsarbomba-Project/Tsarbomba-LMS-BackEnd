@@ -27,7 +27,7 @@ public class PasswordResetController {
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "재설정 성공")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "AUT-011 유효하지 않은 코드 / AUT-012 만료된 코드 / USR-004 비밀번호 형식 오류")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "AUT-014 재설정 시도 횟수 초과")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "429", description = "AUT-017 재설정 시도 횟수 초과")
     @PutMapping("/reset")
     public ResponseEntity<ApiResponse<Void>> reset(
             @Valid @RequestBody PasswordResetRequest request
