@@ -5,6 +5,7 @@ import com.wanted.codebombalms.admin.permission.application.service.AdminPermiss
 import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.course.presentation.api.CourseController;
@@ -23,12 +24,14 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,6 +54,9 @@ class CourseControllerTest {
 
     @MockitoBean
     private CourseQueryUseCase courseQueryUseCase;
+
+    @MockitoBean
+    private CourseThumbnailStoragePort courseThumbnailStoragePort;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
@@ -112,6 +118,32 @@ class CourseControllerTest {
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.CREATED))
                 .andExpect(jsonPath("$.message").value(CourseResponseMessage.CREATED))
                 .andExpect(jsonPath("$.data.courseId").value(1L));
+    }
+
+    @Test
+    void uploadCourseThumbnail_returnsGcsUrl() throws Exception {
+        MockMultipartFile thumbnail = new MockMultipartFile(
+                "thumbnail",
+                "java.png",
+                "image/png",
+                "image".getBytes()
+        );
+        given(courseThumbnailStoragePort.upload(any(), any(), anyLong(), any()))
+                .willReturn(new CourseThumbnailStoragePort.StoredCourseThumbnail(
+                        "java.png",
+                        "course_thumbnail_images/java.png",
+                        "image/png",
+                        5,
+                        "https://storage.googleapis.com/codebombalms/course_thumbnail_images/java.png"
+                ));
+
+        mockMvc.perform(multipart("/api/v1/courses/thumbnails")
+                        .file(thumbnail)
+                        .principal(operatorPrincipal()))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(CourseResponseCode.THUMBNAIL_UPLOADED))
+                .andExpect(jsonPath("$.data.thumbnailUrl")
+                        .value("https://storage.googleapis.com/codebombalms/course_thumbnail_images/java.png"));
     }
 
     private UsernamePasswordAuthenticationToken operatorPrincipal() {
