@@ -12,4 +12,6 @@ public interface EnrollmentQueryUseCase {
     List<Enrollment> findAllActiveEnrollments();
 
     List<Long> findActiveStudentIdsByCourse(Long courseId);
+
+    boolean isActiveStudentOfCourse(Long courseId, Long userId);
 }

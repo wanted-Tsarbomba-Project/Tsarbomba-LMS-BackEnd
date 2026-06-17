@@ -19,7 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.regex.Pattern;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 @RequiredArgsConstructor
@@ -27,9 +30,7 @@ import java.util.regex.Pattern;
 public class LectureCommandService implements LectureCommandUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(LectureCommandService.class);
-    private static final Pattern YOUTUBE_URL_PATTERN = Pattern.compile(
-            "^https?://(www\\.|m\\.)?(youtube\\.com/(watch\\?v=|embed/|shorts/)|youtu\\.be/).+"
-    );
+    private static final int YOUTUBE_VIDEO_ID_LENGTH = 11;
 
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
@@ -116,8 +117,111 @@ public class LectureCommandService implements LectureCommandUseCase {
         if (videoUrl == null) {
             return;
         }
-        if (videoUrl.isBlank() || !YOUTUBE_URL_PATTERN.matcher(videoUrl).matches()) {
+        if (videoUrl.isBlank() || !isValidYoutubeVideoUrl(videoUrl)) {
             throw new ValidationException(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL);
         }
+    }
+
+    private boolean isValidYoutubeVideoUrl(String videoUrl) {
+        try {
+            URI uri = new URI(videoUrl);
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+
+            if (!isHttpScheme(scheme) || host == null) {
+                return false;
+            }
+            if (uri.getPort() != -1 || uri.getRawUserInfo() != null) {
+                return false;
+            }
+
+            String normalizedHost = host.toLowerCase();
+            if ("youtu.be".equals(normalizedHost)) {
+                return hasSingleVideoIdPath(uri.getPath());
+            }
+
+            if (!isYoutubeHost(normalizedHost)) {
+                return false;
+            }
+
+            String path = uri.getPath();
+            if ("/watch".equals(path)) {
+                return hasSingleValidWatchVideoId(uri.getRawQuery());
+            }
+            if (path != null && path.startsWith("/embed/")) {
+                return hasPrefixedVideoIdPath(path, "embed");
+            }
+            if (path != null && path.startsWith("/shorts/")) {
+                return hasPrefixedVideoIdPath(path, "shorts");
+            }
+            return false;
+        } catch (URISyntaxException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private boolean isHttpScheme(String scheme) {
+        return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+    }
+
+    private boolean isYoutubeHost(String host) {
+        return "youtube.com".equals(host) || "www.youtube.com".equals(host) || "m.youtube.com".equals(host);
+    }
+
+    private boolean hasSingleValidWatchVideoId(String rawQuery) {
+        if (rawQuery == null || rawQuery.isBlank()) {
+            return false;
+        }
+
+        int videoIdCount = 0;
+        String videoId = null;
+        for (String parameter : rawQuery.split("&")) {
+            String[] keyValue = parameter.split("=", 2);
+            String key = URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8);
+            if (!"v".equals(key)) {
+                continue;
+            }
+
+            videoIdCount++;
+            videoId = keyValue.length > 1
+                    ? URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8)
+                    : "";
+        }
+        return videoIdCount == 1 && isValidYoutubeVideoId(videoId);
+    }
+
+    private boolean hasSingleVideoIdPath(String path) {
+        if (path == null || !path.startsWith("/")) {
+            return false;
+        }
+
+        String[] segments = path.substring(1).split("/", -1);
+        return segments.length == 1 && isValidYoutubeVideoId(segments[0]);
+    }
+
+    private boolean hasPrefixedVideoIdPath(String path, String prefix) {
+        String[] segments = path.substring(1).split("/", -1);
+        return segments.length == 2 && prefix.equals(segments[0]) && isValidYoutubeVideoId(segments[1]);
+    }
+
+    private boolean isValidYoutubeVideoId(String videoId) {
+        if (videoId == null || videoId.length() != YOUTUBE_VIDEO_ID_LENGTH) {
+            return false;
+        }
+        for (int i = 0; i < videoId.length(); i++) {
+            char ch = videoId.charAt(i);
+            if (!isAsciiYoutubeVideoIdChar(ch)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isAsciiYoutubeVideoIdChar(char ch) {
+        return (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= '0' && ch <= '9')
+                || ch == '_'
+                || ch == '-';
     }
 }
