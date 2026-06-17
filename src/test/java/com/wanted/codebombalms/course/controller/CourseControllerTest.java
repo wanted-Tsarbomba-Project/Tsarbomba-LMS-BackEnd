@@ -8,6 +8,7 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.presentation.api.CourseController;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseMessage;
@@ -15,6 +16,7 @@ import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.course.presentation.api.request.CourseCreateRequest;
 import com.wanted.codebombalms.course.presentation.api.request.CourseUpdateRequest;
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -146,6 +149,40 @@ class CourseControllerTest {
                         .value("https://storage.googleapis.com/codebombalms/course_thumbnail_images/java.png"));
     }
 
+    @Test
+    void uploadCourseThumbnail_returnsUploadFailed_whenReadingFileBytesFails() throws Exception {
+        MockMultipartFile thumbnail = new IOExceptionMockMultipartFile(
+                "thumbnail",
+                "java.png",
+                "image/png",
+                "image".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/v1/courses/thumbnails")
+                        .file(thumbnail)
+                        .principal(operatorPrincipal()))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.code").value(CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED.getCode()));
+    }
+
+    @Test
+    void uploadCourseThumbnail_returnsUploadFailed_whenStorageUploadFails() throws Exception {
+        MockMultipartFile thumbnail = new MockMultipartFile(
+                "thumbnail",
+                "java.png",
+                "image/png",
+                "image".getBytes()
+        );
+        given(courseThumbnailStoragePort.upload(any(), any(), anyLong(), any()))
+                .willThrow(new ExternalServiceException(CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED));
+
+        mockMvc.perform(multipart("/api/v1/courses/thumbnails")
+                        .file(thumbnail)
+                        .principal(operatorPrincipal()))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.code").value(CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED.getCode()));
+    }
+
     private UsernamePasswordAuthenticationToken operatorPrincipal() {
         return new UsernamePasswordAuthenticationToken(
                 10L,
@@ -210,5 +247,27 @@ class CourseControllerTest {
         course.setCreatedAt(LocalDateTime.now());
         course.setUpdatedAt(LocalDateTime.now());
         return course;
+    }
+
+    private static class IOExceptionMockMultipartFile extends MockMultipartFile {
+
+        IOExceptionMockMultipartFile(
+                String name,
+                String originalFilename,
+                String contentType,
+                byte[] content
+        ) {
+            super(
+                    name,
+                    originalFilename,
+                    contentType,
+                    content
+            );
+        }
+
+        @Override
+        public byte[] getBytes() throws IOException {
+            throw new IOException("failed to read file");
+        }
     }
 }

@@ -6,12 +6,14 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.presentation.api.request.CourseCreateRequest;
 import com.wanted.codebombalms.course.presentation.api.request.CourseUpdateRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseDetailResponse;
 import com.wanted.codebombalms.course.presentation.api.response.CourseResponse;
 import com.wanted.codebombalms.course.presentation.api.response.CourseThumbnailUploadResponse;
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -129,12 +131,14 @@ public class CourseController {
     @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> uploadCourseThumbnail(
             @RequestParam("thumbnail") MultipartFile thumbnail
-    ) throws IOException {
+    ) {
+        byte[] thumbnailBytes = readThumbnailBytes(thumbnail);
+
         var storedThumbnail = courseThumbnailStoragePort.upload(
                 thumbnail.getOriginalFilename(),
                 thumbnail.getContentType(),
                 thumbnail.getSize(),
-                thumbnail.getBytes()
+                thumbnailBytes
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -143,6 +147,17 @@ public class CourseController {
                         "Course thumbnail has been uploaded.",
                         new CourseThumbnailUploadResponse(storedThumbnail.accessUrl())
                 ));
+    }
+
+    private byte[] readThumbnailBytes(MultipartFile thumbnail) {
+        try {
+            return thumbnail.getBytes();
+        } catch (IOException e) {
+            throw new ExternalServiceException(
+                    CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED,
+                    e
+            );
+        }
     }
 
     @Operation(summary = "강좌 수정")

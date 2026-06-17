@@ -101,13 +101,78 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
                 || fileSize <= 0
                 || fileSize > MAX_FILE_SIZE
                 || imageBytes == null
-                || imageBytes.length == 0;
+                || imageBytes.length == 0
+                || fileSize != imageBytes.length
+                || !hasValidImageSignature(contentType, imageBytes);
 
         if (invalidFile) {
             throw new ValidationException(
                     CourseErrorCode.COURSE_THUMBNAIL_INVALID_FILE
             );
         }
+    }
+
+    private boolean hasValidImageSignature(
+            String contentType,
+            byte[] imageBytes
+    ) {
+        return switch (contentType) {
+            case "image/jpeg" -> isJpeg(imageBytes);
+            case "image/png" -> isPng(imageBytes);
+            case "image/webp" -> isWebp(imageBytes);
+            default -> false;
+        };
+    }
+
+    private boolean isJpeg(byte[] imageBytes) {
+        return imageBytes.length >= 3
+                && (imageBytes[0] & 0xFF) == 0xFF
+                && (imageBytes[1] & 0xFF) == 0xD8
+                && (imageBytes[2] & 0xFF) == 0xFF;
+    }
+
+    private boolean isPng(byte[] imageBytes) {
+        byte[] pngSignature = new byte[] {
+                (byte) 0x89,
+                0x50,
+                0x4E,
+                0x47,
+                0x0D,
+                0x0A,
+                0x1A,
+                0x0A
+        };
+
+        return startsWith(imageBytes, pngSignature);
+    }
+
+    private boolean isWebp(byte[] imageBytes) {
+        return imageBytes.length >= 12
+                && imageBytes[0] == 'R'
+                && imageBytes[1] == 'I'
+                && imageBytes[2] == 'F'
+                && imageBytes[3] == 'F'
+                && imageBytes[8] == 'W'
+                && imageBytes[9] == 'E'
+                && imageBytes[10] == 'B'
+                && imageBytes[11] == 'P';
+    }
+
+    private boolean startsWith(
+            byte[] imageBytes,
+            byte[] signature
+    ) {
+        if (imageBytes.length < signature.length) {
+            return false;
+        }
+
+        for (int index = 0; index < signature.length; index++) {
+            if (imageBytes[index] != signature[index]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private String buildObjectName(String fileName) {
