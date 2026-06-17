@@ -30,6 +30,7 @@ public class GcpStorageProperties {
         private String bucket;
         private String datasetPrefix = "problem_dataset";
         private String badgeImagePrefix = "badge_image";
+        private String courseThumbnailPrefix = "course_thumbnail_images";
 
         public String getBucket() {
             return bucket;
@@ -53,6 +54,14 @@ public class GcpStorageProperties {
 
         public void setBadgeImagePrefix(String badgeImagePrefix) {
             this.badgeImagePrefix = badgeImagePrefix;
+        }
+
+        public String getCourseThumbnailPrefix() {
+            return courseThumbnailPrefix;
+        }
+
+        public void setCourseThumbnailPrefix(String courseThumbnailPrefix) {
+            this.courseThumbnailPrefix = courseThumbnailPrefix;
         }
     }
 

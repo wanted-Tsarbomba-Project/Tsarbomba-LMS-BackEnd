@@ -36,7 +36,7 @@ Content-Type: application/json
   "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
-  "thumbnailUrl": "java.png"
+  "thumbnailUrl": "https://storage.googleapis.com/codebombalms/course_thumbnail_images/java.png"
 }
 
 ### 6. 강좌 상세 조회
@@ -50,7 +50,7 @@ Content-Type: application/json
   "courseCategoryId": {{courseCategoryId}},
   "title": "수정된 Java 강좌",
   "description": "수정된 강좌 설명입니다.",
-  "thumbnailUrl": "updated-java.png",
+  "thumbnailUrl": "https://storage.googleapis.com/codebombalms/course_thumbnail_images/updated-java.png",
   "status": "DRAFT"
 }
 
