@@ -25,6 +25,8 @@ import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Flux;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.wanted.codebombalms.chatbot.presentation.api.request.RenameChatRoomRequest;
@@ -69,6 +71,7 @@ public class ChatRoomController {
                 .map(this::toServerSentEvent);
 
         return ResponseEntity.ok()
+                .contentType(new MediaType(MediaType.TEXT_EVENT_STREAM, StandardCharsets.UTF_8))
                 .header("X-Accel-Buffering", "no")
                 .body(body);
     }
@@ -168,6 +171,7 @@ public class ChatRoomController {
                 .map(this::toServerSentEvent);
 
         return ResponseEntity.ok()
+                .contentType(new MediaType(MediaType.TEXT_EVENT_STREAM, StandardCharsets.UTF_8))
                 .header("X-Accel-Buffering", "no")
                 .body(body);
     }
