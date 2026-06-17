@@ -7,6 +7,7 @@ import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblem
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetHintsPort;
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetProblemsPort;
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetTestCasesPort;
+import com.wanted.codebombalms.problems.set.domain.model.CreatedProblemSummary;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemModification;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemRegistration;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetDeactivationResult;
@@ -19,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,16 +54,23 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
         ProblemSetJpaEntity savedProblemSet = problemSetRepository.save(problemSet);
         int createdProblemCount = 0;
         int createdTestCaseCount = 0;
+        List<CreatedProblemSummary> createdProblems = new ArrayList<>();
 
         for (int i = 0; i < registration.problems().size(); i++) {
             ProblemRegistration problemCommand = registration.problems().get(i);
+            int problemOrder = i + 1;
             Long problemId = manageProblemSetProblemsPort.createProblem(
                     savedProblemSet.getProblemSetId(),
                     problemCommand,
-                    i + 1
+                    problemOrder
             );
             manageProblemSetHintsPort.createHint(problemId, problemCommand.hint());
             createdTestCaseCount += manageProblemSetTestCasesPort.createTestCases(problemId, problemCommand.testCases());
+            createdProblems.add(new CreatedProblemSummary(
+                    problemId,
+                    problemOrder,
+                    problemCommand.title()
+            ));
             createdProblemCount++;
         }
 
@@ -71,7 +80,8 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
                 savedProblemSet.getCategory().getCategoryName(),
                 savedProblemSet.getTotalProblemCount(),
                 createdProblemCount,
-                createdTestCaseCount
+                createdTestCaseCount,
+                createdProblems
         );
     }
 

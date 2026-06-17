@@ -75,7 +75,8 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
                 result.categoryName(),
                 result.totalProblemCount(),
                 result.createdProblemCount(),
-                result.createdTestCaseCount()
+                result.createdTestCaseCount(),
+                result.problems()
         );
     }
 }

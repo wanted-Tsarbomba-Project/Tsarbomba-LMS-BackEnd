@@ -68,6 +68,53 @@ public class ProblemManageController {
             summary = "문제 세트 등록",
             description = "데이터셋 파일 없이 문제 세트와 소문제 목록을 등록합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "문제 세트 등록 성공",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ProblemSetCreateResponse.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "timestamp": "2026-06-17T03:49:12.054530Z",
+                                              "status": 201,
+                                              "code": "COMMON-CREATED",
+                                              "message": "리소스가 성공적으로 생성되었습니다.",
+                                              "data": {
+                                                "problemSetId": 4108,
+                                                "title": "pandas 기초 분석 문제 세트",
+                                                "categoryName": "Python 데이터 분석",
+                                                "totalProblemCount": 1,
+                                                "createdProblemCount": 1,
+                                                "createdTestCaseCount": 1,
+                                                "problems": [
+                                                  {
+                                                    "problemId": 5163,
+                                                    "problemOrder": 1,
+                                                    "title": "데이터 행과 열 개수 확인"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                            """
+                            )
+                    )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "PRB-INP-001 요청값 오류 / PRB-TC-002 테스트케이스 입력값 오류"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증 토큰이 없거나 유효하지 않음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "문제 세트 등록 권한 없음"
+            )
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @PostMapping("/api/v1/problems")
     public ResponseEntity<ApiResponse<ProblemSetCreateResponse>> createProblem(
@@ -211,6 +258,13 @@ public class ProblemManageController {
                                                 "totalProblemCount": 1,
                                                 "createdProblemCount": 1,
                                                 "createdTestCaseCount": 2,
+                                                "problems": [
+                                                  {
+                                                    "problemId": 5001,
+                                                    "problemOrder": 1,
+                                                    "title": "데이터 행과 열 개수 확인"
+                                                  }
+                                                ],
                                                 "datasetFileName": "employee_performance.csv",
                                                 "startCode": "import os\\nimport pandas as pd\\n\\ndf = pd.read_csv(os.environ[\\"DATASET_PATH\\"])"
                                               }
@@ -253,7 +307,7 @@ public class ProblemManageController {
                 toDatasetCommand(datasetFile)
         );
 
-        var response = new ProblemSetWithDatasetCreateResponse(
+        var response = ProblemSetWithDatasetCreateResponse.from(
                 result.problemSetId(),
                 result.datasetId(),
                 result.title(),
@@ -261,6 +315,7 @@ public class ProblemManageController {
                 result.totalProblemCount(),
                 result.createdProblemCount(),
                 result.createdTestCaseCount(),
+                result.problems(),
                 result.datasetFileName(),
                 result.startCode()
         );
