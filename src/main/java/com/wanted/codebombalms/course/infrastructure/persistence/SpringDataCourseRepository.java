@@ -29,6 +29,11 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
 
     List<CourseJpaEntity> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds);
 
+    List<CourseJpaEntity> findByCourseIdInAndStatusAndDeletedAtIsNull(
+            Set<Long> courseIds,
+            CourseStatus status
+    );
+
     Optional<CourseJpaEntity> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
 
     List<CourseJpaEntity> findByInstructorIdAndDeletedAtIsNull(Long instructorId);
