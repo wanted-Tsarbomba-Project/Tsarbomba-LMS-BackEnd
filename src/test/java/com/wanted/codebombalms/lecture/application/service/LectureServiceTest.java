@@ -153,6 +153,81 @@ class LectureServiceTest {
     }
 
     @Test
+    void createLecture_throwsValidation_whenYoutubeVideoIdHasNonAsciiCharacters() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(
+                                courseId,
+                                "Java 1",
+                                "description",
+                                "https://www.youtube.com/watch?v=가나다라마바사아자차카",
+                                "java-1.png",
+                                1,
+                                LectureStatus.ACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
+    void createLecture_throwsValidation_whenYoutubeUrlHasPort() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(
+                                courseId,
+                                "Java 1",
+                                "description",
+                                "https://www.youtube.com:444/watch?v=dQw4w9WgXcQ",
+                                "java-1.png",
+                                1,
+                                LectureStatus.ACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
+    void createLecture_throwsValidation_whenYoutubeUrlHasUserInfo() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+
+        given(courseCatalogPort.findCourse(courseId)).willReturn(course);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.createLecture(
+                        new CreateLectureCommand(
+                                courseId,
+                                "Java 1",
+                                "description",
+                                "https://user@www.youtube.com/watch?v=dQw4w9WgXcQ",
+                                "java-1.png",
+                                1,
+                                LectureStatus.ACTIVE
+                        )
+                )
+        );
+
+        assertEquals(LectureErrorCode.INVALID_YOUTUBE_VIDEO_URL, exception.getErrorCode());
+    }
+
+    @Test
     void createLecture_acceptsYoutubeShortsUrl() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java");

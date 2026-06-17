@@ -56,7 +56,7 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
 
     @Override
     public boolean isActiveStudentOfCourse(Long courseId, Long userId) {
-        log.info("[EnrollmentQueryService] check active enrollment - courseId: {}, userId: {}", courseId, userId);
+        log.debug("[EnrollmentQueryService] check active enrollment - courseId: {}, userId: {}", courseId, userId);
 
         return enrollmentRepository.existsByCourseIdAndUserIdAndStatus(courseId, userId, EnrollmentStatus.ACTIVE);
     }

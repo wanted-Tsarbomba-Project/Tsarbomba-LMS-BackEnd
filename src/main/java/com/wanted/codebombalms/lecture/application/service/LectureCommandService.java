@@ -131,6 +131,9 @@ public class LectureCommandService implements LectureCommandUseCase {
             if (!isHttpScheme(scheme) || host == null) {
                 return false;
             }
+            if (uri.getPort() != -1 || uri.getRawUserInfo() != null) {
+                return false;
+            }
 
             String normalizedHost = host.toLowerCase();
             if ("youtu.be".equals(normalizedHost)) {
@@ -207,10 +210,18 @@ public class LectureCommandService implements LectureCommandUseCase {
         }
         for (int i = 0; i < videoId.length(); i++) {
             char ch = videoId.charAt(i);
-            if (!Character.isLetterOrDigit(ch) && ch != '_' && ch != '-') {
+            if (!isAsciiYoutubeVideoIdChar(ch)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private boolean isAsciiYoutubeVideoIdChar(char ch) {
+        return (ch >= 'A' && ch <= 'Z')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= '0' && ch <= '9')
+                || ch == '_'
+                || ch == '-';
     }
 }
