@@ -5,9 +5,18 @@ spring:
     password: loadtest
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  mail:
+    username: loadtest@example.com
+    password: loadtest
+
   jpa:
     hibernate:
       ddl-auto: create
     properties:
       hibernate:
         format_sql: false
+
+jwt:
+  secret: g4SoLqa33ggACZrbDM3X8MDqzNEDOhw+dKb5cr9CQbw=
+  access-expiration: 3600000
+  refresh-expiration: 1209600000
