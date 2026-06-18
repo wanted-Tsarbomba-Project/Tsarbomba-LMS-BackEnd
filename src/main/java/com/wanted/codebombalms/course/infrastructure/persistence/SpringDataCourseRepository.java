@@ -2,6 +2,7 @@ package com.wanted.codebombalms.course.infrastructure.persistence;
 
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -17,6 +18,17 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     List<CourseJpaEntity> findByDeletedAtIsNull();
 
     List<CourseJpaEntity> findByStatusAndDeletedAtIsNull(CourseStatus status);
+
+    List<CourseJpaEntity> findByStatusAndDeletedAtIsNullOrderByCourseIdDesc(
+            CourseStatus status,
+            Pageable pageable
+    );
+
+    List<CourseJpaEntity> findByStatusAndDeletedAtIsNullAndTitleContainingIgnoreCaseOrderByCourseIdDesc(
+            CourseStatus status,
+            String title,
+            Pageable pageable
+    );
 
     List<CourseJpaEntity> findByCourseCategory_CourseCategoryIdAndStatusAndDeletedAtIsNull(
             Long courseCategoryId,

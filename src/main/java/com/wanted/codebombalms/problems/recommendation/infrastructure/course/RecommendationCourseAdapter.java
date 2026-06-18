@@ -5,6 +5,7 @@ import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCours
 import com.wanted.codebombalms.problems.recommendation.application.port.LoadRecommendationCoursePort;
 import com.wanted.codebombalms.problems.recommendation.application.port.LoadRecommendationCoursePort.SelectableCourseData;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,8 +30,40 @@ public class RecommendationCourseAdapter implements LoadRecommendationCoursePort
     }
 
     @Override
-    public List<SelectableCourseData> loadSelectableCourses() {
-        return courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)
+    public List<SelectableCourseData> loadSelectableCourses(String keyword, int limit) {
+        var pageable = PageRequest.of(0, limit);
+
+        var courses = isBlank(keyword)
+                ? courseRepository.findByStatusAndDeletedAtIsNullOrderByCourseIdDesc(
+                CourseStatus.ACTIVE,
+                pageable
+        )
+                : courseRepository.findByStatusAndDeletedAtIsNullAndTitleContainingIgnoreCaseOrderByCourseIdDesc(
+                CourseStatus.ACTIVE,
+                keyword.trim(),
+                pageable
+        );
+
+        return courses.stream()
+                .map(course -> new SelectableCourseData(
+                        course.getCourseId(),
+                        course.getTitle(),
+                        course.getDescription(),
+                        course.getThumbnailUrl()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<SelectableCourseData> loadActiveCoursesByIds(Set<Long> courseIds) {
+        if (courseIds == null || courseIds.isEmpty()) {
+            return List.of();
+        }
+
+        return courseRepository.findByCourseIdInAndStatusAndDeletedAtIsNull(
+                        courseIds,
+                        CourseStatus.ACTIVE
+                )
                 .stream()
                 .map(course -> new SelectableCourseData(
                         course.getCourseId(),
@@ -39,5 +72,9 @@ public class RecommendationCourseAdapter implements LoadRecommendationCoursePort
                         course.getThumbnailUrl()
                 ))
                 .toList();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

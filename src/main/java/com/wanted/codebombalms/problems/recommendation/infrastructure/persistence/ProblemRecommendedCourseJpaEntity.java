@@ -38,6 +38,8 @@ public class ProblemRecommendedCourseJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    private static final String ACTIVE_STATUS = "ACTIVE";
+
     protected ProblemRecommendedCourseJpaEntity() {
     }
 
@@ -49,7 +51,7 @@ public class ProblemRecommendedCourseJpaEntity {
         this.problemId = problemId;
         this.courseId = courseId;
         this.displayOrder = displayOrder;
-        this.status = "ACTIVE";
+        this.status = ACTIVE_STATUS;
     }
 
     @PrePersist
@@ -59,7 +61,7 @@ public class ProblemRecommendedCourseJpaEntity {
         this.updatedAt = now;
 
         if (this.status == null) {
-            this.status = "ACTIVE";
+            this.status = ACTIVE_STATUS;
         }
     }
 

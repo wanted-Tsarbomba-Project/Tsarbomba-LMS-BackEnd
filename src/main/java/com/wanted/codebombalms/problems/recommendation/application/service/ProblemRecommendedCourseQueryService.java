@@ -7,6 +7,7 @@ import com.wanted.codebombalms.problems.recommendation.application.port.LoadReco
 import com.wanted.codebombalms.problems.recommendation.application.port.LoadSavedRecommendedCoursePort;
 import com.wanted.codebombalms.problems.recommendation.application.query.GetProblemRecommendedCoursesQuery;
 import com.wanted.codebombalms.problems.recommendation.application.query.GetRecommendedCourseEditViewQuery;
+import com.wanted.codebombalms.problems.recommendation.application.query.GetSelectableRecommendedCoursesQuery;
 import com.wanted.codebombalms.problems.recommendation.application.usecase.GetProblemRecommendedCoursesUseCase;
 import com.wanted.codebombalms.problems.recommendation.application.usecase.GetRecommendedCourseEditViewUseCase;
 import com.wanted.codebombalms.problems.recommendation.application.usecase.GetSelectableRecommendedCoursesUseCase;
@@ -14,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -24,6 +27,9 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ProblemRecommendedCourseQueryService implements GetRecommendedCourseEditViewUseCase,
         GetProblemRecommendedCoursesUseCase, GetSelectableRecommendedCoursesUseCase {
+
+    private static final int DEFAULT_SELECTABLE_COURSE_LIMIT = 20;
+    private static final int MAX_SELECTABLE_COURSE_LIMIT = 100;
 
     private final LoadRecommendationProblemPort loadRecommendationProblemPort;
     private final LoadSavedRecommendedCoursePort loadSavedRecommendedCoursePort;
@@ -34,13 +40,18 @@ public class ProblemRecommendedCourseQueryService implements GetRecommendedCours
         validateProblem(query.problemId());
 
         var savedCourses = loadSavedRecommendedCoursePort.loadSavedRecommendedCourses(query.problemId());
-        var selectableCourses = loadRecommendationCoursePort.loadSelectableCourses();
+        var selectableCourses = loadRecommendationCoursePort.loadSelectableCourses(
+                null,
+                MAX_SELECTABLE_COURSE_LIMIT
+        );
+        selectableCourses = mergeSelectedCoursesIfMissing(savedCourses, selectableCourses);
 
         Map<Long, LoadSavedRecommendedCoursePort.SavedRecommendedCourseData> savedCourseMap =
                 savedCourses.stream()
                         .collect(Collectors.toMap(
                                 LoadSavedRecommendedCoursePort.SavedRecommendedCourseData::courseId,
-                                Function.identity()
+                                Function.identity(),
+                                (first, second) -> first
                         ));
 
         var selectedCourseIds = savedCourses.stream()
@@ -74,7 +85,8 @@ public class ProblemRecommendedCourseQueryService implements GetRecommendedCours
         validateProblem(query.problemId());
 
         var savedCourses = loadSavedRecommendedCoursePort.loadSavedRecommendedCourses(query.problemId());
-        var selectableCourses = loadRecommendationCoursePort.loadSelectableCourses();
+        var savedCourseIds = toCourseIds(savedCourses);
+        var selectableCourses = loadRecommendationCoursePort.loadActiveCoursesByIds(savedCourseIds);
 
         var selectableCourseMap = selectableCourses.stream()
                 .collect(Collectors.toMap(
@@ -103,8 +115,13 @@ public class ProblemRecommendedCourseQueryService implements GetRecommendedCours
     }
 
     @Override
-    public List<SelectableRecommendedCourseView> handle() {
-        return loadRecommendationCoursePort.loadSelectableCourses()
+    public List<SelectableRecommendedCourseView> handle(GetSelectableRecommendedCoursesQuery query) {
+        int limit = resolveLimit(query.limit());
+
+        return loadRecommendationCoursePort.loadSelectableCourses(
+                        query.keyword(),
+                        limit
+                )
                 .stream()
                 .map(course -> new SelectableRecommendedCourseView(
                         course.courseId(),
@@ -113,6 +130,48 @@ public class ProblemRecommendedCourseQueryService implements GetRecommendedCours
                         course.thumbnailUrl()
                 ))
                 .toList();
+    }
+
+    private int resolveLimit(Integer limit) {
+        if (limit == null) {
+            return DEFAULT_SELECTABLE_COURSE_LIMIT;
+        }
+
+        if (limit <= 0) {
+            return DEFAULT_SELECTABLE_COURSE_LIMIT;
+        }
+
+        return Math.min(limit, MAX_SELECTABLE_COURSE_LIMIT);
+    }
+
+    private List<LoadRecommendationCoursePort.SelectableCourseData> mergeSelectedCoursesIfMissing(
+            List<LoadSavedRecommendedCoursePort.SavedRecommendedCourseData> savedCourses,
+            List<LoadRecommendationCoursePort.SelectableCourseData> selectableCourses
+    ) {
+        Set<Long> selectableCourseIds = selectableCourses.stream()
+                .map(LoadRecommendationCoursePort.SelectableCourseData::courseId)
+                .collect(Collectors.toSet());
+
+        Set<Long> missingSelectedCourseIds = toCourseIds(savedCourses);
+        missingSelectedCourseIds.removeAll(selectableCourseIds);
+
+        if (missingSelectedCourseIds.isEmpty()) {
+            return selectableCourses;
+        }
+
+        var missingCourses = loadRecommendationCoursePort.loadActiveCoursesByIds(missingSelectedCourseIds);
+
+        return java.util.stream.Stream.concat(
+                        selectableCourses.stream(),
+                        missingCourses.stream()
+                )
+                .toList();
+    }
+
+    private Set<Long> toCourseIds(List<LoadSavedRecommendedCoursePort.SavedRecommendedCourseData> savedCourses) {
+        return savedCourses.stream()
+                .map(LoadSavedRecommendedCoursePort.SavedRecommendedCourseData::courseId)
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     private void validateProblem(Long problemId) {

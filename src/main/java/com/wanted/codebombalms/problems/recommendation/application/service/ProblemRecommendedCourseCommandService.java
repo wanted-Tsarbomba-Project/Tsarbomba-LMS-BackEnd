@@ -53,6 +53,10 @@ public class ProblemRecommendedCourseCommandService implements SaveProblemRecomm
             throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
         }
 
+        if (command.problemId() <= 0) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+
         Set<Long> uniqueCourseIds = new HashSet<>(command.courseIds());
 
         if (uniqueCourseIds.size() != command.courseIds().size()) {
