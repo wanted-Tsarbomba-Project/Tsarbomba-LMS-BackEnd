@@ -9,7 +9,9 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetProgressState;
 import com.wanted.codebombalms.problems.set.application.usecase.ValidateProblemSetAccessUseCase;
+import com.wanted.codebombalms.problems.set.infrastructure.metrics.ProblemSetMetrics;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProblemSetEntryService implements EnterProblemSetUseCase {
 
     private final LoadProblemSetEntryPort loadProblemSetEntryPort;
@@ -28,10 +31,14 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final LoadProgressProblemPort loadProgressProblemPort;
     private final IncreaseProblemSetStartedCountPort increaseProblemSetStartedCountPort;
     private final ValidateProblemSetAccessUseCase validateProblemSetAccessUseCase;
+    private final ProblemSetMetrics problemSetMetrics;
 
     @Override
     @Transactional
     public ProblemSetEntryView handle(EnterProblemSetQuery query) {
+        long startNanos = System.nanoTime();
+
+        try {
         validateProblemSetAccessUseCase.validate(
                 query.userId(),
                 query.problemSetId()
@@ -72,7 +79,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                 .filter(problem -> "CORRECT".equals(problem.status()))
                 .count();
 
-        return new ProblemSetEntryView(
+        ProblemSetEntryView view = new ProblemSetEntryView(
                 problemSet.getProblemSetId(),
                 problemSet.getTitle(),
                 problemSet.getDescription(),
@@ -83,6 +90,34 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                 progress.completed(),
                 problems
         );
+
+        log.info(
+                "event=problem_set_entered userId={} problemSetId={} problemCount={} solvedProblemCount={} durationMs={}",
+                query.userId(),
+                query.problemSetId(),
+                problems.size(),
+                solvedProblemCount,
+                elapsedMillis(startNanos)
+        );
+
+        return view;
+        } catch (RuntimeException e) {
+            log.warn(
+                    "event=problem_set_entry_failed userId={} problemSetId={} exceptionType={} durationMs={}",
+                    query.userId(),
+                    query.problemSetId(),
+                    e.getClass().getSimpleName(),
+                    elapsedMillis(startNanos),
+                    e
+            );
+            throw e;
+        } finally {
+            problemSetMetrics.recordEntry(System.nanoTime() - startNanos);
+        }
+    }
+
+    private long elapsedMillis(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
     }
 
     private ProblemDetailItemView toDetailItemView(

@@ -23,10 +23,13 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class ProblemRecommendedCourseController {
 
     private final SaveProblemRecommendedCoursesUseCase saveProblemRecommendedCoursesUseCase;
@@ -172,7 +176,7 @@ public class ProblemRecommendedCourseController {
             @RequestParam(required = false) String keyword,
 
             @Parameter(description = "최대 조회 개수. 기본 20, 최대 100", example = "20")
-            @RequestParam(required = false) Integer limit
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer limit
     ) {
         var result = getSelectableRecommendedCoursesUseCase.handle(
                 new GetSelectableRecommendedCoursesQuery(keyword, limit)
