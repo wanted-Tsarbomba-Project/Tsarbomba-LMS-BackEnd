@@ -50,8 +50,8 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
 
         Long loginUserId = findOrCreateLoginUser();
         seedRankingUsers();
-        seedUserPoints();
-        seedPointHistories();
+        seedUserPoints(loginUserId);
+        seedPointHistories(loginUserId);
         seedBadges();
         seedLoginUserBadges(loginUserId);
 
@@ -121,7 +121,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
         });
     }
 
-    private void seedUserPoints() {
+    private void seedUserPoints(Long loginUserId) {
         jdbc.batchUpdate("""
                 insert into user_point
                   (user_id, total_point, created_at, updated_at)
@@ -146,8 +146,6 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
             }
         });
 
-        Long loginUserId = findOrCreateLoginUser();
-
         jdbc.update("""
                 insert into user_point
                   (user_id, total_point, created_at, updated_at)
@@ -159,7 +157,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
                 """, loginUserId);
     }
 
-    private void seedPointHistories() {
+    private void seedPointHistories(Long loginUserId) {
         jdbc.batchUpdate("""
                 insert ignore into point_history
                   (user_id, problem_id, submission_id, point, reason, created_at)
@@ -187,8 +185,6 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
                 return USER_COUNT * POINT_HISTORY_PER_USER;
             }
         });
-
-        Long loginUserId = findOrCreateLoginUser();
 
         jdbc.batchUpdate("""
                 insert ignore into point_history
