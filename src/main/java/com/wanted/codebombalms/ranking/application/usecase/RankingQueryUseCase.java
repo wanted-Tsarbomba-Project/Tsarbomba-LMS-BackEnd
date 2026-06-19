@@ -10,4 +10,6 @@ public interface RankingQueryUseCase {
     RankingListResult getWeeklyPointRankings(int page, int size);
 
     RankingItem getMyPointRanking(Long userId);
+
+    RankingItem getMyWeeklyPointRanking(Long userId);
 }

@@ -1,7 +1,6 @@
 package com.wanted.codebombalms.problems.execution.infrastructure.runner;
 
 import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
-import com.wanted.codebombalms.problems.execution.infrastructure.metrics.CodeExecutionMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -15,12 +14,10 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
 
     private final CloudRunCodeRunnerProperties properties;
     private final RestClient restClient;
-    private final CodeExecutionMetrics codeExecutionMetrics;
 
     public CloudRunCodeRunnerAdapter(
             CloudRunCodeRunnerProperties properties,
-            RestClient.Builder restClientBuilder,
-            CodeExecutionMetrics codeExecutionMetrics
+            RestClient.Builder restClientBuilder
     ) {
         SimpleClientHttpRequestFactory requestFactory =
                 new SimpleClientHttpRequestFactory();
@@ -29,7 +26,6 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
         requestFactory.setReadTimeout(properties.getReadTimeoutMs());
 
         this.properties = properties;
-        this.codeExecutionMetrics = codeExecutionMetrics;
         this.restClient = restClientBuilder
                 .requestFactory(requestFactory)
                 .build();
@@ -98,8 +94,6 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
                     System.currentTimeMillis() - startTime,
                     false
             );
-        } finally {
-            codeExecutionMetrics.recordRunnerExecution(System.nanoTime() - startNanos);
         }
     }
 

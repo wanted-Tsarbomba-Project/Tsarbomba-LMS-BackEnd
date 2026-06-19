@@ -1,24 +1,24 @@
-# k6 Result - submission-before
+# k6 Result - ranking-before
 
 ## Summary
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 963 |
-| iterations | 962 |
+| http_reqs | 6487 |
+| iterations | 2162 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 875076 |
-| data_sent bytes | 408096 |
+| data_received bytes | 16050778 |
+| data_sent bytes | 2330844 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 1673.93 | 141.66 | 1889.88 | 2470.51 | 2795.89 | 3108.41 | 4285.66 |
-| http_req_waiting | 1673.05 | 140.43 | 1888.98 | 2469.40 | 2795.17 | 3107.69 | 4284.46 |
-| http_req_blocked | 0.26 | 0.00 | 0.01 | 0.01 | 2.96 | 5.57 | 7.35 |
-| http_req_connecting | 0.24 | 0 | 0 | 0 | 2.77 | 5.36 | 6.83 |
+| http_req_duration | 12.86 | 8.38 | 12.04 | 16.35 | 19.02 | 24.88 | 257.83 |
+| http_req_waiting | 12.52 | 7.94 | 11.70 | 15.92 | 18.58 | 24.31 | 257.41 |
+| http_req_blocked | 0.04 | 0.00 | 0.00 | 0.00 | 0.01 | 1.97 | 4.27 |
+| http_req_connecting | 0.03 | 0 | 0 | 0 | 0 | 1.88 | 3.23 |
 
 ## Metric Meaning
 
@@ -36,9 +36,12 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 962 pass / 0 fail |
-| has submissionId | 962 pass / 0 fail |
-| has executionStatus | 962 pass / 0 fail |
+| GET /rankings/points status is 200 | 2162 pass / 0 fail |
+| GET /rankings/points has rankings array | 2162 pass / 0 fail |
+| GET /rankings/points/weekly status is 200 | 2162 pass / 0 fail |
+| GET /rankings/points/weekly has rankings array | 2162 pass / 0 fail |
+| my ranking status is 200 | 2162 pass / 0 fail |
+| my ranking has rank | 2162 pass / 0 fail |
 
 ## How To Compare
 

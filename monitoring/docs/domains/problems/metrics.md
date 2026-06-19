@@ -1,317 +1,115 @@
-# Problems 도메인 메트릭 / 로그 / 부하 테스트 설계
+# Problems 도메인 M4 메트릭 / 로그 설계
 
-> 프로세스: `monitoring/docs/PROCESS.md` 2~5단계 산출물  
 > 병목 가설: `monitoring/docs/domains/problems/bottleneck-hypothesis.md`
-
-이 문서는 Problems 관련 병목 후보 1, 2순위를 실제로 측정하기 위한 메트릭, 로그, 성공 기준, k6 시나리오, 시드 및 baseline 실행 방법을 정리한다.
+> 현재 M4 측정 대상은 Problems 하위 기능 중 Ranking, Badge 입니다.
 
 ---
 
-## 1단계 요약 - 측정 대상 API
+## 1. 측정 대상
 
-| 우선순위 | API | 유형 | 병목 가설 |
+| 우선순위 | 대상 | API | 병목 가설 |
 | --- | --- | --- | --- |
-| 1 | `POST /api/v1/problems/{problemId}/submissions` | 쓰기 + 외부 연동 | 사용자 코드 실행, 테스트케이스 채점, 제출 결과 저장, 포인트 이벤트 발행이 한 흐름에 이어져 p95가 커질 수 있다. |
-| 2 | `GET /api/v1/problem-sets/{problemSetId}` | 조회 / 집계 | 문제세트 진입 시 문제 목록, 진행 상태, 최신 제출, 시작 코드를 함께 구성하므로 조회 조합 비용이 커질 수 있다. |
+| 1 | Ranking | `GET /api/v1/rankings/points`, `GET /api/v1/rankings/weekly`, `GET /api/v1/rankings/points/me` | 점수 집계, 내 순위 계산, 랭킹 데이터 유무에 따라 응답 실패율이 증가할 수 있음 |
+| 2 | Badge | `POST /api/v1/badges/me/sync`, `GET /api/v1/badges/me` | 포인트 기준 배지 동기화 시 사용자 보유 배지와 전체 배지 비교 비용이 커질 수 있음 |
 
 ---
 
-## 2단계 - Custom Metrics
+## 2. k6 커스텀 메트릭
 
-| metric name | type | 대상 API | 의미 | 코드 위치 |
-| --- | --- | --- | --- | --- |
-| `submission_grading_duration_seconds` | Timer | 제출/채점 | 제출 요청에서 채점과 결과 저장까지 걸린 시간 | `submission.infrastructure.metrics.SubmissionMetrics.recordGrading()` |
-| `code_execution_runner_duration_seconds` | Timer | 코드 실행 / 제출 | Python Runner 호출과 응답 수신에 걸린 시간 | `problems.execution.infrastructure.metrics.CodeExecutionMetrics.recordRunnerExecution()` |
-| `problem_set_entry_duration_seconds` | Timer | 문제세트 진입 | 문제세트 진입 화면 데이터 구성에 걸린 시간 | `problems.set.infrastructure.metrics.ProblemSetMetrics.recordEntry()` |
-| `submission_failed_total` | Counter | 제출/채점 | 제출 또는 채점 실패 횟수 | `submission.infrastructure.metrics.SubmissionMetrics.incrementFailure()` |
-
-> Micrometer Timer는 Prometheus에서 `_seconds_count`, `_seconds_sum`, `_seconds_max` 형태로 노출된다.
-
----
-
-## 2단계 - Structured Logs
-
-| event | 대상 API | 남길 값 | 목적 |
+| metric name | type | 대상 | 의미 |
 | --- | --- | --- | --- |
-| `event=submission_completed` | 제출/채점 | `userId`, `problemId`, `submissionId`, `isCorrect`, `passedTestCount`, `totalTestCount`, `durationMs` | 정상 제출의 전체 처리 시간 확인 |
-| `event=submission_failed` | 제출/채점 | `userId`, `problemId`, `exceptionType`, `durationMs` | 제출/채점 실패 원인 분류 |
-| `event=code_execution_runner_completed` | Runner 호출 | `success`, `executionTimeMs`, `durationMs` | 외부 Runner 지연 여부 확인 |
-| `event=code_execution_runner_failed` | Runner 호출 | `endpoint`, `exceptionType`, `durationMs` | Runner 호출 실패 원인 확인 |
-| `event=problem_set_entered` | 문제세트 진입 | `userId`, `problemSetId`, `problemCount`, `solvedProblemCount`, `durationMs` | 문제세트 화면 구성 시간 확인 |
-| `event=problem_set_entry_failed` | 문제세트 진입 | `userId`, `problemSetId`, `exceptionType`, `durationMs` | 문제세트 진입 실패 원인 확인 |
-
-로그는 `event=<domain>_<verb> ... durationMs=<n>` 형식을 따른다.
+| `ranking_response_valid_rate` | Rate | Ranking | 랭킹 응답 구조가 기대한 형태인지 확인 |
+| `ranking_result_count` | Trend | Ranking | 랭킹 목록 응답 개수 |
+| `ranking_my_rank` | Trend | Ranking | 내 랭킹 순위 값 |
+| `ranking_total_point` | Trend | Ranking | 내 누적 포인트 값 |
+| `badge_response_valid_rate` | Rate | Badge | 배지 응답 구조가 기대한 형태인지 확인 |
+| `badge_owned_count` | Trend | Badge | 사용자가 보유한 배지 개수 |
+| `badge_newly_earned_count` | Trend | Badge | 동기화로 새로 획득한 배지 개수 |
+| `badge_total_point` | Trend | Badge | 배지 동기화 기준 사용자 포인트 |
 
 ---
 
-## 3단계 - 성공 기준
+## 3. k6 시나리오 태그
 
-반드시 트래픽 조건과 측정 기간을 함께 적는다. `평균 500ms 이하`처럼 평균만 보는 기준은 사용하지 않는다.
+| type tag | 의미 |
+| --- | --- |
+| `ranking_total` | 전체 포인트 랭킹 조회 |
+| `ranking_weekly` | 주간 포인트 랭킹 조회 |
+| `ranking_me` | 내 포인트 랭킹 조회 |
+| `badge_sync` | 내 배지 동기화 |
+| `badge_list` | 내 배지 목록 조회 |
 
-### 3-1. 문제세트 진입 API
+Grafana에서는 k6 기본 메트릭을 `type` 태그로 나눠서 봅니다.
 
-```http
-GET /api/v1/problem-sets/{problemSetId}
+```promql
+histogram_quantile(0.95, sum by (le, type) (rate(k6_http_req_duration_seconds_bucket[1m])))
 ```
 
-| 항목 | 기준 |
-| --- | --- |
-| 트래픽 조건 | VU 50, ramping 0 -> 50, 약 70초 |
-| API 유형 | 조회 / 집계 |
-| 성공 기준 | `http_req_duration{type:entry}` p95 < 800ms |
-| tail latency 기준 | `http_req_duration{type:entry}` p99 < 2s |
-| 실패율 | `http_req_failed < 1%` |
-| check 성공률 | 99% 이상 |
-| 함께 볼 메트릭 | `problem_set_entry_duration_seconds` |
-
-실패 해석:
-
-| 실패 상황 | 의심 지점 |
-| --- | --- |
-| p95가 800ms 초과 | 문제세트 조회 조합, 진행 상태 조회, startCode 구성 |
-| p99가 2초 초과 | 일부 요청의 DB 조회 지연 또는 커넥션 대기 |
-| HTTP duration과 `problem_set_entry_duration_seconds`가 함께 증가 | application 내부 조회 조합 병목 |
-| HTTP만 높고 custom metric은 낮음 | 인증, 필터, 네트워크, 공통 계층 의심 |
-
-### 3-2. 코드 제출/채점 API
-
-```http
-POST /api/v1/problems/{problemId}/submissions
+```promql
+sum by (type) (rate(k6_http_reqs_total[1m]))
 ```
 
-| 항목 | 기준 |
-| --- | --- |
-| 트래픽 조건 | VU 50, ramping 0 -> 50, 약 70초 |
-| API 유형 | 쓰기 + 외부 연동 |
-| 성공 기준 | `http_req_duration{type:submit}` p95 < 2s |
-| tail latency 기준 | `http_req_duration{type:submit}` p99 < 5s |
-| 실패율 | `http_req_failed < 1%` |
-| check 성공률 | 99% 이상 |
-| 함께 볼 메트릭 | `submission_grading_duration_seconds`, `code_execution_runner_duration_seconds`, `submission_failed_total` |
-
-실패 해석:
-
-| 실패 상황 | 의심 지점 |
-| --- | --- |
-| p95가 2초 초과 | Runner, 테스트케이스 채점, DB 저장 중 병목 가능 |
-| p99가 5초 초과 | timeout 근처 요청 또는 외부 Runner 지연 |
-| Runner duration만 높음 | Python Runner / Cloud Run / 네트워크 병목 |
-| Runner는 낮고 submission grading만 높음 | 테스트케이스 조회, 제출 저장, 진행 상태 갱신 병목 |
-| `submission_failed_total` 증가 | 제출/채점 예외 증가 |
+```promql
+sum by (type) (rate(k6_http_req_failed_total[1m]))
+/
+sum by (type) (rate(k6_http_reqs_total[1m]))
+```
 
 ---
 
-## 4단계 - k6 시나리오
+## 4. 로그 기준
 
-Problems 도메인은 병목 유형이 다르므로 k6 시나리오를 2개로 분리한다.
-
-| 파일 | 대상 | 설명 |
+| event keyword | 대상 | 의미 |
 | --- | --- | --- |
-| `monitoring/k6/scripts/problems/01-problem-set-entry-baseline.js` | 문제세트 진입 | 조회/집계형 API baseline |
-| `monitoring/k6/scripts/problems/02-submission-baseline.js` | 코드 제출/채점 | 쓰기 + 외부 Runner 연동 API baseline |
+| `rankings` | Ranking | 랭킹 API 요청, 실패 로그 추적 |
+| `badges` | Badge | 배지 목록/동기화 API 요청, 실패 로그 추적 |
+| `point_reward_task` | Reward Point | 포인트 지급 복구 스케줄러 동작 추적 |
 
-### 4-1. 문제세트 진입 시나리오
+Loki에서는 아래처럼 도메인 키워드 기준으로 확인합니다.
 
-주요 조건:
-
-| 항목 | 값 |
-| --- | --- |
-| 기본 문제세트 ID | `4001` |
-| 환경변수 | `PROBLEM_SET_ID`로 변경 가능 |
-| k6 tag | `type=entry` |
-| threshold | p95 < 800ms, p99 < 2s, failed < 1% |
-
-실행 대상 파일:
-
-```text
-monitoring/k6/scripts/problems/01-problem-set-entry-baseline.js
+```logql
+{service="code-bomba-lms"} |= "rankings"
 ```
 
-### 4-2. 코드 제출/채점 시나리오
+```logql
+{service="code-bomba-lms"} |= "badges"
+```
 
-주요 조건:
-
-| 항목 | 값 |
-| --- | --- |
-| 기본 문제 ID | `5001` |
-| 기본 제출 코드 | `result = None` |
-| 환경변수 | `PROBLEM_ID`, `SUBMISSION_CODE`로 변경 가능 |
-| k6 tag | `type=submit` |
-| threshold | p95 < 2s, p99 < 5s, failed < 1% |
-
-기본 코드를 오답 코드로 둔 이유:
-
-| 이유 | 설명 |
-| --- | --- |
-| 반복 제출 안정성 | 정답 코드를 반복 제출하면 이미 푼 문제 정책에 막힐 수 있다. |
-| 병목 측정 가능 | 오답이어도 Runner 실행, 테스트케이스 채점, 제출 저장 흐름은 실행된다. |
-| 포인트 중복 방지 | 정답 이벤트와 포인트 지급을 반복 발생시키지 않는다. |
-
-실행 대상 파일:
-
-```text
-monitoring/k6/scripts/problems/02-submission-baseline.js
+```logql
+{service="code-bomba-lms"} |= "point_reward_task"
 ```
 
 ---
 
-## 5단계 - 시드 + baseline
+## 5. 성공 기준
 
-### 5-1. 시드가 필요한 이유
-
-loadtest DB는 테스트 환경에서 비어 있거나 데이터가 적을 수 있다. 데이터가 너무 적으면 조회 조합, 테스트케이스 채점, Runner 호출 병목이 드러나지 않는다.
-
-| 데이터 | 권장 개수 | 이유 |
-| --- | ---: | --- |
-| 학생 계정 | 1개 이상 | k6 로그인에 필요 |
-| 문제세트 | 1개 이상 | 문제세트 진입 API 대상 |
-| 문제 | 20개 이상 | 문제 목록 조회 비용 확인 |
-| 테스트케이스 | 문제당 1~3개 | 제출/채점 비용 확인 |
-| 데이터셋 | 1개 이상 | Runner에서 CSV 기반 실행 확인 |
-| 문제 진행 상태 | 학생 1명 기준 | 이어풀기 상태 확인 |
-
-시더를 만든다면 다음 조건을 따른다.
-
-| 조건 | 설명 |
+| 대상 | 기준 |
 | --- | --- |
-| 프로필 | `@Profile("loadtest")` |
-| 실행 시점 | 애플리케이션 부팅 직후 |
-| 방식 | `JdbcTemplate batch` 권장 |
-| 중복 방지 | 이미 시드 데이터가 있으면 skip |
-| DB | 운영 DB가 아니라 loadtest DB만 사용 |
+| Ranking | VU 50, 약 70초 기준 `http_req_duration{type=ranking_*}` p95 < 500ms, 실패율 < 1% |
+| Badge | VU 50, 약 70초 기준 `http_req_duration{type=badge_*}` p95 < 500ms, 실패율 < 1% |
 
-현재 시더 클래스:
+랭킹은 데이터가 없으면 404가 발생할 수 있으므로, loadtest DB에 랭킹용 포인트/히스토리 시드가 필요합니다.
 
-```text
-src/main/java/com/wanted/codebombalms/problems/set/infrastructure/loadtest/ProblemsLoadTestSeeder.java
+---
+
+## 6. 실행 명령
+
+```powershell
+cd C:\Lecture\wan\Module03-project\Tsarbomba-Backend-module03-LMS\monitoring
 ```
 
-시더 기본값:
-
-| 항목 | 값 |
-| --- | --- |
-| 로그인 계정 | `u01@test.com` / `Test1234!` |
-| 문제세트 ID | `4001` |
-| 첫 번째 문제 ID | `5001` |
-| 문제 수 | 20개 |
-| 테스트케이스 | 문제당 1개 |
-| 데이터셋 | `employee_performance.csv` |
-
-### 5-2. 시드 확인 SQL
-
-```bash
-docker compose exec mysql mysql -ulms_loadtest -ploadtest lms_loadtest \
-  -e "select count(*) from problem_set;"
+```powershell
+docker compose run --rm -e RESULT_NAME=ranking-before k6 run -o experimental-prometheus-rw /scripts/ranking/01-ranking-baseline.js
 ```
 
-```bash
-docker compose exec mysql mysql -ulms_loadtest -ploadtest lms_loadtest \
-  -e "select count(*) from problem;"
-```
-
-```bash
-docker compose exec mysql mysql -ulms_loadtest -ploadtest lms_loadtest \
-  -e "select count(*) from problem_test_case;"
-```
-
-기대값:
-
-| 테이블 | 기대값 |
-| --- | ---: |
-| `problem_set` | 1 이상 |
-| `problem` | 20 이상 |
-| `problem_test_case` | 20 이상 |
-| `problem_dataset` | 1 이상 |
-| `users` | 테스트 학생 1명 이상 |
-
-### 5-3. baseline 실행
-
-문제세트 진입 baseline:
-
-```bash
-MSYS_NO_PATHCONV=1 docker compose run --rm \
-  -e PROBLEM_SET_ID=4001 \
-  -e RESULT_NAME=problem-set-entry-before \
-  k6 run -o experimental-prometheus-rw /scripts/problems/01-problem-set-entry-baseline.js
-```
-
-코드 제출/채점 baseline:
-
-```bash
-MSYS_NO_PATHCONV=1 docker compose run --rm \
-  -e PROBLEM_ID=5001 \
-  -e RESULT_NAME=submission-before \
-  k6 run -o experimental-prometheus-rw /scripts/problems/02-submission-baseline.js
-```
-
-### 5-4. 결과 저장 위치
-
-k6 결과는 `handleSummary`에 의해 아래 위치에 저장된다.
-
-```text
-monitoring/k6/results/problem-set-entry-before-summary.md
-monitoring/k6/results/problem-set-entry-before-summary.json
-monitoring/k6/results/submission-before-summary.md
-monitoring/k6/results/submission-before-summary.json
+```powershell
+docker compose run --rm -e RESULT_NAME=badge-sync-before k6 run -o experimental-prometheus-rw /scripts/badge/01-badge-sync-baseline.js
 ```
 
 ---
 
-## 6단계 준비 - PromQL / LogQL 후보
+## 7. 정리
 
-### 제출/채점 평균 처리 시간
-
-```promql
-rate(submission_grading_duration_seconds_sum[1m])
-/
-rate(submission_grading_duration_seconds_count[1m])
-```
-
-### Runner 평균 실행 시간
-
-```promql
-rate(code_execution_runner_duration_seconds_sum[1m])
-/
-rate(code_execution_runner_duration_seconds_count[1m])
-```
-
-### 문제세트 진입 평균 처리 시간
-
-```promql
-rate(problem_set_entry_duration_seconds_sum[1m])
-/
-rate(problem_set_entry_duration_seconds_count[1m])
-```
-
-### 제출 실패 증가량
-
-```promql
-rate(submission_failed_total[1m])
-```
-
-### 제출/채점 완료 로그
-
-```logql
-{job="lms"} |= "event=submission_completed"
-```
-
-### Runner 호출 완료 로그
-
-```logql
-{job="lms"} |= "event=code_execution_runner_completed"
-```
-
-### 문제세트 진입 로그
-
-```logql
-{job="lms"} |= "event=problem_set_entered"
-```
-
-### 1초 이상 걸린 Problems 요청
-
-```logql
-{job="lms"}
-  |= "event=request_completed"
-  |= "/api/v1/problem"
-  | regexp "durationMs=([1-9][0-9]{3,})"
-```
+- 예전 문제세트 진입/제출/Runner 전용 Micrometer 메트릭은 현재 측정 대상에서 제거했습니다.
+- 현재 대시보드는 k6 외부 관찰 지표와 Ranking/Badge 비즈니스 지표를 중심으로 봅니다.
+- Spring 내부 상세 지표가 필요하면 Ranking/Badge 전용 메트릭을 별도 추가합니다.
