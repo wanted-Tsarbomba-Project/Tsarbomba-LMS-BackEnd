@@ -4,6 +4,7 @@ import com.wanted.codebombalms.recommendation.application.command.GeneratedProbl
 import com.wanted.codebombalms.recommendation.application.command.GeneratedUserProblemSetRecommendations;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationGenerationClient;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationAlgorithm;
+import com.wanted.codebombalms.recommendation.infrastructure.metrics.RecommendationMetrics;
 import io.netty.channel.ChannelOption;
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -23,6 +24,7 @@ import reactor.netty.http.client.HttpClient;
 public class FastApiProblemRecommendationGenerationClient implements ProblemRecommendationGenerationClient {
 
     private final RecommendationPythonProperties properties;
+    private final RecommendationMetrics recommendationMetrics;
 
     @Value("${fastapi.url}")
     private String fastApiBaseUrl;
@@ -30,26 +32,47 @@ public class FastApiProblemRecommendationGenerationClient implements ProblemReco
     /** 설정된 Python 추천 생성 endpoint를 호출해 사용자별 추천 결과를 가져옵니다. */
     @Override
     public List<GeneratedUserProblemSetRecommendations> generateProblemSetRecommendations() {
+        long startedAt = System.nanoTime();
+
         if (!properties.isEnabled()) {
             log.info("Python 추천 생성 호출이 비활성화되어 추천 생성 배치를 건너뜁니다.");
+            recommendationMetrics.recordGenerationExternal(System.nanoTime() - startedAt);
+            log.info("event=recommendation_generation_external_called userCount=0 durationMs={}",
+                    (System.nanoTime() - startedAt) / 1_000_000);
             return List.of();
         }
 
-        PythonRecommendationResponse response = webClient().post()
-                .uri(properties.getGeneratePath())
-                .bodyValue(new PythonRecommendationRequest(3))
-                .retrieve()
-                .bodyToMono(PythonRecommendationResponse.class)
-                .block();
+        int userCount = 0;
 
-        if (response == null || response.recommendations() == null) {
-            return List.of();
+        try {
+            PythonRecommendationResponse response = webClient().post()
+                    .uri(properties.getGeneratePath())
+                    .bodyValue(new PythonRecommendationRequest(3))
+                    .retrieve()
+                    .bodyToMono(PythonRecommendationResponse.class)
+                    .block();
+
+            if (response == null || response.recommendations() == null) {
+                return List.of();
+            }
+
+            userCount = response.recommendations().size();
+            return response.recommendations()
+                    .stream()
+                    .map(PythonUserRecommendations::toCommand)
+                    .toList();
+        } catch (RuntimeException exception) {
+            String reason = classifyFailure(exception);
+            recommendationMetrics.incrementGenerationFailed(reason);
+            log.warn("event=recommendation_generation_failed reason={} exceptionType={}",
+                    reason, exception.getClass().getSimpleName());
+            throw exception;
+        } finally {
+            long elapsedNanos = System.nanoTime() - startedAt;
+            recommendationMetrics.recordGenerationExternal(elapsedNanos);
+            log.info("event=recommendation_generation_external_called userCount={} durationMs={}",
+                    userCount, elapsedNanos / 1_000_000);
         }
-
-        return response.recommendations()
-                .stream()
-                .map(PythonUserRecommendations::toCommand)
-                .toList();
     }
 
     /** 추천 기능이 챗봇 WebClient 설정에 의존하지 않도록 전용 client를 구성합니다. */
@@ -62,6 +85,15 @@ public class FastApiProblemRecommendationGenerationClient implements ProblemReco
                 .baseUrl(fastApiBaseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
+    }
+
+    private String classifyFailure(RuntimeException exception) {
+        String exceptionName = exception.getClass().getSimpleName().toLowerCase();
+        if (exceptionName.contains("timeout")) {
+            return "timeout";
+        }
+
+        return "external_error";
     }
 
     /** Python 서버에 요청하는 추천 개수 조건입니다. */
