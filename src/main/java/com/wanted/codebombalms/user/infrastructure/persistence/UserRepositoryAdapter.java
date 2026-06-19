@@ -30,7 +30,10 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<User> findByNameAndPhone(String name, String phone) {
-        return springDataUserRepository.findByNameAndPhoneAndDeletedAtIsNull(name, phone)
+        return springDataUserRepository
+                .findByNameAndPhoneAndDeletedAtIsNullOrderByCreatedAtDesc(name, phone)
+                .stream()
+                .findFirst()                 // 중복 시 가장 최근 가입 회원 1건 선택 (500 방어)
                 .map(UserJpaEntity::toDomain);
     }
 

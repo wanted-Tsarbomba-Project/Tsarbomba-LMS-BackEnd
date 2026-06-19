@@ -35,7 +35,7 @@ public class FindEmailService implements FindEmailUseCase {
     private String maskEmail(String email) {
         int atIndex = email.indexOf('@');
         if (atIndex <= 0) {
-            return email; // 형식 비정상 — 그대로 반환 (방어적 처리)
+            return "***"; // 형식 비정상 — 평문 노출 대신 비식별 문자열 반환
         }
 
         String local  = email.substring(0, atIndex);
