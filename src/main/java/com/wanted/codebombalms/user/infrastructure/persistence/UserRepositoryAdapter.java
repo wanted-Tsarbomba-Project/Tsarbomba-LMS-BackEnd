@@ -29,6 +29,12 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByNameAndPhone(String name, String phone) {
+        return springDataUserRepository.findByNameAndPhoneAndDeletedAtIsNull(name, phone)
+                .map(UserJpaEntity::toDomain);
+    }
+
+    @Override
     public boolean existsByEmail(String email) {
         return springDataUserRepository.existsByEmail(email);
     }
