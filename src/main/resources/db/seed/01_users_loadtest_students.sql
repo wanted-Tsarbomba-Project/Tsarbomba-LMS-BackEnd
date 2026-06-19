@@ -3,12 +3,13 @@
 -- 목적: users(role, created_at) 인덱스 부재 → 풀스캔 + filesort 병목을
 --       baseline 에서 드러내려면 학생 행이 충분히 많아야 한다(18명으론 안 보임).
 -- 전제: 00_users.sql(이름있는 계정) 먼저 적재. user_id 는 AUTO_INCREMENT(1000~) 자동.
--- 재실행: ddl-auto:create 라 부팅 시 스키마가 비므로, 깨끗한 부팅 후 1회 주입.
+-- 재실행: loadtest 는 ddl-auto:update + 도커 볼륨이라 데이터가 영속된다. 따라서
+--        INSERT IGNORE 로 중복(email/nickname UNIQUE)을 건너뛰어 재실행을 안전하게 한다.
 -- ============================================================
 
 SET SESSION cte_max_recursion_depth = 2000000;
 
-INSERT INTO users (
+INSERT IGNORE INTO users (
     role, email, password, name, nickname, phone,
     provider, provider_id, email_verified, is_locked,
     bio, career, created_at, updated_at, deleted_at
