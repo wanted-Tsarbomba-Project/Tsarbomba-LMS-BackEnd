@@ -8,6 +8,7 @@ import com.wanted.codebombalms.admin.operation.alert.application.query.Operation
 import com.wanted.codebombalms.admin.operation.alert.application.query.OperationAlertTargetInfo;
 import com.wanted.codebombalms.admin.operation.alert.domain.exception.OperationAlertErrorCode;
 import com.wanted.codebombalms.admin.operation.common.domain.model.OperationTargetType;
+import com.wanted.codebombalms.admin.operation.metrics.AdminMetrics;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
@@ -16,11 +17,13 @@ import com.wanted.codebombalms.problems.problem.application.usecase.ProblemTarge
 import com.wanted.codebombalms.user.application.query.StudentDetail;
 import com.wanted.codebombalms.user.application.usecase.GetStudentDetailUseCase;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -30,6 +33,7 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
     private final CourseQueryUseCase courseQueryUseCase;
     private final ProblemTargetDetailQueryUseCase problemTargetDetailQueryUseCase;
     private final GetStudentDetailUseCase getStudentDetailUseCase;
+    private final AdminMetrics adminMetrics;
 
     @Override
     // 대상 타입에 따라 강좌, 문제 또는 사용자 상세 조회로 분기한다.
@@ -40,11 +44,19 @@ public class OperationAlertTargetDetailAdapter implements OperationAlertTargetDe
             BigDecimal thresholdValue,
             OperationAlertRuleInfo rule
     ) {
-        return switch (targetType) {
+        long startedAt = System.nanoTime();
+        OperationAlertTargetDetail result = switch (targetType) {
             case COURSE -> loadCourseDetail(targetId, detectedValue, thresholdValue, rule);
             case PROBLEM -> loadProblemDetail(targetId, detectedValue, thresholdValue, rule);
             case USER -> loadUserDetail(targetId, detectedValue, thresholdValue, rule);
         };
+        long elapsedNanos = System.nanoTime() - startedAt;
+
+        adminMetrics.recordTargetDetail(targetType, elapsedNanos);
+        log.info("event=admin_operation_alert_target_detail_loaded targetType={} durationMs={}",
+                targetType, elapsedNanos / 1_000_000);
+
+        return result;
     }
 
     // 강좌 알림의 강좌 정보와 강좌 담당자 정보를 조회한다.
