@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -42,6 +43,7 @@ public class ProblemsLoadTestSeeder implements ApplicationRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
         Long alreadySeeded = jdbc.queryForObject(
                 "select count(*) from problem_set where problem_set_id = ?",
