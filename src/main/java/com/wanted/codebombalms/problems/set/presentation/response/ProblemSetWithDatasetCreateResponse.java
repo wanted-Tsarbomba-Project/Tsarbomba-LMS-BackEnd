@@ -1,6 +1,6 @@
 package com.wanted.codebombalms.problems.set.presentation.response;
 
-import com.wanted.codebombalms.problems.set.domain.model.CreatedProblemSummary;
+import  com.wanted.codebombalms.problems.set.domain.model.CreatedProblemSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
