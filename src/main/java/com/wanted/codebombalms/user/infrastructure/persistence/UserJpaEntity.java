@@ -14,13 +14,22 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
+
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_role_deleted_created",
+                        columnList = "role, deleted_at, created_at")
+        }
+)
 @SQLRestriction("deleted_at IS NULL")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class UserJpaEntity {
+
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -120,4 +129,6 @@ public class UserJpaEntity {
         this.career        = user.getCareer();
         this.deletedAt     = user.getDeletedAt();
     }
+
+
 }
