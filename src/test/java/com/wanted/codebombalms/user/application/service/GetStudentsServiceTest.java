@@ -5,6 +5,7 @@ import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import com.wanted.codebombalms.user.infrastructure.metrics.UserMetrics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.verify;
 class GetStudentsServiceTest {
 
     @Mock private UserRepository userRepository;
+    @Mock private UserMetrics userMetrics;
 
     @InjectMocks
     private GetStudentsService getStudentsService;
