@@ -9,7 +9,6 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetProgressState;
 import com.wanted.codebombalms.problems.set.application.usecase.ValidateProblemSetAccessUseCase;
-import com.wanted.codebombalms.problems.set.infrastructure.metrics.ProblemSetMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,6 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final LoadProgressProblemPort loadProgressProblemPort;
     private final IncreaseProblemSetStartedCountPort increaseProblemSetStartedCountPort;
     private final ValidateProblemSetAccessUseCase validateProblemSetAccessUseCase;
-    private final ProblemSetMetrics problemSetMetrics;
 
     @Override
     @Transactional
@@ -111,8 +109,6 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                     e
             );
             throw e;
-        } finally {
-            problemSetMetrics.recordEntry(System.nanoTime() - startNanos);
         }
     }
 

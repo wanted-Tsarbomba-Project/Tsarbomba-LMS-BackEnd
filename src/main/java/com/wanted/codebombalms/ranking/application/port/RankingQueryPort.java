@@ -10,4 +10,5 @@ public interface RankingQueryPort {
     List<RankingItem> findTotalPointRankings(int offset, int size);
     List<RankingItem> findWeeklyPointRankings(LocalDateTime from, int offset, int size);
     Optional<RankingItem> findMyTotalPointRanking(Long userId);
+    Optional<RankingItem> findMyWeeklyPointRanking(Long userId, LocalDateTime from);
 }

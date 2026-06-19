@@ -30,6 +30,16 @@ public class RankingService implements RankingQueryUseCase {
     }
 
     @Override
+    public RankingItem getMyWeeklyPointRanking(Long userId) {
+        LocalDateTime from = LocalDateTime.now().minusDays(7);
+
+        return rankingQueryPort.findMyWeeklyPointRanking(userId, from)
+                .orElseThrow(() -> new NotFoundException(
+                        RankingErrorCode.RANKING_NOT_FOUND
+                ));
+    }
+
+    @Override
     public RankingListResult getWeeklyPointRankings(int page, int size) {
         int safePage = Math.max(page, 0);
         int safeSize = normalizeSize(size);

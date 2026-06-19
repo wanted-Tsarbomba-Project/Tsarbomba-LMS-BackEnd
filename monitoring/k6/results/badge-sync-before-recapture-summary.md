@@ -1,24 +1,24 @@
-# k6 Result - problem-set-entry-before
+# k6 Result - badge-sync-before-recapture
 
 ## Summary
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 1439 |
-| iterations | 1438 |
+| http_reqs | 3183 |
+| iterations | 1591 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 10116954 |
-| data_sent bytes | 484814 |
+| data_received bytes | 35726055 |
+| data_sent bytes | 1086861 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 721.61 | 70.24 | 769.64 | 1112.50 | 1245.24 | 1647.03 | 1897.88 |
-| http_req_waiting | 720.91 | 70.02 | 768.84 | 1111.69 | 1244.79 | 1646.57 | 1897.45 |
-| http_req_blocked | 0.14 | 0.00 | 0.01 | 0.01 | 0.03 | 4.00 | 7.15 |
-| http_req_connecting | 0.13 | 0 | 0 | 0 | 0 | 3.82 | 6.97 |
+| http_req_duration | 255.67 | 6.98 | 260.84 | 528.02 | 634.51 | 751.92 | 959.64 |
+| http_req_waiting | 254.68 | 6.80 | 259.61 | 526.89 | 632.22 | 750.57 | 956.81 |
+| http_req_blocked | 0.04 | 0.00 | 0.00 | 0.01 | 0.01 | 2.12 | 4.62 |
+| http_req_connecting | 0.04 | 0 | 0 | 0 | 0 | 2.03 | 4.51 |
 
 ## Metric Meaning
 
@@ -36,9 +36,11 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 1438 pass / 0 fail |
-| has problemSetId | 1438 pass / 0 fail |
-| has problems array | 1438 pass / 0 fail |
+| badge sync status is 200 | 1591 pass / 0 fail |
+| badge sync has totalPoint | 1591 pass / 0 fail |
+| badge sync has newlyEarnedBadgeCount | 1591 pass / 0 fail |
+| my badge status is 200 | 1591 pass / 0 fail |
+| my badge has array | 1591 pass / 0 fail |
 
 ## How To Compare
 

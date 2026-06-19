@@ -122,4 +122,43 @@ public class RankingController {
                 MyRankingResponse.from(result)
         ));
     }
+
+    @Operation(
+            summary = "내 주간 포인트 랭킹 조회",
+            description = """
+                로그인한 사용자의 최근 7일 기준 주간 포인트 랭킹을 조회합니다.
+                전체 누적 포인트 랭킹이 아니라 point_history.created_at 기준 최근 7일 포인트 합계로 등수를 계산합니다.
+                """
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "내 주간 포인트 랭킹 조회 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "인증이 필요합니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "RNK-001 - 랭킹 정보를 찾을 수 없습니다."
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "서버 내부 오류"
+            )
+    })
+    @GetMapping("/weekly/me")
+    public ResponseEntity<ApiResponse<MyRankingResponse>> getMyWeeklyPointRanking(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal Long userId
+    ) {
+        var result = rankingQueryUseCase.getMyWeeklyPointRanking(userId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                ApiResponseCode.SUCCESS,
+                "내 주간 포인트 랭킹 조회에 성공했습니다.",
+                MyRankingResponse.from(result)
+        ));
+    }
 }

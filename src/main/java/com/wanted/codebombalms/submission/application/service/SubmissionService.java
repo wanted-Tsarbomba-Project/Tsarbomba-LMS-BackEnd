@@ -14,7 +14,6 @@ import com.wanted.codebombalms.submission.application.port.ProblemSolvedEventPor
 import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
 import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
-import com.wanted.codebombalms.submission.infrastructure.metrics.SubmissionMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
     private final ProblemSolvedEventPort problemSolvedEventPort;
     private final LoadActiveDatasetFilePathPort loadActiveDatasetFilePathPort;
     private final GenerateDatasetAccessUrlPort generateDatasetAccessUrlPort;
-    private final SubmissionMetrics submissionMetrics;
 
     @Override
     @Transactional
@@ -184,7 +182,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
 
         return view;
         } catch (RuntimeException e) {
-            submissionMetrics.incrementFailure();
             log.warn(
                     "event=submission_failed userId={} problemId={} exceptionType={} durationMs={}",
                     command.userId(),
@@ -194,8 +191,6 @@ public class SubmissionService implements SubmissionCommandUseCase {
                     e
             );
             throw e;
-        } finally {
-            submissionMetrics.recordGrading(System.nanoTime() - startNanos);
         }
     }
 
