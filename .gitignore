@@ -85,3 +85,6 @@ architecture-user-auth.html
 /forme/HOME.md
 /forme/부하테스트_모니터링_구축기.md
 /forme/
+/monitoring/k6/results/user-student-list-after-summary.json
+/monitoring/k6/results/user-student-list-before-50k-summary.json
+/monitoring/k6/results/user-student-list-before-summary.json

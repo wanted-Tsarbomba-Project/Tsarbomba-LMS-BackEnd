@@ -5,4 +5,6 @@ import java.util.List;
 public interface LearningEnrollmentPort {
 
     List<Long> findActiveStudentIdsByCourse(Long courseId);
+
+    boolean isActiveStudentOfCourse(Long courseId, Long userId);
 }

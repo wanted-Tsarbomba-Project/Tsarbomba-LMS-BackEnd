@@ -15,11 +15,13 @@ import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
 import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SubmissionService implements SubmissionCommandUseCase {
 
     private final SubmissionCommandPort submissionCommandPort;
@@ -37,6 +39,9 @@ public class SubmissionService implements SubmissionCommandUseCase {
     @Override
     @Transactional
     public SubmissionView handle(Long problemId, SubmitCodeCommand command) {
+        long startNanos = System.nanoTime();
+
+        try {
         submissionCodePolicy.validate(command.code());
 
         ProblemForSubmission problem =
@@ -146,7 +151,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
             }
         }
 
-        return new SubmissionView(
+        SubmissionView view = new SubmissionView(
                 submissionId,
                 problem.problemId(),
                 isCorrect,
@@ -163,7 +168,36 @@ public class SubmissionService implements SubmissionCommandUseCase {
                 pointGranted,
                 isCorrect ? problem.explanation() : null
         );
+
+        log.info(
+                "event=submission_completed userId={} problemId={} submissionId={} isCorrect={} passedTestCount={} totalTestCount={} durationMs={}",
+                command.userId(),
+                problem.problemId(),
+                submissionId,
+                isCorrect,
+                gradingResult.passedTestCount(),
+                gradingResult.totalTestCount(),
+                elapsedMillis(startNanos)
+        );
+
+        return view;
+        } catch (RuntimeException e) {
+            log.warn(
+                    "event=submission_failed userId={} problemId={} exceptionType={} durationMs={}",
+                    command.userId(),
+                    problemId,
+                    e.getClass().getSimpleName(),
+                    elapsedMillis(startNanos),
+                    e
+            );
+            throw e;
+        }
     }
+
+    private long elapsedMillis(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
+    }
+
     private void validateNotAlreadySolved(Long userId, Long problemId) {
         boolean alreadySolved =
                 submissionCommandPort.existsCorrectSubmission(

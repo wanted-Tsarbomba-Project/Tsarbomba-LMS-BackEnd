@@ -131,6 +131,51 @@ public class RankingQueryAdapter implements RankingQueryPort {
         return Optional.of(toRankingItem((Object[]) result.get(0)));
     }
 
+    @Override
+    public Optional<RankingItem> findMyWeeklyPointRanking(
+            Long userId,
+            LocalDateTime from
+    ) {
+        String sql = """
+        select *
+        from (
+            select
+                dense_rank() over (order by weekly.weekly_point desc) as ranking,
+                u.user_id,
+                u.name,
+                u.nickname,
+                null as badge_image_url,
+                weekly.weekly_point,
+                coalesce(up.total_point, 0) as total_point
+            from (
+                select
+                    ph.user_id,
+                    sum(ph.point) as weekly_point
+                from point_history ph
+                where ph.created_at >= :from
+                group by ph.user_id
+            ) weekly
+            join users u on u.user_id = weekly.user_id
+            left join user_point up on up.user_id = u.user_id
+            where u.deleted_at is null
+              and u.role = 'STUDENT'
+        ) ranked
+        where ranked.user_id = :userId
+        """;
+
+        Query query = entityManager.createNativeQuery(sql)
+                .setParameter("from", from)
+                .setParameter("userId", userId);
+
+        List<?> result = query.getResultList();
+
+        if (result.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(toRankingItem((Object[]) result.get(0)));
+    }
+
     private RankingItem toRankingItem(Object[] row) {
         return new RankingItem(
                 ((Number) row[0]).intValue(),

@@ -18,6 +18,16 @@ import java.time.LocalDateTime;
                         name = "uk_point_history_user_problem",
                         columnNames = {"user_id", "problem_id"}
                 )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_point_history_created_at",
+                        columnList = "created_at"
+                ),
+                @Index(
+                        name = "idx_point_history_user_created_at",
+                        columnList = "user_id, created_at"
+                )
         }
 )
 @Getter
