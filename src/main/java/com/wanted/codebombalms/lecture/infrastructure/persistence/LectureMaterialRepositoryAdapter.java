@@ -2,6 +2,8 @@ package com.wanted.codebombalms.lecture.infrastructure.persistence;
 
 import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +24,7 @@ public class LectureMaterialRepositoryAdapter implements LectureMaterialReposito
                     found.apply(material);
                     return found;
                 })
-                .orElseGet(() -> LectureMaterialJpaEntity.from(material));
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_MATERIAL_NOT_FOUND));
 
         return springDataLectureMaterialRepository.save(entity).toDomain();
     }

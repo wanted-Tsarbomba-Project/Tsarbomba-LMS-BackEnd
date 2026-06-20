@@ -13,12 +13,14 @@ import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialReposito
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class LectureMaterialService implements LectureMaterialUseCase {
 
     private final LectureMaterialRepository lectureMaterialRepository;
@@ -46,7 +48,12 @@ public class LectureMaterialService implements LectureMaterialUseCase {
                 storedMaterial.fileSize()
         );
 
-        return lectureMaterialRepository.save(material);
+        try {
+            return lectureMaterialRepository.save(material);
+        } catch (RuntimeException e) {
+            deleteUploadedMaterialQuietly(storedMaterial.filePath(), e);
+            throw e;
+        }
     }
 
     @Override
@@ -95,5 +102,14 @@ public class LectureMaterialService implements LectureMaterialUseCase {
     private LectureMaterial findMaterial(Long lectureMaterialId) {
         return lectureMaterialRepository.findByLectureMaterialIdAndDeletedAtIsNull(lectureMaterialId)
                 .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_MATERIAL_NOT_FOUND));
+    }
+
+    private void deleteUploadedMaterialQuietly(String filePath, RuntimeException originalException) {
+        try {
+            lectureMaterialStoragePort.delete(filePath);
+        } catch (RuntimeException deleteException) {
+            originalException.addSuppressed(deleteException);
+            log.warn("Failed to delete uploaded lecture material after DB save failure. filePath={}", filePath, deleteException);
+        }
     }
 }

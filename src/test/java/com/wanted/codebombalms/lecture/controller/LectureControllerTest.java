@@ -34,6 +34,8 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -200,6 +202,8 @@ class LectureControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LectureResponseCode.MATERIAL_DOWNLOAD_URL_ISSUED))
                 .andExpect(jsonPath("$.data.downloadUrl").value("https://storage.googleapis.com/codebombalms/lecture_materials/guide.pdf?signature=test"));
+
+        verify(lectureMaterialUseCase).issueDownloadUrl(eq(lectureMaterialId), isNull(), eq(false));
     }
 
     private Lecture createDetailResult(Long lectureId, String title) {
@@ -234,16 +238,17 @@ class LectureControllerTest {
     }
 
     private LectureMaterial createMaterial(Long lectureMaterialId, Long lectureId) {
-        LectureMaterial material = new LectureMaterial();
-        material.setLectureMaterialId(lectureMaterialId);
-        material.setLectureId(lectureId);
-        material.setOriginalFileName("guide.pdf");
-        material.setStoredFileName("stored-guide.pdf");
-        material.setFilePath("lecture_materials/stored-guide.pdf");
-        material.setContentType("application/pdf");
-        material.setFileSize(3L);
-        material.setCreatedAt(LocalDateTime.now());
-        return material;
+        return LectureMaterial.restore(
+                lectureMaterialId,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                LocalDateTime.now(),
+                null
+        );
     }
 
     private Authentication operatorUser(Long userId) {

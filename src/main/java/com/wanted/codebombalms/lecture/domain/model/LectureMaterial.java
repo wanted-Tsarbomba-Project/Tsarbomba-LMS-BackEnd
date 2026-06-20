@@ -1,15 +1,11 @@
 package com.wanted.codebombalms.lecture.domain.model;
 
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @Getter
-@Setter
 public class LectureMaterial {
 
     private Long lectureMaterialId;
@@ -22,6 +18,28 @@ public class LectureMaterial {
     private LocalDateTime createdAt;
     private LocalDateTime deletedAt;
 
+    private LectureMaterial(
+            Long lectureMaterialId,
+            Long lectureId,
+            String originalFileName,
+            String storedFileName,
+            String filePath,
+            String contentType,
+            Long fileSize,
+            LocalDateTime createdAt,
+            LocalDateTime deletedAt
+    ) {
+        this.lectureMaterialId = lectureMaterialId;
+        this.lectureId = lectureId;
+        this.originalFileName = originalFileName;
+        this.storedFileName = storedFileName;
+        this.filePath = filePath;
+        this.contentType = contentType;
+        this.fileSize = fileSize;
+        this.createdAt = createdAt;
+        this.deletedAt = deletedAt;
+    }
+
     public static LectureMaterial create(
             Long lectureId,
             String originalFileName,
@@ -30,14 +48,17 @@ public class LectureMaterial {
             String contentType,
             Long fileSize
     ) {
-        LectureMaterial material = new LectureMaterial();
-        material.setLectureId(lectureId);
-        material.setOriginalFileName(originalFileName);
-        material.setStoredFileName(storedFileName);
-        material.setFilePath(filePath);
-        material.setContentType(contentType);
-        material.setFileSize(fileSize);
-        return material;
+        return new LectureMaterial(
+                null,
+                lectureId,
+                originalFileName,
+                storedFileName,
+                filePath,
+                contentType,
+                fileSize,
+                null,
+                null
+        );
     }
 
     public static LectureMaterial restore(

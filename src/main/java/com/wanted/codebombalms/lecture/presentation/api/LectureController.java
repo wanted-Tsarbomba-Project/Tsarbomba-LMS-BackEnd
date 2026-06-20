@@ -169,6 +169,7 @@ public class LectureController {
 
     @PostMapping("/lecture-materials/{lectureMaterialId}/download-url")
     @Operation(summary = "강의자료 다운로드 URL 발급")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<?>> issueMaterialDownloadUrl(
             @PathVariable Long lectureMaterialId,
             @AuthenticationPrincipal Long userId,

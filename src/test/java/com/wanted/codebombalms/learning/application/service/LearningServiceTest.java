@@ -20,6 +20,7 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,9 @@ class LearningServiceTest {
 
     @Mock
     private LearningUserPort learningUserPort;
+
+    @Mock
+    private LearningMetrics learningMetrics;
 
     @InjectMocks
     private LectureProgressService lectureProgressService;

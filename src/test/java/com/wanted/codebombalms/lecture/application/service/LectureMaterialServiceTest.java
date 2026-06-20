@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
@@ -98,6 +100,23 @@ class LectureMaterialServiceTest {
     }
 
     @Test
+    void issueDownloadUrl_returnsUrl_whenOperator() {
+        Long lectureMaterialId = 10L;
+
+        given(lectureMaterialRepository.findByLectureMaterialIdAndDeletedAtIsNull(lectureMaterialId))
+                .willReturn(Optional.of(createMaterial(lectureMaterialId, 1L)));
+        given(lectureMaterialStoragePort.generateDownloadUrl(
+                "lecture_materials/stored-guide.pdf",
+                "guide.pdf"
+        )).willReturn("https://download-url");
+
+        String result = lectureMaterialService.issueDownloadUrl(lectureMaterialId, null, true);
+
+        assertEquals("https://download-url", result);
+        verify(lectureEnrollmentPort, never()).isActiveStudentOfCourse(any(), any());
+    }
+
+    @Test
     void issueDownloadUrl_throwsForbidden_whenStudentNotEnrolled() {
         Long lectureMaterialId = 10L;
         Long lectureId = 1L;
@@ -118,6 +137,76 @@ class LectureMaterialServiceTest {
         assertEquals(LectureErrorCode.LECTURE_MATERIAL_ACCESS_DENIED, exception.getErrorCode());
     }
 
+    @Test
+    void issueDownloadUrl_throwsForbidden_whenUserIdIsNull() {
+        Long lectureMaterialId = 10L;
+
+        given(lectureMaterialRepository.findByLectureMaterialIdAndDeletedAtIsNull(lectureMaterialId))
+                .willReturn(Optional.of(createMaterial(lectureMaterialId, 1L)));
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureMaterialService.issueDownloadUrl(lectureMaterialId, null, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_MATERIAL_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void findMaterials_returnsMaterials() {
+        Long lectureId = 1L;
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId))
+                .willReturn(Optional.of(createLecture(lectureId, 100L)));
+        given(lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId))
+                .willReturn(java.util.List.of(createMaterial(10L, lectureId)));
+
+        var result = lectureMaterialService.findMaterials(lectureId);
+
+        assertEquals(1, result.size());
+        assertEquals(10L, result.get(0).getLectureMaterialId());
+    }
+
+    @Test
+    void findMaterials_throwsNotFound_whenLectureMissing() {
+        Long lectureId = 999L;
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> lectureMaterialService.findMaterials(lectureId)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void deleteMaterial_softDeletesAndDeletesStorageObject() {
+        Long lectureMaterialId = 10L;
+        LectureMaterial material = createMaterial(lectureMaterialId, 1L);
+        LectureMaterial deleted = LectureMaterial.restore(
+                lectureMaterialId,
+                1L,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                null,
+                java.time.LocalDateTime.now()
+        );
+
+        given(lectureMaterialRepository.findByLectureMaterialIdAndDeletedAtIsNull(lectureMaterialId))
+                .willReturn(Optional.of(material));
+        given(lectureMaterialRepository.save(any(LectureMaterial.class))).willReturn(deleted);
+
+        lectureMaterialService.deleteMaterial(lectureMaterialId);
+
+        verify(lectureMaterialRepository).save(any(LectureMaterial.class));
+        verify(lectureMaterialStoragePort).delete("lecture_materials/stored-guide.pdf");
+    }
+
     private Lecture createLecture(Long lectureId, Long courseId) {
         Course course = new Course();
         course.setCourseId(courseId);
@@ -129,14 +218,16 @@ class LectureMaterialServiceTest {
     }
 
     private LectureMaterial createMaterial(Long lectureMaterialId, Long lectureId) {
-        LectureMaterial material = new LectureMaterial();
-        material.setLectureMaterialId(lectureMaterialId);
-        material.setLectureId(lectureId);
-        material.setOriginalFileName("guide.pdf");
-        material.setStoredFileName("stored-guide.pdf");
-        material.setFilePath("lecture_materials/stored-guide.pdf");
-        material.setContentType("application/pdf");
-        material.setFileSize(3L);
-        return material;
+        return LectureMaterial.restore(
+                lectureMaterialId,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                null,
+                null
+        );
     }
 }

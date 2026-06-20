@@ -91,7 +91,10 @@ public class GcsLectureMaterialStorageAdapter implements LectureMaterialStorageP
         try {
             getStorage().delete(BlobId.of(properties.getStorage().getBucket(), filePath));
         } catch (Exception e) {
-            log.warn("Failed to delete lecture material from GCS. filePath={}", filePath, e);
+            throw new ExternalServiceException(
+                    LectureErrorCode.LECTURE_MATERIAL_DELETE_FAILED,
+                    e
+            );
         }
     }
 
