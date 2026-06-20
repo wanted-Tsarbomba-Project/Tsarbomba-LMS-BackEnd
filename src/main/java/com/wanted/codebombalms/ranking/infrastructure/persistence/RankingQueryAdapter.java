@@ -34,11 +34,10 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 select
                     ph.user_id,
                     sum(ph.point) as weekly_point
-            from point_history ph
-            where ph.created_at >= date_sub(now(), interval 7 day)
-              and ph.user_id = :userId
-            group by ph.user_id
-        ) weekly on weekly.user_id = u.user_id
+                from point_history ph
+                where ph.created_at >= date_sub(now(), interval 7 day)
+                group by ph.user_id
+            ) weekly on weekly.user_id = u.user_id
             where u.deleted_at is null
               and u.role = 'STUDENT'
             order by ranking asc, u.user_id asc
@@ -124,8 +123,9 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 sum(ph.point) as weekly_point
             from point_history ph
             where ph.created_at >= date_sub(now(), interval 7 day)
+              and ph.user_id = :userId
             group by ph.user_id
-        ) 
+        ) weekly on weekly.user_id = u.user_id
         where u.user_id = :userId
           and u.deleted_at is null
           and u.role = 'STUDENT'
