@@ -4,6 +4,12 @@ spring:
     username: lms_loadtest
     password: loadtest
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      idle-timeout: 30000
+      max-lifetime: 1800000
+      connection-timeout: 3000
 
   mail:
     username: loadtest@example.com
@@ -11,7 +17,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: false
