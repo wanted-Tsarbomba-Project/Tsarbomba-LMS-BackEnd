@@ -3,9 +3,9 @@ package com.wanted.codebombalms.problems.execution.infrastructure.runner;
 import com.wanted.codebombalms.problems.execution.application.port.RunCodePort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
 @Slf4j
 @Component
@@ -18,7 +18,6 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
     public CloudRunCodeRunnerAdapter(
             CloudRunCodeRunnerProperties properties,
             RestClient.Builder restClientBuilder
-
     ) {
         SimpleClientHttpRequestFactory requestFactory =
                 new SimpleClientHttpRequestFactory();
@@ -33,8 +32,9 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
     }
 
     @Override
-    public CodeRunResult run(CodeRunCommand command)  {
+    public CodeRunResult run(CodeRunCommand command) {
         long startTime = System.currentTimeMillis();
+        long startNanos = System.nanoTime();
 
         try {
             CloudRunExecuteResponse response = restClient.post()
@@ -50,6 +50,12 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
             long executionTimeMs = resolveExecutionTime(response, startTime);
 
             if (response == null) {
+                log.warn(
+                        "event=code_execution_runner_completed success=false reason=empty_response executionTimeMs={} durationMs={}",
+                        executionTimeMs,
+                        elapsedMillis(startNanos)
+                );
+
                 return new CodeRunResult(
                         null,
                         "코드 실행 서버 응답이 비어 있습니다.",
@@ -60,6 +66,13 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
 
             boolean success = Boolean.TRUE.equals(response.success());
 
+            log.info(
+                    "event=code_execution_runner_completed success={} executionTimeMs={} durationMs={}",
+                    success,
+                    executionTimeMs,
+                    elapsedMillis(startNanos)
+            );
+
             return new CodeRunResult(
                     response.stdout(),
                     success ? null : response.stderr(),
@@ -67,8 +80,13 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
                     success
             );
         } catch (Exception e) {
-            log.error("Cloud Run 코드 실행 서버 호출에 실패했습니다. endpoint={}",
-                    properties.getEndpoint(), e);
+            log.error(
+                    "event=code_execution_runner_failed endpoint={} exceptionType={} durationMs={}",
+                    properties.getEndpoint(),
+                    e.getClass().getSimpleName(),
+                    elapsedMillis(startNanos),
+                    e
+            );
 
             return new CodeRunResult(
                     null,
@@ -84,6 +102,10 @@ public class CloudRunCodeRunnerAdapter implements RunCodePort {
             return response.executionTimeMs();
         }
         return System.currentTimeMillis() - startTime;
+    }
+
+    private long elapsedMillis(long startNanos) {
+        return (System.nanoTime() - startNanos) / 1_000_000;
     }
 
     private String appendResultPrinter(String code) {

@@ -13,7 +13,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter
 @ToString
-@Table(name = "course")
+@Table(
+        name = "course",
+        indexes = {
+                @Index(
+                        name = "idx_course_status_deleted_at_course_id",
+                        columnList = "status, deleted_at, course_id"
+                ),
+                @Index(
+                        name = "idx_course_title",
+                        columnList = "title"
+                )
+        }
+)
 public class CourseJpaEntity {
 
     @Id

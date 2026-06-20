@@ -10,19 +10,9 @@ spring:
       idle-timeout: 30000
       max-lifetime: 1800000
       connection-timeout: 3000
-
-  mail:
-    username: loadtest@example.com
-    password: loadtest
-
   jpa:
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: false
-
-jwt:
-  secret: g4SoLqa33ggACZrbDM3X8MDqzNEDOhw+dKb5cr9CQbw=
-  access-expiration: 3600000
-  refresh-expiration: 1209600000
