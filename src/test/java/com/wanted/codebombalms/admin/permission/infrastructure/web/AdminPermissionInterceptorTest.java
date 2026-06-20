@@ -52,8 +52,8 @@ class AdminPermissionInterceptorTest {
         // given
         authenticate(1L, "ROLE_MASTER");
         MockHttpServletRequest request = new MockHttpServletRequest(
-                "GET",
-                "/api/v1/admin/operation-alerts"
+                "PATCH",
+                "/api/v1/admin/operation-alerts/10/status"
         );
 
         // when
@@ -109,12 +109,48 @@ class AdminPermissionInterceptorTest {
     }
 
     @Test
-    @DisplayName("USER_MANAGEMENT만 있는 ADMIN이 운영 규칙 API에 접근하면 MASTER 문의 메시지와 함께 403 예외를 반환한다.")
-    void user_management_admin_cannot_access_rule_management_api() {
+    @DisplayName("ADMIN은 RULE_MANAGEMENT 없이도 운영 규칙 조회 API를 통과한다.")
+    void admin_rule_query_api_does_not_require_rule_management_permission() {
         // given
         authenticate(2L, "ROLE_ADMIN");
         MockHttpServletRequest request = new MockHttpServletRequest(
                 "GET",
+                "/api/v1/admin/automation-rules"
+        );
+
+        // when
+        boolean result = interceptor.preHandle(request, new MockHttpServletResponse(), new Object());
+
+        // then
+        assertTrue(result);
+        verifyNoInteractions(adminPermissionCheckService);
+    }
+
+    @Test
+    @DisplayName("ADMIN은 RULE_MANAGEMENT 없이도 운영 알림 조회 API를 통과한다.")
+    void admin_operation_alert_query_api_does_not_require_rule_management_permission() {
+        // given
+        authenticate(2L, "ROLE_ADMIN");
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "GET",
+                "/api/v1/admin/operation-alerts/10"
+        );
+
+        // when
+        boolean result = interceptor.preHandle(request, new MockHttpServletResponse(), new Object());
+
+        // then
+        assertTrue(result);
+        verifyNoInteractions(adminPermissionCheckService);
+    }
+
+    @Test
+    @DisplayName("USER_MANAGEMENT만 있는 ADMIN이 운영 규칙 수정 API에 접근하면 MASTER 문의 메시지와 함께 403 예외를 반환한다.")
+    void user_management_admin_cannot_access_rule_management_api() {
+        // given
+        authenticate(2L, "ROLE_ADMIN");
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                "PATCH",
                 "/api/v1/admin/automation-rules"
         );
 
@@ -139,7 +175,7 @@ class AdminPermissionInterceptorTest {
         // given
         authenticate("admin@test.com", "ROLE_ADMIN");
         MockHttpServletRequest request = new MockHttpServletRequest(
-                "GET",
+                "PATCH",
                 "/api/v1/admin/automation-rules"
         );
 
