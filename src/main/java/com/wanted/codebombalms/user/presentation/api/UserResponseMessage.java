@@ -12,4 +12,5 @@ public class UserResponseMessage {
     public static final String PASSWORD_VERIFIED = "비밀번호 인증 성공";
     public static final String PROFILE_UPDATED = "개인정보 수정 성공";
     public static final String PASSWORD_CHANGED = "비밀번호 변경 성공";
+    public static final String EMAIL_FOUND = "이메일 찾기 성공";
 }

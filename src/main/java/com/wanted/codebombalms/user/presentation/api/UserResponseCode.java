@@ -12,4 +12,5 @@ public class UserResponseCode {
     public static final String PASSWORD_VERIFIED = "USER-ME-PASSWORD-VERIFIED";
     public static final String PROFILE_UPDATED = "USER-ME-PROFILE-UPDATED";
     public static final String PASSWORD_CHANGED = "USER-ME-PASSWORD-CHANGED";
+    public static final String EMAIL_FOUND = "USER-EMAIL-FOUND";
 }
