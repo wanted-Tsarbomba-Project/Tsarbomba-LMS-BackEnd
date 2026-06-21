@@ -9,15 +9,23 @@ import org.springframework.stereotype.Component;
 public class LearningMetrics {
 
     private final Timer studentProgressQueryTimer;
+    private final Timer studentProgressItemTimer;
 
     public LearningMetrics(MeterRegistry registry) {
         this.studentProgressQueryTimer = Timer.builder("learning_student_progress_query_duration")
                 .description("강좌별 학생 학습률 목록 조회 구간 시간")
                 .register(registry);
+        this.studentProgressItemTimer = Timer.builder("learning_student_progress_item_duration")
+                .description("student progress item build duration")
+                .register(registry);
     }
 
     public void recordStudentProgressQuery(long elapsedNanos) {
         studentProgressQueryTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
+    }
+
+    public void recordStudentProgressItem(long elapsedNanos) {
+        studentProgressItemTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 }
 

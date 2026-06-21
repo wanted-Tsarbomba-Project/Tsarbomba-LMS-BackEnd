@@ -478,6 +478,7 @@ class LearningServiceTest {
         assertEquals(2L, result.completedProblemCount());
         assertEquals(3L, result.totalProblemCount());
         verify(learningMetrics).recordStudentProgressQuery(anyLong());
+        verify(learningMetrics).recordStudentProgressItem(anyLong());
     }
 
     @Test

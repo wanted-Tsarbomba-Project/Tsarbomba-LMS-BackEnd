@@ -33,7 +33,7 @@
 
 ```text
 event=learning_student_progress_queried courseId=1 studentCount=200 durationMs=830
-event=learning_student_progress_item_built courseId=1 userId=10 lectureCount=20 problemSetCount=20 durationMs=7
+event=learning_student_progress_breakdown courseId=1 studentCount=200 lectureCount=20 problemSetCount=20 lectureIdsMs=120 problemSetIdsMs=130 userNameMs=90 completedLectureCountMs=800 completedProblemCountMs=950 totalBuildMs=2300
 event=learning_summary_queried courseCount=10 durationMs=2450
 event=learning_lecture_progress_queried courseId=1 lectureCount=20 durationMs=410
 ```
@@ -63,6 +63,14 @@ rate(learning_student_progress_query_duration_seconds_sum[1m])
 clamp_min(rate(learning_student_progress_query_duration_seconds_count[1m]), 0.0001)
 ```
 
+### ?숈깮 1紐??숈뒿瑜?怨꾩궛 援ш컙 ?됯퇏
+
+```promql
+rate(learning_student_progress_item_duration_seconds_sum[1m])
+/
+clamp_min(rate(learning_student_progress_item_duration_seconds_count[1m]), 0.0001)
+```
+
 ### Hikari active connection
 
 ```promql
@@ -76,6 +84,11 @@ hikaricp_connections_active
 ```logql
 {job="lms"} |= "event=learning_student_progress_queried"
   | regexp "durationMs=(?P<d>[0-9]+)" | unwrap d
+```
+
+```logql
+{job="lms"} |= "event=learning_student_progress_breakdown"
+  | regexp "completedProblemCountMs=(?P<d>[0-9]+)" | unwrap d
 ```
 
 특정 요청 추적:
