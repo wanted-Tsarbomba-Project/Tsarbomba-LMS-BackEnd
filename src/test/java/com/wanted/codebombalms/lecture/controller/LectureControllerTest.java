@@ -4,16 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
+import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.lecture.presentation.api.LectureController;
 import com.wanted.codebombalms.lecture.presentation.api.LectureResponseCode;
 import com.wanted.codebombalms.lecture.presentation.api.LectureResponseMessage;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureCreateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +33,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -52,6 +59,9 @@ class LectureControllerTest {
 
     @MockitoBean
     private LectureQueryUseCase lectureQueryUseCase;
+
+    @MockitoBean
+    private LectureMaterialUseCase lectureMaterialUseCase;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
@@ -147,6 +157,55 @@ class LectureControllerTest {
         verify(lectureCommandUseCase).deleteLecture(lectureId);
     }
 
+    @Test
+    void uploadMaterial_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        MockMultipartFile material = new MockMultipartFile(
+                "material",
+                "guide.pdf",
+                "application/pdf",
+                "pdf".getBytes()
+        );
+
+        given(lectureMaterialUseCase.uploadMaterial(any(UploadLectureMaterialCommand.class)))
+                .willReturn(createMaterial(10L, lectureId));
+
+        mockMvc.perform(multipart("/api/v1/lectures/{lectureId}/materials", lectureId)
+                        .file(material)
+                        .with(authentication(operatorUser(10L))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.MATERIAL_UPLOADED))
+                .andExpect(jsonPath("$.message").value(LectureResponseMessage.MATERIAL_UPLOADED))
+                .andExpect(jsonPath("$.data.originalFileName").value("guide.pdf"));
+    }
+
+    @Test
+    void findMaterials_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        given(lectureMaterialUseCase.findMaterials(lectureId))
+                .willReturn(List.of(createMaterial(10L, lectureId)));
+
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/materials", lectureId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].lectureMaterialId").value(10L));
+    }
+
+    @Test
+    void issueMaterialDownloadUrl_returnsApiResponse() throws Exception {
+        Long lectureMaterialId = 10L;
+        given(lectureMaterialUseCase.issueDownloadUrl(any(), any(), anyBoolean()))
+                .willReturn("https://storage.googleapis.com/codebombalms/lecture_materials/guide.pdf?signature=test");
+
+        mockMvc.perform(post("/api/v1/lecture-materials/{lectureMaterialId}/download-url", lectureMaterialId)
+                        .with(authentication(studentUser(20L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.MATERIAL_DOWNLOAD_URL_ISSUED))
+                .andExpect(jsonPath("$.data.downloadUrl").value("https://storage.googleapis.com/codebombalms/lecture_materials/guide.pdf?signature=test"));
+
+        verify(lectureMaterialUseCase).issueDownloadUrl(eq(lectureMaterialId), isNull(), eq(false));
+    }
+
     private Lecture createDetailResult(Long lectureId, String title) {
         return createLecture(lectureId, createCourse(1L), title);
     }
@@ -178,8 +237,28 @@ class LectureControllerTest {
         return lecture;
     }
 
+    private LectureMaterial createMaterial(Long lectureMaterialId, Long lectureId) {
+        return LectureMaterial.restore(
+                lectureMaterialId,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                LocalDateTime.now(),
+                null
+        );
+    }
+
     private Authentication operatorUser(Long userId) {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
+        authentication.setAuthenticated(true);
+        return authentication;
+    }
+
+    private Authentication studentUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_STUDENT");
         authentication.setAuthenticated(true);
         return authentication;
     }

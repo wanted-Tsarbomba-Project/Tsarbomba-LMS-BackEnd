@@ -39,6 +39,7 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
         deleteLectureProblemSetsByLectureIds(lectureIds);
         deleteLectureProgressesByLectureIds(lectureIds);
+        deleteLectureMaterialsByLectureIds(lectureIds);
         return deleteLecturesByIds(lectureIds);
     }
 
@@ -88,6 +89,13 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
             where p.lectureId in :lectureIds
             """)
     int deleteLectureProgressesByLectureIds(@Param("lectureIds") List<Long> lectureIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from LectureMaterialJpaEntity m
+            where m.lectureId in :lectureIds
+            """)
+    int deleteLectureMaterialsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

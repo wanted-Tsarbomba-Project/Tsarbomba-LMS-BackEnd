@@ -16,10 +16,14 @@ import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
 import java.util.List;
+
+import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminLearningProgressQueryService implements AdminLearningProgressQueryUseCase {
@@ -31,6 +35,7 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     private final LearningUserPort learningUserPort;
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
+    private final LearningMetrics learningMetrics;
 
     @Override
     @Transactional(readOnly = true)
@@ -50,10 +55,30 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     @Override
     @Transactional(readOnly = true)
     public List<StudentLearningProgress> findStudentProgresses(Long courseId) {
+        long totalStartedAt = System.nanoTime();
+
+        long studentIdsStartedAt = System.nanoTime();
         List<Long> studentIds = learningEnrollmentPort.findActiveStudentIdsByCourse(courseId);
-        return studentIds.stream()
+        long studentIdsElapsedNanos = System.nanoTime() - studentIdsStartedAt;
+
+        log.info("event=learning_student_ids_queried courseId={} studentCount={} durationMs={}",
+                courseId, studentIds.size(), studentIdsElapsedNanos / 1_000_000);
+
+        long progressBuildStartedAt = System.nanoTime();
+        List<StudentLearningProgress> progresses = studentIds.stream()
                 .map(studentId -> buildStudentProgress(courseId, studentId))
                 .toList();
+        long progressBuildElapsedNanos = System.nanoTime() - progressBuildStartedAt;
+
+        log.info("event=learning_student_progress_built courseId={} studentCount={} durationMs={}",
+                courseId, studentIds.size(), progressBuildElapsedNanos / 1_000_000);
+
+        long totalElapsedNanos = System.nanoTime() - totalStartedAt;
+        learningMetrics.recordStudentProgressQuery(totalElapsedNanos);
+        log.info("event=learning_student_progress_queried courseId={} studentCount={} durationMs={}",
+                courseId, studentIds.size(), totalElapsedNanos / 1_000_000);
+
+        return progresses;
     }
 
     @Override
