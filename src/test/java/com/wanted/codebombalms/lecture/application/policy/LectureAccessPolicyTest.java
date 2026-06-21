@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
@@ -32,6 +33,32 @@ class LectureAccessPolicyTest {
 
         lectureAccessPolicy.validateLearningContentAccess(lecture, null, true);
 
+        verify(lectureEnrollmentPort, never()).isActiveStudentOfCourse(1L, null);
+    }
+
+    @Test
+    void validateLearningContentAccess_allowsStudent_whenStudentIsEnrolled() {
+        Long userId = 10L;
+        Lecture lecture = lecture(1L);
+        given(lectureEnrollmentPort.isActiveStudentOfCourse(1L, userId)).willReturn(true);
+
+        assertDoesNotThrow(
+                () -> lectureAccessPolicy.validateLearningContentAccess(lecture, userId, false)
+        );
+
+        verify(lectureEnrollmentPort).isActiveStudentOfCourse(1L, userId);
+    }
+
+    @Test
+    void validateLearningContentAccess_throwsForbidden_whenUserIdIsNull() {
+        Lecture lecture = lecture(1L);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureAccessPolicy.validateLearningContentAccess(lecture, null, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
         verify(lectureEnrollmentPort, never()).isActiveStudentOfCourse(1L, null);
     }
 

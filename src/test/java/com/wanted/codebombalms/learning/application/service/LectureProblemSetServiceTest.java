@@ -74,6 +74,10 @@ class LectureProblemSetServiceTest {
 
         var result = lectureProblemSetService.enterLectureProblemSet(userId, lectureProblemSetId);
 
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         assertEquals(2, result.currentProblemNumber());
         assertEquals(3002L, result.currentProblemId());
         assertEquals(1, result.solvedProblemCount());
@@ -160,6 +164,10 @@ class LectureProblemSetServiceTest {
         verify(lectureProblemSubmissionRepository).save(submissionCaptor.capture());
         assertEquals(lectureProblemSetId, submissionCaptor.getValue().lectureProblemSetId());
         assertEquals(problemId, submissionCaptor.getValue().problemId());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase).recordProgress(any());
     }
 
@@ -191,6 +199,10 @@ class LectureProblemSetServiceTest {
         assertFalse(result.correct());
         assertEquals(2, result.remainingAttemptCount());
         assertEquals(null, result.nextProblemId());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
@@ -214,6 +226,10 @@ class LectureProblemSetServiceTest {
 
         verify(learningProblemGradingPort, never()).grade(any(), any(), any());
         verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
@@ -238,6 +254,10 @@ class LectureProblemSetServiceTest {
         );
 
         verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
