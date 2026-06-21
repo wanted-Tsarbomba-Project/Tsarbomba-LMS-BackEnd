@@ -28,6 +28,7 @@ public class LearningLectureProblemSetAdapter implements LearningLectureProblemS
 
         return new LearningLectureProblemSet(
                 lectureProblemSet.getLectureProblemSetId(),
+                lectureProblemSet.getCourseId(),
                 lectureProblemSet.getLectureId(),
                 lectureProblemSet.getProblemSetId()
         );

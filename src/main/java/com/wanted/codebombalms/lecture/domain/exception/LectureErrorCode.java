@@ -17,7 +17,8 @@ public enum LectureErrorCode implements ErrorCode {
     LECTURE_MATERIAL_UPLOAD_FAILED("LCT-007", "Lecture material upload failed."),
     LECTURE_MATERIAL_DOWNLOAD_URL_FAILED("LCT-008", "Lecture material download URL generation failed."),
     LECTURE_MATERIAL_ACCESS_DENIED("LCT-009", "Lecture material access is denied."),
-    LECTURE_MATERIAL_DELETE_FAILED("LCT-010", "Lecture material delete failed.");
+    LECTURE_MATERIAL_DELETE_FAILED("LCT-010", "Lecture material delete failed."),
+    LECTURE_ACCESS_DENIED("LCT-011", "Only enrolled students can access lecture content.");
 
     private final String code;
     private final String message;
