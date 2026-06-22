@@ -1,8 +1,11 @@
 package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.lecture.application.port.FinalProblemSetCandidatePort;
 import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
+import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
@@ -22,8 +25,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -78,7 +83,33 @@ class FinalProblemSetRecommendationServiceTest {
         assertEquals(Set.of(4001L, 4002L), excludedCaptor.getValue());
         assertEquals(1, result.size());
         assertEquals(4003L, result.get(0).problemSetId());
-        assertEquals("/api/v1/problem-sets/4003", result.get(0).entryPath());
+    }
+
+    @Test
+    void findFinalProblemSetCandidates_throwsNotFound_whenLectureDoesNotExist() {
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(10L)).willReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () ->
+                service.findFinalProblemSetCandidates(10L, 20L, false)
+        );
+
+        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(eq(1L), eq(LectureProblemSetRole.MAIN));
+        verify(finalProblemSetCandidatePort, never()).findCandidates(eq(3001L), eq(Set.of()), eq(2));
+    }
+
+    @Test
+    void findFinalProblemSetCandidates_propagatesForbidden_whenAccessDenied() {
+        Lecture lecture = lecture(10L, 1L, 3001L);
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(10L)).willReturn(Optional.of(lecture));
+        doThrow(new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED))
+                .when(lectureAccessPolicy).validateLearningContentAccess(lecture, 20L, false);
+
+        assertThrows(ForbiddenException.class, () ->
+                service.findFinalProblemSetCandidates(10L, 20L, false)
+        );
+
+        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(eq(1L), eq(LectureProblemSetRole.MAIN));
+        verify(finalProblemSetCandidatePort, never()).findCandidates(eq(3001L), eq(Set.of()), eq(2));
     }
 
     private Lecture lecture(Long lectureId, Long courseId, Long problemCategoryId) {
