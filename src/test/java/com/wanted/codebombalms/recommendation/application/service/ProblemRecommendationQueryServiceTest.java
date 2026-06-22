@@ -5,6 +5,7 @@ import com.wanted.codebombalms.recommendation.application.port.RecommendationHid
 import com.wanted.codebombalms.recommendation.domain.model.ProblemSetRecommendation;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHide;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHideType;
+import com.wanted.codebombalms.recommendation.infrastructure.metrics.RecommendationMetrics;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +31,9 @@ class ProblemRecommendationQueryServiceTest {
 
     @Mock
     private RecommendationHidePort recommendationHidePort;
+
+    @Mock
+    private RecommendationMetrics recommendationMetrics;
 
     @InjectMocks
     private ProblemRecommendationQueryService service;
