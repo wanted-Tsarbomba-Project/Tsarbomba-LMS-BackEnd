@@ -8,6 +8,7 @@ public record UpdateLectureCommand(
         String description,
         String videoUrl,
         String thumbnailUrl,
+        Long problemCategoryId,
         Integer lectureOrder,
         LectureStatus status
 ) {

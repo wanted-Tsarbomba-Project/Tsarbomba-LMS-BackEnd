@@ -3,12 +3,14 @@ package com.wanted.codebombalms.lecture.presentation.api;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
+import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureCreateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateRequest;
+import com.wanted.codebombalms.lecture.presentation.api.response.FinalProblemSetCandidateResponse;
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureDetailResponse;
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureMaterialDownloadUrlResponse;
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureMaterialResponse;
@@ -41,6 +43,7 @@ public class LectureController {
 
     private final LectureCommandUseCase lectureCommandUseCase;
     private final LectureQueryUseCase lectureQueryUseCase;
+    private final FinalProblemSetRecommendationUseCase finalProblemSetRecommendationUseCase;
     private final LectureMaterialUseCase lectureMaterialUseCase;
 
     @GetMapping("/courses/{courseId}/lectures")
@@ -79,6 +82,30 @@ public class LectureController {
         ));
     }
 
+    @GetMapping("/lectures/{lectureId}/final-problem-set-candidates")
+    @Operation(summary = "FINAL 추천 문제세트 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<?>> findFinalProblemSetCandidates(
+            @PathVariable Long lectureId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
+        log.info("[LectureController] find final problem set candidates - lectureId: {}", lectureId);
+
+        return ResponseEntity.ok(ApiResponse.success(
+                LectureResponseCode.FINAL_PROBLEM_SET_CANDIDATES_RETRIEVED,
+                LectureResponseMessage.FINAL_PROBLEM_SET_CANDIDATES_RETRIEVED,
+                finalProblemSetRecommendationUseCase.findFinalProblemSetCandidates(
+                                lectureId,
+                                userId,
+                                isOperator(authentication)
+                        )
+                        .stream()
+                        .map(FinalProblemSetCandidateResponse::from)
+                        .toList()
+        ));
+    }
+
     @PostMapping("/courses/{courseId}/lectures")
     @Operation(summary = "강의 생성")
     @PreAuthorize("hasRole('OPERATOR')")
@@ -98,6 +125,7 @@ public class LectureController {
                                 request.description(),
                                 request.videoUrl(),
                                 request.thumbnailUrl(),
+                                request.problemCategoryId(),
                                 request.lectureOrder(),
                                 request.status()
                         )))
@@ -122,6 +150,7 @@ public class LectureController {
                         request.description(),
                         request.videoUrl(),
                         request.thumbnailUrl(),
+                        request.problemCategoryId(),
                         request.lectureOrder(),
                         request.status()
                 )))

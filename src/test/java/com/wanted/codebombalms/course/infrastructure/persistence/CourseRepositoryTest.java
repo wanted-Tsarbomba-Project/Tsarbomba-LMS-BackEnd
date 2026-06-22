@@ -236,7 +236,7 @@ class CourseRepositoryTest {
         activeCourse = courseRepository.save(activeCourse);
 
         Lecture oldLecture = lectureRepository.save(
-                Lecture.create(oldDeletedCourse, "Old Lecture", "description", "old.mp4", "old.png", 1, LectureStatus.DELETED)
+                Lecture.create(oldDeletedCourse, "Old Lecture", "description", "old.mp4", "old.png", null, 1, LectureStatus.DELETED)
         );
         LectureProblemSet oldProblemSet = lectureProblemSetRepository.save(
                 LectureProblemSet.create(oldDeletedCourse.getCourseId(), oldLecture.getLectureId(), 2002L, LectureProblemSetRole.MAIN, 1)
