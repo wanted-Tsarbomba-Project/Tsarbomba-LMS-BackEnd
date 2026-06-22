@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
@@ -23,6 +24,7 @@ public class LectureQueryService implements LectureQueryUseCase {
 
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
+    private final LectureAccessPolicy lectureAccessPolicy;
 
     @Override
     public List<Lecture> findLecturesByCourseId(Long courseId) {
@@ -39,9 +41,21 @@ public class LectureQueryService implements LectureQueryUseCase {
     public Lecture findLectureById(Long lectureId) {
         log.info("[LectureQueryService] find lecture - lectureId: {}", lectureId);
 
-        Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
+        return findExistingLecture(lectureId);
+    }
+
+    @Override
+    public Lecture findLectureByIdForLearning(Long lectureId, Long userId, boolean operator) {
+        log.info("[LectureQueryService] find lecture for learning - lectureId: {}, userId: {}", lectureId, userId);
+
+        Lecture lecture = findExistingLecture(lectureId);
+        lectureAccessPolicy.validateLearningContentAccess(lecture, userId, operator);
 
         return lecture;
+    }
+
+    private Lecture findExistingLecture(Long lectureId) {
+        return lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
     }
 }

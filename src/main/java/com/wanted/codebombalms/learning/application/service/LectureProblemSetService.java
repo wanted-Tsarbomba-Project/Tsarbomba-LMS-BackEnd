@@ -4,6 +4,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ConflictExce
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
+import com.wanted.codebombalms.learning.application.policy.LearningAccessPolicy;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemGradingPort;
@@ -36,12 +37,14 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     private final LectureProblemProgressCommandUseCase lectureProblemProgressCommandUseCase;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
     private final LectureProblemSubmissionRepository lectureProblemSubmissionRepository;
+    private final LearningAccessPolicy learningAccessPolicy;
 
     @Override
     @Transactional
     public LectureProblemSetEntryView enterLectureProblemSet(Long userId, Long lectureProblemSetId) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
         LectureProblemProgress progress = findOrCreateProgress(userId, lectureProblemSetId);
         Map<Long, LectureProblemSubmission> latestSubmissions =
@@ -80,6 +83,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     public LectureProblemSetProgressView findLectureProblemSetProgress(Long userId, Long lectureProblemSetId) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
         LectureProblemProgress progress = lectureProblemProgressRepository
                 .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId)
@@ -115,6 +119,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     public SubmissionView submit(Long lectureProblemSetId, Long problemId, SubmitCodeCommand command) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(command.userId(), lectureProblemSet);
 
         if (!learningProblemPort.existsProblem(problemId)) {
             throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_FOUND);

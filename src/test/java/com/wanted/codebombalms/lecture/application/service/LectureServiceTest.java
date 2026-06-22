@@ -6,6 +6,7 @@ import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.application.service.LectureCommandService;
 import com.wanted.codebombalms.lecture.application.service.LectureQueryService;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -42,6 +43,9 @@ class LectureServiceTest {
 
     @Mock
     private LectureCreationPolicy lectureCreationPolicy;
+
+    @Mock
+    private LectureAccessPolicy lectureAccessPolicy;
 
     @InjectMocks
     private LectureCommandService lectureCommandService;

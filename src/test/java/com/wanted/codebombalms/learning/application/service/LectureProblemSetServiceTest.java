@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
+import com.wanted.codebombalms.learning.application.policy.LearningAccessPolicy;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemGradingPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemPort;
@@ -49,6 +50,9 @@ class LectureProblemSetServiceTest {
     @Mock
     private LectureProblemSubmissionRepository lectureProblemSubmissionRepository;
 
+    @Mock
+    private LearningAccessPolicy learningAccessPolicy;
+
     @InjectMocks
     private LectureProblemSetService lectureProblemSetService;
 
@@ -61,7 +65,7 @@ class LectureProblemSetServiceTest {
         var latestSubmission = submission(9001L, userId, lectureProblemSetId, 3001L, true, 1);
 
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
-                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 101L, problemSetId));
+                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
         given(learningProblemPort.loadProblemSet(problemSetId)).willReturn(problemSet(problemSetId));
         given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
                 .willReturn(Optional.of(progress));
@@ -70,6 +74,10 @@ class LectureProblemSetServiceTest {
 
         var result = lectureProblemSetService.enterLectureProblemSet(userId, lectureProblemSetId);
 
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         assertEquals(2, result.currentProblemNumber());
         assertEquals(3002L, result.currentProblemId());
         assertEquals(1, result.solvedProblemCount());
@@ -87,7 +95,7 @@ class LectureProblemSetServiceTest {
         var currentProgress = progress(userId, lectureProblemSetId, 1, false);
 
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
-                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 101L, problemSetId));
+                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
         given(learningProblemPort.existsProblem(problemId)).willReturn(true);
         given(learningProblemPort.existsProblemInSet(problemSetId, problemId)).willReturn(true);
         given(learningProblemPort.loadProblem(problemId)).willReturn(
@@ -156,6 +164,10 @@ class LectureProblemSetServiceTest {
         verify(lectureProblemSubmissionRepository).save(submissionCaptor.capture());
         assertEquals(lectureProblemSetId, submissionCaptor.getValue().lectureProblemSetId());
         assertEquals(problemId, submissionCaptor.getValue().problemId());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase).recordProgress(any());
     }
 
@@ -187,6 +199,10 @@ class LectureProblemSetServiceTest {
         assertFalse(result.correct());
         assertEquals(2, result.remainingAttemptCount());
         assertEquals(null, result.nextProblemId());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
@@ -210,6 +226,10 @@ class LectureProblemSetServiceTest {
 
         verify(learningProblemGradingPort, never()).grade(any(), any(), any());
         verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
@@ -234,6 +254,10 @@ class LectureProblemSetServiceTest {
         );
 
         verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(learningAccessPolicy).validateLectureProblemSetAccess(
+                userId,
+                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
+        );
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
 
@@ -247,7 +271,7 @@ class LectureProblemSetServiceTest {
             int attemptLimit
     ) {
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
-                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 101L, problemSetId));
+                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
         given(learningProblemPort.existsProblem(problemId)).willReturn(true);
         given(learningProblemPort.existsProblemInSet(problemSetId, problemId)).willReturn(true);
         given(learningProblemPort.loadProblem(problemId)).willReturn(

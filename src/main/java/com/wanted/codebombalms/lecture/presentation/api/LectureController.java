@@ -60,13 +60,22 @@ public class LectureController {
 
     @GetMapping("/lectures/{lectureId}")
     @Operation(summary = "강의 단건 조회")
-    public ResponseEntity<ApiResponse<?>> findLectureById(@PathVariable Long lectureId) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<?>> findLectureById(
+            @PathVariable Long lectureId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
         log.info("[LectureController] find lecture - lectureId: {}", lectureId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 LectureResponseCode.RETRIEVED,
                 LectureResponseMessage.RETRIEVED,
-                LectureDetailResponse.from(lectureQueryUseCase.findLectureById(lectureId))
+                LectureDetailResponse.from(lectureQueryUseCase.findLectureByIdForLearning(
+                        lectureId,
+                        userId,
+                        isOperator(authentication)
+                ))
         ));
     }
 

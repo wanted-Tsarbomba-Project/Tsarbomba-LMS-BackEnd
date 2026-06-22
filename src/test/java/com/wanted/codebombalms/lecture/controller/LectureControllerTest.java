@@ -85,7 +85,8 @@ class LectureControllerTest {
     @Test
     void findLectureById_returnsApiResponse() throws Exception {
         Long lectureId = 1L;
-        given(lectureQueryUseCase.findLectureById(lectureId)).willReturn(createDetailResult(lectureId, "Java 1"));
+        given(lectureQueryUseCase.findLectureByIdForLearning(eq(lectureId), isNull(), eq(false)))
+                .willReturn(createDetailResult(lectureId, "Java 1"));
 
         mockMvc.perform(get("/api/v1/lectures/{lectureId}", lectureId)
                         .contentType(MediaType.APPLICATION_JSON))
