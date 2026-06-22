@@ -259,12 +259,140 @@
         }
       ]
     },
-    { "type": "row", "title": "Logs", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "id": 18, "collapsed": false },
+    { "type": "row", "title": "Python Recommendation Generation", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 36 }, "id": 20, "collapsed": false },
+    {
+      "type": "stat",
+      "title": "Python 추천 생성 전체 시간",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 37 },
+      "id": 21,
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 3 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "textMode": "auto", "colorMode": "value", "graphMode": "area", "justifyMode": "auto" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "recommendation_python_generation_stage_last_duration_seconds{stage=\"total\"}",
+          "legendFormat": "{{scale_users}} users"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Python stage별 최근 처리 시간",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 12, "x": 6, "y": 37 },
+      "id": 22,
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 4 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "recommendation_python_generation_stage_last_duration_seconds{stage=~\"db_fetch|transaction_build|frequent_itemset|rule_generation|user_pick|response_build\"}",
+          "legendFormat": "{{scale_users}} users / {{stage}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Python 입력/산출 규모",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 37 },
+      "id": 23,
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "recommendation_python_generation_scale{type=~\"input_users|transactions|active_problem_sets|frequent_itemsets|association_rules|generated_users\"}",
+          "legendFormat": "{{type}}"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Python stage별 평균 처리 시간",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 43 },
+      "id": 24,
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 4 }, "overrides": [] },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (scale_users, stage) (increase(recommendation_python_generation_stage_duration_seconds_sum[$__range])) / clamp_min(sum by (scale_users, stage) (increase(recommendation_python_generation_stage_duration_seconds_count[$__range])), 1)",
+          "legendFormat": "{{scale_users}} users / {{stage}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "k6 인원수별 추천 생성 trigger 시간",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 43 },
+      "id": 25,
+      "fieldConfig": { "defaults": { "unit": "ms", "decimals": 2 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "avg by (scale_users) (k6_http_req_duration_p99{type=\"recommendation_generation\"})",
+          "legendFormat": "{{scale_users}} users"
+        }
+      ]
+    },
+    {
+      "type": "barchart",
+      "title": "Python 사용자 수별 stage 응답 시간",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 50 },
+      "id": 26,
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 4 }, "overrides": [] },
+      "options": {
+        "orientation": "auto",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0,
+        "showValue": "auto",
+        "stacking": "none",
+        "groupWidth": 0.7,
+        "barWidth": 0.97,
+        "barRadius": 0,
+        "fullHighlight": false,
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "showLegend": true, "displayMode": "list", "placement": "bottom", "calcs": [] }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "avg by (scale_users, stage) (recommendation_python_generation_stage_last_duration_seconds{stage=~\"db_fetch|transaction_build|frequent_itemset|rule_generation|user_pick|response_build\"})",
+          "legendFormat": "{{scale_users}} users / {{stage}}",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": { "mode": "columns" }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "__name__": true, "job": true, "instance": true, "application": true },
+            "indexByName": { "scale_users": 0, "stage": 1, "Value": 2 },
+            "renameByName": { "scale_users": "users", "stage": "stage", "Value": "seconds" }
+          }
+        }
+      ]
+    },
+    { "type": "row", "title": "Logs", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 59 }, "id": 18, "collapsed": false },
     {
       "type": "logs",
       "title": "Recommendation 로그",
       "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 37 },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 60 },
       "id": 19,
       "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
       "targets": [

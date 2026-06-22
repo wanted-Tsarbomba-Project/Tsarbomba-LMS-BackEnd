@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -32,14 +33,15 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
 
     private static final String LOGIN_EMAIL = "u01@test.com";
     private static final String LOADTEST_PASSWORD = "Test1234!";
-    private static final int RECOMMENDATION_SETS = 200;
-    private static final int COMPLETED_EVERY = 10;
-    private static final int BATCH_USERS = 120;
-    private static final int BATCH_COMPLETED_PER_USER = 12;
-    private static final int BATCH_EXISTING_RECOMMENDATIONS_PER_USER = 3;
+    private static final int DEFAULT_RECOMMENDATION_SETS = 200;
+    private static final int DEFAULT_COMPLETED_EVERY = 10;
+    private static final int DEFAULT_BATCH_USERS = 120;
+    private static final int DEFAULT_BATCH_COMPLETED_PER_USER = 12;
+    private static final int DEFAULT_BATCH_EXISTING_RECOMMENDATIONS_PER_USER = 3;
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
+    private final Environment environment;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -50,19 +52,21 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
         }
 
         long startedAt = System.nanoTime();
+        LoadTestRecommendationSeedProperties seedProperties = LoadTestRecommendationSeedProperties.from(environment);
 
         Long userId = findOrCreateLoginUser();
         Long categoryId = seedCategory();
-        List<Long> problemSetIds = seedProblemSets(userId, categoryId);
+        List<Long> problemSetIds = seedProblemSets(userId, categoryId, seedProperties.recommendationSets());
         seedRecommendations(userId, problemSetIds);
-        seedCompletedProgress(userId, problemSetIds);
-        List<Long> batchUserIds = seedBatchUsers();
-        seedBatchCompletedProgress(batchUserIds, problemSetIds);
-        seedBatchExistingRecommendations(batchUserIds, problemSetIds);
+        seedCompletedProgress(userId, problemSetIds, seedProperties.completedEvery());
+        List<Long> batchUserIds = seedBatchUsers(seedProperties.batchUsers());
+        seedBatchCompletedProgress(batchUserIds, problemSetIds, seedProperties.batchCompletedPerUser());
+        seedBatchExistingRecommendations(batchUserIds, problemSetIds, seedProperties.batchExistingRecommendationsPerUser());
 
-        log.info("event=loadtest_recommendation_seed_completed userId={} batchUsers={} problemSets={} recommendations={} durationMs={}",
-                userId, batchUserIds.size(), problemSetIds.size(),
-                RECOMMENDATION_SETS + batchUserIds.size() * BATCH_EXISTING_RECOMMENDATIONS_PER_USER,
+        log.info("event=loadtest_recommendation_seed_completed userId={} batchUsers={} problemSets={} completedPerUser={} existingRecommendationsPerUser={} recommendations={} durationMs={}",
+                userId, batchUserIds.size(), problemSetIds.size(), seedProperties.batchCompletedPerUser(),
+                seedProperties.batchExistingRecommendationsPerUser(),
+                problemSetIds.size() + batchUserIds.size() * seedProperties.batchExistingRecommendationsPerUser(),
                 (System.nanoTime() - startedAt) / 1_000_000);
     }
 
@@ -102,7 +106,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 """, Long.class);
     }
 
-    private List<Long> seedProblemSets(Long userId, Long categoryId) {
+    private List<Long> seedProblemSets(Long userId, Long categoryId, int recommendationSets) {
         jdbc.batchUpdate("""
                 insert into problem_set
                   (category_id, title, description, difficulty, status,
@@ -119,7 +123,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return RECOMMENDATION_SETS;
+                return recommendationSets;
             }
         });
 
@@ -154,9 +158,9 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
         });
     }
 
-    private void seedCompletedProgress(Long userId, List<Long> problemSetIds) {
+    private void seedCompletedProgress(Long userId, List<Long> problemSetIds, int completedEvery) {
         List<Long> completedProblemSetIds = problemSetIds.stream()
-                .filter(problemSetId -> problemSetIds.indexOf(problemSetId) % COMPLETED_EVERY == COMPLETED_EVERY - 1)
+                .filter(problemSetId -> problemSetIds.indexOf(problemSetId) % completedEvery == completedEvery - 1)
                 .toList();
 
         jdbc.batchUpdate("""
@@ -177,7 +181,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
         });
     }
 
-    private List<Long> seedBatchUsers() {
+    private List<Long> seedBatchUsers(int batchUsers) {
         jdbc.batchUpdate("""
                 insert into users
                   (role, email, password, name, nickname, provider, email_verified, is_locked, created_at, updated_at)
@@ -196,7 +200,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return BATCH_USERS;
+                return batchUsers;
             }
         });
 
@@ -208,8 +212,8 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 """, Long.class);
     }
 
-    private void seedBatchCompletedProgress(List<Long> batchUserIds, List<Long> problemSetIds) {
-        int progressCount = batchUserIds.size() * BATCH_COMPLETED_PER_USER;
+    private void seedBatchCompletedProgress(List<Long> batchUserIds, List<Long> problemSetIds, int batchCompletedPerUser) {
+        int progressCount = batchUserIds.size() * batchCompletedPerUser;
         jdbc.batchUpdate("""
                 insert into problem_progress
                   (user_id, problem_set_id, current_problem_number, is_completed, completed_at, updated_at)
@@ -217,7 +221,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                int userIndex = i / BATCH_COMPLETED_PER_USER;
+                int userIndex = i / batchCompletedPerUser;
                 int setIndex = (userIndex * 7 + i) % problemSetIds.size();
                 ps.setLong(1, batchUserIds.get(userIndex));
                 ps.setLong(2, problemSetIds.get(setIndex));
@@ -231,8 +235,8 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
         });
     }
 
-    private void seedBatchExistingRecommendations(List<Long> batchUserIds, List<Long> problemSetIds) {
-        int recommendationCount = batchUserIds.size() * BATCH_EXISTING_RECOMMENDATIONS_PER_USER;
+    private void seedBatchExistingRecommendations(List<Long> batchUserIds, List<Long> problemSetIds, int batchExistingRecommendationsPerUser) {
+        int recommendationCount = batchUserIds.size() * batchExistingRecommendationsPerUser;
         jdbc.batchUpdate("""
                 insert into problem_recommendation
                   (user_id, problem_set_id, support, confidence, lift, rank_no, status, algorithm, created_at, updated_at)
@@ -240,8 +244,8 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
-                int userIndex = i / BATCH_EXISTING_RECOMMENDATIONS_PER_USER;
-                int rankNo = i % BATCH_EXISTING_RECOMMENDATIONS_PER_USER + 1;
+                int userIndex = i / batchExistingRecommendationsPerUser;
+                int rankNo = i % batchExistingRecommendationsPerUser + 1;
                 int setIndex = (userIndex * 11 + rankNo) % problemSetIds.size();
 
                 ps.setLong(1, batchUserIds.get(userIndex));
@@ -257,5 +261,32 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 return recommendationCount;
             }
         });
+    }
+
+    private record LoadTestRecommendationSeedProperties(
+            int recommendationSets,
+            int completedEvery,
+            int batchUsers,
+            int batchCompletedPerUser,
+            int batchExistingRecommendationsPerUser
+    ) {
+
+        private static LoadTestRecommendationSeedProperties from(Environment environment) {
+            return new LoadTestRecommendationSeedProperties(
+                    readInt(environment, "LOADTEST_RECOMMENDATION_SETS", DEFAULT_RECOMMENDATION_SETS),
+                    readInt(environment, "LOADTEST_RECOMMENDATION_COMPLETED_EVERY", DEFAULT_COMPLETED_EVERY),
+                    readInt(environment, "LOADTEST_RECOMMENDATION_BATCH_USERS", DEFAULT_BATCH_USERS),
+                    readInt(environment, "LOADTEST_RECOMMENDATION_COMPLETED_PER_USER", DEFAULT_BATCH_COMPLETED_PER_USER),
+                    readInt(environment, "LOADTEST_RECOMMENDATION_EXISTING_RECOMMENDATIONS_PER_USER", DEFAULT_BATCH_EXISTING_RECOMMENDATIONS_PER_USER)
+            );
+        }
+
+        private static int readInt(Environment environment, String key, int defaultValue) {
+            String value = environment.getProperty(key);
+            if (value == null || value.isBlank()) {
+                return defaultValue;
+            }
+            return Integer.parseInt(value);
+        }
     }
 }
