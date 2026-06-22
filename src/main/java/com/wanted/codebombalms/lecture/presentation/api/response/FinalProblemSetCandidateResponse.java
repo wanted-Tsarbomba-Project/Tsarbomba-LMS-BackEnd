@@ -14,6 +14,8 @@ public record FinalProblemSetCandidateResponse(
         String entryPath
 ) {
 
+    private static final String PROBLEM_SET_ENTRY_PATH_PREFIX = "/api/v1/problem-sets/";
+
     public static FinalProblemSetCandidateResponse from(FinalProblemSetCandidateView candidate) {
         return new FinalProblemSetCandidateResponse(
                 candidate.problemSetId(),
@@ -23,7 +25,7 @@ public record FinalProblemSetCandidateResponse(
                 candidate.difficulty(),
                 candidate.accuracyRate(),
                 candidate.createdAt(),
-                candidate.entryPath()
+                PROBLEM_SET_ENTRY_PATH_PREFIX + candidate.problemSetId()
         );
     }
 }

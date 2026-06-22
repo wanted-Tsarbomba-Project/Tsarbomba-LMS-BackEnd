@@ -63,8 +63,7 @@ public class FinalProblemSetRecommendationService implements FinalProblemSetReco
                 problemSet.getDescription(),
                 problemSet.getDifficulty(),
                 problemSet.getAccuracyRate(),
-                problemSet.getCreatedAt(),
-                "/api/v1/problem-sets/" + problemSet.getProblemSetId()
+                problemSet.getCreatedAt()
         );
     }
 }

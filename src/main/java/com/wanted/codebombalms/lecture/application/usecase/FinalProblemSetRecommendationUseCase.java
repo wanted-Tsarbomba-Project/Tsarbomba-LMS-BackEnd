@@ -14,8 +14,7 @@ public interface FinalProblemSetRecommendationUseCase {
             String description,
             String difficulty,
             Double accuracyRate,
-            LocalDateTime createdAt,
-            String entryPath
+            LocalDateTime createdAt
     ) {
     }
 }
