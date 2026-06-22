@@ -6,6 +6,7 @@
 //
 // 실행 (monitoring/ 에서):
 //   docker compose run --rm -e RESULT_NAME=recommendation-generation-before \
+//     -e SCALE_USERS=120 \
 //     -e LOGIN_EMAIL=admin@test.com -e LOGIN_PASSWORD=Test1234! \
 //     k6 run -o experimental-prometheus-rw /scripts/recommendation/03-generation-baseline.js
 
@@ -30,10 +31,12 @@ export function setup() {
 }
 
 export default function (data) {
+    const scaleUsers = String(__ENV.SCALE_USERS || "120");
     const params = authCookies(data.token);
     params.tags = {
         type: "recommendation_generation",
         api: "POST /internal/loadtest/recommendations/generate",
+        scale_users: scaleUsers,
     };
 
     const res = http.post(`${BASE_URL}/internal/loadtest/recommendations/generate`, null, params);
