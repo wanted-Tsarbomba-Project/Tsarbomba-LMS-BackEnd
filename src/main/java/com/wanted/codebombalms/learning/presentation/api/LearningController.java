@@ -108,6 +108,27 @@ public class LearningController {
         ));
     }
 
+    @GetMapping("/admin/courses/{courseId}/students/{userId}/lecture-problem-sets/{lectureProblemSetId}")
+    @Operation(summary = "Admin student lecture problem set entry status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    public ResponseEntity<ApiResponse<LectureProblemSetEntryResponse>> findStudentLectureProblemSet(
+            @PathVariable Long courseId,
+            @PathVariable Long userId,
+            @PathVariable Long lectureProblemSetId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                LearningResponseCode.RETRIEVED,
+                LearningResponseMessage.RETRIEVED,
+                LectureProblemSetEntryResponse.from(
+                        lectureProblemSetQueryUseCase.findStudentLectureProblemSet(
+                                courseId,
+                                userId,
+                                lectureProblemSetId
+                        )
+                )
+        ));
+    }
+
     @GetMapping("/lecture-problem-sets/{lectureProblemSetId}/progress")
     @Operation(summary = "강의 문제세트 진행 상태 조회")
     @PreAuthorize("isAuthenticated()")

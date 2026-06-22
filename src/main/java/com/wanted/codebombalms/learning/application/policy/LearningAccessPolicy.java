@@ -21,4 +21,16 @@ public class LearningAccessPolicy {
             throw new ForbiddenException(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED);
         }
     }
+
+    public void validateStudentLectureProblemSetAccess(
+            Long courseId,
+            Long userId,
+            LearningLectureProblemSet lectureProblemSet
+    ) {
+        if (courseId == null || !courseId.equals(lectureProblemSet.courseId())) {
+            throw new ForbiddenException(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED);
+        }
+
+        validateLectureProblemSetAccess(userId, lectureProblemSet);
+    }
 }
