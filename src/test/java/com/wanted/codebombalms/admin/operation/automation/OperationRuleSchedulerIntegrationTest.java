@@ -40,11 +40,13 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "jwt.secret=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE="
+})
 @ActiveProfiles("test")
 @Transactional
 @DisplayName("Operation rule scheduler integration test")
-// ??怨멸껀 ???吏??잙?裕?????덈뺄 ?熬곥굦??????逾???諛댁뎽 ??⑤객臾??곌떠???? ?롪틵?嶺뚯빘鍮쒒뇡??
+// 운영 규칙 실행 시점에 알림이 생성되는지 검증합니다.
 class OperationRuleSchedulerIntegrationTest {
 
     private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
@@ -68,7 +70,7 @@ class OperationRuleSchedulerIntegrationTest {
     private MutableClock mutableClock;
 
     @Test
-    @DisplayName("08??59?釉뚯뫒??????逾?????㈑?09???잙?裕?????덈뺄 ???띠룆踰▽펺????뉖Ц/??쒖굣?????逾????諛댁뎽??類ｋ펲.")
+    @DisplayName("08시 59분에는 알림이 없고 09시에 운영 알림을 생성한다.")
     void operationRuleSchedulerCreatesAlertsAtNine() {
         // given
         LocalDateTime beforeScheduleTime = LocalDateTime.of(2026, 5, 24, 8, 59);
@@ -83,7 +85,7 @@ class OperationRuleSchedulerIntegrationTest {
         entityManager.flush();
         entityManager.clear();
 
-        // 1. ?繹먮굞夷???잙?裕???브퀗???
+        // 1. 활성 운영 규칙이 정상 등록되었는지 확인합니다.
         List<AutomationRule> registeredRules = automationRuleRepository.findAllActive(null);
         printRules(registeredRules);
         assertEquals(3, registeredRules.size());
@@ -94,12 +96,12 @@ class OperationRuleSchedulerIntegrationTest {
         assertTrue(registeredRules.stream()
                 .anyMatch(rule -> rule.getRuleCode() == OperationRuleCode.PROBLEM_HIGH_WRONG_RATE));
 
-        // 2. ?熬곣뫗????蹂?뜟??08??59?釉뚯뫒????┑??띠럾??筌먐삳┃?????肉??브퀗???
+        // 2. 스케줄 실행 전인 08시 59분에는 알림이 없는지 확인합니다.
         List<OperationAlertJpaEntity> alertsAtBeforeScheduleTime = operationAlertRepository.findAll();
         printAlerts("08:59 before scheduler", alertsAtBeforeScheduleTime);
         assertEquals(0, alertsAtBeforeScheduleTime.size());
 
-        // 3. 1?????고뱺 ???繞벿븐뫊??泥? ???덈뺄??濡ル츎 ??ル∥裕??댟??怨룸츩???筌뤾쑵????겶????肉??브퀗???
+        // 3. 09시에 규칙을 실행하면 대상별 운영 알림이 생성되는지 확인합니다.
         mutableClock.setTime(scheduleTime);
         runOperationRuleUseCase.run();
         entityManager.flush();
@@ -244,7 +246,7 @@ class OperationRuleSchedulerIntegrationTest {
                             'STUDENT',
                             'inactive-student@test.com',
                             'encoded',
-                            '?鰲?깃퀎泥뗰쭗袁⑹젘?????뉖Ц',
+                            '비활성 학생',
                             'inactive',
                             'LOCAL',
                             true,
@@ -286,12 +288,12 @@ class OperationRuleSchedulerIntegrationTest {
                         )
                         values (
                             100,
-                            :courseId,
+                            ?,
                             'ACTIVE',
                             '2026-05-05 09:00:00'
                         )
                         """)
-                .setParameter("courseId", courseId)
+                .setParameter(1, courseId)
                 .executeUpdate();
     }
 
@@ -375,7 +377,7 @@ class OperationRuleSchedulerIntegrationTest {
                 OperationAlertRuleInfo.from(OperationRuleCode.USER_INACTIVE_NO_COURSE, null)
         );
 
-        assertEquals("?鰲?깃퀎泥뗰쭗袁⑹젘?????뉖Ц", targetDetail.target().title());
+        assertEquals("비활성 학생", targetDetail.target().title());
         assertEquals("inactive", targetDetail.target().nickname());
         assertEquals("inactive-student@test.com", targetDetail.target().email());
     }
