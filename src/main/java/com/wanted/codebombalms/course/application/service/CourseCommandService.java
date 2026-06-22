@@ -110,9 +110,9 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
 
+        lectureManagementPort.deleteLecturesByCourseId(courseId);
         course.delete();
         courseRepository.save(course);
-        lectureManagementPort.deleteLecturesByCourseId(courseId);
 
         log.info("[CourseCommandService] deleted course - courseId: {}", courseId);
     }

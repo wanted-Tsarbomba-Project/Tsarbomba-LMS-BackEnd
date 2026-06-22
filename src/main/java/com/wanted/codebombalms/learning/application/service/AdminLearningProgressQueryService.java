@@ -15,6 +15,7 @@ import com.wanted.codebombalms.learning.application.usecase.AdminLearningProgres
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
@@ -64,14 +65,44 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
         log.info("event=learning_student_ids_queried courseId={} studentCount={} durationMs={}",
                 courseId, studentIds.size(), studentIdsElapsedNanos / 1_000_000);
 
+        StudentProgressTiming timing = new StudentProgressTiming();
         long progressBuildStartedAt = System.nanoTime();
-        List<StudentLearningProgress> progresses = studentIds.stream()
-                .map(studentId -> buildStudentProgress(courseId, studentId))
-                .toList();
+        List<StudentLearningProgress> progresses = new ArrayList<>();
+
+        List<Long> lectureIds = List.of();
+        List<Long> lectureProblemSetIds = List.of();
+        if (!studentIds.isEmpty()) {
+            long lectureIdsStartedAt = System.nanoTime();
+            lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
+            timing.recordLectureIds(System.nanoTime() - lectureIdsStartedAt, lectureIds.size());
+
+            long problemSetIdsStartedAt = System.nanoTime();
+            lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
+            timing.recordProblemSetIds(System.nanoTime() - problemSetIdsStartedAt, lectureProblemSetIds.size());
+        }
+
+        for (Long studentId : studentIds) {
+            progresses.add(buildStudentProgress(studentId, lectureIds, lectureProblemSetIds, timing));
+        }
         long progressBuildElapsedNanos = System.nanoTime() - progressBuildStartedAt;
 
         log.info("event=learning_student_progress_built courseId={} studentCount={} durationMs={}",
                 courseId, studentIds.size(), progressBuildElapsedNanos / 1_000_000);
+        log.info(
+                "event=learning_student_progress_breakdown courseId={} studentCount={} lectureCount={} "
+                        + "problemSetCount={} lectureIdsMs={} problemSetIdsMs={} userNameMs={} "
+                        + "completedLectureCountMs={} completedProblemCountMs={} totalBuildMs={}",
+                courseId,
+                studentIds.size(),
+                timing.lectureCount,
+                timing.problemSetCount,
+                timing.lectureIdsElapsedNanos / 1_000_000,
+                timing.problemSetIdsElapsedNanos / 1_000_000,
+                timing.userNameElapsedNanos / 1_000_000,
+                timing.completedLectureCountElapsedNanos / 1_000_000,
+                timing.completedProblemCountElapsedNanos / 1_000_000,
+                progressBuildElapsedNanos / 1_000_000
+        );
 
         long totalElapsedNanos = System.nanoTime() - totalStartedAt;
         learningMetrics.recordStudentProgressQuery(totalElapsedNanos);
@@ -84,7 +115,10 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     @Override
     @Transactional(readOnly = true)
     public StudentLearningProgress findStudentProgress(Long courseId, Long userId) {
-        return buildStudentProgress(courseId, userId);
+        List<Long> lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
+        List<Long> lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
+
+        return buildStudentProgress(userId, lectureIds, lectureProblemSetIds, null);
     }
 
     @Override
@@ -147,20 +181,81 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
         );
     }
 
-    private StudentLearningProgress buildStudentProgress(Long courseId, Long studentId) {
-        List<Long> lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
-        List<Long> lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
+    private StudentLearningProgress buildStudentProgress(
+            Long studentId,
+            List<Long> lectureIds,
+            List<Long> lectureProblemSetIds,
+            StudentProgressTiming timing
+    ) {
+        long itemStartedAt = System.nanoTime();
+
+        long userNameStartedAt = System.nanoTime();
+        String userName = learningUserPort.findUserName(studentId);
+        if (timing != null) {
+            timing.recordUserName(System.nanoTime() - userNameStartedAt);
+        }
+
+        long completedLectureCountStartedAt = System.nanoTime();
+        long completedLectureCount = lectureProgressRepository.countCompletedByUserIdAndLectureIds(
+                studentId,
+                lectureIds
+        );
+        if (timing != null) {
+            timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+        }
+
+        long completedProblemCountStartedAt = System.nanoTime();
+        long completedProblemCount = lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                studentId,
+                lectureProblemSetIds
+        );
+        if (timing != null) {
+            timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+        }
+
+        long itemElapsedNanos = System.nanoTime() - itemStartedAt;
+        learningMetrics.recordStudentProgressItem(itemElapsedNanos);
 
         return StudentLearningProgress.of(
                 studentId,
-                learningUserPort.findUserName(studentId),
-                lectureProgressRepository.countCompletedByUserIdAndLectureIds(studentId, lectureIds),
+                userName,
+                completedLectureCount,
                 lectureIds.size(),
-                lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                        studentId,
-                        lectureProblemSetIds
-                ),
+                completedProblemCount,
                 lectureProblemSetIds.size()
         );
+    }
+
+    private static class StudentProgressTiming {
+
+        private long lectureIdsElapsedNanos;
+        private long problemSetIdsElapsedNanos;
+        private long userNameElapsedNanos;
+        private long completedLectureCountElapsedNanos;
+        private long completedProblemCountElapsedNanos;
+        private int lectureCount;
+        private int problemSetCount;
+
+        private void recordLectureIds(long elapsedNanos, int count) {
+            lectureIdsElapsedNanos += elapsedNanos;
+            lectureCount = count;
+        }
+
+        private void recordProblemSetIds(long elapsedNanos, int count) {
+            problemSetIdsElapsedNanos += elapsedNanos;
+            problemSetCount = count;
+        }
+
+        private void recordUserName(long elapsedNanos) {
+            userNameElapsedNanos += elapsedNanos;
+        }
+
+        private void recordCompletedLectureCount(long elapsedNanos) {
+            completedLectureCountElapsedNanos += elapsedNanos;
+        }
+
+        private void recordCompletedProblemCount(long elapsedNanos) {
+            completedProblemCountElapsedNanos += elapsedNanos;
+        }
     }
 }
