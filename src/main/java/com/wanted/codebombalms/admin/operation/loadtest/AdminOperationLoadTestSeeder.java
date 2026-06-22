@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,22 +20,25 @@ import java.util.List;
 /**
  * Admin 운영 알림 목록/상세 baseline 용 부하테스트 시드.
  *
- * <p>{@code loadtest} 프로파일에서만 실행한다. admin 로그인 계정과 RULE_MANAGEMENT 권한,
- * 상세 조회 target 이 실제로 바라볼 COURSE/PROBLEM/USER 데이터, 운영 알림 200건을 만든다.
+ * <p>{@code loadtest-admin} 프로파일에서만 실행한다. admin 로그인 계정과 RULE_MANAGEMENT 권한,
+ * 상세 조회 target 이 실제로 바라볼 COURSE/PROBLEM/USER 데이터, 운영 알림 210건을 만든다.
+ * 자동화 룰 baseline 은 도메인별 병목 위치를 보기 위한 테스트이므로
+ * COURSE/PROBLEM/USER 대상 규모를 같은 수준으로 맞춘다.
  */
 @Slf4j
 @Component
-@Profile("loadtest")
-@DependsOn("chatListLoadTestSeeder")
+@Profile("loadtest-admin")
 @RequiredArgsConstructor
 public class AdminOperationLoadTestSeeder implements ApplicationRunner {
 
     private static final String ADMIN_EMAIL = "admin@test.com";
     private static final String ADMIN_PASSWORD = "Test1234!";
-    private static final int ALERTS = 200;
-    private static final int COURSES = 40;
-    private static final int PROBLEMS = 80;
-    private static final int USERS = 240;
+    private static final int RULE_TARGETS = 200;
+    private static final int ALERTS = 210;
+    private static final int COURSES = RULE_TARGETS;
+    private static final int PROBLEMS = RULE_TARGETS;
+    private static final int USERS = RULE_TARGETS;
+    private static final int PROBLEM_SETS = PROBLEMS;
     private static final int SUBMISSIONS_PER_PROBLEM = 25;
 
     private final JdbcTemplate jdbc;
@@ -44,6 +46,9 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        Long adminUserId = seedAdminUser();
+        seedAdminPermission(adminUserId);
+
         Long already = jdbc.queryForObject("select count(*) from operation_alert", Long.class);
         if (already != null && already > 0) {
             log.info("event=loadtest_admin_seed_skipped reason=already_seeded alerts={}", already);
@@ -52,14 +57,12 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
 
         long startedAt = System.nanoTime();
 
-        Long adminUserId = seedAdminUser();
-        seedAdminPermission(adminUserId);
         seedAutomationRules();
 
         Long courseCategoryId = seedCourseCategory();
         List<Long> courseIds = seedCourses(adminUserId, courseCategoryId);
         List<Long> targetUserIds = seedTargetUsers();
-        List<Long> problemIds = loadProblemIds();
+        List<Long> problemIds = seedProblems(adminUserId);
 
         seedOldLoginHistory(targetUserIds);
         seedLowEnrollments(courseIds, targetUserIds);
@@ -75,6 +78,18 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
     private Long seedAdminUser() {
         Long exists = jdbc.queryForObject("select count(*) from users where email = ?", Long.class, ADMIN_EMAIL);
         if (exists != null && exists > 0) {
+            jdbc.update("""
+                    update users
+                    set role = 'ADMIN',
+                        password = ?,
+                        name = '부하 관리자',
+                        nickname = 'loadtest-admin',
+                        provider = 'LOCAL',
+                        email_verified = true,
+                        is_locked = false,
+                        updated_at = now(6)
+                    where email = ?
+                    """, passwordEncoder.encode(ADMIN_PASSWORD), ADMIN_EMAIL);
             return jdbc.queryForObject("select user_id from users where email = ?", Long.class, ADMIN_EMAIL);
         }
 
@@ -89,6 +104,15 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedAdminPermission(Long adminUserId) {
+        Long exists = jdbc.queryForObject("""
+                select count(*)
+                from admin_permissions
+                where admin_user_id = ? and permission_type = 'RULE_MANAGEMENT'
+                """, Long.class, adminUserId);
+        if (exists != null && exists > 0) {
+            return;
+        }
+
         jdbc.update("""
                 insert into admin_permissions
                   (admin_user_id, permission_type, granted_by, created_at)
@@ -176,13 +200,58 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
                 """, Long.class);
     }
 
-    private List<Long> loadProblemIds() {
+    private List<Long> seedProblemSets(Long adminUserId) {
+        jdbc.batchUpdate("""
+                insert into problem_set
+                  (title, status, total_problem_count, completed_user_count, started_user_count, created_by, created_at)
+                values (?, 'ACTIVE', ?, 0, 0, ?, now(6))
+                """, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setString(1, "운영 부하 문제세트 " + (i + 1));
+                ps.setInt(2, 1);
+                ps.setLong(3, adminUserId);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return PROBLEM_SETS;
+            }
+        });
+
+        return jdbc.queryForList("""
+                select problem_set_id
+                from problem_set
+                where title like '운영 부하 문제세트 %'
+                order by problem_set_id
+                """, Long.class);
+    }
+
+    private List<Long> seedProblems(Long adminUserId) {
+        List<Long> problemSetIds = seedProblemSets(adminUserId);
+
+        jdbc.batchUpdate("""
+                insert into problem (problem_set_id, title, status, point)
+                values (?, ?, 'ACTIVE', 0)
+                """, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, problemSetIds.get(i));
+                ps.setString(2, "운영 부하 문제 " + (i + 1));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return PROBLEMS;
+            }
+        });
+
         return jdbc.queryForList("""
                 select problem_id
                 from problem
+                where title like '운영 부하 문제 %'
                 order by problem_id
-                limit ?
-                """, Long.class, PROBLEMS);
+                """, Long.class);
     }
 
     private void seedOldLoginHistory(List<Long> targetUserIds) {
@@ -300,34 +369,35 @@ public class AdminOperationLoadTestSeeder implements ApplicationRunner {
             List<Long> targetUserIds
     ) {
         int type = index % 3;
+        int targetIndex = index / 3;
         if (type == 0) {
             return new AlertTarget(
                     ruleIds.get(0),
                     "COURSE",
-                    courseIds.get(index % courseIds.size()),
+                    courseIds.get(targetIndex % courseIds.size()),
                     BigDecimal.valueOf(3),
                     BigDecimal.valueOf(10),
-                    targetUserIds.get(index % targetUserIds.size())
+                    targetUserIds.get(targetIndex % targetUserIds.size())
             );
         }
         if (type == 1) {
             return new AlertTarget(
                     ruleIds.get(1),
                     "USER",
-                    targetUserIds.get(index % targetUserIds.size()),
+                    targetUserIds.get(targetIndex % targetUserIds.size()),
                     BigDecimal.valueOf(45),
                     BigDecimal.valueOf(30),
-                    targetUserIds.get(index % targetUserIds.size())
+                    targetUserIds.get(targetIndex % targetUserIds.size())
             );
         }
 
         return new AlertTarget(
                 ruleIds.get(2),
                 "PROBLEM",
-                problemIds.get(index % problemIds.size()),
+                problemIds.get(targetIndex % problemIds.size()),
                 BigDecimal.valueOf(82),
                 BigDecimal.valueOf(70),
-                targetUserIds.get(index % targetUserIds.size())
+                targetUserIds.get(targetIndex % targetUserIds.size())
         );
     }
 

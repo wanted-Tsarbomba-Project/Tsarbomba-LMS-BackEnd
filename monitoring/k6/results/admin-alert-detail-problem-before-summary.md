@@ -4,21 +4,21 @@
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 2177 |
-| iterations | 2176 |
+| http_reqs | 2215 |
+| iterations | 2214 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 3721454 |
-| data_sent bytes | 755282 |
+| data_received bytes | 3786423 |
+| data_sent bytes | 772896 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 31.14 | 19.00 | 29.37 | 40.28 | 45.88 | 56.50 | 122.21 |
-| http_req_waiting | 30.60 | 18.74 | 28.85 | 39.75 | 45.26 | 55.87 | 121.35 |
-| http_req_blocked | 0.11 | 0.00 | 0.01 | 0.01 | 0.02 | 3.88 | 11.06 |
-| http_req_connecting | 0.10 | 0 | 0 | 0 | 0 | 3.67 | 10.79 |
+| http_req_duration | 12.33 | 7.12 | 11.91 | 15.36 | 16.71 | 21.79 | 106.47 |
+| http_req_waiting | 12.01 | 6.99 | 11.60 | 14.92 | 16.27 | 21.14 | 106.07 |
+| http_req_blocked | 0.06 | 0.00 | 0.00 | 0.01 | 0.01 | 2.48 | 3.63 |
+| http_req_connecting | 0.05 | 0 | 0 | 0 | 0 | 2.39 | 3.12 |
 
 ## Metric Meaning
 
@@ -36,9 +36,9 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 2176 pass / 0 fail |
-| data exists | 2176 pass / 0 fail |
-| has target detail | 2176 pass / 0 fail |
+| status is 200 | 2214 pass / 0 fail |
+| data exists | 2214 pass / 0 fail |
+| has target detail | 2214 pass / 0 fail |
 
 ## How To Compare
 
