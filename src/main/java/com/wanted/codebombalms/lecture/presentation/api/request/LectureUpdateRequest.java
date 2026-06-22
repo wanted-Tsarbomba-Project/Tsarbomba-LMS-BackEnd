@@ -15,6 +15,8 @@ public record LectureUpdateRequest(
         @Size(max = 500, message = "썸네일 URL은 500자 이하로 입력해야 합니다.")
         String thumbnailUrl,
 
+        Long problemCategoryId,
+
         Integer lectureOrder,
 
         LectureStatus status

@@ -11,6 +11,7 @@ public record LectureResponse(
         String description,
         String videoUrl,
         String thumbnailUrl,
+        Long problemCategoryId,
         LectureStatus status,
         Integer lectureOrder
 ) {
@@ -24,6 +25,7 @@ public record LectureResponse(
                 lecture.getDescription(),
                 lecture.getVideoUrl(),
                 lecture.getThumbnailUrl(),
+                lecture.getProblemCategoryId(),
                 lecture.getStatus(),
                 lecture.getLectureOrder()
         );

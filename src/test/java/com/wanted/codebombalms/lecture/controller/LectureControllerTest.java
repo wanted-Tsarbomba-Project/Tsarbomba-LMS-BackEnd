@@ -5,6 +5,7 @@ import com.wanted.codebombalms.admin.permission.application.service.AdminPermiss
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
+import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
@@ -61,6 +62,9 @@ class LectureControllerTest {
     private LectureQueryUseCase lectureQueryUseCase;
 
     @MockitoBean
+    private FinalProblemSetRecommendationUseCase finalProblemSetRecommendationUseCase;
+
+    @MockitoBean
     private LectureMaterialUseCase lectureMaterialUseCase;
 
     @MockitoBean
@@ -105,6 +109,7 @@ class LectureControllerTest {
                 "description",
                 "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "java-1.png",
+                3001L,
                 1,
                 LectureStatus.ACTIVE
         );
@@ -130,6 +135,7 @@ class LectureControllerTest {
                 "updated",
                 "https://youtu.be/dQw4w9WgXcQ",
                 "updated.png",
+                3001L,
                 2,
                 LectureStatus.INACTIVE
         );
@@ -145,6 +151,29 @@ class LectureControllerTest {
                 .andExpect(jsonPath("$.code").value(LectureResponseCode.UPDATED))
                 .andExpect(jsonPath("$.message").value(LectureResponseMessage.UPDATED))
                 .andExpect(jsonPath("$.data.title").value("Updated Java"));
+    }
+
+    @Test
+    void findFinalProblemSetCandidates_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        given(finalProblemSetRecommendationUseCase.findFinalProblemSetCandidates(eq(lectureId), isNull(), eq(false)))
+                .willReturn(List.of(new FinalProblemSetRecommendationUseCase.FinalProblemSetCandidateView(
+                        3002L,
+                        1,
+                        "DataFrame filter",
+                        "description",
+                        "MEDIUM",
+                        72.5,
+                        LocalDateTime.now(),
+                        "/api/v1/problem-sets/3002"
+                )));
+
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/final-problem-set-candidates", lectureId)
+                        .with(authentication(studentUser(20L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.FINAL_PROBLEM_SET_CANDIDATES_RETRIEVED))
+                .andExpect(jsonPath("$.data[0].problemSetId").value(3002L))
+                .andExpect(jsonPath("$.data[0].entryPath").value("/api/v1/problem-sets/3002"));
     }
 
     @Test

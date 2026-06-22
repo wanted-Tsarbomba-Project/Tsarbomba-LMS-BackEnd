@@ -8,6 +8,7 @@ public record CreateLectureCommand(
         String description,
         String videoUrl,
         String thumbnailUrl,
+        Long problemCategoryId,
         Integer lectureOrder,
         LectureStatus status
 ) {
