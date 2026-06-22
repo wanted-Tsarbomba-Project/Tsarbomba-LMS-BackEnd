@@ -29,7 +29,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -239,6 +241,25 @@ class CourseServiceTest {
         var inOrder = inOrder(lectureManagementPort, courseRepository);
         inOrder.verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
         inOrder.verify(courseRepository).save(course);
+    }
+
+    @Test
+    void deleteCourse_doesNotDeleteCourse_whenLectureDeleteFails() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
+        RuntimeException exception = new RuntimeException("lecture delete failed");
+
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        doThrow(exception).when(lectureManagementPort).deleteLecturesByCourseId(courseId);
+
+        RuntimeException result = assertThrows(
+                RuntimeException.class,
+                () -> courseCommandService.deleteCourse(courseId)
+        );
+
+        assertEquals(exception, result);
+        assertEquals(CourseStatus.ACTIVE, course.getStatus());
+        verify(courseRepository, never()).save(course);
     }
 
     @Test

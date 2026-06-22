@@ -16,7 +16,7 @@ public class LearningMetrics {
                 .description("강좌별 학생 학습률 목록 조회 구간 시간")
                 .register(registry);
         this.studentProgressItemTimer = Timer.builder("learning_student_progress_item_duration")
-                .description("student progress item build duration")
+                .description("학생 1명 학습률 계산 구간 시간")
                 .register(registry);
     }
 

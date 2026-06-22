@@ -41,6 +41,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -478,7 +479,41 @@ class LearningServiceTest {
         assertEquals(2L, result.completedProblemCount());
         assertEquals(3L, result.totalProblemCount());
         verify(learningMetrics).recordStudentProgressQuery(anyLong());
-        verify(learningMetrics).recordStudentProgressItem(anyLong());
+        verify(learningMetrics, times(1)).recordStudentProgressItem(anyLong());
+    }
+
+    @Test
+    void findStudentProgresses_reusesCourseItemIdsForMultipleStudents() {
+        Long courseId = 101L;
+        Long firstUserId = 10L;
+        Long secondUserId = 11L;
+        List<Long> lectureIds = List.of(101L, 102L);
+        List<Long> lectureProblemSetIds = List.of(6001L, 6002L, 6003L);
+
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId))
+                .willReturn(List.of(firstUserId, secondUserId));
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningUserPort.findUserName(firstUserId)).willReturn("student1");
+        given(learningUserPort.findUserName(secondUserId)).willReturn("student2");
+        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(firstUserId, lectureIds)).willReturn(1L);
+        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(secondUserId, lectureIds)).willReturn(2L);
+        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                firstUserId,
+                lectureProblemSetIds
+        )).willReturn(2L);
+        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                secondUserId,
+                lectureProblemSetIds
+        )).willReturn(3L);
+
+        List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
+
+        assertEquals(2, results.size());
+        verify(learningLecturePort, times(1)).findLectureIdsByCourse(courseId);
+        verify(learningCourseProblemPort, times(1)).findMainLectureProblemSetIdsByCourse(courseId);
+        verify(learningMetrics, times(2)).recordStudentProgressItem(anyLong());
+        verify(learningMetrics).recordStudentProgressQuery(anyLong());
     }
 
     @Test
