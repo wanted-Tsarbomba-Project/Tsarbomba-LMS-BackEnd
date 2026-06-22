@@ -11,6 +11,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.netty.http.client.HttpClient;
+import java.time.Duration;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
@@ -21,7 +25,11 @@ public class GoogleOAuthClient {
     private final OAuthProperties properties;
 
     // 전용 WebClient (다른 도메인 설정에 의존하지 않도록 자체 구성)
-    private final WebClient webClient = WebClient.builder().build();
+    // 전용 WebClient (다른 도메인 설정에 의존하지 않도록 자체 구성, 응답 타임아웃 5초)
+    private final WebClient webClient = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(
+                    HttpClient.create().responseTimeout(Duration.ofSeconds(5))))
+            .build();
 
     /** 구글 동의 화면으로 보낼 authorization URL 생성 */
     public String buildAuthorizationUri(String state) {
@@ -81,7 +89,9 @@ public class GoogleOAuthClient {
         }
         return new OAuthUserInfo(
                 (String) response.get("email"),
-                (String) response.get("name")
+                (String) response.get("name"),
+                Boolean.TRUE.equals(response.get("email_verified"))
         );
+
     }
 }

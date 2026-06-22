@@ -46,9 +46,13 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
         String accessToken = googleOAuthClient.exchangeCodeForAccessToken(code);
         OAuthUserInfo userInfo = googleOAuthClient.fetchUserInfo(accessToken);
 
+        // 2-1. 구글에서 인증되지 않은 이메일은 거부 (신규 가입 신뢰성 확보)
+        if (!userInfo.emailVerified()) {
+            throw new ValidationException(AuthErrorCode.OAUTH_EMAIL_NOT_VERIFIED);
+        }
+
         // 3. 이메일로 기존 회원 조회
         Optional<User> existing = userRepository.findByEmail(userInfo.email());
-
         if (existing.isPresent()) {
             User user = existing.get();
 

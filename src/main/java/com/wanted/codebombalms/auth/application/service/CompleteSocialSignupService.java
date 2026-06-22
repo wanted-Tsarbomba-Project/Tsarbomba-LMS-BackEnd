@@ -31,8 +31,8 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
     @Override
     public TokenPair complete(String tempToken, String nickname, String phone) {
 
-        // 1. TEMP_TOKEN 검증 + 소비 (단일 사용). 없으면 401
-        OAuthTempData data = tempTokenRepository.findAndDelete(tempToken)
+        // 1. TEMP_TOKEN 조회 (삭제 X — 검증 실패 시 재시도 가능하게). 없으면 401
+        OAuthTempData data = tempTokenRepository.find(tempToken)
                 .orElseThrow(() -> new UnauthorizedException(AuthErrorCode.AUTH_TEMP_TOKEN_INVALID));
 
         // 2. 닉네임 중복 검사 (USR-003)
@@ -50,7 +50,10 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
                 User.createSocialUser(data.email(), data.name(), nickname, phone, AuthProvider.GOOGLE)
         );
 
-        // 5. 토큰 발급 (가입 직후 바로 로그인)
+        // 5. 가입 성공 후 TEMP_TOKEN 소비 (단일 사용 — 이 시점에 삭제)
+        tempTokenRepository.findAndDelete(tempToken);
+
+        // 6. 토큰 발급 (가입 직후 바로 로그인)
         String accessToken = jwtTokenProvider.generateAccessToken(
                 saved.getUserId(), saved.getNickname(), saved.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(saved.getUserId());

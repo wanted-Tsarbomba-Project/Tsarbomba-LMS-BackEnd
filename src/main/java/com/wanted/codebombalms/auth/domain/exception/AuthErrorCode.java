@@ -44,7 +44,8 @@ public enum AuthErrorCode implements ErrorCode {
     OAUTH_USER_INFO_FAILED("AUT-020", "구글 사용자 정보 조회에 실패했습니다."),
 
     OAUTH_STATE_INVALID("AUT-021", "유효하지 않은 인증 요청입니다. 다시 시도해주세요."),
-    OAUTH_EMAIL_ALREADY_LOCAL("AUT-022", "이미 일반 가입된 이메일입니다. 일반 로그인을 이용해주세요.");
+    OAUTH_EMAIL_ALREADY_LOCAL("AUT-022", "이미 일반 가입된 이메일입니다. 일반 로그인을 이용해주세요."),
+    OAUTH_EMAIL_NOT_VERIFIED("AUT-023", "구글에서 인증되지 않은 이메일입니다.");
 
     private final String code;
     private final String message;
