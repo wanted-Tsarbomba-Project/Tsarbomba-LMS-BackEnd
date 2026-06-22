@@ -25,7 +25,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@Profile("loadtest")
+@Profile("loadtest & !loadtest-admin")
 @DependsOn("chatListLoadTestSeeder")
 @RequiredArgsConstructor
 public class RecommendationLoadTestSeeder implements ApplicationRunner {
@@ -51,7 +51,7 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
 
         long startedAt = System.nanoTime();
 
-        Long userId = findUserId(LOGIN_EMAIL);
+        Long userId = findOrCreateLoginUser();
         Long categoryId = seedCategory();
         List<Long> problemSetIds = seedProblemSets(userId, categoryId);
         seedRecommendations(userId, problemSetIds);
@@ -66,8 +66,28 @@ public class RecommendationLoadTestSeeder implements ApplicationRunner {
                 (System.nanoTime() - startedAt) / 1_000_000);
     }
 
-    private Long findUserId(String email) {
-        return jdbc.queryForObject("select user_id from users where email = ?", Long.class, email);
+    private Long findOrCreateLoginUser() {
+        List<Long> userIds = jdbc.queryForList(
+                "select user_id from users where email = ?",
+                Long.class,
+                LOGIN_EMAIL
+        );
+        if (!userIds.isEmpty()) {
+            return userIds.get(0);
+        }
+
+        jdbc.update("""
+                insert into users
+                  (role, email, password, name, nickname, provider, email_verified, is_locked, created_at, updated_at)
+                values
+                  ('STUDENT', ?, ?, '추천 부하 사용자', 'recommendation-loadtest-user', 'LOCAL', true, false, now(6), now(6))
+                """, LOGIN_EMAIL, passwordEncoder.encode(LOADTEST_PASSWORD));
+
+        return jdbc.queryForObject(
+                "select user_id from users where email = ?",
+                Long.class,
+                LOGIN_EMAIL
+        );
     }
 
     private Long seedCategory() {
