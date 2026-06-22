@@ -5,6 +5,7 @@ import com.wanted.codebombalms.recommendation.application.command.GeneratedUserP
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationCommandPort;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationGenerationClient;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationAlgorithm;
+import com.wanted.codebombalms.recommendation.infrastructure.metrics.RecommendationMetrics;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ class ProblemRecommendationGenerationServiceTest {
 
     @Mock
     private ProblemRecommendationCommandPort commandPort;
+
+    @Mock
+    private RecommendationMetrics recommendationMetrics;
 
     @InjectMocks
     private ProblemRecommendationGenerationService service;
