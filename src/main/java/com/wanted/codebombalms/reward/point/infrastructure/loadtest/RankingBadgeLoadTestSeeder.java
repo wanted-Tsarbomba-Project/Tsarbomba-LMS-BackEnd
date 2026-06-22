@@ -16,7 +16,7 @@ import java.sql.SQLException;
 
 @Slf4j
 @Component
-@Profile("loadtest")
+@Profile("loadtest & !loadtest-admin")
 @RequiredArgsConstructor
 public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
 

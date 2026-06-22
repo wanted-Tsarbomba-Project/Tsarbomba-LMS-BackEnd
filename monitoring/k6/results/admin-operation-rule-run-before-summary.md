@@ -1,24 +1,24 @@
-# k6 Result - admin-alert-detail-course-before
+# k6 Result - admin-operation-rule-run-before
 
 ## Summary
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 2219 |
-| iterations | 2218 |
+| http_reqs | 2 |
+| iterations | 1 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 3795523 |
-| data_sent bytes | 774292 |
+| data_received bytes | 1563 |
+| data_sent bytes | 589 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 13.57 | 8.53 | 12.65 | 16.94 | 19.65 | 28.94 | 226.06 |
-| http_req_waiting | 13.30 | 8.24 | 12.38 | 16.54 | 19.13 | 28.63 | 225.69 |
-| http_req_blocked | 0.07 | 0.00 | 0.00 | 0.01 | 0.01 | 2.48 | 7.85 |
-| http_req_connecting | 0.06 | 0 | 0 | 0 | 0 | 2.37 | 6.68 |
+| http_req_duration | 2092.81 | 249.20 | 2092.81 | 3567.70 | 3752.06 | 3899.55 | 3936.42 |
+| http_req_waiting | 2091.32 | 247.84 | 2091.32 | 3566.10 | 3750.45 | 3897.92 | 3934.79 |
+| http_req_blocked | 2.99 | 2.40 | 2.99 | 3.46 | 3.52 | 3.56 | 3.57 |
+| http_req_connecting | 2.72 | 2.33 | 2.72 | 3.03 | 3.07 | 3.11 | 3.11 |
 
 ## Metric Meaning
 
@@ -36,9 +36,9 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 2218 pass / 0 fail |
-| data exists | 2218 pass / 0 fail |
-| has target detail | 2218 pass / 0 fail |
+| status is 200 | 1 pass / 0 fail |
+| trigger completed | 1 pass / 0 fail |
+| duration exists | 1 pass / 0 fail |
 
 ## How To Compare
 
