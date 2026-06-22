@@ -29,6 +29,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -235,8 +236,9 @@ class CourseServiceTest {
 
         assertEquals(CourseStatus.DELETED, course.getStatus());
         assertNotNull(course.getDeletedAt());
-        verify(courseRepository).save(course);
-        verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
+        var inOrder = inOrder(lectureManagementPort, courseRepository);
+        inOrder.verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
+        inOrder.verify(courseRepository).save(course);
     }
 
     @Test
