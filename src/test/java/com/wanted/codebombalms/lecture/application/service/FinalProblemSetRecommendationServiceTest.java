@@ -26,6 +26,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
@@ -59,7 +63,7 @@ class FinalProblemSetRecommendationServiceTest {
 
         assertEquals(0, result.size());
         verify(lectureAccessPolicy).validateLearningContentAccess(lecture, 20L, false);
-        verify(finalProblemSetCandidatePort, never()).findCandidates(eq(null), eq(Set.of()), eq(2));
+        verify(finalProblemSetCandidatePort, never()).findCandidates(any(), anySet(), anyInt());
     }
 
     @Test
@@ -93,8 +97,8 @@ class FinalProblemSetRecommendationServiceTest {
                 service.findFinalProblemSetCandidates(10L, 20L, false)
         );
 
-        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(eq(1L), eq(LectureProblemSetRole.MAIN));
-        verify(finalProblemSetCandidatePort, never()).findCandidates(eq(3001L), eq(Set.of()), eq(2));
+        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(anyLong(), any());
+        verify(finalProblemSetCandidatePort, never()).findCandidates(anyLong(), anySet(), anyInt());
     }
 
     @Test
@@ -108,8 +112,8 @@ class FinalProblemSetRecommendationServiceTest {
                 service.findFinalProblemSetCandidates(10L, 20L, false)
         );
 
-        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(eq(1L), eq(LectureProblemSetRole.MAIN));
-        verify(finalProblemSetCandidatePort, never()).findCandidates(eq(3001L), eq(Set.of()), eq(2));
+        verify(lectureProblemSetRepository, never()).findByCourseIdAndRole(anyLong(), any());
+        verify(finalProblemSetCandidatePort, never()).findCandidates(anyLong(), anySet(), anyInt());
     }
 
     private Lecture lecture(Long lectureId, Long courseId, Long problemCategoryId) {
