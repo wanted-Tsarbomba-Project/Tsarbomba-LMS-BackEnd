@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public record StudentSummaryResponse(
         Long userId,
         String email,
+        String name,
         String nickname,
         boolean isLocked,
         LocalDateTime createdAt
@@ -16,6 +17,7 @@ public record StudentSummaryResponse(
         return new StudentSummaryResponse(
                 summary.userId(),
                 summary.email(),
+                summary.name(),
                 summary.nickname(),
                 summary.isLocked(),
                 summary.createdAt()
