@@ -16,4 +16,7 @@ public class AuthResponseCode {
     public static final String PASSWORD_RESET_CODE_SENT = "AUTH-PASSWORD-RESET-CODE-SENT";
     public static final String PASSWORD_RESET_CODE_VERIFIED = "AUTH-PASSWORD-RESET-CODE-VERIFIED";
     public static final String PASSWORD_RESET_COMPLETED = "AUTH-PASSWORD-RESET-COMPLETED";
+    public static final String OAUTH_AUTH_URL_ISSUED = "AUTH-OAUTH-AUTH-URL-ISSUED";
+    public static final String OAUTH_SIGNUP_COMPLETED = "AUTH-OAUTH-SIGNUP-COMPLETED";
+    public static final String OAUTH_TEMP_INFO_RETRIEVED = "AUTH-OAUTH-TEMP-INFO-RETRIEVED";
 }
