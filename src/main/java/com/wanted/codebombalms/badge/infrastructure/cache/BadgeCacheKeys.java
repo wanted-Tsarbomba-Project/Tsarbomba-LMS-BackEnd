@@ -6,6 +6,6 @@ public final class BadgeCacheKeys {
     }
 
     public static String badgeImageAccessUrl(String objectName) {
-        return objectName == null ? "" : objectName.trim();
+        return objectName == null ? "" : objectName;
     }
 }
