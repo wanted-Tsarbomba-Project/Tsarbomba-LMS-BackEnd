@@ -6,6 +6,7 @@ import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -50,6 +51,18 @@ public class LectureQueryService implements LectureQueryUseCase {
 
         Lecture lecture = findExistingLecture(lectureId);
         lectureAccessPolicy.validateLearningContentAccess(lecture, userId, operator);
+        if (!operator) {
+            if (lecture.getLectureOrder() == null) {
+                throw new ForbiddenException(LectureErrorCode.PREVIOUS_LECTURE_NOT_COMPLETED);
+            }
+            lectureAccessPolicy.validatePreviousLecturesCompleted(
+                    userId,
+                    lectureRepository.findPreviousLectureIds(
+                            lecture.getCourse().getCourseId(),
+                            lecture.getLectureOrder()
+                    )
+            );
+        }
 
         return lecture;
     }
