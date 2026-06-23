@@ -7,13 +7,16 @@
 @lectureProblemSetId = 102
 @problemSetId = 2002
 @problemId = 2004
+@userId = 3
 
 ### 1. 강의 진행 상태 저장
 PATCH {{host}}/api/v1/lectures/{{lectureId}}/progress
 Content-Type: application/json
 
 {
-  "completed": true
+  "lastPositionSec": 120,
+  "durationSec": 600,
+  "watchedDeltaSec": 10
 }
 
 ### 2. 강의 진행 상태 조회

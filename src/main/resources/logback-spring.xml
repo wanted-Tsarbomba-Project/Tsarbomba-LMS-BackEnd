@@ -82,7 +82,7 @@
     </logger>
 
     <!-- 프로파일별 분기 -->
-    <springProfile name="local,dev">
+    <springProfile name="local,dev,loadtest">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="APP_FILE"/>
@@ -96,6 +96,14 @@
         <root level="WARN">
             <appender-ref ref="APP_FILE"/>
             <appender-ref ref="ERROR_FILE"/>
+        </root>
+        <logger name="com.wanted.codebombalms" level="INFO"/>
+    </springProfile>
+
+    <!-- 배포(EC2 컨테이너): stdout으로 로깅 → 도커 json-file → promtail → ③ Loki -->
+    <springProfile name="deploy">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
         </root>
         <logger name="com.wanted.codebombalms" level="INFO"/>
     </springProfile>

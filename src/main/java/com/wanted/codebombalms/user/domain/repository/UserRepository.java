@@ -12,11 +12,14 @@ public interface UserRepository {
 
     Optional<User> findByUserId(Long userId);
 
+    Optional<User> findByNameAndPhone(String name, String phone);
+
     boolean existsByEmail(String email);
 
     boolean existsByNickname(String nickname);
 
     User save(User user);
+    User saveAndFlush(User user);
 
     List<User> findAllByRole(UserRole role, int page, int size);
 

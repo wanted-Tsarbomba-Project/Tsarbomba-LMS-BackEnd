@@ -1,9 +1,9 @@
 package com.wanted.codebombalms.learning.infrastructure.course;
 
-import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseProblemSetJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseProblemSetRepository;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
+import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,24 +14,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LearningCourseProblemAdapter implements LearningCourseProblemPort {
 
-    private final SpringDataCourseProblemSetRepository courseProblemSetRepository;
+    private final LectureProblemSetQueryUseCase lectureProblemSetQueryUseCase;
 
     @Override
     public List<Long> findMainLectureProblemSetIdsByCourse(Long courseId) {
-        return courseProblemSetRepository.findActiveByCourseIdAndRole(
+        return lectureProblemSetQueryUseCase.findProblemSetsByCourseAndRole(
                         courseId,
-                        CourseProblemSetRole.MAIN
+                        LectureProblemSetRole.MAIN
                 )
                 .stream()
-                .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
+                .map(LectureProblemSet::getLectureProblemSetId)
                 .toList();
     }
 
     @Override
     public List<Long> findLectureProblemSetIdsByLecture(Long lectureId) {
-        return courseProblemSetRepository.findActiveByLectureIdOrderByDisplayOrderAsc(lectureId)
+        return lectureProblemSetQueryUseCase.findProblemSetsByLecture(lectureId)
                 .stream()
-                .map(CourseProblemSetJpaEntity::getCourseProblemSetId)
+                .map(LectureProblemSet::getLectureProblemSetId)
                 .toList();
     }
 }

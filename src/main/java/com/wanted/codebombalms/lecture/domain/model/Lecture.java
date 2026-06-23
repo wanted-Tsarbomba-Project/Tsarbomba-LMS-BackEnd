@@ -18,6 +18,7 @@ public class Lecture {
     private String description;
     private String videoUrl;
     private String thumbnailUrl;
+    private Long problemCategoryId;
     private LectureStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -30,6 +31,7 @@ public class Lecture {
             String description,
             String videoUrl,
             String thumbnailUrl,
+            Long problemCategoryId,
             Integer lectureOrder,
             LectureStatus status
     ) {
@@ -39,6 +41,7 @@ public class Lecture {
         lecture.setDescription(description);
         lecture.setVideoUrl(videoUrl);
         lecture.setThumbnailUrl(thumbnailUrl);
+        lecture.setProblemCategoryId(problemCategoryId);
         lecture.setLectureOrder(lectureOrder);
         lecture.setStatus(status == null ? LectureStatus.ACTIVE : status);
 
@@ -52,6 +55,7 @@ public class Lecture {
             String description,
             String videoUrl,
             String thumbnailUrl,
+            Long problemCategoryId,
             LectureStatus status,
             LocalDateTime createdAt,
             LocalDateTime updatedAt,
@@ -65,6 +69,7 @@ public class Lecture {
                 description,
                 videoUrl,
                 thumbnailUrl,
+                problemCategoryId,
                 status,
                 createdAt,
                 updatedAt,
@@ -78,6 +83,7 @@ public class Lecture {
             String description,
             String videoUrl,
             String thumbnailUrl,
+            Long problemCategoryId,
             Integer lectureOrder,
             LectureStatus status
     ) {
@@ -95,6 +101,10 @@ public class Lecture {
 
         if (thumbnailUrl != null) {
             this.thumbnailUrl = thumbnailUrl;
+        }
+
+        if (problemCategoryId != null) {
+            this.problemCategoryId = problemCategoryId;
         }
 
         if (lectureOrder != null) {

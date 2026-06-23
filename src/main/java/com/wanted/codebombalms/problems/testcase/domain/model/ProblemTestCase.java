@@ -11,7 +11,6 @@ public class ProblemTestCase {
     private final Long testCaseId;
     private final Long problemId;
     private final String testCode;
-    private final String expectedResult;
     private final Integer testOrder;
     private final Boolean hidden;
     private final Integer timeoutMs;
@@ -21,7 +20,6 @@ public class ProblemTestCase {
             Long testCaseId,
             Long problemId,
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs,
@@ -32,7 +30,6 @@ public class ProblemTestCase {
         this.testCaseId = testCaseId;
         this.problemId = problemId;
         this.testCode = testCode;
-        this.expectedResult = expectedResult;
         this.testOrder = testOrder;
         this.hidden = hidden;
         this.timeoutMs = timeoutMs == null ? DEFAULT_TIMEOUT_MS : timeoutMs;
@@ -42,7 +39,6 @@ public class ProblemTestCase {
     public static ProblemTestCase create(
             Long problemId,
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs
@@ -51,7 +47,6 @@ public class ProblemTestCase {
                 null,
                 problemId,
                 testCode,
-                expectedResult,
                 testOrder,
                 hidden,
                 timeoutMs,
@@ -63,7 +58,6 @@ public class ProblemTestCase {
             Long testCaseId,
             Long problemId,
             String testCode,
-            String expectedResult,
             Integer testOrder,
             Boolean hidden,
             Integer timeoutMs,
@@ -73,7 +67,6 @@ public class ProblemTestCase {
                 testCaseId,
                 problemId,
                 testCode,
-                expectedResult,
                 testOrder,
                 hidden,
                 timeoutMs,
@@ -115,10 +108,6 @@ public class ProblemTestCase {
 
     public String getTestCode() {
         return testCode;
-    }
-
-    public String getExpectedResult() {
-        return expectedResult;
     }
 
     public Integer getTestOrder() {

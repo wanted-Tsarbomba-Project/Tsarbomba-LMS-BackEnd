@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 public class AutomationRule {
 
     private final Long operationRuleId;
-    private final Long createdBy;
     private final OperationRuleCode ruleCode;
     private final BigDecimal thresholdValue;
     private final Integer minSampleCount;
@@ -22,7 +21,6 @@ public class AutomationRule {
 
     private AutomationRule(
             Long operationRuleId,
-            Long createdBy,
             OperationRuleCode ruleCode,
             BigDecimal thresholdValue,
             Integer minSampleCount,
@@ -32,7 +30,6 @@ public class AutomationRule {
             LocalDateTime updatedAt
     ) {
         this.operationRuleId = operationRuleId;
-        this.createdBy = createdBy;
         this.ruleCode = ruleCode;
         this.thresholdValue = thresholdValue;
         this.minSampleCount = minSampleCount;
@@ -43,21 +40,19 @@ public class AutomationRule {
     }
 
     public static AutomationRule create(
-            Long createdBy,
             OperationRuleCode ruleCode,
             BigDecimal thresholdValue,
             Integer minSampleCount,
             OperationSeverity severity,
             Boolean enabled
     ) {
-        validateCreateRequest(createdBy, ruleCode, thresholdValue, minSampleCount);
+        validateCreateRequest(ruleCode, thresholdValue, minSampleCount);
 
         OperationSeverity resolvedSeverity = severity == null ? OperationSeverity.MEDIUM : severity;
         boolean resolvedEnabled = enabled == null || enabled;
 
         return new AutomationRule(
                 null,
-                createdBy,
                 ruleCode,
                 thresholdValue,
                 normalizeMinSampleCount(ruleCode, minSampleCount),
@@ -70,7 +65,6 @@ public class AutomationRule {
 
     public static AutomationRule restore(
             Long operationRuleId,
-            Long createdBy,
             OperationRuleCode ruleCode,
             BigDecimal thresholdValue,
             Integer minSampleCount,
@@ -81,7 +75,6 @@ public class AutomationRule {
     ) {
         return new AutomationRule(
                 operationRuleId,
-                createdBy,
                 ruleCode,
                 thresholdValue,
                 minSampleCount,
@@ -102,7 +95,6 @@ public class AutomationRule {
 
         return new AutomationRule(
                 operationRuleId,
-                createdBy,
                 ruleCode,
                 thresholdValue,
                 normalizeMinSampleCount(ruleCode, minSampleCount),
@@ -121,7 +113,6 @@ public class AutomationRule {
 
         return new AutomationRule(
                 operationRuleId,
-                createdBy,
                 ruleCode,
                 thresholdValue,
                 minSampleCount,
@@ -141,12 +132,11 @@ public class AutomationRule {
     }
 
     private static void validateCreateRequest(
-            Long createdBy,
             OperationRuleCode ruleCode,
             BigDecimal thresholdValue,
             Integer minSampleCount
     ) {
-        if (createdBy == null || ruleCode == null || thresholdValue == null) {
+        if (ruleCode == null || thresholdValue == null) {
             throw new ValidationException(AutomationRuleErrorCode.INVALID_CREATE_REQUEST);
         }
 
@@ -174,10 +164,6 @@ public class AutomationRule {
 
     public Long getOperationRuleId() {
         return operationRuleId;
-    }
-
-    public Long getCreatedBy() {
-        return createdBy;
     }
 
     public OperationRuleCode getRuleCode() {

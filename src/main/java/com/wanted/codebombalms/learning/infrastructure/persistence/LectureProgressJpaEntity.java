@@ -33,6 +33,15 @@ public class LectureProgressJpaEntity {
     @Column(name = "last_watched_at")
     private LocalDateTime lastWatchedAt;
 
+    @Column(name = "last_position_sec", nullable = false)
+    private int lastPositionSec;
+
+    @Column(name = "duration_sec")
+    private Integer durationSec;
+
+    @Column(name = "watched_sec", nullable = false)
+    private int watchedSec;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -50,6 +59,9 @@ public class LectureProgressJpaEntity {
         entity.completed = progress.isCompleted();
         entity.completedAt = progress.getCompletedAt();
         entity.lastWatchedAt = progress.getLastWatchedAt();
+        entity.lastPositionSec = progress.getLastPositionSec();
+        entity.durationSec = progress.getDurationSec();
+        entity.watchedSec = progress.getWatchedSec();
         entity.createdAt = progress.getCreatedAt();
         entity.updatedAt = progress.getUpdatedAt();
         return entity;
@@ -59,6 +71,9 @@ public class LectureProgressJpaEntity {
         this.completed = progress.isCompleted();
         this.completedAt = progress.getCompletedAt();
         this.lastWatchedAt = progress.getLastWatchedAt();
+        this.lastPositionSec = progress.getLastPositionSec();
+        this.durationSec = progress.getDurationSec();
+        this.watchedSec = progress.getWatchedSec();
     }
 
     public LectureProgress toDomain() {
@@ -69,6 +84,9 @@ public class LectureProgressJpaEntity {
                 completed,
                 completedAt,
                 lastWatchedAt,
+                lastPositionSec,
+                durationSec,
+                watchedSec,
                 createdAt,
                 updatedAt
         );

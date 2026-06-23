@@ -28,7 +28,6 @@ public class TestCaseForGradingAdapter implements LoadTestCasesForGradingPort {
         return new TestCaseForGrading(
                 testCase.getTestCaseId(),
                 testCase.getTestCode(),
-                testCase.getExpectedResult(),
                 testCase.getHidden(),
                 testCase.getTimeoutMs()
         );

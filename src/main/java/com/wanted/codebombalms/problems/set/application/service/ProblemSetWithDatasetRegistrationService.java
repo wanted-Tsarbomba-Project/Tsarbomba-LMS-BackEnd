@@ -9,6 +9,7 @@ import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
+import com.wanted.codebombalms.problems.set.application.policy.DatasetStartCodePolicy;
 import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetWithDatasetUseCase;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
     private final RegisterProblemSetUseCase registerProblemSetUseCase;
     private final StoreDatasetFilePort storeDatasetFilePort;
     private final ProblemDatasetPersistencePort problemDatasetPersistencePort;
+    private final DatasetStartCodePolicy datasetStartCodePolicy;
     private static final long MAX_DATASET_FILE_SIZE = 10 * 1024 * 1024;
     private static final String CSV_EXTENSION = ".csv";
 
@@ -52,9 +54,10 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
                     problemSet.categoryName(),
                     problemSet.totalProblemCount(),
                     problemSet.createdProblemCount(),
+                    problemSet.createdTestCaseCount(),
+                    problemSet.problems(),
                     dataset.getOriginalFileName(),
-                    dataset.getFileUrl(),
-                    startCode(dataset.getFileUrl())
+                    datasetStartCodePolicy.create()
             );
         } catch (DomainException e) {
             if (storedFile != null) {
@@ -95,8 +98,5 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
         }
     }
 
-    private String startCode(String fileUrl) {
-        return "import pandas as pd\n\n"
-                + "df = pd.read_csv(\"" + fileUrl + "\")";
-    }
+
 }

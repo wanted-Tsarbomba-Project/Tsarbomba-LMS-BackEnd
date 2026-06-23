@@ -7,9 +7,11 @@ import com.wanted.codebombalms.admin.operation.automation.application.model.Oper
 import com.wanted.codebombalms.admin.operation.automation.application.policy.OperationAlertUpsertPolicy;
 import com.wanted.codebombalms.admin.operation.automation.application.policy.OperationRuleExecutionPolicy;
 import com.wanted.codebombalms.admin.operation.automation.application.usecase.RunOperationRuleUseCase;
+import com.wanted.codebombalms.admin.operation.metrics.AdminMetrics;
 import com.wanted.codebombalms.admin.operation.rule.domain.model.AutomationRule;
 import com.wanted.codebombalms.admin.operation.rule.domain.model.OperationRuleCode;
 import com.wanted.codebombalms.admin.operation.rule.domain.repository.AutomationRuleRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 // 활성화된 자동 규칙을 실행하고 탐지 결과를 운영 알림으로 반영한다.
@@ -32,6 +35,7 @@ public class OperationRuleExecutionService implements RunOperationRuleUseCase {
     private final OperationRuleExecutionPolicy operationRuleExecutionPolicy;
     private final OperationAlertUpsertPolicy operationAlertUpsertPolicy;
     private final Clock clock;
+    private final AdminMetrics adminMetrics;
 
     public OperationRuleExecutionService(
             AutomationRuleRepository automationRuleRepository,
@@ -39,13 +43,15 @@ public class OperationRuleExecutionService implements RunOperationRuleUseCase {
             List<OperationRuleHandler> handlers,
             OperationRuleExecutionPolicy operationRuleExecutionPolicy,
             OperationAlertUpsertPolicy operationAlertUpsertPolicy,
-            Clock clock
+            Clock clock,
+            AdminMetrics adminMetrics
     ) {
         this.automationRuleRepository = automationRuleRepository;
         this.operationAlertRepository = operationAlertRepository;
         this.operationRuleExecutionPolicy = operationRuleExecutionPolicy;
         this.operationAlertUpsertPolicy = operationAlertUpsertPolicy;
         this.clock = clock;
+        this.adminMetrics = adminMetrics;
         this.handlers = handlers.stream()
                 .collect(Collectors.toMap(
                         OperationRuleHandler::supports,
@@ -57,21 +63,39 @@ public class OperationRuleExecutionService implements RunOperationRuleUseCase {
 
     @Override
     public void run() {
-        automationRuleRepository.findEnabled()
-                .forEach(this::executeRule);
+        long startedAt = System.nanoTime();
+        List<AutomationRule> enabledRules = automationRuleRepository.findEnabled();
+        int detectedCount = enabledRules.stream()
+                .mapToInt(this::executeRule)
+                .sum();
+        long elapsedNanos = System.nanoTime() - startedAt;
+
+        adminMetrics.recordRuleRun(elapsedNanos);
+        log.info("event=admin_operation_rule_run_completed enabledRuleCount={} detectedCount={} durationMs={}",
+                enabledRules.size(), detectedCount, elapsedNanos / 1_000_000);
     }
 
-    private void executeRule(AutomationRule rule) {
+    private int executeRule(AutomationRule rule) {
         OperationRuleHandler handler = handlers.get(rule.getRuleCode());
         if (!operationRuleExecutionPolicy.canExecute(rule, handler)) {
-            return;
+            return 0;
         }
 
-        handler.detect(rule)
-                .forEach(result -> saveAlert(rule, result));
+        long startedAt = System.nanoTime();
+        List<OperationRuleDetectionResult> results = handler.detect(rule);
+        long elapsedNanos = System.nanoTime() - startedAt;
+
+        adminMetrics.recordRuleDetect(rule.getRuleCode(), elapsedNanos);
+        adminMetrics.incrementRuleDetected(rule.getRuleCode(), results.size());
+        log.info("event=admin_operation_rule_detected ruleCode={} detectedCount={} durationMs={}",
+                rule.getRuleCode(), results.size(), elapsedNanos / 1_000_000);
+
+        results.forEach(result -> saveAlert(rule, result));
+        return results.size();
     }
 
     private void saveAlert(AutomationRule rule, OperationRuleDetectionResult result) {
+        long startedAt = System.nanoTime();
         LocalDateTime detectedAt = LocalDateTime.now(clock);
 
         OperationAlert operationAlert = operationAlertUpsertPolicy.resolve(
@@ -86,5 +110,10 @@ public class OperationRuleExecutionService implements RunOperationRuleUseCase {
         );
 
         operationAlertRepository.save(operationAlert);
+        long elapsedNanos = System.nanoTime() - startedAt;
+
+        adminMetrics.recordAlertUpsert(elapsedNanos);
+        log.info("event=admin_operation_alert_upserted ruleCode={} targetType={} alertCount=1 durationMs={}",
+                rule.getRuleCode(), result.targetType(), elapsedNanos / 1_000_000);
     }
 }

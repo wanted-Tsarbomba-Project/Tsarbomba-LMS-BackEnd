@@ -1,31 +1,101 @@
-### 파이썬 테스트
-POST http://localhost:8081/execute
+@runnerUrl = http://localhost:8081
+@signedUrl = 실제_GCS_SIGNED_URL을_여기에_입력
+
+# =====================================================
+# Python Runner 테스트
+# =====================================================
+
+### 1. 기본 코드 실행 성공
+POST {{runnerUrl}}/execute
 Content-Type: application/json
 
 {
-  "code": "print('hello')"
+  "code": "print(1 + 2)",
+  "timeoutMs": 5000
 }
 
-###
-POST http://localhost:8081/execute
+
+### 2. DATASET_PATH 없는 상태 확인
+POST {{runnerUrl}}/execute
 Content-Type: application/json
 
 {
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/8220751d-1dd0-44e9-a9f4-5b84fbf56c84_employee_performance.csv\")\nprint(df.shape)"
+  "code": "import os\nprint(os.environ.get('DATASET_PATH'))",
+  "timeoutMs": 5000
 }
 
-### hello 테스트
-POST https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute
+
+### 3. 실행 시간 초과 확인
+# 예상 결과:
+# - success: false
+# - stderr: 코드 실행 시간이 초과되었습니다.
+POST {{runnerUrl}}/execute
 Content-Type: application/json
 
 {
-  "code": "print('hello from cloud run')"
+  "code": "while True:\n    pass",
+  "timeoutMs": 500
 }
 
-### 판다스 확인
-POST https://codebomba-python-runner-227846656059.asia-northeast3.run.app/execute
+
+### 4. 허용되지 않은 데이터셋 URL 거부
+# 예상 결과:
+# - success: false
+# - stderr: 코드 실행 중 오류가 발생했습니다.
+POST {{runnerUrl}}/execute
 Content-Type: application/json
 
 {
-  "code": "import pandas as pd\n\ndf = pd.read_csv(\"https://storage.googleapis.com/codebombalms/problem_dataset/8220751d-1dd0-44e9-a9f4-5b84fbf56c84_employee_performance.csv\")\nprint(df.shape)"
+  "code": "print('실행되면 안 됩니다.')",
+  "datasetAccessUrl": "https://example.com/dataset.csv",
+  "timeoutMs": 5000
+}
+
+
+### 5. Signed URL로 CSV 읽기
+# @signedUrl에 만료되지 않은 실제 Signed URL을 입력해야 합니다.
+# 예상 결과:
+# - success: true
+# - stdout에 CSV 행/열 개수 출력
+POST {{runnerUrl}}/execute
+Content-Type: application/json
+
+{
+  "code": "import os\nimport pandas as pd\n\ndataset_path = os.environ['DATASET_PATH']\ndf = pd.read_csv(dataset_path)\nprint(df.shape)",
+  "datasetAccessUrl": "{{signedUrl}}",
+  "timeoutMs": 5000
+}
+
+
+### 6. 임시 CSV 파일 경로 확인
+# 출력 경로는 Runner 내부 임시 폴더여야 합니다.
+POST {{runnerUrl}}/execute
+Content-Type: application/json
+
+{
+  "code": "import os\nfrom pathlib import Path\n\npath = Path(os.environ['DATASET_PATH'])\nprint(path)\nprint(path.exists())",
+  "datasetAccessUrl": "{{signedUrl}}",
+  "timeoutMs": 5000
+}
+
+
+### 7. timeoutMs 최소 제한 확인
+# 1ms를 전달해도 Runner가 최소 100ms로 보정합니다.
+POST {{runnerUrl}}/execute
+Content-Type: application/json
+
+{
+  "code": "import time\ntime.sleep(1)\nprint('완료')",
+  "timeoutMs": 1
+}
+
+
+### 8. timeoutMs 최대 제한 확인
+# 60000ms를 전달해도 Runner가 최대 10000ms로 보정합니다.
+POST {{runnerUrl}}/execute
+Content-Type: application/json
+
+{
+  "code": "import time\ntime.sleep(11)\nprint('완료')",
+  "timeoutMs": 60000
 }

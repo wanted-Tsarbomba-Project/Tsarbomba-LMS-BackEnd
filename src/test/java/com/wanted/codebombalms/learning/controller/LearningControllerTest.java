@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.learning.controller;
 
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
 import com.wanted.codebombalms.learning.application.usecase.AdminLearningProgressQueryUseCase;
@@ -69,6 +70,9 @@ class LearningControllerTest {
     @MockitoBean
     private AdminLearningProgressQueryUseCase adminLearningProgressQueryUseCase;
 
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
+
     @Test
     void recordLectureProgressReturnsApiResponse() throws Exception {
         given(lectureProgressCommandUseCase.recordProgress(any(RecordLectureProgressCommand.class)))
@@ -79,6 +83,9 @@ class LearningControllerTest {
                         true,
                         LocalDateTime.now(),
                         LocalDateTime.now(),
+                        540,
+                        600,
+                        540,
                         LocalDateTime.now(),
                         null
                 ));
@@ -88,14 +95,19 @@ class LearningControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
-                                  "completed": true
+                                  "lastPositionSec": 540,
+                                  "durationSec": 600,
+                                  "watchedDeltaSec": 10
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.UPDATED))
                 .andExpect(jsonPath("$.data.lectureProgressId").value(1L))
                 .andExpect(jsonPath("$.data.lectureId").value(101L))
-                .andExpect(jsonPath("$.data.completed").value(true));
+                .andExpect(jsonPath("$.data.completed").value(true))
+                .andExpect(jsonPath("$.data.lastPositionSec").value(540))
+                .andExpect(jsonPath("$.data.durationSec").value(600))
+                .andExpect(jsonPath("$.data.watchedSec").value(540));
     }
 
     @Test
@@ -108,6 +120,9 @@ class LearningControllerTest {
                         false,
                         null,
                         LocalDateTime.now(),
+                        120,
+                        600,
+                        90,
                         LocalDateTime.now(),
                         null
                 ));
@@ -118,7 +133,10 @@ class LearningControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.data.lectureProgressId").value(1L))
-                .andExpect(jsonPath("$.data.completed").value(false));
+                .andExpect(jsonPath("$.data.completed").value(false))
+                .andExpect(jsonPath("$.data.lastPositionSec").value(120))
+                .andExpect(jsonPath("$.data.durationSec").value(600))
+                .andExpect(jsonPath("$.data.watchedSec").value(90));
     }
 
     @Test

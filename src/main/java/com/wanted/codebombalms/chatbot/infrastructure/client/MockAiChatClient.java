@@ -1,10 +1,13 @@
 package com.wanted.codebombalms.chatbot.infrastructure.client;
 
+import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -14,15 +17,18 @@ public class MockAiChatClient implements AiChatClient {
     private final AtomicInteger callCount = new AtomicInteger(0);
 
     @Override
-    public AiChatClientResponse call(ChatContext context) {
+    public Flux<AiChatStreamChunk> stream(ChatContext context) {
         int count = callCount.incrementAndGet();
-        String answer = "Fastapi 반환 mock입니다." + count;
+        String answer = "Fastapi 반환 mock입니다." + count + " 토큰 단위로 스트리밍됩니다.";
 
-        return new AiChatClientResponse(
-                answer,
-                true,
-                30,
-                new TokenUsage(0, 0, 0)
+        Flux<AiChatStreamChunk> tokens = Flux.fromArray(answer.split("(?<=\\s)"))
+                .delayElements(Duration.ofMillis(50))
+                .map(AiChatStreamChunk.Token::new);
+
+        Flux<AiChatStreamChunk> done = Flux.just(
+                new AiChatStreamChunk.Done(new AiChatStreamChunk.TokenUsage(0, 0, 0))
         );
+
+        return Flux.concat(tokens, done);
     }
 }

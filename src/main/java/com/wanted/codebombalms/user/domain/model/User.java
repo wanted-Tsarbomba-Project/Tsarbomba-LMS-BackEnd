@@ -91,8 +91,59 @@ public class User {
         return user;
     }
 
-    public void softDelete() { this.deletedAt = LocalDateTime.now(); }
-    public void lock()       { this.isLocked = true; }
+    public void updateProfile(String nickname, String phone) {
+        if (nickname != null) this.nickname = nickname;
+        if (phone != null)    this.phone = phone;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    // ===== 탈퇴(소프트딜리트) 묘비 처리용 상수 =====
+    private static final int EMAIL_MAX_LENGTH = 100;          // users.email 컬럼 길이
+    private static final String DELETED_NICKNAME_PREFIX = "탈퇴회원_";
+    private static final String DELETED_EMAIL_MARKER = "#deleted#";
+
+    public void softDelete() {
+        if (isDeleted()) return;  // 이미 탈퇴 처리됨 — 중복 묘비화 방지
+        this.deletedAt = LocalDateTime.now();
+        this.nickname  = DELETED_NICKNAME_PREFIX + this.userId;      // 닉네임 슬롯 해방
+        this.email     = tombstoneEmail(this.email, this.userId);   // 이메일 슬롯 해방(원본 보존)
+    }
+
+    /**
+     * 이메일 묘비화: "원본#deleted#{userId}" 로 바꿔 unique 슬롯을 풀되 원본을 보존.
+     * 컬럼 길이(100) 초과 시 원본 앞부분만 잘라 보존 (userId는 끝에 유지해 고유성 보장).
+     */
+    private static String tombstoneEmail(String email, Long userId) {
+        String suffix  = DELETED_EMAIL_MARKER + userId;             // 예: "#deleted#42"
+        int    baseMax = EMAIL_MAX_LENGTH - suffix.length();
+        String base    = email.length() > baseMax ? email.substring(0, baseMax) : email;
+        return base + suffix;
+    }    public void lock()       { this.isLocked = true; }
     public void unlock()     { this.isLocked = false; }
     public boolean isDeleted() { return this.deletedAt != null; }
+
+
+    // ===== 신규 소셜 회원 생성 (구글) =====
+    public static User createSocialUser(
+            String email,
+            String name,
+            String nickname,
+            String phone,
+            AuthProvider provider
+    ) {
+        User user = new User();
+        user.role          = UserRole.STUDENT;
+        user.email         = email;
+        user.password      = null;          // 소셜 계정은 비밀번호 없음
+        user.name          = name;
+        user.nickname      = nickname;
+        user.phone         = phone;
+        user.provider      = provider;
+        user.emailVerified = true;          // 구글에서 검증된 이메일
+        user.isLocked      = false;
+        return user;
+    }
 }

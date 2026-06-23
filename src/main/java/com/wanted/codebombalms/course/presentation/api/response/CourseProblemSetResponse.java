@@ -1,25 +1,25 @@
 package com.wanted.codebombalms.course.presentation.api.response;
 
-import com.wanted.codebombalms.course.domain.model.CourseProblemSet;
-import com.wanted.codebombalms.course.domain.model.CourseProblemSetRole;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
+import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 
 public record CourseProblemSetResponse(
         Long courseProblemSetId,
         Long courseId,
         Long lectureId,
         Long problemSetId,
-        CourseProblemSetRole role,
+        LectureProblemSetRole role,
         Integer displayOrder
 ) {
 
-    public static CourseProblemSetResponse from(CourseProblemSet courseProblemSet) {
+    public static CourseProblemSetResponse from(LectureProblemSet lectureProblemSet) {
         return new CourseProblemSetResponse(
-                courseProblemSet.getCourseProblemSetId(),
-                courseProblemSet.getCourseId(),
-                courseProblemSet.getLectureId(),
-                courseProblemSet.getProblemSetId(),
-                courseProblemSet.getRole(),
-                courseProblemSet.getDisplayOrder()
+                lectureProblemSet.getLectureProblemSetId(),
+                lectureProblemSet.getCourseId(),
+                lectureProblemSet.getLectureId(),
+                lectureProblemSet.getProblemSetId(),
+                lectureProblemSet.getRole(),
+                lectureProblemSet.getDisplayOrder()
         );
     }
 }

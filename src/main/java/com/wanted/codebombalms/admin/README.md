@@ -7,8 +7,8 @@
 - 운영 알림 목록과 상세 정보를 조회한다.
 - 운영 알림의 메모와 상태를 수정한다.
 - 운영 알림을 삭제한다.
-- 자동화 규칙 목록과 생성 옵션을 조회한다.
-- 자동화 규칙을 생성하고 수정한다.
+- 자동화 규칙 목록을 조회한다.
+- 자동화 규칙을 수정한다.
 - 자동화 규칙 활성화 여부를 변경한다.
 - 스케줄러를 통해 규칙을 실행하고 운영 알림을 생성한다.
 
@@ -51,24 +51,22 @@ admin
 | --- | --- |
 | `OperationAlertQueryService` | 운영 알림 목록/상세 조회 |
 | `OperationAlertCommandService` | 운영 알림 메모/상태 수정, 삭제 |
-| `AutomationRuleQueryService` | 자동화 규칙 목록과 옵션 조회 |
-| `AutomationRuleCommandService` | 자동화 규칙 생성/수정/활성화 변경 |
+| `AutomationRuleQueryService` | 자동화 규칙 목록 조회 |
+| `AutomationRuleCommandService` | 자동화 규칙 수정/활성화 변경 |
 | `OperationRuleExecutionService` | 자동화 규칙 실행과 운영 알림 생성 |
 
 ## API 목록
 
 | Method | Path | 설명 | 권한 |
 | --- | --- | --- | --- |
-| `GET` | `/api/v1/admin/operation-alerts` | 운영 알림 목록 조회 | 운영자 |
-| `GET` | `/api/v1/admin/operation-alerts/{operationAlertId}` | 운영 알림 상세 조회 | 운영자 |
-| `PATCH` | `/api/v1/admin/operation-alerts/{operationAlertId}/memo` | 운영 알림 메모 수정 | 운영자 |
-| `PATCH` | `/api/v1/admin/operation-alerts/{operationAlertId}/status` | 운영 알림 상태 수정 | 운영자 |
-| `DELETE` | `/api/v1/admin/operation-alerts/{operationAlertId}` | 운영 알림 삭제 | 운영자 |
-| `GET` | `/api/v1/admin/automation-rules` | 자동화 규칙 목록 조회 | 운영자 |
-| `GET` | `/api/v1/admin/automation-rules/options` | 자동화 규칙 옵션 조회 | 운영자 |
-| `POST` | `/api/v1/admin/automation-rules` | 자동화 규칙 생성 | 운영자 |
-| `PATCH` | `/api/v1/admin/automation-rules` | 자동화 규칙 수정 | 운영자 |
-| `PATCH` | `/api/v1/admin/automation-rules/{automationRuleId}/enabled` | 자동화 규칙 활성화 변경 | 운영자 |
+| `GET` | `/api/v1/admin/operation-alerts` | 운영 알림 목록 조회 | `ADMIN` |
+| `GET` | `/api/v1/admin/operation-alerts/{operationAlertId}` | 운영 알림 상세 조회 | `ADMIN` |
+| `PATCH` | `/api/v1/admin/operation-alerts/{operationAlertId}/memo` | 운영 알림 메모 수정 | `ADMIN` + `RULE_MANAGEMENT` |
+| `PATCH` | `/api/v1/admin/operation-alerts/{operationAlertId}/status` | 운영 알림 상태 수정 | `ADMIN` + `RULE_MANAGEMENT` |
+| `DELETE` | `/api/v1/admin/operation-alerts/{operationAlertId}` | 운영 알림 삭제 | `ADMIN` + `RULE_MANAGEMENT` |
+| `GET` | `/api/v1/admin/automation-rules` | 자동화 규칙 목록 조회 | `ADMIN` |
+| `PATCH` | `/api/v1/admin/automation-rules` | 자동화 규칙 수정 | `ADMIN` + `RULE_MANAGEMENT` |
+| `PATCH` | `/api/v1/admin/automation-rules/{automationRuleId}/enabled` | 자동화 규칙 활성화 변경 | `ADMIN` + `RULE_MANAGEMENT` |
 
 ## 핵심 흐름
 

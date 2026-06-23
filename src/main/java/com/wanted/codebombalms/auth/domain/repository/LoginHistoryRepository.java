@@ -2,11 +2,13 @@ package com.wanted.codebombalms.auth.domain.repository;
 
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 public interface LoginHistoryRepository {
 
     LoginHistory save(LoginHistory loginHistory);
 
-    Optional<LoginHistory> findLatestByUserId(Long userId);
+    Map<Long, LocalDateTime> findLatestLoginAtByUserIds(List<Long> userIds);
 }

@@ -38,9 +38,6 @@ public class ProblemDatasetCommandService implements UploadProblemDatasetUseCase
             return new UploadProblemDatasetView(
                     dataset.getDatasetId(),
                     dataset.getOriginalFileName(),
-                    dataset.getStoredFileName(),
-                    dataset.getFileUrl(),
-                    dataset.getFilePath(),
                     dataset.getStatus()
             );
         } catch (DomainException e) {

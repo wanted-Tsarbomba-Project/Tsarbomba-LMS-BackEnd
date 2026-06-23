@@ -55,3 +55,167 @@ Cookie: accessToken={{rt}}
     });
 %}
 
+
+
+
+### ===== 회원 탈퇴 (#198) =====
+### C0 → C1 → C2 순서대로 실행
+
+### C0. (사전) 로그인 — 탈퇴할 계정으로 쿠키 발급
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### C1. 회원 탈퇴 — 비번 틀림 (400 기대)
+DELETE http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "password": "wrongpassword!"
+}
+
+> {%
+    client.test("비번 불일치 400", function () {
+        client.assert(response.status === 400, "기대 400, 실제 " + response.status);
+    });
+%}
+
+### C2. 회원 탈퇴 — 정상 (비번 일치, 200 기대)
+DELETE http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "password": "Test1234!"
+}
+
+> {%
+    client.test("탈퇴 성공 200", function () {
+        client.assert(response.status === 200, "기대 200, 실제 " + response.status);
+    });
+%}
+
+### C3. 탈퇴 후 내 정보 조회 — 401 기대 (쿠키 만료)
+GET http://localhost:8080/api/v1/users/me
+
+> {%
+    client.test("탈퇴 후 401", function () {
+        client.assert(response.status === 401, "기대 401, 실제 " + response.status);
+    });
+%}
+
+
+### ===== 개인정보 수정 비밀번호 인증 (#113) =====
+### D0 → D1 → D2 순서대로 실행
+
+### D0. (사전) 로그인 — 쿠키 발급
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### D1. 비밀번호 인증 — 비번 틀림 (400 기대)
+POST http://localhost:8080/api/v1/users/me/verify-password
+Content-Type: application/json
+
+{
+  "password": "wrongpassword!"
+}
+
+> {%
+    client.test("비번 불일치 400", function () {
+        client.assert(response.status === 400, "기대 400, 실제 " + response.status);
+    });
+%}
+
+### D2. 비밀번호 인증 — 정상 (비번 일치, 200 기대)
+POST http://localhost:8080/api/v1/users/me/verify-password
+Content-Type: application/json
+
+{
+  "password": "Test1234!"
+}
+
+### ===== 개인정보 수정 (#114) =====
+### E0 → E1 → E2 → E3 → E4 순서대로 실행
+
+### E0. (사전) 로그인 — 쿠키 발급
+POST http://localhost:8080/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "u01@test.com",
+  "password": "Test1234!"
+}
+
+### E1. 전화번호만 수정 — 200 (토큰 재발급 X)
+PUT http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "phone": "010-9999-8888"
+}
+
+> {%
+    client.test("전화 수정 성공 200", function () {
+        client.assert(response.status === 200, "기대 200, 실제 " + response.status);
+    });
+    const setCookies = response.headers.valuesOf("Set-Cookie");
+    client.test("토큰 재발급 안 됨(accessToken Set-Cookie 없음)", function () {
+        const reissued = setCookies.some(c => c.startsWith("accessToken="));
+        client.assert(!reissued, "전화만 바꿨는데 토큰 재발급됨");
+    });
+%}
+
+### E2. 닉네임 수정 — 200 + accessToken 재발급
+PUT http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "nickname": "유저01변경"
+}
+
+> {%
+    client.test("닉네임 수정 성공 200", function () {
+        client.assert(response.status === 200, "기대 200, 실제 " + response.status);
+    });
+    const setCookies = response.headers.valuesOf("Set-Cookie");
+    client.test("accessToken 재발급됨", function () {
+        const reissued = setCookies.some(c => c.startsWith("accessToken="));
+        client.assert(reissued, "닉네임 바꿨는데 토큰 재발급 안 됨");
+    });
+%}
+
+### E3. 닉네임 중복 — 400 (다른 유저가 쓰는 닉네임)
+PUT http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "nickname": "김관리"
+}
+
+> {%
+    client.test("닉네임 중복 400", function () {
+        client.assert(response.status === 400, "기대 400, 실제 " + response.status);
+    });
+%}
+
+### E4. 전화번호 형식 오류 — 400
+PUT http://localhost:8080/api/v1/users/me
+Content-Type: application/json
+
+{
+  "phone": "01099998888"
+}
+
+> {%
+    client.test("전화 형식 오류 400", function () {
+        client.assert(response.status === 400, "기대 400, 실제 " + response.status);
+    });
+%}

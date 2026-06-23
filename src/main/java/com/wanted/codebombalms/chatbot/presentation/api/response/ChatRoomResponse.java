@@ -9,6 +9,8 @@ public record ChatRoomResponse(
         Long problemSetId,
         Long problemId,
         String title,
+        String problemSetTitle,
+        String problemTitle,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -18,6 +20,8 @@ public record ChatRoomResponse(
                 result.problemSetId(),
                 result.problemId(),
                 result.title(),
+                result.problemSetTitle(),
+                result.problemTitle(),
                 result.createdAt(),
                 result.updatedAt()
         );

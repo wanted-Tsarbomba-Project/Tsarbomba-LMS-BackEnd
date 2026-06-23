@@ -29,6 +29,15 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByNameAndPhone(String name, String phone) {
+        return springDataUserRepository
+                .findByNameAndPhoneAndDeletedAtIsNullOrderByCreatedAtDesc(name, phone)
+                .stream()
+                .findFirst()                 // 중복 시 가장 최근 가입 회원 1건 선택 (500 방어)
+                .map(UserJpaEntity::toDomain);
+    }
+
+    @Override
     public boolean existsByEmail(String email) {
         return springDataUserRepository.existsByEmail(email);
     }
@@ -40,19 +49,24 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public User save(User user) {
-        UserJpaEntity entity;
+        return springDataUserRepository.save(toEntity(user)).toDomain();
+    }
 
+    @Override
+    public User saveAndFlush(User user) {
+        return springDataUserRepository.saveAndFlush(toEntity(user)).toDomain();
+    }
+
+    private UserJpaEntity toEntity(User user) {
         if (user.getUserId() == null) {
             // 신규 저장
-            entity = UserJpaEntity.from(user);
-        } else {
-            // 업데이트 — 기존 엔티티 찾아서 상태 반영 (JPA 변경감지 활용)
-            entity = springDataUserRepository.findByUserId(user.getUserId())
-                    .orElseGet(() -> UserJpaEntity.from(user));
-            entity.applyDomain(user);
+            return UserJpaEntity.from(user);
         }
-
-        return springDataUserRepository.save(entity).toDomain();
+        // 업데이트 — 기존 엔티티 찾아서 상태 반영 (JPA 변경감지 활용)
+        UserJpaEntity entity = springDataUserRepository.findByUserId(user.getUserId())
+                .orElseGet(() -> UserJpaEntity.from(user));
+        entity.applyDomain(user);
+        return entity;
     }
 
     @Override

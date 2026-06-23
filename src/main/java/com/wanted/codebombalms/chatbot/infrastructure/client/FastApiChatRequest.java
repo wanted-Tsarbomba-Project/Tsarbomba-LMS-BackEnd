@@ -57,14 +57,11 @@ public class FastApiChatRequest {
         @JsonProperty("problem_type")
         private String problemType;
 
-        @JsonProperty("answer")
-        private String answer;
-
         @JsonProperty("explanation")
         private String explanation;
 
         @JsonProperty("submitted_answer")
-        private String submittedAnswer;
+        private String submittedCode;
     }
 
     @Getter

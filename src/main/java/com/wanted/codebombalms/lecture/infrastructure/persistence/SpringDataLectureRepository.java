@@ -16,13 +16,28 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
     Optional<LectureJpaEntity> findByLectureIdAndDeletedAtIsNull(Long lectureId);
 
-    List<LectureJpaEntity> findByCourse_CourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
+    List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
-    List<LectureJpaEntity> findByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
+    List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
 
-    boolean existsByCourse_CourseIdAndDeletedAtIsNull(Long courseId);
+    @Query("""
+            select l.lectureId
+            from LectureJpaEntity l
+            where l.courseId = :courseId
+              and l.deletedAt is null
+              and l.lectureOrder < :lectureOrder
+            order by l.lectureOrder asc, l.lectureId asc
+            """)
+    List<Long> findPreviousLectureIds(
+            @Param("courseId") Long courseId,
+            @Param("lectureOrder") Integer lectureOrder
+    );
 
-    boolean existsByCourse_CourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
+    boolean existsByCourseIdAndDeletedAtIsNullAndLectureOrderGreaterThan(Long courseId, Integer lectureOrder);
+
+    boolean existsByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);
 
     @Transactional
     default int hardDeleteByDeletedAtBefore(LocalDateTime threshold) {
@@ -33,11 +48,13 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
         List<Long> lectureProblemSetIds = findLectureProblemSetIdsByLectureIds(lectureIds);
         if (!lectureProblemSetIds.isEmpty()) {
+            deleteLectureProblemSubmissionsByLectureProblemSetIds(lectureProblemSetIds);
             deleteLectureProblemProgressesByLectureProblemSetIds(lectureProblemSetIds);
         }
 
         deleteLectureProblemSetsByLectureIds(lectureIds);
         deleteLectureProgressesByLectureIds(lectureIds);
+        deleteLectureMaterialsByLectureIds(lectureIds);
         return deleteLecturesByIds(lectureIds);
     }
 
@@ -50,11 +67,20 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
     List<Long> findHardDeleteTargetIds(@Param("threshold") LocalDateTime threshold);
 
     @Query("""
-            select cps.courseProblemSetId
-            from CourseProblemSetJpaEntity cps
+            select cps.lectureProblemSetId
+            from LectureProblemSetJpaEntity cps
             where cps.lectureId in :lectureIds
             """)
     List<Long> findLectureProblemSetIdsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from LectureProblemSubmissionJpaEntity s
+            where s.lectureProblemSetId in :lectureProblemSetIds
+            """)
+    int deleteLectureProblemSubmissionsByLectureProblemSetIds(
+            @Param("lectureProblemSetIds") List<Long> lectureProblemSetIds
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -67,7 +93,7 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from CourseProblemSetJpaEntity cps
+            delete from LectureProblemSetJpaEntity cps
             where cps.lectureId in :lectureIds
             """)
     int deleteLectureProblemSetsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
@@ -78,6 +104,13 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
             where p.lectureId in :lectureIds
             """)
     int deleteLectureProgressesByLectureIds(@Param("lectureIds") List<Long> lectureIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from LectureMaterialJpaEntity m
+            where m.lectureId in :lectureIds
+            """)
+    int deleteLectureMaterialsByLectureIds(@Param("lectureIds") List<Long> lectureIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

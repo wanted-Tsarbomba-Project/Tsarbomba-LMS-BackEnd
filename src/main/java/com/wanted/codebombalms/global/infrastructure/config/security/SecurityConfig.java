@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        // 모니터링 (Prometheus 스크레이핑)
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         // 인증 불필요
                         .requestMatchers("/api/v1/auth/**").permitAll()
@@ -55,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/courses/**").permitAll()
                         .requestMatchers("/api/v1/lectures/**").permitAll()
                         // 운영/관리자 전용 (권한 경계 확정 전까지 둘 다 허용)
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR", "MASTER")
                         // 그 외 모두 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -73,7 +75,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOrigins(List.of("http://localhost:3001"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

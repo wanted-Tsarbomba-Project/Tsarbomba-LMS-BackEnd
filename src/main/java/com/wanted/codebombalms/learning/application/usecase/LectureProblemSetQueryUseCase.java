@@ -6,6 +6,8 @@ public interface LectureProblemSetQueryUseCase {
 
     LectureProblemSetEntryView enterLectureProblemSet(Long userId, Long lectureProblemSetId);
 
+    LectureProblemSetEntryView findStudentLectureProblemSet(Long courseId, Long userId, Long lectureProblemSetId);
+
     LectureProblemSetProgressView findLectureProblemSetProgress(Long userId, Long lectureProblemSetId);
 
     record LectureProblemSetEntryView(

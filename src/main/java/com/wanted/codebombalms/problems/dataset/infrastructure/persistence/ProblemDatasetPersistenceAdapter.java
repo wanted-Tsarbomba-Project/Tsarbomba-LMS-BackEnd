@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.persistence;
-import com.wanted.codebombalms.problems.dataset.application.port.LoadActiveDatasetUrlPort;
+import com.wanted.codebombalms.problems.dataset.application.port.LoadActiveDatasetFilePathPort;
+import com.wanted.codebombalms.problems.dataset.application.port.LoadDatasetDownloadInfoPort;
 import com.wanted.codebombalms.problems.dataset.application.port.ProblemDatasetPersistencePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.ProblemDataset;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
@@ -17,8 +18,9 @@ import java.util.Optional;
 public class ProblemDatasetPersistenceAdapter implements
         ProblemDatasetPersistencePort,
         LoadExecutionDatasetPort,
-        LoadActiveDatasetUrlPort,
-        LoadDatasetForUpdatePort {
+        LoadDatasetForUpdatePort,
+        LoadActiveDatasetFilePathPort,
+        LoadDatasetDownloadInfoPort {
 
     private final SpringDataProblemDatasetRepository problemDatasetRepository;
     private final EntityManager entityManager;
@@ -45,6 +47,13 @@ public class ProblemDatasetPersistenceAdapter implements
         );
     }
 
+    @Override
+    public String loadActiveDatasetFilePath(Long problemSetId) {
+        return problemDatasetRepository
+                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
+                .map(ProblemDatasetJpaEntity::getFilePath)
+                .orElse(null);
+    }
 
     @Override
     public ProblemDataset saveUploadedDataset(Long problemSetId, StoredDatasetFile storedFile) {
@@ -75,13 +84,6 @@ public class ProblemDatasetPersistenceAdapter implements
         );
     }
 
-    @Override
-    public String loadActiveDatasetUrl(Long problemSetId) {
-        return problemDatasetRepository
-                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
-                .map(ProblemDatasetJpaEntity::getFileUrl)
-                .orElse(null);
-    }
 
     @Override
     public Optional<DatasetForUpdateData> loadActiveDatasetForUpdate(Long problemSetId) {
@@ -89,8 +91,7 @@ public class ProblemDatasetPersistenceAdapter implements
                 .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(problemSetId, "ACTIVE")
                 .map(dataset -> new DatasetForUpdateData(
                         dataset.getDatasetId(),
-                        dataset.getOriginalFileName(),
-                        dataset.getFileUrl()
+                        dataset.getOriginalFileName()
                 ));
     }
 
@@ -99,5 +100,18 @@ public class ProblemDatasetPersistenceAdapter implements
         problemDatasetRepository
                 .findAllByProblemSet_ProblemSetIdAndStatus(problemSetId, "ACTIVE")
                 .forEach(ProblemDatasetJpaEntity::deactivate);
+    }
+
+    @Override
+    public Optional<DatasetDownloadInfo> loadActiveDataset(Long problemSetId) {
+        return problemDatasetRepository
+                .findFirstByProblemSet_ProblemSetIdAndStatusOrderByDatasetIdDesc(
+                        problemSetId,
+                        "ACTIVE"
+                )
+                .map(dataset -> new DatasetDownloadInfo(
+                        dataset.getOriginalFileName(),
+                        dataset.getFilePath()
+                ));
     }
 }

@@ -3,24 +3,23 @@ package com.wanted.codebombalms.course.presentation.api;
 import com.wanted.codebombalms.course.application.command.CreateCourseCommand;
 import com.wanted.codebombalms.course.application.command.PublishCourseCommand;
 import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
+import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.usecase.CourseCommandUseCase;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.presentation.api.request.CourseCreateRequest;
 import com.wanted.codebombalms.course.presentation.api.request.CourseUpdateRequest;
 import com.wanted.codebombalms.course.presentation.api.response.CourseDetailResponse;
 import com.wanted.codebombalms.course.presentation.api.response.CourseResponse;
 import com.wanted.codebombalms.course.presentation.api.response.CourseThumbnailUploadResponse;
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,7 +40,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -51,10 +48,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class CourseController {
 
     private static final Logger log = LoggerFactory.getLogger(CourseController.class);
-    private static final String THUMBNAIL_UPLOAD_DIR = "uploads/course-thumbnails";
 
     private final CourseCommandUseCase courseCommandUseCase;
     private final CourseQueryUseCase courseQueryUseCase;
+    private final CourseThumbnailStoragePort courseThumbnailStoragePort;
 
     @Operation(summary = "강좌 목록 조회")
     @GetMapping("/courses")
@@ -135,39 +132,31 @@ public class CourseController {
     public ResponseEntity<ApiResponse<?>> uploadCourseThumbnail(
             @RequestParam("thumbnail") MultipartFile thumbnail
     ) {
-        if (thumbnail == null || thumbnail.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thumbnail file is required.");
-        }
+        byte[] thumbnailBytes = readThumbnailBytes(thumbnail);
 
-        String contentType = thumbnail.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only image files can be uploaded.");
-        }
+        var storedThumbnail = courseThumbnailStoragePort.upload(
+                thumbnail.getOriginalFilename(),
+                thumbnail.getContentType(),
+                thumbnail.getSize(),
+                thumbnailBytes
+        );
 
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.created(
+                        CourseResponseCode.THUMBNAIL_UPLOADED,
+                        "Course thumbnail has been uploaded.",
+                        new CourseThumbnailUploadResponse(storedThumbnail.accessUrl())
+                ));
+    }
+
+    private byte[] readThumbnailBytes(MultipartFile thumbnail) {
         try {
-            String originalFilename = StringUtils.cleanPath(
-                    thumbnail.getOriginalFilename() == null ? "thumbnail" : thumbnail.getOriginalFilename()
-            );
-            String storedFilename = UUID.randomUUID() + "_" + originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-            Path uploadPath = Path.of(THUMBNAIL_UPLOAD_DIR).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath);
-
-            Path targetPath = uploadPath.resolve(storedFilename).normalize();
-            if (!targetPath.startsWith(uploadPath)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid thumbnail filename.");
-            }
-
-            Files.copy(thumbnail.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-            String thumbnailUrl = "/" + THUMBNAIL_UPLOAD_DIR + "/" + storedFilename;
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.created(
-                            CourseResponseCode.THUMBNAIL_UPLOADED,
-                            "Course thumbnail has been uploaded.",
-                            new CourseThumbnailUploadResponse(thumbnailUrl)
-                    ));
+            return thumbnail.getBytes();
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload thumbnail.", e);
+            throw new ExternalServiceException(
+                    CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED,
+                    e
+            );
         }
     }
 

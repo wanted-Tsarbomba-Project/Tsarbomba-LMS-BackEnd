@@ -1,8 +1,7 @@
 package com.wanted.codebombalms.learning.infrastructure.course;
 
-import com.wanted.codebombalms.course.domain.model.CourseStatus;
-import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
-import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
+import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
+import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
@@ -17,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class LearningCourseAdapter implements LearningCoursePort {
 
-    private final SpringDataCourseRepository courseRepository;
+    private final CourseQueryUseCase courseQueryUseCase;
 
     @Override
     public List<LearningCourse> findActiveCourses() {
-        return courseRepository.findByStatusAndDeletedAtIsNull(CourseStatus.ACTIVE)
+        return courseQueryUseCase.findAllCourses(null)
                 .stream()
                 .map(this::toLearningCourse)
                 .toList();
@@ -29,12 +28,14 @@ public class LearningCourseAdapter implements LearningCoursePort {
 
     @Override
     public LearningCourse findActiveCourse(Long courseId) {
-        return courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE)
-                .map(this::toLearningCourse)
-                .orElseThrow(() -> new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND));
+        try {
+            return toLearningCourse(courseQueryUseCase.findCourseById(courseId));
+        } catch (NotFoundException e) {
+            throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND, e);
+        }
     }
 
-    private LearningCourse toLearningCourse(CourseJpaEntity course) {
+    private LearningCourse toLearningCourse(Course course) {
         return new LearningCourse(course.getCourseId(), course.getTitle());
     }
 }

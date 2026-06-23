@@ -53,9 +53,9 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
                         problem.point(),
                         DEFAULT_ATTEMPT_LIMIT,
                         DEFAULT_RETRIABLE,
-                        problem.answer(),
                         problem.hint(),
-                        problem.explanation()
+                        problem.explanation(),
+                        problem.testCases()
                 ))
                 .toList();
 
@@ -74,7 +74,9 @@ public class ProblemSetRegistrationService implements RegisterProblemSetUseCase 
                 result.title(),
                 result.categoryName(),
                 result.totalProblemCount(),
-                result.createdProblemCount()
+                result.createdProblemCount(),
+                result.createdTestCaseCount(),
+                result.problems()
         );
     }
 }

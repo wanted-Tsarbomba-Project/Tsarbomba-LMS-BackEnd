@@ -1,18 +1,24 @@
 package com.wanted.codebombalms.lecture.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
+import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
+import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.lecture.presentation.api.LectureController;
 import com.wanted.codebombalms.lecture.presentation.api.LectureResponseCode;
 import com.wanted.codebombalms.lecture.presentation.api.LectureResponseMessage;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureCreateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateRequest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +34,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -52,6 +62,15 @@ class LectureControllerTest {
     @MockitoBean
     private LectureQueryUseCase lectureQueryUseCase;
 
+    @MockitoBean
+    private FinalProblemSetRecommendationUseCase finalProblemSetRecommendationUseCase;
+
+    @MockitoBean
+    private LectureMaterialUseCase lectureMaterialUseCase;
+
+    @MockitoBean
+    private AdminPermissionCheckService adminPermissionCheckService;
+
     @Test
     void findLecturesByCourseId_returnsApiResponse() throws Exception {
         Long courseId = 1L;
@@ -71,7 +90,8 @@ class LectureControllerTest {
     @Test
     void findLectureById_returnsApiResponse() throws Exception {
         Long lectureId = 1L;
-        given(lectureQueryUseCase.findLectureById(lectureId)).willReturn(createDetailResult(lectureId, "Java 1"));
+        given(lectureQueryUseCase.findLectureByIdForLearning(eq(lectureId), isNull(), eq(false)))
+                .willReturn(createDetailResult(lectureId, "Java 1"));
 
         mockMvc.perform(get("/api/v1/lectures/{lectureId}", lectureId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -88,8 +108,9 @@ class LectureControllerTest {
         LectureCreateRequest request = new LectureCreateRequest(
                 "Java 1",
                 "description",
-                "java-1.mp4",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "java-1.png",
+                3001L,
                 1,
                 LectureStatus.ACTIVE
         );
@@ -113,8 +134,9 @@ class LectureControllerTest {
         LectureUpdateRequest request = new LectureUpdateRequest(
                 "Updated Java",
                 "updated",
-                "updated.mp4",
+                "https://youtu.be/dQw4w9WgXcQ",
                 "updated.png",
+                3001L,
                 2,
                 LectureStatus.INACTIVE
         );
@@ -133,6 +155,70 @@ class LectureControllerTest {
     }
 
     @Test
+    void findFinalProblemSetCandidates_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        given(finalProblemSetRecommendationUseCase.findFinalProblemSetCandidates(eq(lectureId), isNull(), eq(false)))
+                .willReturn(List.of(new FinalProblemSetRecommendationUseCase.FinalProblemSetCandidateView(
+                        3002L,
+                        1,
+                        "DataFrame filter",
+                        "description",
+                        "MEDIUM",
+                        72.5,
+                        LocalDateTime.now()
+                )));
+
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/final-problem-set-candidates", lectureId)
+                        .with(authentication(studentUser(20L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.FINAL_PROBLEM_SET_CANDIDATES_RETRIEVED))
+                .andExpect(jsonPath("$.data[0].problemSetId").value(3002L))
+                .andExpect(jsonPath("$.data[0].entryPath").value("/api/v1/problem-sets/3002"));
+    }
+
+    @Test
+    void createLecture_returnsBadRequest_whenProblemCategoryIdIsNotPositive() throws Exception {
+        LectureCreateRequest request = new LectureCreateRequest(
+                "Java 1",
+                "description",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "java-1.png",
+                0L,
+                1,
+                LectureStatus.ACTIVE
+        );
+
+        mockMvc.perform(post("/api/v1/courses/{courseId}/lectures", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).createLecture(any(CreateLectureCommand.class));
+    }
+
+    @Test
+    void updateLecture_returnsBadRequest_whenProblemCategoryIdIsNotPositive() throws Exception {
+        LectureUpdateRequest request = new LectureUpdateRequest(
+                "Updated Java",
+                "updated",
+                "https://youtu.be/dQw4w9WgXcQ",
+                "updated.png",
+                -1L,
+                2,
+                LectureStatus.INACTIVE
+        );
+
+        mockMvc.perform(put("/api/v1/lectures/{lectureId}", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).updateLecture(any(UpdateLectureCommand.class));
+    }
+
+    @Test
     void deleteLecture_returnsNoContent() throws Exception {
         Long lectureId = 1L;
 
@@ -141,6 +227,55 @@ class LectureControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(lectureCommandUseCase).deleteLecture(lectureId);
+    }
+
+    @Test
+    void uploadMaterial_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        MockMultipartFile material = new MockMultipartFile(
+                "material",
+                "guide.pdf",
+                "application/pdf",
+                "pdf".getBytes()
+        );
+
+        given(lectureMaterialUseCase.uploadMaterial(any(UploadLectureMaterialCommand.class)))
+                .willReturn(createMaterial(10L, lectureId));
+
+        mockMvc.perform(multipart("/api/v1/lectures/{lectureId}/materials", lectureId)
+                        .file(material)
+                        .with(authentication(operatorUser(10L))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.MATERIAL_UPLOADED))
+                .andExpect(jsonPath("$.message").value(LectureResponseMessage.MATERIAL_UPLOADED))
+                .andExpect(jsonPath("$.data.originalFileName").value("guide.pdf"));
+    }
+
+    @Test
+    void findMaterials_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        given(lectureMaterialUseCase.findMaterials(lectureId))
+                .willReturn(List.of(createMaterial(10L, lectureId)));
+
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/materials", lectureId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.RETRIEVED))
+                .andExpect(jsonPath("$.data[0].lectureMaterialId").value(10L));
+    }
+
+    @Test
+    void issueMaterialDownloadUrl_returnsApiResponse() throws Exception {
+        Long lectureMaterialId = 10L;
+        given(lectureMaterialUseCase.issueDownloadUrl(any(), any(), anyBoolean()))
+                .willReturn("https://storage.googleapis.com/codebombalms/lecture_materials/guide.pdf?signature=test");
+
+        mockMvc.perform(post("/api/v1/lecture-materials/{lectureMaterialId}/download-url", lectureMaterialId)
+                        .with(authentication(studentUser(20L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.MATERIAL_DOWNLOAD_URL_ISSUED))
+                .andExpect(jsonPath("$.data.downloadUrl").value("https://storage.googleapis.com/codebombalms/lecture_materials/guide.pdf?signature=test"));
+
+        verify(lectureMaterialUseCase).issueDownloadUrl(eq(lectureMaterialId), isNull(), eq(false));
     }
 
     private Lecture createDetailResult(Long lectureId, String title) {
@@ -165,7 +300,7 @@ class LectureControllerTest {
         lecture.setCourse(course);
         lecture.setTitle(title);
         lecture.setDescription("description");
-        lecture.setVideoUrl("java-1.mp4");
+        lecture.setVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         lecture.setThumbnailUrl("java-1.png");
         lecture.setStatus(LectureStatus.ACTIVE);
         lecture.setLectureOrder(1);
@@ -174,8 +309,28 @@ class LectureControllerTest {
         return lecture;
     }
 
+    private LectureMaterial createMaterial(Long lectureMaterialId, Long lectureId) {
+        return LectureMaterial.restore(
+                lectureMaterialId,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                LocalDateTime.now(),
+                null
+        );
+    }
+
     private Authentication operatorUser(Long userId) {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
+        authentication.setAuthenticated(true);
+        return authentication;
+    }
+
+    private Authentication studentUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_STUDENT");
         authentication.setAuthenticated(true);
         return authentication;
     }

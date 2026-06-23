@@ -14,7 +14,6 @@ public interface GetProblemSetForUpdateUseCase {
             String description,
             String dataFileName,
             Long datasetId,
-            String datasetUrl,
             java.util.List<ProblemForUpdateView> problems
     ) {
     }
@@ -25,10 +24,18 @@ public interface GetProblemSetForUpdateUseCase {
             String content,
             Integer point,
             String startCode,
-            String answer,
             Long hintId,
             String hint,
-            String explanation
+            String explanation,
+            java.util.List<TestCaseForUpdateView> testCases
+    ) {
+    }
+
+    record TestCaseForUpdateView(
+            Long testCaseId,
+            String testCode,
+            Boolean isHidden,
+            Integer timeoutMs
     ) {
     }
 }

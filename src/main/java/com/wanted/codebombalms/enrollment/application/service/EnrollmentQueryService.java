@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.enrollment.application.service;
 
+import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
@@ -20,12 +22,19 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
     private static final Logger log = LoggerFactory.getLogger(EnrollmentQueryService.class);
 
     private final EnrollmentRepository enrollmentRepository;
+    private final CourseCatalogPort courseCatalogPort;
 
     @Override
-    public List<Enrollment> findMyCourses(Long userId) {
+    public List<MyCourseResult> findMyCourses(Long userId) {
         log.info("[EnrollmentQueryService] find my courses - userId: {}", userId);
 
-        return enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
+        return enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE)
+                .stream()
+                .map(enrollment -> MyCourseResult.from(
+                        enrollment,
+                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                ))
+                .toList();
     }
 
     @Override
@@ -33,5 +42,22 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
         log.info("[EnrollmentQueryService] find all active enrollments");
 
         return enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE);
+    }
+
+    @Override
+    public List<Long> findActiveStudentIdsByCourse(Long courseId) {
+        log.info("[EnrollmentQueryService] find active student ids - courseId: {}", courseId);
+
+        return enrollmentRepository.findByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE)
+                .stream()
+                .map(Enrollment::getUserId)
+                .toList();
+    }
+
+    @Override
+    public boolean isActiveStudentOfCourse(Long courseId, Long userId) {
+        log.debug("[EnrollmentQueryService] check active enrollment - courseId: {}, userId: {}", courseId, userId);
+
+        return enrollmentRepository.existsByCourseIdAndUserIdAndStatus(courseId, userId, EnrollmentStatus.ACTIVE);
     }
 }

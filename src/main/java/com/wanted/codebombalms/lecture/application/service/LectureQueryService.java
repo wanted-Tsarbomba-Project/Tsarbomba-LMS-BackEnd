@@ -1,10 +1,12 @@
 package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ public class LectureQueryService implements LectureQueryUseCase {
 
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
+    private final LectureAccessPolicy lectureAccessPolicy;
 
     @Override
     public List<Lecture> findLecturesByCourseId(Long courseId) {
@@ -39,9 +42,33 @@ public class LectureQueryService implements LectureQueryUseCase {
     public Lecture findLectureById(Long lectureId) {
         log.info("[LectureQueryService] find lecture - lectureId: {}", lectureId);
 
-        Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
-                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
+        return findExistingLecture(lectureId);
+    }
+
+    @Override
+    public Lecture findLectureByIdForLearning(Long lectureId, Long userId, boolean operator) {
+        log.info("[LectureQueryService] find lecture for learning - lectureId: {}, userId: {}", lectureId, userId);
+
+        Lecture lecture = findExistingLecture(lectureId);
+        lectureAccessPolicy.validateLearningContentAccess(lecture, userId, operator);
+        if (!operator) {
+            if (lecture.getLectureOrder() == null) {
+                throw new ForbiddenException(LectureErrorCode.PREVIOUS_LECTURE_NOT_COMPLETED);
+            }
+            lectureAccessPolicy.validatePreviousLecturesCompleted(
+                    userId,
+                    lectureRepository.findPreviousLectureIds(
+                            lecture.getCourse().getCourseId(),
+                            lecture.getLectureOrder()
+                    )
+            );
+        }
 
         return lecture;
+    }
+
+    private Lecture findExistingLecture(Long lectureId) {
+        return lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
+                .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
     }
 }

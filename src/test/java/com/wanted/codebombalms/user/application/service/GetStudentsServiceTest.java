@@ -5,6 +5,7 @@ import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import com.wanted.codebombalms.user.infrastructure.metrics.UserMetrics;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.verify;
 class GetStudentsServiceTest {
 
     @Mock private UserRepository userRepository;
+    @Mock private UserMetrics userMetrics;
 
     @InjectMocks
     private GetStudentsService getStudentsService;
@@ -44,6 +48,7 @@ class GetStudentsServiceTest {
         assertEquals(25L, result.totalElements());
         assertEquals(3, result.totalPages()); // ceil(25/10)
         verify(userRepository).findAllByRole(UserRole.STUDENT, 0, 10);
+        verify(userMetrics).recordStudentListQuery(anyLong()); // 쿼리 구간 계측이 실제로 호출되는지 고정
     }
 
     @Test
@@ -60,6 +65,19 @@ class GetStudentsServiceTest {
         // then
         assertEquals(0, result.totalPages());
         assertTrue(result.content().isEmpty());
+    }
+
+    @Test
+    @DisplayName("조회 중 예외가 발생하면 그대로 전파하고, 메트릭은 기록하지 않는다.")
+    void 조회_예외_전파() {
+        // given
+        given(userRepository.findAllByRole(UserRole.STUDENT, 0, 10))
+                .willThrow(new RuntimeException("DB unavailable"));
+
+        // when & then
+        assertThrows(RuntimeException.class, () -> getStudentsService.getStudents(0, 10));
+        // 실패 시엔 쿼리 구간 계측을 남기지 않는다(성공 케이스만 집계 — finally 미사용 동작 고정)
+        verify(userMetrics, never()).recordStudentListQuery(anyLong());
     }
 
     // ===== 테스트 헬퍼 =====

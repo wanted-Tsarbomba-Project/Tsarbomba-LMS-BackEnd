@@ -11,7 +11,6 @@ public interface LoadProblemsForUpdatePort {
             String title,
             String content,
             Integer point,
-            String answer,
             String explanation
     ) {
     }

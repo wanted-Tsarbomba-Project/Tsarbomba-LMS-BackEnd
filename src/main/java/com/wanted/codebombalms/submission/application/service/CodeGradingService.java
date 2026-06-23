@@ -19,7 +19,7 @@ public class CodeGradingService {
 
     private final RunCodePort runCodePort;
 
-    public CodeGradingResult grade(String code, List<TestCaseForGrading> testCases) {
+    public CodeGradingResult grade(String code, String datasetAccessUrl,List<TestCaseForGrading> testCases) {
         if (testCases == null || testCases.isEmpty()) {
             return new CodeGradingResult(
                     false,
@@ -37,7 +37,11 @@ public class CodeGradingService {
         for (TestCaseForGrading testCase : testCases) {
             String gradingCode = buildGradingCode(code, testCase.testCode());
 
-            RunCodePort.CodeRunResult runResult = runCodePort.run(gradingCode);
+            RunCodePort.CodeRunResult runResult = runCodePort.run(new RunCodePort.CodeRunCommand(
+                    gradingCode,
+                    datasetAccessUrl,
+                    testCase.timeoutMs()
+            ));
             boolean passed = Boolean.TRUE.equals(runResult.success());
 
             if (passed) {

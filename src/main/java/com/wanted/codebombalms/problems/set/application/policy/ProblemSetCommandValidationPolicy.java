@@ -6,6 +6,8 @@ import com.wanted.codebombalms.problems.set.application.command.ProblemCreateCom
 import com.wanted.codebombalms.problems.set.application.command.ProblemUpdateCommand;
 import com.wanted.codebombalms.problems.set.application.command.RegisterProblemSetCommand;
 import com.wanted.codebombalms.problems.set.application.command.UpdateProblemSetCommand;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseModification;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemTestCaseRegistration;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,20 +30,37 @@ public class ProblemSetCommandValidationPolicy {
     public void validate(UpdateProblemSetCommand command) {
         validateProblemSet(command.title(), command.categoryName(), command.difficulty(), command.problems());
         command.problems().forEach(this::validate);
+        validateUniqueProblemIds(command);
+    }
+
+    private void validateUniqueProblemIds(UpdateProblemSetCommand command) {
+        long problemIdCount = command.problems().stream()
+                .map(ProblemUpdateCommand::problemId)
+                .filter(java.util.Objects::nonNull)
+                .count();
+        long uniqueProblemIdCount = command.problems().stream()
+                .map(ProblemUpdateCommand::problemId)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .count();
+
+        if (problemIdCount != uniqueProblemIdCount) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
     }
 
     private void validate(ProblemCreateCommand command) {
         requireNotBlank(command.title(), ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         requireNotBlank(command.content(), ProblemErrorCode.PROBLEM_CONTENT_REQUIRED);
-        requireNotBlank(command.answer(), ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
         requirePositivePoint(command.point());
+        validateTestCases(command.testCases());
     }
 
     private void validate(ProblemUpdateCommand command) {
         requireNotBlank(command.title(), ProblemErrorCode.PROBLEM_TITLE_REQUIRED);
         requireNotBlank(command.content(), ProblemErrorCode.PROBLEM_CONTENT_REQUIRED);
-        requireNotBlank(command.answer(), ProblemErrorCode.PROBLEM_ANSWER_REQUIRED);
         requirePositivePoint(command.point());
+        validateTestCases(command.testCases());
     }
 
     private void validateProblemSet(
@@ -83,6 +102,30 @@ public class ProblemSetCommandValidationPolicy {
     private void requireNotEmpty(java.util.List<?> value, ProblemErrorCode errorCode) {
         if (value == null || value.isEmpty()) {
             throw new ValidationException(errorCode);
+        }
+    }
+
+    private void validateTestCases(java.util.List<?> testCases) {
+        requireNotEmpty(testCases, ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
+
+        for (Object value : testCases) {
+            if (value instanceof ProblemTestCaseRegistration testCase) {
+                validateTestCase(testCase.testCode(), testCase.hidden(), testCase.timeoutMs());
+            } else if (value instanceof ProblemTestCaseModification testCase) {
+                validateTestCase(testCase.testCode(), testCase.hidden(), testCase.timeoutMs());
+            } else {
+                throw new ValidationException(
+                        ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT
+                );
+            }
+        }
+    }
+
+    private void validateTestCase(String testCode, Boolean hidden, Integer timeoutMs) {
+        if (testCode == null || testCode.isBlank()
+                || hidden == null
+                || (timeoutMs != null && (timeoutMs < 1 || timeoutMs > 10_000))) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_TEST_CASE_INVALID_INPUT);
         }
     }
 }

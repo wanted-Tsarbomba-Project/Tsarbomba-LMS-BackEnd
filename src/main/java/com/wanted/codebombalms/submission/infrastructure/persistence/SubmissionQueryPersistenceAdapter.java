@@ -27,7 +27,7 @@ public class SubmissionQueryPersistenceAdapter implements SubmissionQueryPort {
                 submission.getSubmissionId(),
                 submission.getProblem().getProblemId(),
                 submission.getProblem().getProblemOrder(),
-                submission.getSubmittedAnswer(),
+                submission.getSubmittedCode(),
                 submission.getCorrect(),
                 submission.getSubmittedAt()
         );

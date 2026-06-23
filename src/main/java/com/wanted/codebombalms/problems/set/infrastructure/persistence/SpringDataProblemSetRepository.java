@@ -3,6 +3,8 @@ package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +15,11 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
 
     List<ProblemSetJpaEntity> findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
             Long categoryId,
-            String status
+            ProblemSetStatus status
+    );
+
+    List<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(
+            ProblemSetStatus status
     );
 
     @Transactional
@@ -26,7 +32,7 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
         deleteChatMessagesByProblemSetIds(problemSetIds);
         deleteChatRoomsByProblemSetIds(problemSetIds);
         deleteLectureProblemProgressesByProblemSetIds(problemSetIds);
-        deleteCourseProblemSetsByProblemSetIds(problemSetIds);
+        deleteLectureProblemSetsByProblemSetIds(problemSetIds);
         deleteSubmissionTestResultsByProblemSetIds(problemSetIds);
         deleteSubmissionsByProblemSetIds(problemSetIds);
         deleteProblemTestCasesByProblemSetIds(problemSetIds);
@@ -67,8 +73,8 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
     @Query("""
             delete from LectureProblemProgressJpaEntity p
             where p.lectureProblemSetId in (
-                select cps.courseProblemSetId
-                from CourseProblemSetJpaEntity cps
+                select cps.lectureProblemSetId
+                from LectureProblemSetJpaEntity cps
                 where cps.problemSetId in :problemSetIds
             )
             """)
@@ -76,10 +82,10 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from CourseProblemSetJpaEntity cps
+            delete from LectureProblemSetJpaEntity cps
             where cps.problemSetId in :problemSetIds
             """)
-    int deleteCourseProblemSetsByProblemSetIds(@Param("problemSetIds") List<Long> problemSetIds);
+    int deleteLectureProblemSetsByProblemSetIds(@Param("problemSetIds") List<Long> problemSetIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -138,5 +144,5 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             """)
     int deleteProblemSetsByIds(@Param("problemSetIds") List<Long> problemSetIds);
 
-    List<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(String status);
+
 }

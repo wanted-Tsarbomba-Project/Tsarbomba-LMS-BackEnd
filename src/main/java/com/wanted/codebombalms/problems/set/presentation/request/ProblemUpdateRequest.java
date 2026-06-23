@@ -1,33 +1,37 @@
 package com.wanted.codebombalms.problems.set.presentation.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import java.util.List;
 
 public record ProblemUpdateRequest(
-        @Schema(description = "수정할 기존 소문제 ID. 신규 추가 문제라면 null로 보낼 수 있습니다.", example = "3001", nullable = true)
+        @Schema(description = "기존 문제 ID. 새 문제 추가 시 null", example = "3001", nullable = true)
         Long problemId,
-
-        @Schema(description = "소문제 제목", example = "데이터 행과 열 개수 확인", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotBlank
+        @Schema(description = "문제 제목", example = "데이터 행과 열 개수 확인", requiredMode = Schema.RequiredMode.REQUIRED)
         String title,
-
-        @Schema(description = "소문제 내용", example = "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.", requiredMode = Schema.RequiredMode.REQUIRED)
+        @NotBlank
+        @Schema(description = "문제 내용", example = "CSV 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.", requiredMode = Schema.RequiredMode.REQUIRED)
         String content,
-
+        @NotNull
+        @Positive
         @Schema(description = "정답 시 지급할 포인트", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
         Integer point,
-
-        @Schema(description = "코드 에디터에 기본으로 보여줄 시작 코드", nullable = true)
+        @Schema(description = "코드 에디터에 기본으로 표시할 시작 코드", nullable = true)
         String startCode,
-
-        @Schema(description = "텍스트 문제 정답. 코드 실행형 문제에서는 null로 보낼 수 있습니다.", example = "정답 문자열", nullable = true)
-        String answer,
-
-        @Schema(description = "수정할 기존 힌트 ID", example = "3001", nullable = true)
+        @Schema(description = "기존 힌트 ID. 새 힌트 추가 시 null", example = "3001", nullable = true)
         Long hintId,
-
-        @Schema(description = "소문제 힌트", example = "DataFrame의 shape 속성을 사용해보세요.", nullable = true)
+        @Schema(description = "문제 힌트", example = "DataFrame의 shape 속성을 사용해보세요.", nullable = true)
         String hint,
-
-        @Schema(description = "정답 또는 풀이 해설", example = "df.shape는 행 개수와 열 개수를 튜플로 반환합니다.", nullable = true)
-        String explanation
+        @Schema(description = "정답 제출 후 제공할 해설", example = "df.shape는 행과 열 개수를 튜플로 반환합니다.", nullable = true)
+        String explanation,
+        @NotEmpty(message = "테스트케이스는 1개 이상 필요합니다.")
+        @Schema(description = "문제 채점용 테스트 케이스 목록", requiredMode = Schema.RequiredMode.REQUIRED)
+        List<@Valid ProblemTestCaseUpdateItemRequest> testCases
 ) {
 }

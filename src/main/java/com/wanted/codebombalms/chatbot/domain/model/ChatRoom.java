@@ -4,6 +4,7 @@ import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 
 import java.time.Instant;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 
 public class ChatRoom {
 
@@ -11,7 +12,7 @@ public class ChatRoom {
     private final Long userId;
     private final Long problemSetId;
     private final Long problemId;
-    private final String title;
+    private String title;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -42,6 +43,14 @@ public class ChatRoom {
     }
 
     public void updateTimestamp(Instant now) {
+        this.updatedAt = now;
+    }
+
+    public void rename(String newTitle, Instant now) {
+        if (newTitle == null || newTitle.isBlank()) {
+            throw new ValidationException(ChatErrorCode.CHAT_ROOM_TITLE_INVALID);
+        }
+        this.title = newTitle;
         this.updatedAt = now;
     }
 

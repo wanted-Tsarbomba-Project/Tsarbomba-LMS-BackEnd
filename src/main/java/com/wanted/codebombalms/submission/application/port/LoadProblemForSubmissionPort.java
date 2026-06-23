@@ -12,7 +12,6 @@ public interface LoadProblemForSubmissionPort {
             Long problemId,
             Long problemSetId,
             Integer problemOrder,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,

@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
 import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
@@ -18,9 +20,11 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,11 +33,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,39 +69,354 @@ class LearningServiceTest {
     @Mock
     private LearningUserPort learningUserPort;
 
+    @Mock
+    private LearningMetrics learningMetrics;
+
     @InjectMocks
     private LectureProgressService lectureProgressService;
 
     @InjectMocks
     private AdminLearningProgressQueryService adminLearningProgressQueryService;
 
+    @BeforeEach
+    void setUp() {
+        lenient().when(learningLecturePort.findCourseIdByLecture(anyLong())).thenReturn(1L);
+        lenient().when(learningEnrollmentPort.isActiveStudentOfCourse(anyLong(), anyLong())).thenReturn(true);
+    }
+
     @Test
     void recordProgress_completesLectureProgress() {
         Long userId = 10L;
         Long lectureId = 101L;
-        LectureProgress savedProgress = LectureProgress.restore(
+        LectureProgress existingProgress = LectureProgress.restore(
                 1L,
                 userId,
                 lectureId,
-                true,
+                false,
+                null,
                 LocalDateTime.now(),
-                LocalDateTime.now(),
+                530,
+                600,
+                530,
                 LocalDateTime.now(),
                 null
         );
 
         given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
-        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)).willReturn(Optional.empty());
-        given(lectureProgressRepository.save(any(LectureProgress.class))).willReturn(savedProgress);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
 
         LectureProgress result = lectureProgressService.recordProgress(
-                new RecordLectureProgressCommand(userId, lectureId, true)
+                new RecordLectureProgressCommand(userId, lectureId, 540, 600, 10)
         );
 
         assertEquals(1L, result.getLectureProgressId());
         assertTrue(result.isCompleted());
         assertNotNull(result.getCompletedAt());
+        assertEquals(540, result.getLastPositionSec());
+        assertEquals(540, result.getWatchedSec());
         verify(lectureProgressRepository).save(any(LectureProgress.class));
+    }
+
+    @Test
+    void recordProgress_doesNotComplete_whenOnlyPositionReachesThreshold() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                300,
+                600,
+                300,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.recordProgress(
+                new RecordLectureProgressCommand(userId, lectureId, 540, 600, 10)
+        );
+
+        assertFalse(result.isCompleted());
+        assertEquals(540, result.getLastPositionSec());
+        assertEquals(310, result.getWatchedSec());
+    }
+
+    @Test
+    void recordProgress_doesNotComplete_whenOnlyWatchedSecondsReachThreshold() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                300,
+                600,
+                530,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.recordProgress(
+                new RecordLectureProgressCommand(userId, lectureId, 400, 600, 10)
+        );
+
+        assertFalse(result.isCompleted());
+        assertEquals(400, result.getLastPositionSec());
+        assertEquals(540, result.getWatchedSec());
+    }
+
+    @Test
+    void recordProgress_keepsCompleted_whenCompletedLectureIsRewatched() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LocalDateTime completedAt = LocalDateTime.now().minusDays(1);
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                true,
+                completedAt,
+                LocalDateTime.now().minusDays(1),
+                540,
+                600,
+                540,
+                LocalDateTime.now().minusDays(2),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.recordProgress(
+                new RecordLectureProgressCommand(userId, lectureId, 120, 600, 10)
+        );
+
+        assertTrue(result.isCompleted());
+        assertEquals(completedAt, result.getCompletedAt());
+        assertEquals(120, result.getLastPositionSec());
+        assertEquals(550, result.getWatchedSec());
+    }
+
+    @Test
+    void recordProgress_throwsValidation_whenWatchedDeltaIsNegative() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 120, 600, -1)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 120, 600, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsValidation_whenLastPositionExceedsRequestedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 601, 600, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsValidation_whenLastPositionExceedsSavedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                100,
+                600,
+                100,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 601, null, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void recordProgress_throwsValidation_whenRequestedDurationDiffersFromSavedDuration() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                false,
+                null,
+                LocalDateTime.now(),
+                100,
+                600,
+                100,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureProgressService.recordProgress(
+                        new RecordLectureProgressCommand(userId, lectureId, 120, 300, 10)
+                )
+        );
+
+        assertEquals(LearningErrorCode.INVALID_LECTURE_PROGRESS, exception.getErrorCode());
+    }
+
+    @Test
+    void completeProgress_completesLectureProgress() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId)).willReturn(Optional.empty());
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.completeProgress(userId, lectureId);
+
+        assertTrue(result.isCompleted());
+        assertNotNull(result.getCompletedAt());
+        verify(lectureProgressRepository).save(any(LectureProgress.class));
+    }
+
+    @Test
+    void completeProgress_keepsCompletedAt_whenAlreadyCompleted() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        LocalDateTime completedAt = LocalDateTime.now().minusDays(1);
+        LectureProgress existingProgress = LectureProgress.restore(
+                1L,
+                userId,
+                lectureId,
+                true,
+                completedAt,
+                LocalDateTime.now().minusDays(1),
+                0,
+                null,
+                0,
+                LocalDateTime.now().minusDays(2),
+                null
+        );
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(lectureProgressRepository.findByUserIdAndLectureId(userId, lectureId))
+                .willReturn(Optional.of(existingProgress));
+        given(lectureProgressRepository.save(any(LectureProgress.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        LectureProgress result = lectureProgressService.completeProgress(userId, lectureId);
+
+        assertTrue(result.isCompleted());
+        assertEquals(completedAt, result.getCompletedAt());
+        verify(lectureProgressRepository).save(any(LectureProgress.class));
+    }
+
+    @Test
+    void completeProgress_throwsNotFound_whenLectureMissing() {
+        Long lectureId = 999L;
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(false);
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> lectureProgressService.completeProgress(10L, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void completeProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.completeProgress(userId, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
     }
 
     @Test
@@ -107,6 +430,24 @@ class LearningServiceTest {
         );
 
         assertEquals(LearningErrorCode.LECTURE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void findProgress_throwsForbidden_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Long lectureId = 101L;
+        Long courseId = 1L;
+
+        given(learningLecturePort.existsLecture(lectureId)).willReturn(true);
+        given(learningLecturePort.findCourseIdByLecture(lectureId)).willReturn(courseId);
+        given(learningEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureProgressService.findProgress(userId, lectureId)
+        );
+
+        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
     }
 
     @Test
@@ -137,6 +478,42 @@ class LearningServiceTest {
         assertEquals(50, result.lectureProgressRate());
         assertEquals(2L, result.completedProblemCount());
         assertEquals(3L, result.totalProblemCount());
+        verify(learningMetrics).recordStudentProgressQuery(anyLong());
+        verify(learningMetrics, times(1)).recordStudentProgressItem(anyLong());
+    }
+
+    @Test
+    void findStudentProgresses_reusesCourseItemIdsForMultipleStudents() {
+        Long courseId = 101L;
+        Long firstUserId = 10L;
+        Long secondUserId = 11L;
+        List<Long> lectureIds = List.of(101L, 102L);
+        List<Long> lectureProblemSetIds = List.of(6001L, 6002L, 6003L);
+
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId))
+                .willReturn(List.of(firstUserId, secondUserId));
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningUserPort.findUserName(firstUserId)).willReturn("student1");
+        given(learningUserPort.findUserName(secondUserId)).willReturn("student2");
+        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(firstUserId, lectureIds)).willReturn(1L);
+        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(secondUserId, lectureIds)).willReturn(2L);
+        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                firstUserId,
+                lectureProblemSetIds
+        )).willReturn(2L);
+        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                secondUserId,
+                lectureProblemSetIds
+        )).willReturn(3L);
+
+        List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
+
+        assertEquals(2, results.size());
+        verify(learningLecturePort, times(1)).findLectureIdsByCourse(courseId);
+        verify(learningCourseProblemPort, times(1)).findMainLectureProblemSetIdsByCourse(courseId);
+        verify(learningMetrics, times(2)).recordStudentProgressItem(anyLong());
+        verify(learningMetrics).recordStudentProgressQuery(anyLong());
     }
 
     @Test

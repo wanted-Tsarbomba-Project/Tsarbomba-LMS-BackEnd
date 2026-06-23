@@ -7,7 +7,7 @@ public interface ChatContextPort {
     // problemSetId로 문제집 정보 조회
     ProblemSetInfo findProblemSet(Long problemSetId);
 
-    // problemSetId + userId로 문제 목록 조회 (submittedAnswer 포함)
+    // problemSetId + userId로 문제 목록 조회 (submittedCode 포함)
     List<ProblemInfo> findProblems(Long problemSetId, Long userId);
 
     // problemId로 현재 문제 순서 조회
@@ -29,9 +29,8 @@ public interface ChatContextPort {
             String title,
             String content,
             String problemType,
-            String answer,
             String explanation,
-            String submittedAnswer
+            String submittedCode
     ) {}
 
     record SessionProgressInfo(

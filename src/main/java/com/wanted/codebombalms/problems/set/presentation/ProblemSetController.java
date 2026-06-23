@@ -170,7 +170,7 @@ public class ProblemSetController {
                                                           "content": "employee_performance.csv 파일을 불러온 뒤 DataFrame의 행과 열 개수를 확인하세요.",
                                                           "problemType": "CODE",
                                                           "point": 10,
-                                                          "startCode": "import pandas as pd\\n\\ndf = pd.read_csv(\\"https://storage.googleapis.com/codebombalms/problem_dataset/28679fde-6075-4c2e-a3f0-190fa3d80db7_employee_performance.csv\\")"
+                                                          "startCode": "import os\\nimport pandas as pd\\n\\ndf = pd.read_csv(os.environ[\\"DATASET_PATH\\"])"
                                                         }
                                                       }
                                                     }

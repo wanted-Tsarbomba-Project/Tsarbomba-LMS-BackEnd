@@ -2,10 +2,13 @@ package com.wanted.codebombalms.course.infrastructure.persistence;
 
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +20,20 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
 
     List<CourseJpaEntity> findByStatusAndDeletedAtIsNull(CourseStatus status);
 
+    @EntityGraph(attributePaths = "courseCategory")
+    List<CourseJpaEntity> findByStatusAndDeletedAtIsNullOrderByCourseIdDesc(
+            CourseStatus status,
+            Pageable pageable
+    );
+
+
+    @EntityGraph(attributePaths = "courseCategory")
+    List<CourseJpaEntity> findByStatusAndDeletedAtIsNullAndTitleContainingIgnoreCaseOrderByCourseIdDesc(
+            CourseStatus status,
+            String title,
+            Pageable pageable
+    );
+
     List<CourseJpaEntity> findByCourseCategory_CourseCategoryIdAndStatusAndDeletedAtIsNull(
             Long courseCategoryId,
             CourseStatus status
@@ -25,6 +42,13 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     List<CourseJpaEntity> findByCourseCategory_CourseCategoryIdAndDeletedAtIsNull(Long courseCategoryId);
 
     Optional<CourseJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    List<CourseJpaEntity> findByCourseIdInAndDeletedAtIsNull(Set<Long> courseIds);
+
+    List<CourseJpaEntity> findByCourseIdInAndStatusAndDeletedAtIsNull(
+            Set<Long> courseIds,
+            CourseStatus status
+    );
 
     Optional<CourseJpaEntity> findByCourseIdAndStatusAndDeletedAtIsNull(Long courseId, CourseStatus status);
 
@@ -41,6 +65,7 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
         List<Long> lectureProblemSetIds = findLectureProblemSetIdsByCourseIds(courseIds);
 
         if (!lectureProblemSetIds.isEmpty()) {
+            deleteLectureProblemSubmissionsByLectureProblemSetIds(lectureProblemSetIds);
             deleteLectureProblemProgressesByLectureProblemSetIds(lectureProblemSetIds);
         }
         if (!lectureIds.isEmpty()) {
@@ -64,16 +89,25 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
     @Query("""
             select l.lectureId
             from LectureJpaEntity l
-            where l.course.courseId in :courseIds
+            where l.courseId in :courseIds
             """)
     List<Long> findLectureIdsByCourseIds(@Param("courseIds") List<Long> courseIds);
 
     @Query("""
-            select cps.courseProblemSetId
-            from CourseProblemSetJpaEntity cps
-            where cps.course.courseId in :courseIds
+            select cps.lectureProblemSetId
+            from LectureProblemSetJpaEntity cps
+            where cps.courseId in :courseIds
             """)
     List<Long> findLectureProblemSetIdsByCourseIds(@Param("courseIds") List<Long> courseIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            delete from LectureProblemSubmissionJpaEntity s
+            where s.lectureProblemSetId in :lectureProblemSetIds
+            """)
+    int deleteLectureProblemSubmissionsByLectureProblemSetIds(
+            @Param("lectureProblemSetIds") List<Long> lectureProblemSetIds
+    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -93,22 +127,22 @@ public interface SpringDataCourseRepository extends JpaRepository<CourseJpaEntit
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-            delete from CourseProblemSetJpaEntity cps
-            where cps.course.courseId in :courseIds
+            delete from LectureProblemSetJpaEntity cps
+            where cps.courseId in :courseIds
             """)
     int deleteLectureProblemSetsByCourseIds(@Param("courseIds") List<Long> courseIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             delete from LectureJpaEntity l
-            where l.course.courseId in :courseIds
+            where l.courseId in :courseIds
             """)
     int deleteLecturesByCourseIds(@Param("courseIds") List<Long> courseIds);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             delete from EnrollmentJpaEntity e
-            where e.course.courseId in :courseIds
+            where e.courseId in :courseIds
             """)
     int deleteEnrollmentsByCourseIds(@Param("courseIds") List<Long> courseIds);
 

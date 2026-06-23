@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.problems.set.presentation.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
@@ -21,6 +23,7 @@ public record ProblemSetCreateRequest(
         String dataFileName,
 
         @Schema(description = "문제 세트에 포함할 소문제 목록", requiredMode = Schema.RequiredMode.REQUIRED)
-        List<ProblemCreateRequest> problems
+        @NotEmpty(message = "소문제는 1개 이상 필요합니다.")
+        List<@Valid ProblemCreateRequest> problems
 ) {
 }

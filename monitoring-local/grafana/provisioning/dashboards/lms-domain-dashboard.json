@@ -1,0 +1,161 @@
+{
+  "uid": "lms-domain",
+  "title": "LMS 도메인 대시보드",
+  "tags": ["lms", "loadtest"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "domain",
+        "label": "도메인",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(http_server_requests_seconds_count, domain)",
+        "query": { "qryType": 1, "query": "label_values(http_server_requests_seconds_count, domain)", "refId": "A" },
+        "current": { "text": "chatbot", "value": "chatbot" },
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    { "type": "row", "title": "Traffic", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 }, "id": 1, "collapsed": false },
+    {
+      "type": "timeseries",
+      "title": "RPS by URI  ($domain)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 2,
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_count{domain=\"$domain\"}[1m]))",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Error Rate  ($domain)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 3,
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(http_server_requests_seconds_count{domain=\"$domain\",status=~\"4..|5..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{domain=\"$domain\"}[1m])), 0.0001)",
+          "legendFormat": "error rate"
+        }
+      ]
+    },
+    { "type": "row", "title": "Latency", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 }, "id": 4, "collapsed": false },
+    {
+      "type": "timeseries",
+      "title": "HTTP Avg Duration by URI  ($domain)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "id": 5,
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (uri) (rate(http_server_requests_seconds_sum{domain=\"$domain\"}[1m])) / clamp_min(sum by (uri) (rate(http_server_requests_seconds_count{domain=\"$domain\"}[1m])), 0.0001)",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "커스텀: chat 목록 쿼리 구간 avg (N+1 증거)",
+      "description": "domain=chatbot 일 때만 값이 있음. 커스텀 메트릭은 이름 prefix 라 domain 변수와 무관.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "id": 6,
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "rate(chat_room_list_query_duration_seconds_sum[1m]) / clamp_min(rate(chat_room_list_query_duration_seconds_count[1m]), 0.0001)",
+          "legendFormat": "chat_room_list_query avg"
+        }
+      ]
+    },
+    { "type": "row", "title": "Resource (앱 전체)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 }, "id": 7, "collapsed": false },
+    {
+      "type": "timeseries",
+      "title": "Hikari Active Connections",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 19 },
+      "id": 8,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "hikaricp_connections_active",
+          "legendFormat": "active"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Process CPU Usage",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 19 },
+      "id": 9,
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "process_cpu_usage",
+          "legendFormat": "cpu"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "JVM Heap Used",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 19 },
+      "id": 10,
+      "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})",
+          "legendFormat": "heap used"
+        }
+      ]
+    },
+    { "type": "row", "title": "Logs (Loki)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 }, "id": 11, "collapsed": false },
+    {
+      "type": "logs",
+      "title": "요청 완료 로그 (actuator 제외)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 28 },
+      "id": 12,
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{job=\"lms\"} |= \"event=request_completed\" != \"actuator\"",
+          "queryType": "range"
+        }
+      ]
+    }
+  ]
+}

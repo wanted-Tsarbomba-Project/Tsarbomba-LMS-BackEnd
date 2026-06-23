@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.learning.application.service;
 
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
-import com.wanted.codebombalms.learning.application.command.RecordLectureProgressCommand;
+import com.wanted.codebombalms.learning.application.policy.LearningAccessPolicy;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemProgressCommandUseCase;
 import com.wanted.codebombalms.learning.application.usecase.LectureProgressCommandUseCase;
@@ -18,10 +18,14 @@ public class LectureProblemProgressService implements LectureProblemProgressComm
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
     private final LearningLectureProblemSetPort learningLectureProblemSetPort;
     private final LectureProgressCommandUseCase lectureProgressCommandUseCase;
+    private final LearningAccessPolicy learningAccessPolicy;
 
     @Override
     @Transactional
     public LectureProblemProgress recordProgress(RecordLectureProblemProgressCommand command) {
+        var lectureProblemSet = learningLectureProblemSetPort.findLectureProblemSet(command.lectureProblemSetId());
+        learningAccessPolicy.validateLectureProblemSetAccess(command.userId(), lectureProblemSet);
+
         LectureProblemProgress progress = lectureProblemProgressRepository
                 .findByUserIdAndLectureProblemSetId(command.userId(), command.lectureProblemSetId())
                 .orElseGet(() -> LectureProblemProgress.create(command.userId(), command.lectureProblemSetId()));
@@ -30,12 +34,10 @@ public class LectureProblemProgressService implements LectureProblemProgressComm
         LectureProblemProgress savedProgress = lectureProblemProgressRepository.save(progress);
 
         if (command.completed()) {
-            var lectureProblemSet = learningLectureProblemSetPort.findLectureProblemSet(command.lectureProblemSetId());
-            lectureProgressCommandUseCase.recordProgress(new RecordLectureProgressCommand(
+            lectureProgressCommandUseCase.completeProgress(
                     command.userId(),
-                    lectureProblemSet.lectureId(),
-                    true
-            ));
+                    lectureProblemSet.lectureId()
+            );
         }
 
         return savedProgress;

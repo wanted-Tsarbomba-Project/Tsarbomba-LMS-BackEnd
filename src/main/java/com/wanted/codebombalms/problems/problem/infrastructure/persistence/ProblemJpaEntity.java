@@ -33,9 +33,6 @@ public class ProblemJpaEntity {
     private String difficulty;
 
     @Column(columnDefinition = "TEXT")
-    private String answer;
-
-    @Column(columnDefinition = "TEXT")
     private String explanation;
 
     @Column(nullable = false)
@@ -59,7 +56,6 @@ public class ProblemJpaEntity {
             String content,
             String problemType,
             String difficulty,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,
@@ -71,7 +67,6 @@ public class ProblemJpaEntity {
         this.content = content;
         this.problemType = problemType;
         this.difficulty = difficulty;
-        this.answer = answer;
         this.explanation = explanation;
         this.point = point == null ? 0 : point;
         this.attemptLimit = attemptLimit;
@@ -85,7 +80,6 @@ public class ProblemJpaEntity {
             String content,
             String problemType,
             String difficulty,
-            String answer,
             String explanation,
             Integer point,
             Integer attemptLimit,
@@ -95,7 +89,6 @@ public class ProblemJpaEntity {
         this.content = content;
         this.problemType = problemType;
         this.difficulty = difficulty;
-        this.answer = answer;
         this.explanation = explanation;
         this.point = point == null ? 0 : point;
         this.attemptLimit = attemptLimit;
@@ -128,10 +121,6 @@ public class ProblemJpaEntity {
 
     public String getProblemType() {
         return problemType;
-    }
-
-    public String getAnswer() {
-        return answer;
     }
 
     public String getExplanation() {

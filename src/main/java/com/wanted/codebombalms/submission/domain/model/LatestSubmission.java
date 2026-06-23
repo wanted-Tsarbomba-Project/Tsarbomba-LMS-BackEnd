@@ -6,7 +6,7 @@ public record LatestSubmission(
         Long submissionId,
         Long problemId,
         Integer problemOrder,
-        String submittedAnswer,
+        String submittedCode,
         Boolean correct,
         LocalDateTime submittedAt
 ) {

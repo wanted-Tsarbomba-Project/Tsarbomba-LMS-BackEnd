@@ -3,6 +3,8 @@ package com.wanted.codebombalms.learning.application.command;
 public record RecordLectureProgressCommand(
         Long userId,
         Long lectureId,
-        boolean completed
+        int lastPositionSec,
+        Integer durationSec,
+        int watchedDeltaSec
 ) {
 }

@@ -65,7 +65,9 @@ public class LearningController {
                 lectureProgressCommandUseCase.recordProgress(new RecordLectureProgressCommand(
                         userId,
                         lectureId,
-                        request.completed()
+                        request.lastPositionSec(),
+                        request.durationSec(),
+                        request.watchedDeltaSec()
                 ))
         );
 
@@ -102,6 +104,27 @@ public class LearningController {
                 LearningResponseMessage.RETRIEVED,
                 LectureProblemSetEntryResponse.from(
                         lectureProblemSetQueryUseCase.enterLectureProblemSet(userId, lectureProblemSetId)
+                )
+        ));
+    }
+
+    @GetMapping("/admin/courses/{courseId}/students/{userId}/lecture-problem-sets/{lectureProblemSetId}")
+    @Operation(summary = "Admin student lecture problem set entry status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
+    public ResponseEntity<ApiResponse<LectureProblemSetEntryResponse>> findStudentLectureProblemSet(
+            @PathVariable Long courseId,
+            @PathVariable Long userId,
+            @PathVariable Long lectureProblemSetId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                LearningResponseCode.RETRIEVED,
+                LearningResponseMessage.RETRIEVED,
+                LectureProblemSetEntryResponse.from(
+                        lectureProblemSetQueryUseCase.findStudentLectureProblemSet(
+                                courseId,
+                                userId,
+                                lectureProblemSetId
+                        )
                 )
         ));
     }

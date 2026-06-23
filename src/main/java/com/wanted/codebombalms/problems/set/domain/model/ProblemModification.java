@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.problems.set.domain.model;
 
+import java.util.List;
+
 public record ProblemModification(
         Long problemId,
         String title,
@@ -9,9 +11,9 @@ public record ProblemModification(
         Integer point,
         Integer attemptLimit,
         Boolean isRetriable,
-        String answer,
         Long hintId,
         String hint,
-        String explanation
+        String explanation,
+        List<ProblemTestCaseModification> testCases
 ) {
 }

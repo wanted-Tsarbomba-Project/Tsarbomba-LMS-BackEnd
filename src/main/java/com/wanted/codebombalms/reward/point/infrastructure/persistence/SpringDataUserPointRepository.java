@@ -13,4 +13,5 @@ public interface SpringDataUserPointRepository extends JpaRepository<UserPointJp
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select up from UserPointJpaEntity up where up.userId = :userId")
     Optional<UserPointJpaEntity> findByUserIdForUpdate(@Param("userId") Long userId);
+    Optional<UserPointJpaEntity> findByUserId(Long userId);
 }

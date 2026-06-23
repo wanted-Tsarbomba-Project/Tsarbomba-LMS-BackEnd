@@ -36,7 +36,7 @@ Content-Type: application/json
   "courseCategoryId": {{courseCategoryId}},
   "title": "Java 기초 강좌",
   "description": "Java 기초 문법을 학습하는 강좌입니다.",
-  "thumbnailUrl": "java.png"
+  "thumbnailUrl": "https://storage.googleapis.com/codebombalms/course_thumbnail_images/java.png"
 }
 
 ### 6. 강좌 상세 조회
@@ -50,7 +50,7 @@ Content-Type: application/json
   "courseCategoryId": {{courseCategoryId}},
   "title": "수정된 Java 강좌",
   "description": "수정된 강좌 설명입니다.",
-  "thumbnailUrl": "updated-java.png",
+  "thumbnailUrl": "https://storage.googleapis.com/codebombalms/course_thumbnail_images/updated-java.png",
   "status": "DRAFT"
 }
 
@@ -58,13 +58,22 @@ Content-Type: application/json
 ### 주의: 공개하려면 해당 강좌에 강의가 1개 이상 등록되어 있어야 합니다.
 PATCH {{host}}/api/v1/courses/{{courseId}}/publish
 
-### 9. 강좌에 연결된 문제 세트 목록 조회
+### 9. 비활성 강좌 재활성화
+### DRAFT 상태 강좌는 공개 API를 사용하고, INACTIVE 상태 강좌는 수정 API로 ACTIVE 전환할 수 있습니다.
+PUT {{host}}/api/v1/courses/{{courseId}}
+Content-Type: application/json
+
+{
+  "status": "ACTIVE"
+}
+
+### 10. 강좌에 연결된 문제 세트 목록 조회
 GET {{host}}/api/v1/courses/{{courseId}}/problem-sets
 
-### 10. 강의에 연결된 문제 세트 목록 조회
+### 11. 강의에 연결된 문제 세트 목록 조회
 GET {{host}}/api/v1/lectures/{{lectureId}}/problem-sets
 
-### 11. 강좌/강의 문제 세트 연결 저장
+### 12. 강좌/강의 문제 세트 연결 저장
 PUT {{host}}/api/v1/courses/{{courseId}}/problem-sets
 Content-Type: application/json
 
@@ -77,7 +86,7 @@ Content-Type: application/json
       "displayOrder": 1
     },
     {
-      "lectureId": 102,
+      "lectureId": null,
       "problemSetId": 2002,
       "role": "FINAL",
       "displayOrder": 1
@@ -85,11 +94,11 @@ Content-Type: application/json
   ]
 }
 
-### 12. 강사별 강좌 목록 조회
+### 13. 강사별 강좌 목록 조회
 GET {{host}}/api/v1/users/{{userId}}/courses
 
-### 13. 강좌 삭제 - 다른 모든 http 실행 전에는 실행하지 말 것
+### 14. 강좌 삭제 - 다른 모든 http 실행 전에는 실행하지 말 것
 # DELETE {{host}}/api/v1/courses/{{courseId}}
 
-### 14. 삭제된 강좌 상세 조회 확인 - 강좌 삭제 후 별도 실행
+### 15. 삭제된 강좌 상세 조회 확인 - 강좌 삭제 후 별도 실행
 # GET {{host}}/api/v1/courses/{{courseId}}
