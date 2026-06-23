@@ -13,6 +13,8 @@ public interface LoadRecommendationCoursePort {
 
     record SelectableCourseData(
             Long courseId,
+            Long categoryId,
+            String categoryName,
             String title,
             String description,
             String thumbnailUrl
