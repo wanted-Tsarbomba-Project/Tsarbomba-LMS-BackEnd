@@ -228,6 +228,7 @@ class LectureProblemSetRepositoryTest {
                 "description",
                 "video.mp4",
                 "lecture.png",
+                null,
                 lectureOrder,
                 status
         );

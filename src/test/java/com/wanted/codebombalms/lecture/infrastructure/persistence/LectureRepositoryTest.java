@@ -75,6 +75,7 @@ class LectureRepositoryTest {
                 "description",
                 "java-1.mp4",
                 "java-1.png",
+                null,
                 1,
                 LectureStatus.ACTIVE
         ));
@@ -92,8 +93,8 @@ class LectureRepositoryTest {
     void findByCourseIdOrdersByLectureOrder() {
         Course course = courseRepository.save(createCourse());
 
-        lectureRepository.save(Lecture.create(course, "Java 2", "description", "java-2.mp4", "java-2.png", 2, LectureStatus.ACTIVE));
-        lectureRepository.save(Lecture.create(course, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE));
+        lectureRepository.save(Lecture.create(course, "Java 2", "description", "java-2.mp4", "java-2.png", null, 2, LectureStatus.ACTIVE));
+        lectureRepository.save(Lecture.create(course, "Java 1", "description", "java-1.mp4", "java-1.png", null, 1, LectureStatus.ACTIVE));
 
         List<Lecture> lectures =
                 lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(course.getCourseId());
@@ -106,8 +107,8 @@ class LectureRepositoryTest {
     @Test
     void findByDeletedAtIsNullExcludesDeletedLectures() {
         Course course = courseRepository.save(createCourse());
-        Lecture activeLecture = Lecture.create(course, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE);
-        Lecture deletedLecture = Lecture.create(course, "Deleted", "description", "deleted.mp4", "deleted.png", 2, LectureStatus.ACTIVE);
+        Lecture activeLecture = Lecture.create(course, "Java 1", "description", "java-1.mp4", "java-1.png", null, 1, LectureStatus.ACTIVE);
+        Lecture deletedLecture = Lecture.create(course, "Deleted", "description", "deleted.mp4", "deleted.png", null, 2, LectureStatus.ACTIVE);
         deletedLecture.delete();
 
         lectureRepository.save(activeLecture);
@@ -153,7 +154,7 @@ class LectureRepositoryTest {
                 2
         ));
         Lecture activeLecture = lectureRepository.save(
-                Lecture.create(course, "Active", "description", "active.mp4", "active.png", 3, LectureStatus.ACTIVE)
+                Lecture.create(course, "Active", "description", "active.mp4", "active.png", null, 3, LectureStatus.ACTIVE)
         );
         LectureProblemSet lectureProblemSet = lectureProblemSetRepository.save(
                 LectureProblemSet.create(course.getCourseId(), oldDeletedLecture.getLectureId(), 2002L, LectureProblemSetRole.MAIN, 1)
