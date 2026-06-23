@@ -36,6 +36,7 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     private final LoadMyBadgesPort loadMyBadgesPort;
 
     @Override
+    @Transactional(readOnly = true)
     public List<MyBadgeResult> getMyBadges(Long userId) {
         return loadMyBadgesPort.loadMyBadges(userId)
                 .stream()

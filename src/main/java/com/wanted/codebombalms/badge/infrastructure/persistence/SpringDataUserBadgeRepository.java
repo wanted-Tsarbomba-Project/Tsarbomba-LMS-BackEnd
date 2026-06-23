@@ -31,7 +31,7 @@ public interface SpringDataUserBadgeRepository
               on badge.badgeId = userBadge.badgeId
             where userBadge.userId = :userId
               and badge.deletedAt is null
-            order by userBadge.earnedAt desc
+            order by userBadge.earnedAt desc, userBadge.userBadgeId desc
             """)
     List<MyBadgeRow> findMyBadgeRows(@Param("userId") Long userId);
 

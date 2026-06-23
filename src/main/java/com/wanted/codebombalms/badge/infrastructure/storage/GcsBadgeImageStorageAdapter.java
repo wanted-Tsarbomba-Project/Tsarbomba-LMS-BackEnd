@@ -136,7 +136,8 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
     @CacheEvict(
             cacheNames = CacheNames.BADGE_IMAGE_ACCESS_URL,
             key = "T(com.wanted.codebombalms.badge.infrastructure.cache.BadgeCacheKeys).badgeImageAccessUrl(#objectName)",
-            condition = "#objectName != null && !#objectName.isBlank()"
+            condition = "#objectName != null && !#objectName.isBlank()",
+            beforeInvocation = true
     )
     @Override
     public void delete(String objectName) {
