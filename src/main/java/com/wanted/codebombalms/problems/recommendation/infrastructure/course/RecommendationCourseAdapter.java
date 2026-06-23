@@ -1,9 +1,9 @@
 package com.wanted.codebombalms.problems.recommendation.infrastructure.course;
 
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
+import com.wanted.codebombalms.course.infrastructure.persistence.CourseJpaEntity;
 import com.wanted.codebombalms.course.infrastructure.persistence.SpringDataCourseRepository;
 import com.wanted.codebombalms.problems.recommendation.application.port.LoadRecommendationCoursePort;
-import com.wanted.codebombalms.problems.recommendation.application.port.LoadRecommendationCoursePort.SelectableCourseData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
@@ -45,12 +45,7 @@ public class RecommendationCourseAdapter implements LoadRecommendationCoursePort
         );
 
         return courses.stream()
-                .map(course -> new SelectableCourseData(
-                        course.getCourseId(),
-                        course.getTitle(),
-                        course.getDescription(),
-                        course.getThumbnailUrl()
-                ))
+                .map(this::toSelectableCourseData)
                 .toList();
     }
 
@@ -65,16 +60,24 @@ public class RecommendationCourseAdapter implements LoadRecommendationCoursePort
                         CourseStatus.ACTIVE
                 )
                 .stream()
-                .map(course -> new SelectableCourseData(
-                        course.getCourseId(),
-                        course.getTitle(),
-                        course.getDescription(),
-                        course.getThumbnailUrl()
-                ))
+                .map(this::toSelectableCourseData)
                 .toList();
     }
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private SelectableCourseData toSelectableCourseData(CourseJpaEntity course) {
+        var courseCategory = course.getCourseCategory();
+
+        return new SelectableCourseData(
+                course.getCourseId(),
+                courseCategory != null ? courseCategory.getCourseCategoryId() : null,
+                courseCategory != null ? courseCategory.getName() : null,
+                course.getTitle(),
+                course.getDescription(),
+                course.getThumbnailUrl()
+        );
     }
 }

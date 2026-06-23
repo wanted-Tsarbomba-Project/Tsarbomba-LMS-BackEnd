@@ -9,7 +9,10 @@ import com.wanted.codebombalms.badge.application.port.BadgeImageStoragePort;
 import com.wanted.codebombalms.badge.exception.BadgeErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.global.infrastructure.cache.CacheNames;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
@@ -90,6 +93,12 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
         }
     }
 
+    @Cacheable(
+            cacheNames = CacheNames.BADGE_IMAGE_ACCESS_URL,
+            key = "T(com.wanted.codebombalms.badge.infrastructure.cache.BadgeCacheKeys).badgeImageAccessUrl(#objectName)",
+            condition = "#objectName != null && !#objectName.isBlank()",
+            unless = "#result == null"
+    )
     @Override
     public String generateAccessUrl(String objectName) {
         if (objectName == null || objectName.isBlank()) {
@@ -98,6 +107,10 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
             );
         }
 
+        return createAccessUrl(objectName);
+    }
+
+    private String createAccessUrl(String objectName) {
         try {
             BlobInfo blobInfo = BlobInfo.newBuilder(
                     properties.getStorage().getBucket(),
@@ -120,6 +133,12 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
         }
     }
 
+    @CacheEvict(
+            cacheNames = CacheNames.BADGE_IMAGE_ACCESS_URL,
+            key = "T(com.wanted.codebombalms.badge.infrastructure.cache.BadgeCacheKeys).badgeImageAccessUrl(#objectName)",
+            condition = "#objectName != null && !#objectName.isBlank()",
+            beforeInvocation = true
+    )
     @Override
     public void delete(String objectName) {
         if (objectName == null || objectName.isBlank()) {
@@ -140,6 +159,7 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
             );
         }
     }
+    
 
     private void validateImage(
             String originalFileName,

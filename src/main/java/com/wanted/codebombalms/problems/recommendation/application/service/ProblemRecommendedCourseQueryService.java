@@ -125,6 +125,8 @@ public class ProblemRecommendedCourseQueryService implements GetRecommendedCours
                 .stream()
                 .map(course -> new SelectableRecommendedCourseView(
                         course.courseId(),
+                        course.categoryId(),
+                        course.categoryName(),
                         course.title(),
                         course.description(),
                         course.thumbnailUrl()

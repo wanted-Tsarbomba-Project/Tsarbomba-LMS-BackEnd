@@ -169,6 +169,47 @@ public class ProblemRecommendedCourseController {
             summary = "추천 코스 선택 목록 조회",
             description = "운영자가 문제에 추천 코스를 연결할 때 선택 가능한 ACTIVE 코스 목록을 조회합니다. 검색어와 최대 조회 개수를 지정할 수 있습니다."
     )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "추천 코스 선택 목록 조회 성공",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = SelectableRecommendedCourseResponse.class),
+                            examples = @ExampleObject(
+                                    name = "추천 코스 선택 목록 조회 성공",
+                                    value = """
+                                            {
+                                              "timestamp": "2026-06-18T12:00:00Z",
+                                              "status": 200,
+                                              "code": "COMMON-SUCCESS",
+                                              "message": "요청이 성공적으로 처리되었습니다.",
+                                              "data": {
+                                                "courses": [
+                                                  {
+                                                    "courseId": 10,
+                                                    "categoryId": 3,
+                                                    "categoryName": "Python 데이터 분석",
+                                                    "title": "Pandas 데이터 분석 입문",
+                                                    "description": "Pandas를 활용한 데이터 분석 기초 강좌입니다.",
+                                                    "thumbnailUrl": "/images/courses/pandas.png"
+                                                  },
+                                                  {
+                                                    "courseId": 11,
+                                                    "categoryId": 4,
+                                                    "categoryName": "머신러닝",
+                                                    "title": "머신러닝 기초",
+                                                    "description": "머신러닝 모델 학습 과정을 다루는 강좌입니다.",
+                                                    "thumbnailUrl": "/images/courses/ml.png"
+                                                  }
+                                                ]
+                                              }
+                                            }
+                                            """
+                            )
+                    )
+            )
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     @GetMapping("/api/v1/recommended-courses/selectable")
     public ResponseEntity<ApiResponse<SelectableRecommendedCourseResponse>> getSelectableRecommendedCourses(

@@ -2,9 +2,11 @@ package com.wanted.codebombalms.badge.application.service;
 
 import com.wanted.codebombalms.badge.application.port.BadgeImageStoragePort;
 import com.wanted.codebombalms.badge.application.port.BadgePersistencePort;
+import com.wanted.codebombalms.badge.application.port.LoadMyBadgesPort;
 import com.wanted.codebombalms.badge.application.port.LoadUserTotalPointPort;
 import com.wanted.codebombalms.badge.application.port.UserBadgePersistencePort;
 import com.wanted.codebombalms.badge.application.query.BadgeSyncResult;
+import com.wanted.codebombalms.badge.application.query.MyBadgeRow;
 import com.wanted.codebombalms.badge.application.query.MyBadgeResult;
 import com.wanted.codebombalms.badge.application.usecase.MyBadgeUseCase;
 import com.wanted.codebombalms.badge.application.usecase.SyncUserBadgesUseCase;
@@ -25,41 +27,34 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
 
     private final UserBadgePersistencePort userBadgePersistencePort;
     private final BadgePersistencePort badgePersistencePort;
     private final BadgeImageStoragePort badgeImageStoragePort;
     private final LoadUserTotalPointPort loadUserTotalPointPort;
+    private final LoadMyBadgesPort loadMyBadgesPort;
 
     @Override
     @Transactional(readOnly = true)
     public List<MyBadgeResult> getMyBadges(Long userId) {
-        List<UserBadge> userBadges =
-                userBadgePersistencePort.findAllByUserId(userId);
-
-        List<Long> badgeIds = userBadges.stream()
-                .map(UserBadge::getBadgeId)
-                .toList();
-
-        Map<Long, Badge> badgesById = badgePersistencePort
-                .findAllNotDeletedByIds(badgeIds)
+        return loadMyBadgesPort.loadMyBadges(userId)
                 .stream()
-                .collect(Collectors.toMap(
-                        Badge::getBadgeId,
-                        Function.identity()
-                ));
-
-        return userBadges.stream()
-                .filter(userBadge -> badgesById.containsKey(
-                        userBadge.getBadgeId()
-                ))
-                .map(userBadge -> toMyBadgeResult(
-                        userBadge,
-                        badgesById.get(userBadge.getBadgeId())
-                ))
+                .map(this::toMyBadgeResult)
                 .toList();
+    }
+
+    private MyBadgeResult toMyBadgeResult(MyBadgeRow row) {
+        return new MyBadgeResult(
+                row.badgeId(),
+                row.badgeName(),
+                row.description(),
+                row.requiredPoint(),
+                generateImageUrl(row.objectName()),
+                row.status().name(),
+                row.earnedAt(),
+                row.equipped()
+        );
     }
 
     private MyBadgeResult toMyBadgeResult(
@@ -87,6 +82,7 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     }
 
     @Override
+    @Transactional
     public MyBadgeResult equipBadge(Long userId, Long badgeId) {
         Badge badge = badgePersistencePort.findNotDeletedById(badgeId)
                 .orElseThrow(() -> new NotFoundException(
@@ -122,12 +118,14 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     }
 
     @Override
+    @Transactional
     public BadgeSyncResult syncBadges(Long userId) {
         int totalPoint = loadUserTotalPointPort.loadTotalPoint(userId);
         return sync(userId, totalPoint);
     }
 
     @Override
+    @Transactional
     public BadgeSyncResult sync(Long userId, int totalPoint) {
         List<Badge> grantableBadges =
                 badgePersistencePort.findGrantableBadges(totalPoint);
