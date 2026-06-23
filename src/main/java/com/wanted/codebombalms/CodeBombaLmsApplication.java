@@ -11,7 +11,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({
         CloudRunCodeRunnerProperties.class,
         GcpStorageProperties.class,
-        CodeExecutionProperties.class
+        CodeExecutionProperties.class,
+        com.wanted.codebombalms.auth.infrastructure.oauth.OAuthProperties.class
 })
 public class CodeBombaLmsApplication {
 

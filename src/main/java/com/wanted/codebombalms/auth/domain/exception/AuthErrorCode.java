@@ -37,7 +37,15 @@ public enum AuthErrorCode implements ErrorCode {
     AUTH_EMAIL_SEND_TOO_MANY("AUT-014", "이메일 발송 횟수를 초과했습니다."),
     AUTH_FORBIDDEN("AUT-015", "접근 권한이 없습니다."),
     AUTH_REQUIRED("AUT-016", "인증이 필요합니다."),
-    AUTH_PASSWORD_RESET_TOO_MANY("AUT-017", "비밀번호 재설정 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.");
+    AUTH_PASSWORD_RESET_TOO_MANY("AUT-017", "비밀번호 재설정 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요."),
+
+
+    OAUTH_TOKEN_EXCHANGE_FAILED("AUT-019", "구글 토큰 교환에 실패했습니다."),
+    OAUTH_USER_INFO_FAILED("AUT-020", "구글 사용자 정보 조회에 실패했습니다."),
+
+    OAUTH_STATE_INVALID("AUT-021", "유효하지 않은 인증 요청입니다. 다시 시도해주세요."),
+    OAUTH_EMAIL_ALREADY_LOCAL("AUT-022", "이미 일반 가입된 이메일입니다. 일반 로그인을 이용해주세요."),
+    OAUTH_EMAIL_NOT_VERIFIED("AUT-023", "구글에서 인증되지 않은 이메일입니다.");
 
     private final String code;
     private final String message;

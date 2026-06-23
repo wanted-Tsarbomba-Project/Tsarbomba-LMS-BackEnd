@@ -6,6 +6,7 @@ import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.application.service.LectureCommandService;
 import com.wanted.codebombalms.lecture.application.service.LectureQueryService;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -43,6 +44,9 @@ class LectureServiceTest {
     @Mock
     private LectureCreationPolicy lectureCreationPolicy;
 
+    @Mock
+    private LectureAccessPolicy lectureAccessPolicy;
+
     @InjectMocks
     private LectureCommandService lectureCommandService;
 
@@ -59,7 +63,7 @@ class LectureServiceTest {
         given(lectureRepository.save(any(Lecture.class))).willReturn(savedLecture);
 
         Lecture result = lectureCommandService.createLecture(
-                new CreateLectureCommand(courseId, "Java 1", "description", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "java-1.png", 1, LectureStatus.ACTIVE)
+                new CreateLectureCommand(courseId, "Java 1", "description", "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "java-1.png", null, 1, LectureStatus.ACTIVE)
         );
 
         assertEquals(1L, result.getLectureId());
@@ -78,7 +82,7 @@ class LectureServiceTest {
         ValidationException exception = assertThrows(
                 ValidationException.class,
                 () -> lectureCommandService.createLecture(
-                        new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", 1, LectureStatus.ACTIVE)
+                        new CreateLectureCommand(courseId, "Java 1", "description", "java-1.mp4", "java-1.png", null, 1, LectureStatus.ACTIVE)
                 )
         );
 
@@ -95,7 +99,7 @@ class LectureServiceTest {
         ValidationException exception = assertThrows(
                 ValidationException.class,
                 () -> lectureCommandService.createLecture(
-                        new CreateLectureCommand(courseId, "Java 1", "description", "   ", "java-1.png", 1, LectureStatus.ACTIVE)
+                        new CreateLectureCommand(courseId, "Java 1", "description", "   ", "java-1.png", null, 1, LectureStatus.ACTIVE)
                 )
         );
 
@@ -118,6 +122,7 @@ class LectureServiceTest {
                                 "description",
                                 "https://www.youtube.com/watch?v=short",
                                 "java-1.png",
+                                null,
                                 1,
                                 LectureStatus.ACTIVE
                         )
@@ -143,6 +148,7 @@ class LectureServiceTest {
                                 "description",
                                 "https://www.youtube.com/watch?v=short&v=dQw4w9WgXcQ",
                                 "java-1.png",
+                                null,
                                 1,
                                 LectureStatus.ACTIVE
                         )
@@ -168,6 +174,7 @@ class LectureServiceTest {
                                 "description",
                                 "https://www.youtube.com/watch?v=가나다라마바사아자차카",
                                 "java-1.png",
+                                null,
                                 1,
                                 LectureStatus.ACTIVE
                         )
@@ -193,6 +200,7 @@ class LectureServiceTest {
                                 "description",
                                 "https://www.youtube.com:444/watch?v=dQw4w9WgXcQ",
                                 "java-1.png",
+                                null,
                                 1,
                                 LectureStatus.ACTIVE
                         )
@@ -218,6 +226,7 @@ class LectureServiceTest {
                                 "description",
                                 "https://user@www.youtube.com/watch?v=dQw4w9WgXcQ",
                                 "java-1.png",
+                                null,
                                 1,
                                 LectureStatus.ACTIVE
                         )
@@ -243,6 +252,7 @@ class LectureServiceTest {
                         "description",
                         "https://www.youtube.com/shorts/dQw4w9WgXcQ",
                         "java-1.png",
+                        null,
                         1,
                         LectureStatus.ACTIVE
                 )
@@ -261,7 +271,7 @@ class LectureServiceTest {
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
                 () -> lectureCommandService.createLecture(
-                        new CreateLectureCommand(courseId, "Java 1", "description", "https://youtu.be/dQw4w9WgXcQ", "java-1.png", 1, LectureStatus.ACTIVE)
+                        new CreateLectureCommand(courseId, "Java 1", "description", "https://youtu.be/dQw4w9WgXcQ", "java-1.png", null, 1, LectureStatus.ACTIVE)
                 )
         );
 
@@ -307,7 +317,7 @@ class LectureServiceTest {
         given(lectureRepository.save(lecture)).willReturn(lecture);
 
         Lecture result = lectureCommandService.updateLecture(
-                new UpdateLectureCommand(lectureId, "Updated Java", "updated", "https://www.youtube.com/embed/dQw4w9WgXcQ", "updated.png", 2, LectureStatus.INACTIVE)
+                new UpdateLectureCommand(lectureId, "Updated Java", "updated", "https://www.youtube.com/embed/dQw4w9WgXcQ", "updated.png", null, 2, LectureStatus.INACTIVE)
         );
 
         assertEquals("Updated Java", result.getTitle());
@@ -331,6 +341,7 @@ class LectureServiceTest {
                                 "updated",
                                 "https://example.com/video.mp4",
                                 "updated.png",
+                                null,
                                 2,
                                 LectureStatus.INACTIVE
                         )
@@ -356,6 +367,7 @@ class LectureServiceTest {
                                 "updated",
                                 "   ",
                                 "updated.png",
+                                null,
                                 2,
                                 LectureStatus.INACTIVE
                         )
@@ -374,7 +386,7 @@ class LectureServiceTest {
 
         ValidationException exception = assertThrows(
                 ValidationException.class,
-                () -> lectureCommandService.updateLecture(new UpdateLectureCommand(lectureId, null, null, null, null, null, LectureStatus.DELETED))
+                () -> lectureCommandService.updateLecture(new UpdateLectureCommand(lectureId, null, null, null, null, null, null, LectureStatus.DELETED))
         );
 
         assertEquals(LectureErrorCode.LECTURE_DELETE_STATUS_REQUIRES_DELETE, exception.getErrorCode());

@@ -4,6 +4,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ConflictExce
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.learning.application.command.RecordLectureProblemProgressCommand;
+import com.wanted.codebombalms.learning.application.policy.LearningAccessPolicy;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemGradingPort;
@@ -36,16 +37,45 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     private final LectureProblemProgressCommandUseCase lectureProblemProgressCommandUseCase;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
     private final LectureProblemSubmissionRepository lectureProblemSubmissionRepository;
+    private final LearningAccessPolicy learningAccessPolicy;
 
     @Override
     @Transactional
     public LectureProblemSetEntryView enterLectureProblemSet(Long userId, Long lectureProblemSetId) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
+
+        return buildLectureProblemSetEntry(userId, lectureProblemSet, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LectureProblemSetEntryView findStudentLectureProblemSet(
+            Long courseId,
+            Long userId,
+            Long lectureProblemSetId
+    ) {
+        LearningLectureProblemSet lectureProblemSet =
+                learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateStudentLectureProblemSetAccess(courseId, userId, lectureProblemSet);
+
+        return buildLectureProblemSetEntry(userId, lectureProblemSet, false);
+    }
+
+    private LectureProblemSetEntryView buildLectureProblemSetEntry(
+            Long userId,
+            LearningLectureProblemSet lectureProblemSet,
+            boolean createProgressIfAbsent
+    ) {
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
-        LectureProblemProgress progress = findOrCreateProgress(userId, lectureProblemSetId);
+        LectureProblemProgress progress = findProgress(
+                userId,
+                lectureProblemSet.lectureProblemSetId(),
+                createProgressIfAbsent
+        );
         Map<Long, LectureProblemSubmission> latestSubmissions =
-                findLatestSubmissions(userId, lectureProblemSetId);
+                findLatestSubmissions(userId, lectureProblemSet.lectureProblemSetId());
         List<ProblemDetailView> problems = problemSet.problems()
                 .stream()
                 .map(problem -> new ProblemDetailView(
@@ -80,6 +110,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     public LectureProblemSetProgressView findLectureProblemSetProgress(Long userId, Long lectureProblemSetId) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
         LectureProblemProgress progress = lectureProblemProgressRepository
                 .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId)
@@ -115,6 +146,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     public SubmissionView submit(Long lectureProblemSetId, Long problemId, SubmitCodeCommand command) {
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(command.userId(), lectureProblemSet);
 
         if (!learningProblemPort.existsProblem(problemId)) {
             throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_FOUND);
@@ -198,11 +230,24 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     }
 
     private LectureProblemProgress findOrCreateProgress(Long userId, Long lectureProblemSetId) {
+        return findProgress(userId, lectureProblemSetId, true);
+    }
+
+    private LectureProblemProgress findProgress(
+            Long userId,
+            Long lectureProblemSetId,
+            boolean createProgressIfAbsent
+    ) {
         return lectureProblemProgressRepository
                 .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId)
-                .orElseGet(() -> lectureProblemProgressCommandUseCase.recordProgress(
-                        new RecordLectureProblemProgressCommand(userId, lectureProblemSetId, 1, false)
-                ));
+                .orElseGet(() -> {
+                    if (createProgressIfAbsent) {
+                        return lectureProblemProgressCommandUseCase.recordProgress(
+                                new RecordLectureProblemProgressCommand(userId, lectureProblemSetId, 1, false)
+                        );
+                    }
+                    return LectureProblemProgress.create(userId, lectureProblemSetId);
+                });
     }
 
     private LectureProblemProgress lockProgress(Long userId, Long lectureProblemSetId) {

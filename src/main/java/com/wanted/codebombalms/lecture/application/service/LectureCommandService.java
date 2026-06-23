@@ -51,6 +51,7 @@ public class LectureCommandService implements LectureCommandUseCase {
                 command.description(),
                 command.videoUrl(),
                 command.thumbnailUrl(),
+                command.problemCategoryId(),
                 command.lectureOrder(),
                 command.status()
         );
@@ -80,6 +81,7 @@ public class LectureCommandService implements LectureCommandUseCase {
                 command.description(),
                 command.videoUrl(),
                 command.thumbnailUrl(),
+                command.problemCategoryId(),
                 command.lectureOrder(),
                 command.status()
         );

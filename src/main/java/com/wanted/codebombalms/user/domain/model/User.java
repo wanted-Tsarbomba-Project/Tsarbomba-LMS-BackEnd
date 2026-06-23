@@ -124,4 +124,26 @@ public class User {
     }    public void lock()       { this.isLocked = true; }
     public void unlock()     { this.isLocked = false; }
     public boolean isDeleted() { return this.deletedAt != null; }
+
+
+    // ===== 신규 소셜 회원 생성 (구글) =====
+    public static User createSocialUser(
+            String email,
+            String name,
+            String nickname,
+            String phone,
+            AuthProvider provider
+    ) {
+        User user = new User();
+        user.role          = UserRole.STUDENT;
+        user.email         = email;
+        user.password      = null;          // 소셜 계정은 비밀번호 없음
+        user.name          = name;
+        user.nickname      = nickname;
+        user.phone         = phone;
+        user.provider      = provider;
+        user.emailVerified = true;          // 구글에서 검증된 이메일
+        user.isLocked      = false;
+        return user;
+    }
 }

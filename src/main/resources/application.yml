@@ -32,6 +32,20 @@ spring:
 jwt:
   secret: ${JWT_SECRET}
 
+oauth:
+  google:
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
+    redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/api/v1/auth/oauth2/callback/google}
+    # 구글 OAuth2 엔드포인트 (고정값)
+    authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+    token-uri: https://oauth2.googleapis.com/token
+    user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+    scope: openid,email,profile
+  # 신규 가입 시 추가정보 입력 페이지 (콜백 redirect 대상)
+  additional-info-uri: ${OAUTH_ADDITIONAL_INFO_URI:http://localhost:3001/oauth2/additional-info}
+  success-uri: ${OAUTH_SUCCESS_URI:http://localhost:3001}
+
 app:
   cookie:
     secure: ${COOKIE_SECURE:false}
@@ -50,6 +64,7 @@ gcp:
     dataset-prefix: ${GCP_STORAGE_DATASET_PREFIX:problem_dataset}
     badge-image-prefix: ${GCP_BADGE_IMAGE_PREFIX:badge_image}
     course-thumbnail-prefix: ${GCP_COURSE_THUMBNAIL_PREFIX:course_thumbnail_images}
+    lecture-material-prefix: ${GCP_STORAGE_LECTURE_MATERIAL_PREFIX:lecture_materials}
   credentials:
     location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
 
