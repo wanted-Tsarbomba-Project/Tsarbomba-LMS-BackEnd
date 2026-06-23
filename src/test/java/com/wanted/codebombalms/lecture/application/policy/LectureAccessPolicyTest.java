@@ -3,8 +3,10 @@ package com.wanted.codebombalms.lecture.application.policy;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
+import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +25,9 @@ class LectureAccessPolicyTest {
 
     @Mock
     private LectureEnrollmentPort lectureEnrollmentPort;
+
+    @Mock
+    private LectureProgressPort lectureProgressPort;
 
     @InjectMocks
     private LectureAccessPolicy lectureAccessPolicy;
@@ -74,6 +79,38 @@ class LectureAccessPolicyTest {
         );
 
         assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void validatePreviousLecturesCompleted_allowsFirstLecture() {
+        lectureAccessPolicy.validatePreviousLecturesCompleted(10L, List.of());
+
+        verify(lectureProgressPort, never()).areLecturesCompleted(10L, List.of());
+    }
+
+    @Test
+    void validatePreviousLecturesCompleted_allowsWhenAllPreviousLecturesCompleted() {
+        Long userId = 10L;
+        List<Long> previousLectureIds = List.of(1L, 2L);
+        given(lectureProgressPort.areLecturesCompleted(userId, previousLectureIds)).willReturn(true);
+
+        assertDoesNotThrow(
+                () -> lectureAccessPolicy.validatePreviousLecturesCompleted(userId, previousLectureIds)
+        );
+    }
+
+    @Test
+    void validatePreviousLecturesCompleted_throwsForbiddenWhenPreviousLectureNotCompleted() {
+        Long userId = 10L;
+        List<Long> previousLectureIds = List.of(1L, 2L);
+        given(lectureProgressPort.areLecturesCompleted(userId, previousLectureIds)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureAccessPolicy.validatePreviousLecturesCompleted(userId, previousLectureIds)
+        );
+
+        assertEquals(LectureErrorCode.PREVIOUS_LECTURE_NOT_COMPLETED, exception.getErrorCode());
     }
 
     private Lecture lecture(Long courseId) {

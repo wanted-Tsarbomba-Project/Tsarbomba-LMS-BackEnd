@@ -50,6 +50,15 @@ public class LectureQueryService implements LectureQueryUseCase {
 
         Lecture lecture = findExistingLecture(lectureId);
         lectureAccessPolicy.validateLearningContentAccess(lecture, userId, operator);
+        if (!operator) {
+            lectureAccessPolicy.validatePreviousLecturesCompleted(
+                    userId,
+                    lectureRepository.findPreviousLectureIds(
+                            lecture.getCourse().getCourseId(),
+                            lecture.getLectureOrder()
+                    )
+            );
+        }
 
         return lecture;
     }

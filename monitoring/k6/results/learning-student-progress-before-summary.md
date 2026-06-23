@@ -4,21 +4,21 @@
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 224 |
-| iterations | 223 |
+| http_reqs | 478 |
+| iterations | 477 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 7798275 |
-| data_sent bytes | 80267 |
+| data_received bytes | 16679316 |
+| data_sent bytes | 171453 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 6858.25 | 287.37 | 7872.83 | 8687.37 | 8892.16 | 9384.60 | 9411.57 |
-| http_req_waiting | 6855.70 | 286.81 | 7870.41 | 8684.68 | 8889.01 | 9378.38 | 9409.82 |
-| http_req_blocked | 0.39 | 0.00 | 0.01 | 2.10 | 2.55 | 4.36 | 8.21 |
-| http_req_connecting | 0.37 | 0 | 0 | 1.99 | 2.39 | 4.25 | 8.10 |
+| http_req_duration | 2275.86 | 319.12 | 2605.70 | 2952.13 | 3083.09 | 3205.99 | 3350.88 |
+| http_req_waiting | 2273.55 | 317.73 | 2603.37 | 2949.95 | 3081.27 | 3202.45 | 3348.81 |
+| http_req_blocked | 0.16 | 0.00 | 0.01 | 0.01 | 2.24 | 2.64 | 3.02 |
+| http_req_connecting | 0.15 | 0 | 0 | 0 | 2.11 | 2.50 | 2.90 |
 
 ## Metric Meaning
 
@@ -36,8 +36,8 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 223 pass / 0 fail |
-| has data array | 223 pass / 0 fail |
+| status is 200 | 477 pass / 0 fail |
+| has data array | 477 pass / 0 fail |
 
 ## How To Compare
 

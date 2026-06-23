@@ -68,6 +68,23 @@ public class LectureRepositoryAdapter implements LectureRepository {
     }
 
     @Override
+    public List<Long> findPreviousLectureIds(Long courseId, Integer lectureOrder) {
+        if (lectureOrder == null) {
+            return List.of();
+        }
+        return springDataLectureRepository.findPreviousLectureIds(courseId, lectureOrder);
+    }
+
+    @Override
+    public boolean existsNextLecture(Long courseId, Integer lectureOrder) {
+        return lectureOrder != null
+                && springDataLectureRepository.existsByCourseIdAndDeletedAtIsNullAndLectureOrderGreaterThan(
+                courseId,
+                lectureOrder
+        );
+    }
+
+    @Override
     public boolean existsByCourseIdAndDeletedAtIsNull(Long courseId) {
         return springDataLectureRepository.existsByCourseIdAndDeletedAtIsNull(courseId);
     }
