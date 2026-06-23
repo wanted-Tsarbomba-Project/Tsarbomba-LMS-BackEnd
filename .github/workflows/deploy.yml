@@ -2,7 +2,7 @@ name: Deploy Spring (② EC2)
 
 on:
   push:
-    branches: [deploy]
+    branches: [main]            # develop→main 머지(=릴리스) 시 배포
     paths:
       - 'src/**'
       - 'build.gradle'
