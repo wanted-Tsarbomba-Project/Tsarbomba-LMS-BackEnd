@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -30,9 +31,14 @@ public class UserOperationMetricAdapter implements UserOperationMetricPort {
         long inactiveDays = inactiveDaysThreshold.longValue();
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime cutoff = now.minusDays(inactiveDays);
+        List<UserOperationQueryUseCase.UserOperationView> students = userOperationQueryUseCase.findStudents();
+        List<Long> userIds = students.stream()
+                .map(UserOperationQueryUseCase.UserOperationView::userId)
+                .toList();
+        Map<Long, LocalDateTime> latestLoginAtByUserId = loginActivityQueryUseCase.findLatestLoginAtByUserIds(userIds);
 
-        return userOperationQueryUseCase.findStudents().stream()
-                .map(student -> toMetric(student, now))
+        return students.stream()
+                .map(student -> toMetric(student, now, latestLoginAtByUserId))
                 .filter(metric -> !metric.lastActivityAt().isAfter(cutoff))
                 .map(metric -> toResult(metric, inactiveDaysThreshold))
                 .toList();
@@ -40,10 +46,10 @@ public class UserOperationMetricAdapter implements UserOperationMetricPort {
 
     private UserInactiveMetric toMetric(
             UserOperationQueryUseCase.UserOperationView student,
-            LocalDateTime now
+            LocalDateTime now,
+            Map<Long, LocalDateTime> latestLoginAtByUserId
     ) {
-        LocalDateTime lastActivityAt = loginActivityQueryUseCase.findLatestLoginAt(student.userId())
-                .orElse(student.createdAt());
+        LocalDateTime lastActivityAt = latestLoginAtByUserId.getOrDefault(student.userId(), student.createdAt());
         long inactiveDays = ChronoUnit.DAYS.between(lastActivityAt, now);
 
         return new UserInactiveMetric(

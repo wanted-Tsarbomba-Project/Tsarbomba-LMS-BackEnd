@@ -33,12 +33,9 @@ public class AdminPermissionInterceptor implements HandlerInterceptor {
             new AdminPermissionRule("GET", "^/api/v1/users/[0-9]+/enrollments$", AdminPermissionType.USER_MANAGEMENT),
             new AdminPermissionRule("GET", "^/api/v1/admin/students/[0-9]+/problems$", AdminPermissionType.USER_MANAGEMENT),
             new AdminPermissionRule("PATCH", "^/api/v1/users/[0-9]+/lock$", AdminPermissionType.USER_MANAGEMENT),
-            new AdminPermissionRule("GET", "^/api/v1/admin/operation-alerts$", AdminPermissionType.RULE_MANAGEMENT),
-            new AdminPermissionRule("GET", "^/api/v1/admin/operation-alerts/[0-9]+$", AdminPermissionType.RULE_MANAGEMENT),
             new AdminPermissionRule("PATCH", "^/api/v1/admin/operation-alerts/[0-9]+/memo$", AdminPermissionType.RULE_MANAGEMENT),
             new AdminPermissionRule("PATCH", "^/api/v1/admin/operation-alerts/[0-9]+/status$", AdminPermissionType.RULE_MANAGEMENT),
             new AdminPermissionRule("DELETE", "^/api/v1/admin/operation-alerts/[0-9]+$", AdminPermissionType.RULE_MANAGEMENT),
-            new AdminPermissionRule("GET", "^/api/v1/admin/automation-rules$", AdminPermissionType.RULE_MANAGEMENT),
             new AdminPermissionRule("PATCH", "^/api/v1/admin/automation-rules$", AdminPermissionType.RULE_MANAGEMENT),
             new AdminPermissionRule("PATCH", "^/api/v1/admin/automation-rules/[0-9]+/enabled$", AdminPermissionType.RULE_MANAGEMENT)
     );
