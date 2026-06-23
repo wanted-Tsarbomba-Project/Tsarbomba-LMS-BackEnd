@@ -1,0 +1,58 @@
+# ③ 모니터링 EC2 전용 스택 — prometheus + loki + grafana + redis
+# 실행: docker compose --env-file .env up -d
+# (로컬 부하테스트용 스택은 ../monitoring-local/docker-compose.yml)
+services:
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: lms-prometheus
+    ports:
+      - "9090:9090"                         # SG: 내 IP만 허용
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver   # k6 메트릭 remote-write 수신
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: lms-loki
+    ports:
+      - "3100:3100"                         # SG: ②④(사설망)만 허용
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: lms-grafana
+    ports:
+      - "3000:3000"                         # SG: 내 IP만 허용
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false       # 아무나 회원가입 차단 (3000 공개라 필수)
+      - GF_AUTH_ANONYMOUS_ENABLED=false    # 익명 접근 차단 (기본값이나 명시)
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    depends_on: [prometheus, loki]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "6379:6379"                         # SG: ②만 허용 (OTP 전용)
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  loki-data:
+  redis-data:

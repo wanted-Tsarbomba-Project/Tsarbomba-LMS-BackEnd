@@ -1,0 +1,23 @@
+# 빌드 컨텍스트 최소화 + 비밀/불필요 파일 이미지 유입 차단
+.git
+.github
+.gradle
+build
+.idea
+*.iml
+
+# 비밀값(절대 이미지에 넣지 않음)
+**/application-local.yml
+*.env
+.env*
+secrets/
+src/main/resources/gcs/
+
+# 배포/모니터링/문서 — 이미지에 불필요
+deploy/
+monitoring-local/
+monitoring-deploy/
+docs/
+.ai/
+forme/
+*.md
