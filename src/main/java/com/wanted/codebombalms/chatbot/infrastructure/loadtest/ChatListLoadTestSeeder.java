@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@Profile("loadtest")
+@Profile("loadtest & !loadtest-admin")
 @RequiredArgsConstructor
 public class ChatListLoadTestSeeder implements ApplicationRunner {
 
