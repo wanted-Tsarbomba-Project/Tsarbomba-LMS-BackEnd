@@ -22,7 +22,9 @@ import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgress
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
 import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -45,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("Learning application service unit test")
 class LearningServiceTest {
 
@@ -82,6 +87,32 @@ class LearningServiceTest {
     void setUp() {
         lenient().when(learningLecturePort.findCourseIdByLecture(anyLong())).thenReturn(1L);
         lenient().when(learningEnrollmentPort.isActiveStudentOfCourse(anyLong(), anyLong())).thenReturn(true);
+        lenient().when(learningUserPort.findUserNames(any())).thenAnswer(invocation -> {
+            List<Long> userIds = invocation.getArgument(0);
+            Map<Long, String> userNames = new HashMap<>();
+            for (Long userId : userIds) {
+                userNames.put(userId, "학생");
+            }
+            return userNames;
+        });
+        lenient().when(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(any(), any()))
+                .thenAnswer(invocation -> {
+                    List<Long> userIds = invocation.getArgument(0);
+                    Map<Long, Long> counts = new HashMap<>();
+                    for (Long userId : userIds) {
+                        counts.put(userId, 1L);
+                    }
+                    return counts;
+                });
+        lenient().when(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(any(), any()))
+                .thenAnswer(invocation -> {
+                    List<Long> userIds = invocation.getArgument(0);
+                    Map<Long, Long> counts = new HashMap<>();
+                    for (Long userId : userIds) {
+                        counts.put(userId, 2L);
+                    }
+                    return counts;
+                });
     }
 
     @Test
@@ -494,18 +525,15 @@ class LearningServiceTest {
                 .willReturn(List.of(firstUserId, secondUserId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(firstUserId)).willReturn("student1");
-        given(learningUserPort.findUserName(secondUserId)).willReturn("student2");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(firstUserId, lectureIds)).willReturn(1L);
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(secondUserId, lectureIds)).willReturn(2L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                firstUserId,
+        List<Long> userIds = List.of(firstUserId, secondUserId);
+        given(learningUserPort.findUserNames(userIds))
+                .willReturn(Map.of(firstUserId, "student1", secondUserId, "student2"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds))
+                .willReturn(Map.of(firstUserId, 1L, secondUserId, 2L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
                 lectureProblemSetIds
-        )).willReturn(2L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                secondUserId,
-                lectureProblemSetIds
-        )).willReturn(3L);
+        )).willReturn(Map.of(firstUserId, 2L, secondUserId, 3L));
 
         List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
 
@@ -527,12 +555,13 @@ class LearningServiceTest {
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(userId)).willReturn("?숈깮");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                userId,
+        given(learningUserPort.findUserNames(List.of(userId))).willReturn(Map.of(userId, "?숈깮"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(List.of(userId), lectureIds))
+                .willReturn(Map.of(userId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                List.of(userId),
                 lectureProblemSetIds
-        )).willReturn(2L);
+        )).willReturn(Map.of(userId, 2L));
 
         CourseLearningProgress result = adminLearningProgressQueryService.findCourseProgress(courseId);
 

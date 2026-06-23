@@ -17,6 +17,7 @@ import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgress
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import lombok.RequiredArgsConstructor;
@@ -71,6 +72,9 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
 
         List<Long> lectureIds = List.of();
         List<Long> lectureProblemSetIds = List.of();
+        Map<Long, String> userNames = Map.of();
+        Map<Long, Long> completedLectureCounts = Map.of();
+        Map<Long, Long> completedProblemCounts = Map.of();
         if (!studentIds.isEmpty()) {
             long lectureIdsStartedAt = System.nanoTime();
             lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
@@ -79,10 +83,35 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
             long problemSetIdsStartedAt = System.nanoTime();
             lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
             timing.recordProblemSetIds(System.nanoTime() - problemSetIdsStartedAt, lectureProblemSetIds.size());
+
+            long userNameStartedAt = System.nanoTime();
+            userNames = learningUserPort.findUserNames(studentIds);
+            timing.recordUserName(System.nanoTime() - userNameStartedAt);
+
+            long completedLectureCountStartedAt = System.nanoTime();
+            completedLectureCounts = lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
+                    studentIds,
+                    lectureIds
+            );
+            timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+
+            long completedProblemCountStartedAt = System.nanoTime();
+            completedProblemCounts = lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                    studentIds,
+                    lectureProblemSetIds
+            );
+            timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
         }
 
         for (Long studentId : studentIds) {
-            progresses.add(buildStudentProgress(studentId, lectureIds, lectureProblemSetIds, timing));
+            progresses.add(buildStudentProgress(
+                    studentId,
+                    userNames,
+                    completedLectureCounts,
+                    lectureIds.size(),
+                    completedProblemCounts,
+                    lectureProblemSetIds.size()
+            ));
         }
         long progressBuildElapsedNanos = System.nanoTime() - progressBuildStartedAt;
 
@@ -179,6 +208,29 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
                 studentProgresses.stream().mapToLong(StudentLearningProgress::completedProblemCount).sum(),
                 studentProgresses.stream().mapToLong(StudentLearningProgress::totalProblemCount).sum()
         );
+    }
+
+    private StudentLearningProgress buildStudentProgress(
+            Long studentId,
+            Map<Long, String> userNames,
+            Map<Long, Long> completedLectureCounts,
+            int totalLectureCount,
+            Map<Long, Long> completedProblemCounts,
+            int totalProblemCount
+    ) {
+        long itemStartedAt = System.nanoTime();
+
+        StudentLearningProgress progress = StudentLearningProgress.of(
+                studentId,
+                userNames.getOrDefault(studentId, "사용자없음"),
+                completedLectureCounts.getOrDefault(studentId, 0L),
+                totalLectureCount,
+                completedProblemCounts.getOrDefault(studentId, 0L),
+                totalProblemCount
+        );
+
+        learningMetrics.recordStudentProgressItem(System.nanoTime() - itemStartedAt);
+        return progress;
     }
 
     private StudentLearningProgress buildStudentProgress(

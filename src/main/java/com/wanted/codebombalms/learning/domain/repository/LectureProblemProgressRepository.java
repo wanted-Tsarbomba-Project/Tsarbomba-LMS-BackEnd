@@ -2,6 +2,7 @@ package com.wanted.codebombalms.learning.domain.repository;
 
 import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface LectureProblemProgressRepository {
@@ -16,6 +17,11 @@ public interface LectureProblemProgressRepository {
     );
 
     long countCompletedByUserIdAndLectureProblemSetIds(Long userId, List<Long> lectureProblemSetIds);
+
+    Map<Long, Long> countCompletedByUserIdsAndLectureProblemSetIds(
+            List<Long> userIds,
+            List<Long> lectureProblemSetIds
+    );
 
     long countCompletedByLectureProblemSetIds(List<Long> lectureProblemSetIds);
 }
