@@ -45,10 +45,37 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         LearningLectureProblemSet lectureProblemSet =
                 learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
         learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
+
+        return buildLectureProblemSetEntry(userId, lectureProblemSet, true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LectureProblemSetEntryView findStudentLectureProblemSet(
+            Long courseId,
+            Long userId,
+            Long lectureProblemSetId
+    ) {
+        LearningLectureProblemSet lectureProblemSet =
+                learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateStudentLectureProblemSetAccess(courseId, userId, lectureProblemSet);
+
+        return buildLectureProblemSetEntry(userId, lectureProblemSet, false);
+    }
+
+    private LectureProblemSetEntryView buildLectureProblemSetEntry(
+            Long userId,
+            LearningLectureProblemSet lectureProblemSet,
+            boolean createProgressIfAbsent
+    ) {
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
-        LectureProblemProgress progress = findOrCreateProgress(userId, lectureProblemSetId);
+        LectureProblemProgress progress = findProgress(
+                userId,
+                lectureProblemSet.lectureProblemSetId(),
+                createProgressIfAbsent
+        );
         Map<Long, LectureProblemSubmission> latestSubmissions =
-                findLatestSubmissions(userId, lectureProblemSetId);
+                findLatestSubmissions(userId, lectureProblemSet.lectureProblemSetId());
         List<ProblemDetailView> problems = problemSet.problems()
                 .stream()
                 .map(problem -> new ProblemDetailView(
@@ -203,11 +230,24 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     }
 
     private LectureProblemProgress findOrCreateProgress(Long userId, Long lectureProblemSetId) {
+        return findProgress(userId, lectureProblemSetId, true);
+    }
+
+    private LectureProblemProgress findProgress(
+            Long userId,
+            Long lectureProblemSetId,
+            boolean createProgressIfAbsent
+    ) {
         return lectureProblemProgressRepository
                 .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId)
-                .orElseGet(() -> lectureProblemProgressCommandUseCase.recordProgress(
-                        new RecordLectureProblemProgressCommand(userId, lectureProblemSetId, 1, false)
-                ));
+                .orElseGet(() -> {
+                    if (createProgressIfAbsent) {
+                        return lectureProblemProgressCommandUseCase.recordProgress(
+                                new RecordLectureProblemProgressCommand(userId, lectureProblemSetId, 1, false)
+                        );
+                    }
+                    return LectureProblemProgress.create(userId, lectureProblemSetId);
+                });
     }
 
     private LectureProblemProgress lockProgress(Long userId, Long lectureProblemSetId) {

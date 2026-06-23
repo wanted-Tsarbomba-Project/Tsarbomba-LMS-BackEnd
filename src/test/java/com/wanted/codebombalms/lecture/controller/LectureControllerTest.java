@@ -5,6 +5,7 @@ import com.wanted.codebombalms.admin.permission.application.service.AdminPermiss
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
+import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
@@ -37,6 +38,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -59,6 +61,9 @@ class LectureControllerTest {
 
     @MockitoBean
     private LectureQueryUseCase lectureQueryUseCase;
+
+    @MockitoBean
+    private FinalProblemSetRecommendationUseCase finalProblemSetRecommendationUseCase;
 
     @MockitoBean
     private LectureMaterialUseCase lectureMaterialUseCase;
@@ -105,6 +110,7 @@ class LectureControllerTest {
                 "description",
                 "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "java-1.png",
+                3001L,
                 1,
                 LectureStatus.ACTIVE
         );
@@ -130,6 +136,7 @@ class LectureControllerTest {
                 "updated",
                 "https://youtu.be/dQw4w9WgXcQ",
                 "updated.png",
+                3001L,
                 2,
                 LectureStatus.INACTIVE
         );
@@ -145,6 +152,70 @@ class LectureControllerTest {
                 .andExpect(jsonPath("$.code").value(LectureResponseCode.UPDATED))
                 .andExpect(jsonPath("$.message").value(LectureResponseMessage.UPDATED))
                 .andExpect(jsonPath("$.data.title").value("Updated Java"));
+    }
+
+    @Test
+    void findFinalProblemSetCandidates_returnsApiResponse() throws Exception {
+        Long lectureId = 1L;
+        given(finalProblemSetRecommendationUseCase.findFinalProblemSetCandidates(eq(lectureId), isNull(), eq(false)))
+                .willReturn(List.of(new FinalProblemSetRecommendationUseCase.FinalProblemSetCandidateView(
+                        3002L,
+                        1,
+                        "DataFrame filter",
+                        "description",
+                        "MEDIUM",
+                        72.5,
+                        LocalDateTime.now()
+                )));
+
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/final-problem-set-candidates", lectureId)
+                        .with(authentication(studentUser(20L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.FINAL_PROBLEM_SET_CANDIDATES_RETRIEVED))
+                .andExpect(jsonPath("$.data[0].problemSetId").value(3002L))
+                .andExpect(jsonPath("$.data[0].entryPath").value("/api/v1/problem-sets/3002"));
+    }
+
+    @Test
+    void createLecture_returnsBadRequest_whenProblemCategoryIdIsNotPositive() throws Exception {
+        LectureCreateRequest request = new LectureCreateRequest(
+                "Java 1",
+                "description",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "java-1.png",
+                0L,
+                1,
+                LectureStatus.ACTIVE
+        );
+
+        mockMvc.perform(post("/api/v1/courses/{courseId}/lectures", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).createLecture(any(CreateLectureCommand.class));
+    }
+
+    @Test
+    void updateLecture_returnsBadRequest_whenProblemCategoryIdIsNotPositive() throws Exception {
+        LectureUpdateRequest request = new LectureUpdateRequest(
+                "Updated Java",
+                "updated",
+                "https://youtu.be/dQw4w9WgXcQ",
+                "updated.png",
+                -1L,
+                2,
+                LectureStatus.INACTIVE
+        );
+
+        mockMvc.perform(put("/api/v1/lectures/{lectureId}", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).updateLecture(any(UpdateLectureCommand.class));
     }
 
     @Test
