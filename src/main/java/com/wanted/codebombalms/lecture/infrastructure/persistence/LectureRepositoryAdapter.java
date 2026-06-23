@@ -70,7 +70,7 @@ public class LectureRepositoryAdapter implements LectureRepository {
     @Override
     public List<Long> findPreviousLectureIds(Long courseId, Integer lectureOrder) {
         if (lectureOrder == null) {
-            return List.of();
+            throw new IllegalArgumentException("lectureOrder must not be null");
         }
         return springDataLectureRepository.findPreviousLectureIds(courseId, lectureOrder);
     }

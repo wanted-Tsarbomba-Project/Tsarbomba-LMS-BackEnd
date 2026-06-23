@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class LectureAccessPolicyTest {
@@ -85,7 +86,7 @@ class LectureAccessPolicyTest {
     void validatePreviousLecturesCompleted_allowsFirstLecture() {
         lectureAccessPolicy.validatePreviousLecturesCompleted(10L, List.of());
 
-        verify(lectureProgressPort, never()).areLecturesCompleted(10L, List.of());
+        verifyNoInteractions(lectureProgressPort);
     }
 
     @Test

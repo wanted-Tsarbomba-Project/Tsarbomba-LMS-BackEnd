@@ -98,6 +98,24 @@ class FinalProblemSetRecommendationServiceTest {
     }
 
     @Test
+    void findFinalProblemSetCandidates_checksPreviousAndCurrentLecturesCompleted() {
+        Lecture lecture = lecture(10L, 1L, 3001L, 3);
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(10L)).willReturn(Optional.of(lecture));
+        given(lectureRepository.existsNextLecture(1L, 3)).willReturn(false);
+        given(lectureRepository.findPreviousLectureIds(1L, 3)).willReturn(List.of(8L, 9L));
+        given(lectureProgressPort.areLecturesCompleted(20L, List.of(8L, 9L, 10L))).willReturn(true);
+        given(lectureProblemSetRepository.findByCourseIdAndRole(1L, LectureProblemSetRole.MAIN))
+                .willReturn(List.of());
+        given(finalProblemSetCandidatePort.findCandidates(eq(3001L), anySet(), eq(2)))
+                .willReturn(List.of(problemSet(4003L)));
+
+        var result = service.findFinalProblemSetCandidates(10L, 20L, false);
+
+        assertEquals(1, result.size());
+        verify(lectureProgressPort).areLecturesCompleted(20L, List.of(8L, 9L, 10L));
+    }
+
+    @Test
     void findFinalProblemSetCandidates_throwsForbidden_whenLectureIsNotLastLecture() {
         Lecture lecture = lecture(10L, 1L, 3001L);
         given(lectureRepository.findByLectureIdAndDeletedAtIsNull(10L)).willReturn(Optional.of(lecture));
@@ -173,6 +191,10 @@ class FinalProblemSetRecommendationServiceTest {
     }
 
     private Lecture lecture(Long lectureId, Long courseId, Long problemCategoryId) {
+        return lecture(lectureId, courseId, problemCategoryId, 1);
+    }
+
+    private Lecture lecture(Long lectureId, Long courseId, Long problemCategoryId, Integer lectureOrder) {
         Course course = new Course();
         course.setCourseId(courseId);
 
@@ -188,7 +210,7 @@ class FinalProblemSetRecommendationServiceTest {
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 null,
-                1
+                lectureOrder
         );
     }
 

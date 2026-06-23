@@ -16,7 +16,10 @@ import java.time.LocalDateTime;
 @ToString
 @Table(
         name = "lecture",
-        indexes = @Index(name = "idx_lecture_course_id", columnList = "course_id")
+        indexes = {
+                @Index(name = "idx_lecture_course_id", columnList = "course_id"),
+                @Index(name = "idx_lecture_course_deleted_order", columnList = "course_id, deleted_at, lecture_order")
+        }
 )
 public class LectureJpaEntity {
 
