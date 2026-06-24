@@ -26,6 +26,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     private static final int USER_COUNT = 300;
     private static final int POINT_HISTORY_PER_USER = 20;
     private static final int BADGE_COUNT = 20;
+    private static final int RANKING_BADGE_EQUIPPED_USER_COUNT = USER_COUNT;
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
@@ -38,28 +39,30 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
                 Long.class
         );
 
+        long startNanos = System.nanoTime();
+        Long loginUserId = findOrCreateLoginUser();
+
         if (alreadySeeded != null && alreadySeeded >= USER_COUNT) {
             log.info(
                     "event=ranking_badge_loadtest_seed_skipped reason=already_seeded userPointCount={}",
                     alreadySeeded
             );
-            return;
+        } else {
+            seedRankingUsers();
+            seedUserPoints(loginUserId);
+            seedPointHistories(loginUserId);
         }
 
-        long startNanos = System.nanoTime();
-
-        Long loginUserId = findOrCreateLoginUser();
-        seedRankingUsers();
-        seedUserPoints(loginUserId);
-        seedPointHistories(loginUserId);
         seedBadges();
+        seedRankingUserBadges();
         seedLoginUserBadges(loginUserId);
 
         log.info(
-                "event=ranking_badge_loadtest_seed_completed users={} historiesPerUser={} badges={} durationMs={}",
+                "event=ranking_badge_loadtest_seed_completed users={} historiesPerUser={} badges={} equippedRankingUsers={} durationMs={}",
                 USER_COUNT,
                 POINT_HISTORY_PER_USER,
                 BADGE_COUNT,
+                RANKING_BADGE_EQUIPPED_USER_COUNT,
                 elapsedMillis(startNanos)
         );
     }
@@ -236,11 +239,18 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedLoginUserBadges(Long loginUserId) {
+        jdbc.update("""
+        update user_badge
+           set is_equipped = false
+         where user_id = ?
+        """, loginUserId);
         jdbc.batchUpdate("""
-                insert ignore into user_badge
+                insert into user_badge
                   (user_id, badge_id, earned_at, is_equipped)
                 values
                   (?, ?, now(6), ?)
+                on duplicate key update
+                  is_equipped = values(is_equipped)
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -252,6 +262,37 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
             @Override
             public int getBatchSize() {
                 return BADGE_COUNT;
+            }
+        });
+    }
+
+    private void seedRankingUserBadges() {
+        jdbc.update("""
+                update user_badge
+                   set is_equipped = false
+                 where user_id between 700001 and ?
+                """, 700000L + RANKING_BADGE_EQUIPPED_USER_COUNT);
+
+        jdbc.batchUpdate("""
+                insert into user_badge
+                  (user_id, badge_id, earned_at, is_equipped)
+                values
+                  (?, ?, now(6), true)
+                on duplicate key update
+                  is_equipped = true
+                """, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                long userId = 700001L + i;
+                long badgeId = 800001L + (i % BADGE_COUNT);
+
+                ps.setLong(1, userId);
+                ps.setLong(2, badgeId);
+            }
+
+            @Override
+            public int getBatchSize() {
+                return RANKING_BADGE_EQUIPPED_USER_COUNT;
             }
         });
     }
