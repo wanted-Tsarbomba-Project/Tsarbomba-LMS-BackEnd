@@ -1,0 +1,35 @@
+name: Deploy Monitoring (③ EC2)
+
+on:
+  push:
+    branches: [deploy]
+    paths: ['monitoring-deploy/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: ③ EC2로 파일 복사
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.MON_EC2_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "monitoring-deploy/**"
+          target: "/opt/monitoring"
+          strip_components: 1          # 'monitoring-deploy/' 제거하고 전송
+
+      - name: ③ EC2에서 compose 기동
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.MON_EC2_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /opt/monitoring
+            docker compose --env-file .env pull
+            docker compose --env-file .env up -d

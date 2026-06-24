@@ -5,6 +5,7 @@ public record RankingItem(
         Long userId,
         String name,
         String nickname,
+        String badgeObjectName,
         String badgeImageUrl,
         Integer weeklyPoint,
         Integer totalPoint

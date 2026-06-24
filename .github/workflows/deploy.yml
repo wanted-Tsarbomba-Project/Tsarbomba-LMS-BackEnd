@@ -1,0 +1,95 @@
+name: Deploy Spring (② EC2)
+
+on:
+  push:
+    branches: [main]            # develop→main 머지(=릴리스) 시 배포
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'Dockerfile'
+      - 'deploy/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+# 동시 배포 방지 (연속 push/중복 dispatch 시 race condition 차단)
+concurrency:
+  group: deploy-spring-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read              # 최소 권한 (배포는 읽기만 필요)
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false   # 이후 스텝에 토큰 잔존 방지
+
+      - name: AWS 자격증명 (codebomb-ci)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: ECR 로그인
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 이미지 빌드 & ECR 푸시
+        # Dockerfile 멀티스테이지가 gradle bootJar 수행 → 러너에서 빌드 중복 안 함
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          REPO: codebomb-spring
+          TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          docker build -t "$REGISTRY/$REPO:$TAG" -t "$REGISTRY/$REPO:latest" .
+          docker push "$REGISTRY/$REPO:$TAG"
+          docker push "$REGISTRY/$REPO:latest"
+
+      - name: ② EC2로 배포파일 복사
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SPRING_EC2_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "deploy/**"
+          target: "/opt/spring"
+          strip_components: 1          # 'deploy/' 제거하고 전송 (.env/secrets는 EC2 기존 파일 유지)
+
+      - name: ② EC2에서 pull & 기동
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+        with:
+          host: ${{ secrets.SPRING_EC2_HOST }}
+          username: ${{ secrets.EC2_SSH_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: ECR_REGISTRY
+          script: |
+            set -e
+            aws ecr get-login-password --region ap-northeast-2 \
+              | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            cd /opt/spring
+            export ECR_REGISTRY="$ECR_REGISTRY"
+            docker compose pull
+            docker compose up -d
+            # 헬스 체크: /actuator/health 200 (DB·Redis 연결까지 확인하려 -f로 엄격하게)
+            echo "헬스 체크: localhost:8080/actuator/health 대기..."
+            for i in $(seq 1 40); do
+              if curl -fs -o /dev/null http://localhost:8080/actuator/health; then
+                echo "OK: health UP"
+                break
+              fi
+              if [ "$i" -eq 40 ]; then
+                echo "FAIL: 40회(약 200초) 후에도 비정상"
+                docker compose logs --tail 80 spring
+                exit 1
+              fi
+              sleep 5
+            done
+            docker image prune -f
