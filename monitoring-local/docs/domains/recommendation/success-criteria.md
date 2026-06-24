@@ -7,10 +7,10 @@
 
 | 가설 | 대상 | 측정 방식 | 산출물 |
 |------|------|-----------|--------|
-| #1 추천 목록 조인/인덱스 | `GET /api/v1/recommendations/problem-sets/me` | k6 목록 단독 baseline | `monitoring/k6/scripts/recommendation/01-list-baseline.js` |
-| #2 Python FastAPI 호출 | `ProblemRecommendationGenerationService.generate()` | loadtest trigger API로 배치 본체 실행 | `monitoring/k6/scripts/recommendation/03-generation-baseline.js`, `recommendation_generation_external_duration`, `recommendation_generation_batch_duration` |
+| #1 추천 목록 조인/인덱스 | `GET /api/v1/recommendations/problem-sets/me` | k6 목록 단독 baseline | `monitoring-local/k6/scripts/recommendation/01-list-baseline.js` |
+| #2 Python FastAPI 호출 | `ProblemRecommendationGenerationService.generate()` | loadtest trigger API로 배치 본체 실행 | `monitoring-local/k6/scripts/recommendation/03-generation-baseline.js`, `recommendation_generation_external_duration`, `recommendation_generation_batch_duration` |
 | #3 추천 교체 저장 반복 | `ProblemRecommendationCommandAdapter.replaceActiveRecommendations()` | loadtest trigger API 실행 중 save timer 관찰 | `recommendation_generation_save_duration{status=...}` |
-| #4 hide today upsert | `POST /api/v1/recommendations/problem-sets/hide-today` | k6 hide 단독 baseline | `monitoring/k6/scripts/recommendation/02-hide-today-baseline.js` |
+| #4 hide today upsert | `POST /api/v1/recommendations/problem-sets/hide-today` | k6 hide 단독 baseline | `monitoring-local/k6/scripts/recommendation/02-hide-today-baseline.js` |
 
 ---
 

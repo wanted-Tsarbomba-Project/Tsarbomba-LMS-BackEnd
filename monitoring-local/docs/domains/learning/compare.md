@@ -1,6 +1,6 @@
 # Learning 도메인 before/after 비교 (Phase 1 / 7단계 중 6~7단계)
 
-> 아직 baseline 측정 전이다. k6 실행 후 `monitoring/k6/results/*-summary.md` 값과 Grafana/Prometheus/Loki 관측 결과를 이 문서에 채운다.
+> 아직 baseline 측정 전이다. k6 실행 후 `monitoring-local/k6/results/*-summary.md` 값과 Grafana/Prometheus/Loki 관측 결과를 이 문서에 채운다.
 
 ---
 
@@ -10,7 +10,7 @@
 |------|------|
 | 대상 API | `GET /api/v1/courses/{courseId}/users/learning-progress` |
 | 병목 가설 | 수강생별 반복 조회로 인한 DB query 증가 |
-| k6 스크립트 | `monitoring/k6/scripts/learning/01-student-progress-baseline.js` 예정 |
+| k6 스크립트 | `monitoring-local/k6/scripts/learning/01-student-progress-baseline.js` 예정 |
 | baseline 결과 | 측정 전 |
 | 개선 후 결과 | 측정 전 |
 

@@ -6,16 +6,16 @@ import { login, authCookies } from "../../lib/auth.js";
 import { createSummaryHandler } from "../../lib/summary.js";
 
 const PAGE = __ENV.RANKING_PAGE || "0";
-const SIZE = __ENV.RANKING_SIZE || "100";
+const SIZE = __ENV.RANKING_SIZE || "20";
 
 const TOTAL_RANKING_API = "GET /rankings/points";
 const WEEKLY_RANKING_API = "GET /rankings/points/weekly";
+const MY_RANKING_API = "GET /rankings/points/me";
 
-const rankingBadgeResponseValidRate = new Rate("ranking_badge_response_valid_rate");
-const rankingBadgeImageUrlPresentRate = new Rate("ranking_badge_image_url_present_rate");
-const rankingBadgeImageUrlCount = new Trend("ranking_badge_image_url_count");
-const rankingBadgeResultCount = new Trend("ranking_badge_result_count");
-const rankingBadgeDistinctImageUrlCount = new Trend("ranking_badge_distinct_image_url_count");
+const rankingResponseValidRate = new Rate("ranking_response_valid_rate");
+const rankingResultCount = new Trend("ranking_result_count");
+const rankingMyRank = new Trend("ranking_my_rank");
+const rankingTotalPoint = new Trend("ranking_total_point");
 
 export const options = {
     stages: [
@@ -25,10 +25,10 @@ export const options = {
     ],
     thresholds: {
         http_req_failed: ["rate<0.01"],
-        "http_req_duration{type:ranking_total_badge_image}": ["p(95)<1000", "p(99)<2500"],
-        "http_req_duration{type:ranking_weekly_badge_image}": ["p(95)<1200", "p(99)<3000"],
-        ranking_badge_response_valid_rate: ["rate>0.99"],
-        ranking_badge_image_url_present_rate: ["rate>0.90"],
+        "http_req_duration{type:ranking_total}": ["p(95)<800", "p(99)<2000"],
+        "http_req_duration{type:ranking_weekly}": ["p(95)<1000", "p(99)<2500"],
+        "http_req_duration{type:ranking_me}": ["p(95)<800", "p(99)<2000"],
+        ranking_response_valid_rate: ["rate>0.99"],
     },
     summaryTrendStats: ["avg", "min", "med", "p(90)", "p(95)", "p(99)", "max"],
 };
@@ -40,7 +40,7 @@ export function setup() {
 function requestRankingList(token, path, type, apiName) {
     const params = authCookies(token);
     params.tags = {
-        type,
+        type: type,
         api: apiName,
     };
 
@@ -55,27 +55,43 @@ function requestRankingList(token, path, type, apiName) {
     }
 
     const valid = res.status === 200 && Array.isArray(rankings);
-    rankingBadgeResponseValidRate.add(valid, { api: apiName });
+    rankingResponseValidRate.add(valid, { api: apiName });
 
     if (valid) {
-        const imageUrls = rankings
-            .map((ranking) => ranking.badgeImageUrl)
-            .filter((url) => typeof url === "string" && url.length > 0);
-
-        rankingBadgeResultCount.add(rankings.length, { api: apiName });
-        rankingBadgeImageUrlCount.add(imageUrls.length, { api: apiName });
-        rankingBadgeDistinctImageUrlCount.add(new Set(imageUrls).size, { api: apiName });
-        rankingBadgeImageUrlPresentRate.add(
-            rankings.length > 0 && imageUrls.length / rankings.length >= 0.9,
-            { api: apiName }
-        );
+        rankingResultCount.add(rankings.length, { api: apiName });
     }
 
     check(res, {
         [`${apiName} status is 200`]: (r) => r.status === 200,
         [`${apiName} has rankings array`]: () => Array.isArray(rankings),
-        [`${apiName} has badge image urls`]: () =>
-            rankings.some((ranking) => ranking.badgeImageUrl),
+    });
+}
+
+function requestMyRanking(token) {
+    const params = authCookies(token);
+    params.tags = {
+        type: "ranking_me",
+        api: MY_RANKING_API,
+    };
+
+    const res = http.get(`${BASE_URL}/api/v1/rankings/points/me`, params);
+
+    let data = {};
+    if (res.status === 200) {
+        data = res.json("data") || {};
+    }
+
+    const valid = res.status === 200 && data.rank !== undefined;
+    rankingResponseValidRate.add(valid, { api: MY_RANKING_API });
+
+    if (valid) {
+        rankingMyRank.add(Number(data.rank), { api: MY_RANKING_API });
+        rankingTotalPoint.add(Number(data.totalPoint || 0), { api: MY_RANKING_API });
+    }
+
+    check(res, {
+        "my ranking status is 200": (r) => r.status === 200,
+        "my ranking has rank": () => data.rank !== undefined,
     });
 }
 
@@ -83,18 +99,20 @@ export default function (data) {
     requestRankingList(
         data.token,
         "/api/v1/rankings/points",
-        "ranking_total_badge_image",
+        "ranking_total",
         TOTAL_RANKING_API
     );
 
     requestRankingList(
         data.token,
         "/api/v1/rankings/points/weekly",
-        "ranking_weekly_badge_image",
+        "ranking_weekly",
         WEEKLY_RANKING_API
     );
+
+    requestMyRanking(data.token);
 
     sleep(randomSleep());
 }
 
-export const handleSummary = createSummaryHandler("ranking-badge-image-url-baseline");
+export const handleSummary = createSummaryHandler("ranking-baseline");

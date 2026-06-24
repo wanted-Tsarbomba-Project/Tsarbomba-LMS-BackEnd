@@ -7,10 +7,10 @@
 
 | 가설 | 대상 | 측정 방식 | 산출물 |
 |------|------|-----------|--------|
-| #1 USER 규칙 N+1 | `OperationRuleExecutionService.run()` | loadtest trigger API로 스케줄러 본체 실행 | `monitoring/k6/scripts/admin/03-operation-rule-run-baseline.js`, `admin_operation_rule_detect_duration{ruleCode="USER_INACTIVE_NO_COURSE"}` |
+| #1 USER 규칙 N+1 | `OperationRuleExecutionService.run()` | loadtest trigger API로 스케줄러 본체 실행 | `monitoring-local/k6/scripts/admin/03-operation-rule-run-baseline.js`, `admin_operation_rule_detect_duration{ruleCode="USER_INACTIVE_NO_COURSE"}` |
 | #2 alert upsert 반복 비용 | `OperationRuleExecutionService.saveAlert()` | loadtest trigger API로 자동화 실행 후 탐지 결과 수와 upsert timer 관찰 | `admin_operation_alert_upsert_duration`, `admin_operation_rule_detected_total` |
-| #3 목록 query/정렬 | `GET /api/v1/admin/operation-alerts` | k6 목록 단독 baseline | `monitoring/k6/scripts/admin/01-alert-list-baseline.js` |
-| #4 상세 + target detail | `GET /api/v1/admin/operation-alerts/{operationAlertId}` | k6 상세 단독 baseline | `monitoring/k6/scripts/admin/02-alert-detail-baseline.js` |
+| #3 목록 query/정렬 | `GET /api/v1/admin/operation-alerts` | k6 목록 단독 baseline | `monitoring-local/k6/scripts/admin/01-alert-list-baseline.js` |
+| #4 상세 + target detail | `GET /api/v1/admin/operation-alerts/{operationAlertId}` | k6 상세 단독 baseline | `monitoring-local/k6/scripts/admin/02-alert-detail-baseline.js` |
 
 ---
 

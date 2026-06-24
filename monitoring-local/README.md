@@ -32,7 +32,7 @@ k6 ──부하──▶ Spring Boot 앱 (호스트, :8080)
 
 ### 스택 실행 / 종료
 
-| 명령어 (monitoring/ 에서) | 동작 | 데이터 |
+| 명령어 (monitoring-local/ 에서) | 동작 | 데이터 |
 |--------|------|--------|
 | `docker compose up -d` | 전체 시작 | - |
 | `docker compose down` | 전체 종료 ✅ **평소엔 이거** | 메트릭/로그/대시보드 **유지** — 다시 up 하면 그대로 |
@@ -102,7 +102,7 @@ docker compose run --rm -e RESULT_NAME=login-after-index k6 run -o experimental-
 
 | 증상 | 원인 / 해결 |
 |------|------------|
-| `no configuration file provided: not found` | `monitoring/` 폴더 밖에서 실행함 → `cd monitoring` 후 실행 (또는 루트에서 `docker compose -f monitoring/docker-compose.yml up -d`) |
+| `no configuration file provided: not found` | `monitoring-local/` 폴더 밖에서 실행함 → `cd monitoring-local` 후 실행 (또는 루트에서 `docker compose -f monitoring-local/docker-compose.yml up -d`) |
 | Grafana 포트 3000 충돌 (`address already in use`) | 로컬에 brew 등으로 설치한 grafana가 점유 중 → `brew services stop grafana prometheus` |
 | Prometheus 타겟 `lms-app` DOWN | 앱이 안 떠 있거나 Actuator 미설정 — 앱 실행 + `/actuator/prometheus` 200 확인 |
 | Grafana에 데이터소스 없음 | `grafana/provisioning/datasources/datasources.yml` 내용 확인 후 `docker compose restart grafana` |

@@ -4,7 +4,7 @@
 //   → recommendation_generation_batch_duration, recommendation_generation_external_duration,
 //      recommendation_generation_save_duration 과 함께 before/after 비교.
 //
-// 실행 (monitoring/ 에서):
+// 실행 (monitoring-local/ 에서):
 //   docker compose run --rm -e RESULT_NAME=recommendation-generation-before \
 //     -e SCALE_USERS=120 \
 //     -e LOGIN_EMAIL=admin@test.com -e LOGIN_PASSWORD=Test1234! \
