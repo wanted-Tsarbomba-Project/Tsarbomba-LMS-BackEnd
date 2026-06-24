@@ -74,8 +74,8 @@ docs/*
 !docs/CONVENTION.md
 !docs/README.md
 # 디렉터리부터 다시 포함해야 그 안의 파일 예외가 먹는다(부모가 ignore면 자식 재포함 불가)
-!docs/deploy/
-!docs/deploy/*
+!.ai/deploy/
+!.ai/deploy/*
 AGENTS.md
 CLAUDE.md
 .ai/
