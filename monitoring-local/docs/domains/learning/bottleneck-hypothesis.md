@@ -47,5 +47,5 @@ learning 도메인은 학생 학습 진행률 기록과 관리자 학습 현황 
 ## 다음 단계
 
 - 2단계: `metrics.md` 기준으로 커스텀 Timer와 `event=learning_... durationMs=` 로그 설계
-- 4단계: `monitoring/k6/scripts/learning/` 아래 baseline 스크립트 작성
+- 4단계: `monitoring-local/k6/scripts/learning/` 아래 baseline 스크립트 작성
 - 5단계: loadtest seed로 강좌 1개, 수강생 100~300명, 강의/문제세트/진행률 데이터 생성 후 baseline 측정

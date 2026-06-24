@@ -33,7 +33,7 @@
 2. `git pull` (develop 최신화)
 3. 모니터링 스택 켜기:
    ```bash
-   cd monitoring
+   cd monitoring-local
    docker compose up -d
    docker compose ps    # prometheus/grafana/loki/promtail/mysql 5개 Up 이면 OK
    ```
@@ -59,7 +59,7 @@
 
 - 내 도메인을 유형 분류: **조회/집계형**(인덱스·N+1) / **외부연동·스트리밍형**(외부지연·동시성) / **쓰기·트랜잭션형**(락·커넥션) / **단순 CRUD**(병목 거의 없음).
 - 의심 API와 이유를 표로. (단순 CRUD면 "병목 없음" 결론도 정당합니다 — 억지 최적화 금지)
-- 📄 산출물: `monitoring/docs/domains/<도메인>/bottleneck-hypothesis.md`
+- 📄 산출물: `monitoring-local/docs/domains/<도메인>/bottleneck-hypothesis.md`
 
 ### 2단계 — 메트릭/로그 심기
 **왜**: 자동 HTTP 메트릭은 "요청 전체 시간"만 압니다. **내부 어느 구간이 느린지**는 내가 직접 심어야 보입니다. → 상세: [`metrics-and-loki-guide.md`](metrics-and-loki-guide.md)
@@ -74,7 +74,7 @@
 - 예: "VU 50, 5분, 조회 API p95 < 500ms, 실패율 < 1%". (유형별 기준표는 컨벤션 참고)
 
 ### 4단계 — k6 시나리오 작성
-**왜**: 시나리오 = 운영 상황을 단순화한 모델. `monitoring/k6/scripts/<도메인>/` 에 작성.
+**왜**: 시나리오 = 운영 상황을 단순화한 모델. `monitoring-local/k6/scripts/<도메인>/` 에 작성.
 
 - `01-email-check.js` 또는 [`example-read-list.md`](example-read-list.md) 복제.
 - 인증 필요 API면 `lib/auth.js`의 `login()`을 `setup()`에서 호출.
@@ -89,7 +89,7 @@
   MSYS_NO_PATHCONV=1 docker compose run --rm -e RESULT_NAME=<도메인>-before \
     k6 run -o experimental-prometheus-rw /scripts/<도메인>/01-xxx.js
   ```
-- 📄 산출물: `monitoring/k6/results/<도메인>-before-summary.md`
+- 📄 산출물: `monitoring-local/k6/results/<도메인>-before-summary.md`
 
 ### 6단계 — 병목 분석 (★유형별)
 **왜**: k6 숫자만으로 원인을 확정하지 않습니다. **k6(p95) + Prometheus(내부 수치) + Loki(로그)** 를 교차해 좁힙니다.
@@ -109,12 +109,12 @@
 ## 내가 남길 산출물 (Definition of Done)
 
 ```
-monitoring/docs/domains/<도메인>/
+monitoring-local/docs/domains/<도메인>/
  ├─ bottleneck-hypothesis.md   # 1단계 가설표
  ├─ metrics.md                 # 2단계 심은 메트릭/로그
  └─ compare.md                 # 6·7단계 전후 비교 + 결론
-monitoring/k6/scripts/<도메인>/*.js    # 4단계 시나리오
-monitoring/k6/results/*-summary.md     # 5·7단계 결과(자동 저장)
+monitoring-local/k6/scripts/<도메인>/*.js    # 4단계 시나리오
+monitoring-local/k6/results/*-summary.md     # 5·7단계 결과(자동 저장)
 ```
 
 > 단순 CRUD형이면 compare 대신 "병목 없음, baseline이 기준 충족" 결론으로 갈음 가능.

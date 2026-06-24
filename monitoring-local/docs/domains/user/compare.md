@@ -1,7 +1,7 @@
 # User 도메인 — 인덱스 전후 비교 (7단계)
 
 > 프로세스 [`../../PROCESS.md`](../../PROCESS.md). 대상: `GET /api/v1/users` (학생 목록, Admin).
-> baseline → 인덱스 반영 → 재측정까지 **완주**. raw 결과: `monitoring/k6/results/user-student-list-{before,after}-summary.md`.
+> baseline → 인덱스 반영 → 재측정까지 **완주**. raw 결과: `monitoring-local/k6/results/user-student-list-{before,after}-summary.md`.
 
 ## 측정 조건 (before/after 동일)
 

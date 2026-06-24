@@ -1,0 +1,22 @@
+# =============================================================
+# 배포(deploy) BE 부하 발생기 — k6 단독
+#
+# 이 스택은 "쏘는 것(k6)"만 한다. 관측(Prometheus/Grafana/Loki)은
+# 배포 ③ 모니터링 박스(http://13.124.63.188:3000)가 이미 BE 8080 을
+# 스크랩 중이므로 여기서 띄우지 않는다. (중복 방지)
+#
+# 실행:  docker compose run --rm k6 run /scripts/<도메인>/<스크립트>.js
+#        (BASE_URL 기본 = 배포 BE. k6/lib/config.js 참조)
+# 결과:  터미널 요약 + monitoring-deploy/k6/results/<이름>-summary.md/json
+# 관측:  배포 ③ Grafana http://13.124.63.188:3000 (서버 CPU/힙/DB풀/p95)
+#
+# ⚠️ 배포 BE 는 실 RDS(codebomba)를 쓴다 → README 의 "안전" 절 반드시 읽을 것.
+# =============================================================
+services:
+  k6:
+    image: grafana/k6:0.52.0
+    container_name: lms-k6-deploy
+    volumes:
+      - ./k6/scripts:/scripts:ro
+      - ./k6/lib:/lib:ro
+      - ./k6/results:/results

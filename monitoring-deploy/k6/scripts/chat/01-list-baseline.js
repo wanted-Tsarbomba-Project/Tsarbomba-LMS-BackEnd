@@ -8,7 +8,7 @@
 //   - 그 계정이 "방을 많이" 가지고 있어야 N+1 이 드러난다(방 5개로는 안 보임).
 //     각 방은 problemSetId/problemId 가 채워져야 제목 fanout 2회가 실제로 발생.
 //
-// 실행 (monitoring-local/ 에서):
+// 실행 (monitoring/ 에서):
 //   docker compose run --rm -e RESULT_NAME=chat-list-before \
 //     k6 run -o experimental-prometheus-rw /scripts/chat/01-list-baseline.js
 

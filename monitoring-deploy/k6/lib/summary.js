@@ -4,7 +4,7 @@
 //   import { createSummaryHandler } from "../lib/summary.js";
 //   export const handleSummary = createSummaryHandler("00-smoke-check");
 //
-// 생성 파일 (호스트 기준 monitoring-local/k6/results/):
+// 생성 파일 (호스트 기준 monitoring/k6/results/):
 //   <name>-summary.md / <name>-summary.json
 //
 // 전/후 비교 시 파일명 변경:
@@ -137,8 +137,8 @@ function buildConsoleTable(data, name) {
         `  p99             : ${metricValue(data, "http_req_duration", "p(99)")}`,
         `  max             : ${metricValue(data, "http_req_duration", "max")}`,
         "------------------------------------------------------------",
-        `Markdown report  : monitoring-local/k6/results/${name}-summary.md`,
-        `JSON report      : monitoring-local/k6/results/${name}-summary.json`,
+        `Markdown report  : monitoring/k6/results/${name}-summary.md`,
+        `JSON report      : monitoring/k6/results/${name}-summary.json`,
         "",
     ].join("\n");
 }

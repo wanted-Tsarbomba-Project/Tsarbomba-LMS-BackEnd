@@ -4,7 +4,7 @@
 //   → admin_operation_rule_run_duration, admin_operation_rule_detect_duration,
 //      admin_operation_alert_upsert_duration 과 함께 before/after 비교.
 //
-// 실행 (monitoring/ 에서):
+// 실행 (monitoring-local/ 에서):
 //   docker compose run --rm -e RESULT_NAME=admin-operation-rule-run-before \
 //     -e LOGIN_EMAIL=admin@test.com -e LOGIN_PASSWORD=Test1234! \
 //     k6 run -o experimental-prometheus-rw /scripts/admin/03-operation-rule-run-baseline.js
