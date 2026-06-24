@@ -4,6 +4,7 @@ import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -53,6 +54,19 @@ public class EnrollmentRepositoryAdapter implements EnrollmentRepository {
                 .stream()
                 .map(EnrollmentJpaEntity::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status, Pageable pageable) {
+        return springDataEnrollmentRepository.findByCourseIdAndStatusOrderByUserIdAsc(courseId, status, pageable)
+                .stream()
+                .map(EnrollmentJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countByCourseIdAndStatus(Long courseId, EnrollmentStatus status) {
+        return springDataEnrollmentRepository.countByCourseIdAndStatus(courseId, status);
     }
 
     @Override

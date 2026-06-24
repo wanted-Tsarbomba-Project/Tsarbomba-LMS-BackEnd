@@ -5,6 +5,7 @@ import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 public interface EnrollmentRepository {
 
@@ -17,6 +18,10 @@ public interface EnrollmentRepository {
     List<Enrollment> findByUserIdAndStatus(Long userId, EnrollmentStatus status);
 
     List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
+
+    List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status, Pageable pageable);
+
+    long countByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
 
     Optional<Enrollment> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status);
 

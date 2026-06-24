@@ -13,6 +13,10 @@ public interface LectureProgressRepository {
 
     long countCompletedByUserIdAndLectureIds(Long userId, List<Long> lectureIds);
 
+    /**
+     * Returns completed lecture counts grouped by user id.
+     * User ids without completed lectures are omitted, so callers should treat missing values as 0.
+     */
     Map<Long, Long> countCompletedByUserIdsAndLectureIds(List<Long> userIds, List<Long> lectureIds);
 
     long countCompletedByLectureId(Long lectureId);

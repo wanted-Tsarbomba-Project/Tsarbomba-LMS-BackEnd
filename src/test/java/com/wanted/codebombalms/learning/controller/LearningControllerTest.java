@@ -16,6 +16,7 @@ import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemStatistics;
 import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
+import com.wanted.codebombalms.learning.domain.model.StudentLearningProgressPage;
 import com.wanted.codebombalms.learning.presentation.api.LearningController;
 import com.wanted.codebombalms.learning.presentation.api.LearningResponseCode;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
@@ -299,25 +300,30 @@ class LearningControllerTest {
 
     @Test
     void findStudentLearningProgressesReturnsApiResponse() throws Exception {
-        given(adminLearningProgressQueryUseCase.findStudentProgresses(101L))
-                .willReturn(List.of(StudentLearningProgress.of(
+        given(adminLearningProgressQueryUseCase.findStudentProgresses(101L, 0))
+                .willReturn(StudentLearningProgressPage.of(List.of(StudentLearningProgress.of(
                         10L,
-                        "학생",
+                        "?숈깮",
                         1L,
                         2L,
                         2L,
                         3L
-                )));
+                )), 0, 20, 21));
 
-        mockMvc.perform(get("/api/v1/courses/{courseId}/users/learning-progress", 101L)
+        mockMvc.perform(get("/api/v1/courses/{courseId}/users/learning-progress?page=0", 101L)
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].userId").value(10L))
-                .andExpect(jsonPath("$.data[0].studentName").value("학생"))
-                .andExpect(jsonPath("$.data[0].lectureProgressRate").value(50))
-                .andExpect(jsonPath("$.data[0].completedProblemCount").value(2L));
+                .andExpect(jsonPath("$.data.content[0].userId").value(10L))
+                .andExpect(jsonPath("$.data.content[0].studentName").value("?숈깮"))
+                .andExpect(jsonPath("$.data.content[0].lectureProgressRate").value(50))
+                .andExpect(jsonPath("$.data.content[0].completedProblemCount").value(2L))
+                .andExpect(jsonPath("$.data.page").value(0))
+                .andExpect(jsonPath("$.data.size").value(20))
+                .andExpect(jsonPath("$.data.totalElements").value(21L))
+                .andExpect(jsonPath("$.data.totalPages").value(2))
+                .andExpect(jsonPath("$.data.hasNext").value(true));
     }
 
     @Test
@@ -350,7 +356,7 @@ class LearningControllerTest {
     @Test
     void findStudentLearningProgressReturnsApiResponse() throws Exception {
         given(adminLearningProgressQueryUseCase.findStudentProgress(101L, 10L))
-                .willReturn(StudentLearningProgress.of(10L, "?숈깮", 1L, 2L, 2L, 3L));
+                .willReturn(StudentLearningProgress.of(10L, "??덇문", 1L, 2L, 2L, 3L));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/users/{userId}/learning-progress", 101L, 10L)
                         .with(authentication(operatorUser(1L)))

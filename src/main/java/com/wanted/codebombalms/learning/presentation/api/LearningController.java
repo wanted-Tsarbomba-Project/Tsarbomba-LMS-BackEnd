@@ -19,6 +19,7 @@ import com.wanted.codebombalms.learning.presentation.api.response.LectureProblem
 import com.wanted.codebombalms.learning.presentation.api.response.LectureProblemSetProgressResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.LectureProblemStatisticsResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.LectureProgressResponse;
+import com.wanted.codebombalms.learning.presentation.api.response.StudentLearningProgressPageResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.StudentLearningProgressResponse;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.presentation.request.SubmissionRequest;
@@ -216,16 +217,16 @@ public class LearningController {
     @GetMapping("/courses/{courseId}/users/learning-progress")
     @Operation(summary = "강좌별 학생 학습률 목록 조회")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
-    public ResponseEntity<ApiResponse<List<StudentLearningProgressResponse>>> findStudentLearningProgresses(
-            @PathVariable Long courseId
+    public ResponseEntity<ApiResponse<StudentLearningProgressPageResponse>> findStudentLearningProgresses(
+            @PathVariable Long courseId,
+            @RequestParam(defaultValue = "0") int page
     ) {
         return ResponseEntity.ok(ApiResponse.success(
                 LearningResponseCode.RETRIEVED,
                 LearningResponseMessage.RETRIEVED,
-                adminLearningProgressQueryUseCase.findStudentProgresses(courseId)
-                        .stream()
-                        .map(StudentLearningProgressResponse::from)
-                        .toList()
+                StudentLearningProgressPageResponse.from(
+                        adminLearningProgressQueryUseCase.findStudentProgresses(courseId, page)
+                )
         ));
     }
 

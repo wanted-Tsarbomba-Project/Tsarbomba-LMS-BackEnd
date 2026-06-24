@@ -50,14 +50,14 @@ export default function (data) {
     };
 
     const res = http.get(
-        `${BASE_URL}/api/v1/courses/${COURSE_ID}/users/learning-progress`,
+        `${BASE_URL}/api/v1/courses/${COURSE_ID}/users/learning-progress?page=0`,
         params
     );
 
     // 응답 검증
     check(res, {
         "status is 200": (r) => r.status === 200,
-        "has data array": (r) => Array.isArray(r.json("data")),
+        "has page content array": (r) => Array.isArray(r.json("data.content")),
     });
 
     // 사용자 대기 시간, 저 randomSleep 는 글로벌 config에 있음

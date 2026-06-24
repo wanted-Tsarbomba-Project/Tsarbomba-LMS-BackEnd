@@ -9,6 +9,7 @@ import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,22 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
                 .stream()
                 .map(Enrollment::getUserId)
                 .toList();
+    }
+
+    @Override
+    public List<Long> findActiveStudentIdsByCourse(Long courseId, int page, int size) {
+        log.info("[EnrollmentQueryService] find active student ids page - courseId: {}, page: {}, size: {}",
+                courseId, page, size);
+
+        return enrollmentRepository.findByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE, PageRequest.of(page, size))
+                .stream()
+                .map(Enrollment::getUserId)
+                .toList();
+    }
+
+    @Override
+    public long countActiveStudentsByCourse(Long courseId) {
+        return enrollmentRepository.countByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE);
     }
 
     @Override

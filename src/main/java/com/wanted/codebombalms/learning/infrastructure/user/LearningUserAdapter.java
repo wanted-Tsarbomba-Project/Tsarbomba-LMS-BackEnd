@@ -20,7 +20,7 @@ public class LearningUserAdapter implements LearningUserPort {
     @Override
     public String findUserName(Long userId) {
         return userRepository.findByUserId(userId)
-                .map(user -> user.getName() != null ? user.getName() : user.getNickname())
+                .map(this::resolveUserName)
                 .orElse("알 수 없음");
     }
 
@@ -33,8 +33,18 @@ public class LearningUserAdapter implements LearningUserPort {
                 .stream()
                 .collect(Collectors.toMap(
                         User::getUserId,
-                        user -> user.getName() != null ? user.getName() : user.getNickname(),
+                        this::resolveUserName,
                         (left, right) -> left
                 ));
+    }
+
+    private String resolveUserName(User user) {
+        if (user.getName() != null) {
+            return user.getName();
+        }
+        if (user.getNickname() != null) {
+            return user.getNickname();
+        }
+        return "알 수 없음";
     }
 }
