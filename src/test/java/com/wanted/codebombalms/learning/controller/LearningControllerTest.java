@@ -327,6 +327,22 @@ class LearningControllerTest {
     }
 
     @Test
+    void findStudentLearningProgressesWithNegativePageReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/courses/{courseId}/users/learning-progress?page=-1", 101L)
+                        .with(authentication(operatorUser(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void findStudentLearningProgressesWithTooLargePageReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/courses/{courseId}/users/learning-progress?page=50001", 101L)
+                        .with(authentication(operatorUser(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void findCourseLearningProgressReturnsApiResponse() throws Exception {
         given(adminLearningProgressQueryUseCase.findCourseProgress(101L))
                 .willReturn(CourseLearningProgress.of(101L, "Java", 2L, 3L, 4L, 5L, 6L));

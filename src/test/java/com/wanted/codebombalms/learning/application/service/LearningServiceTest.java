@@ -580,6 +580,23 @@ class LearningServiceTest {
     }
 
     @Test
+    void findStudentProgresses_withNegativePage_usesFirstPage() {
+        Long courseId = 101L;
+
+        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(21L);
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 0, 20)).willReturn(List.of());
+
+        var result = adminLearningProgressQueryService.findStudentProgresses(courseId, -1);
+
+        assertEquals(0, result.page());
+        assertEquals(20, result.size());
+        assertEquals(21L, result.totalElements());
+        assertEquals(2, result.totalPages());
+        assertTrue(result.hasNext());
+        verify(learningEnrollmentPort).findActiveStudentIdsByCourse(courseId, 0, 20);
+    }
+
+    @Test
     void findCourseProgress_returnsAggregatedProgress() {
         Long courseId = 101L;
         Long userId = 10L;
