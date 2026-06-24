@@ -1,10 +1,10 @@
-package com.wanted.codebombalms.course.presentation.api.response;
+package com.wanted.codebombalms.lecture.presentation.api.response;
 
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 
-public record CourseProblemSetResponse(
-        Long courseProblemSetId,
+public record LectureProblemSetResponse(
+        Long lectureProblemSetId,
         Long courseId,
         Long lectureId,
         Long problemSetId,
@@ -12,8 +12,8 @@ public record CourseProblemSetResponse(
         Integer displayOrder
 ) {
 
-    public static CourseProblemSetResponse from(LectureProblemSet lectureProblemSet) {
-        return new CourseProblemSetResponse(
+    public static LectureProblemSetResponse from(LectureProblemSet lectureProblemSet) {
+        return new LectureProblemSetResponse(
                 lectureProblemSet.getLectureProblemSetId(),
                 lectureProblemSet.getCourseId(),
                 lectureProblemSet.getLectureId(),

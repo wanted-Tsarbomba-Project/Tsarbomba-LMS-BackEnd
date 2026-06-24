@@ -1,13 +1,13 @@
-package com.wanted.codebombalms.course.controller;
+package com.wanted.codebombalms.lecture.controller;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
-import com.wanted.codebombalms.course.presentation.api.CourseProblemController;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
 import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
+import com.wanted.codebombalms.lecture.presentation.api.LectureProblemSetController;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,10 +32,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CourseProblemController.class)
+@WebMvcTest(LectureProblemSetController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@DisplayName("CourseProblemController web test")
-class CourseProblemControllerTest {
+@DisplayName("LectureProblemSetController web test")
+class LectureProblemSetControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -56,11 +56,11 @@ class CourseProblemControllerTest {
                 LectureProblemSet.restore(6002L, 101L, null, 2003L, LectureProblemSetRole.FINAL, 1)
         ));
 
-        mockMvc.perform(get("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(get("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseProblemSetId").value(6001L))
+                .andExpect(jsonPath("$.data[0].lectureProblemSetId").value(6001L))
                 .andExpect(jsonPath("$.data[0].role").value("MAIN"))
                 .andExpect(jsonPath("$.data[1].role").value("FINAL"));
     }
@@ -71,11 +71,11 @@ class CourseProblemControllerTest {
                 LectureProblemSet.restore(6001L, 101L, 101L, 2002L, LectureProblemSetRole.MAIN, 1)
         ));
 
-        mockMvc.perform(get("/api/v1/lectures/{lectureId}/problem-sets", 101L)
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/lecture-problem-sets", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseProblemSetId").value(6001L))
+                .andExpect(jsonPath("$.data[0].lectureProblemSetId").value(6001L))
                 .andExpect(jsonPath("$.data[0].problemSetId").value(2002L))
                 .andExpect(jsonPath("$.data[0].lectureId").value(101L));
     }
@@ -107,7 +107,7 @@ class CourseProblemControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
@@ -148,7 +148,7 @@ class CourseProblemControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))

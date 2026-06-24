@@ -1,4 +1,4 @@
-# k6 Result - learning-student-progress-after-1000
+# k6 Result - learning-student-progress-after-5000
 
 ## Summary
 
@@ -8,17 +8,17 @@
 | iterations |  |
 | checks success rate |  |
 | http_req_failed | 100.00% |
-| data_received bytes | 0 |
-| data_sent bytes | 0 |
+| data_received bytes | 563 |
+| data_sent bytes | 210 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_waiting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_blocked | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_connecting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| http_req_duration | 25.56 | 25.56 | 25.56 | 25.56 | 25.56 | 25.56 | 25.56 |
+| http_req_waiting | 24.74 | 24.74 | 24.74 | 24.74 | 24.74 | 24.74 | 24.74 |
+| http_req_blocked | 3.90 | 3.90 | 3.90 | 3.90 | 3.90 | 3.90 | 3.90 |
+| http_req_connecting | 2.70 | 2.70 | 2.70 | 2.70 | 2.70 | 2.70 | 2.70 |
 
 ## Metric Meaning
 

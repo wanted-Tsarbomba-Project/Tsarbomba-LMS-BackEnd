@@ -1,24 +1,24 @@
-# k6 Result - learning-student-progress-after-1000
+# k6 Result - learning-student-progress-after-10000
 
 ## Summary
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 1 |
-| iterations |  |
-| checks success rate |  |
-| http_req_failed | 100.00% |
-| data_received bytes | 0 |
-| data_sent bytes | 0 |
+| http_reqs | 1022 |
+| iterations | 1021 |
+| checks success rate | 100.00% |
+| http_req_failed | 0.00% |
+| data_received bytes | 677472852 |
+| data_sent bytes | 366749 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_waiting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_blocked | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| http_req_connecting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| http_req_duration | 380.75 | 8.67 | 304.30 | 853.11 | 1064.64 | 1339.44 | 1711.56 |
+| http_req_waiting | 287.97 | 8.30 | 252.07 | 617.30 | 709.86 | 854.62 | 944.67 |
+| http_req_blocked | 0.08 | 0.00 | 0.01 | 0.01 | 0.01 | 2.51 | 5.18 |
+| http_req_connecting | 0.07 | 0 | 0 | 0 | 0 | 2.40 | 5.00 |
 
 ## Metric Meaning
 
@@ -36,7 +36,8 @@
 
 | Check | Result |
 | --- | --- |
-| check details | Check console output or JSON summary. |
+| status is 200 | 1021 pass / 0 fail |
+| has data array | 1021 pass / 0 fail |
 
 ## How To Compare
 

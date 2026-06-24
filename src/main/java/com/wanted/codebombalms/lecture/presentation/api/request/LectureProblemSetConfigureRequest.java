@@ -1,4 +1,4 @@
-package com.wanted.codebombalms.course.presentation.api.request;
+package com.wanted.codebombalms.lecture.presentation.api.request;
 
 import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
-public record CourseProblemSetConfigureRequest(
+public record LectureProblemSetConfigureRequest(
         @NotEmpty List<@NotNull @Valid ProblemSetRequest> problemSets
 ) {
 
