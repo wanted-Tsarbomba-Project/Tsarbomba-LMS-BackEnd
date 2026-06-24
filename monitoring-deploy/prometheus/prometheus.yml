@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "spring"
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["172.31.45.217:8080"]   # ② Spring 사설IP (codebomb-spring)
+        labels:
+          application: code-bomba-lms
+
+  # 챗봇(④)은 FastAPI에 prometheus exporter 붙으면 주석 해제
+  # - job_name: "chatbot"
+  #   metrics_path: /metrics
+  #   static_configs:
+  #     - targets: ["<CHATBOT_PRIVATE_IP>:8000"]
