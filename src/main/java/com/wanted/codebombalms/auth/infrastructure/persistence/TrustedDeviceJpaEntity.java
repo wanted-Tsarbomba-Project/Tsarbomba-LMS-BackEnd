@@ -58,6 +58,7 @@ public class TrustedDeviceJpaEntity {
     }
 
 
+
     public TrustedDevice toDomain() {
         return TrustedDevice.restore(
                 trustedDeviceId,
