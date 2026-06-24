@@ -64,16 +64,23 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
         User user = userRepository.findByUserId(challenge.userId())
                 .orElseThrow(() -> new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL));
 
-        // 4. 신뢰 기기 등록 (옵션)
+        // 4. 신뢰 기기 등록 (옵션) — 이미 있으면 갱신, 없으면 신규 (유니크 (user_id, device_fp) 위반 방지)
         if (command.trustDevice()) {
             GeoLocation geo = geoIpResolver.resolve(extractIpAddress(request));
-            trustedDeviceRepository.save(TrustedDevice.register(
-                    user.getUserId(),
-                    challenge.deviceFp(),
-                    parseDeviceName(request.getHeader("User-Agent")),
-                    geo.country(),
-                    geo.city()
-            ));
+            TrustedDevice device = trustedDeviceRepository
+                    .findByUserIdAndDeviceFp(user.getUserId(), challenge.deviceFp())
+                    .map(existing -> {
+                        existing.markUsed(geo.country(), geo.city());
+                        return existing;
+                    })
+                    .orElseGet(() -> TrustedDevice.register(
+                            user.getUserId(),
+                            challenge.deviceFp(),
+                            parseDeviceName(request.getHeader("User-Agent")),
+                            geo.country(),
+                            geo.city()
+                    ));
+            trustedDeviceRepository.save(device);
         }
 
         // 5. 정식 토큰 발급 (단일 세션 강제)

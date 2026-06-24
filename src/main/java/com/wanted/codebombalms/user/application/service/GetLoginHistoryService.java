@@ -20,6 +20,7 @@ public class GetLoginHistoryService implements GetLoginHistoryUseCase {
 
     @Override
     public List<LoginHistory> getLoginHistory(Long userId, int page) {
-        return loginHistoryRepository.findByUserId(userId, page, PAGE_SIZE);
+        int safePage = Math.max(page, 0); // 음수 페이지 → PageRequest 예외(500) 방지
+        return loginHistoryRepository.findByUserId(userId, safePage, PAGE_SIZE);
     }
 }

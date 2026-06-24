@@ -41,7 +41,7 @@ public class LoginHistoryRepositoryAdapter implements LoginHistoryRepository {
     @Override
     public List<LoginHistory> findByUserId(Long userId, int page, int size) {
         return springDataLoginHistoryRepository
-                .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
+                .findByUserIdOrderByCreatedAtDescLoginHistoryIdDesc(userId, PageRequest.of(page, size))
                 .stream()
                 .map(LoginHistoryJpaEntity::toDomain)
                 .toList();

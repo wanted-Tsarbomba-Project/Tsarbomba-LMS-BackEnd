@@ -13,12 +13,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class GeoLite2CityAdapter implements GeoIpResolver {
 
     private static final String DB_PATH = "geoip/GeoLite2-City.mmdb";
+
+    /** IP 리터럴(IPv4 점표기 / IPv6 콜론포함)만 허용 — 호스트명 입력 시 DNS 조회·블로킹 차단 */
+    private static final Pattern IP_LITERAL = Pattern.compile("^\\d{1,3}(\\.\\d{1,3}){3}$|^[0-9a-fA-F:]*:[0-9a-fA-F:]*$");
 
     private final DatabaseReader reader;
 
@@ -35,11 +39,11 @@ public class GeoLite2CityAdapter implements GeoIpResolver {
 
     @Override
     public GeoLocation resolve(String ipAddress) {
-        if (ipAddress == null || ipAddress.isBlank()) {
-            return GeoLocation.unknown();
+        if (ipAddress == null || ipAddress.isBlank() || !IP_LITERAL.matcher(ipAddress).matches()) {
+            return GeoLocation.unknown(); // 호스트명 등 비-IP 입력은 DNS 조회 없이 unknown
         }
         try {
-            InetAddress address = InetAddress.getByName(ipAddress);
+            InetAddress address = InetAddress.getByName(ipAddress); // 리터럴만 도달 → DNS 미발생
             CityResponse response = reader.city(address);
             String country = response.getCountry().getName();
             String city = response.getCity().getName();

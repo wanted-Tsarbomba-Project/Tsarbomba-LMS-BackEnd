@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface SpringDataLoginHistoryRepository extends JpaRepository<LoginHistoryJpaEntity, Long> {
 
-    List<LoginHistoryJpaEntity> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    List<LoginHistoryJpaEntity> findByUserIdOrderByCreatedAtDescLoginHistoryIdDesc(Long userId, Pageable pageable);
 
     @Query("""
             select lh.userId as userId, max(lh.createdAt) as latestLoginAt
