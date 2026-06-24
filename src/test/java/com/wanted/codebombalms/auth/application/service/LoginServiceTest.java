@@ -111,8 +111,7 @@ class LoginServiceTest {
         assertNotNull(result.stepUpToken());
         assertNotNull(result.maskedEmail());
         assertNull(result.accessToken());
-        verify(emailSender).sendStepUpCode(eq("test@example.com"), anyString());
-        verify(stepUpTokenRepository).save(anyString(), any());
+        verify(emailSender).sendStepUpCode(eq("test@example.com"), anyString(), anyString());        verify(stepUpTokenRepository).save(anyString(), any());
         verify(loginHistoryRepository).save(any(LoginHistory.class));
         verify(jwtTokenProvider, never()).generateAccessToken(anyLong(), anyString(), any());
         verify(refreshTokenRepository, never()).save(any());
