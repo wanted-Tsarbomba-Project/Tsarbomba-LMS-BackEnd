@@ -16,7 +16,6 @@ src/main/resources/gcs/
 # 배포/모니터링/문서 — 이미지에 불필요
 deploy/
 monitoring-local/
-monitoring-deploy/
 docs/
 .ai/
 forme/
