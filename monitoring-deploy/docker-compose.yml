@@ -1,58 +1,22 @@
-# ③ 모니터링 EC2 전용 스택 — prometheus + loki + grafana + redis
-# 실행: docker compose --env-file .env up -d
-# (로컬 부하테스트용 스택은 ../monitoring-local/docker-compose.yml)
+# =============================================================
+# 배포(deploy) BE 부하 발생기 — k6 단독
+#
+# 이 스택은 "쏘는 것(k6)"만 한다. 관측(Prometheus/Grafana/Loki)은
+# 배포 ③ 모니터링 박스(http://13.124.63.188:3000)가 이미 BE 8080 을
+# 스크랩 중이므로 여기서 띄우지 않는다. (중복 방지)
+#
+# 실행:  docker compose run --rm k6 run /scripts/<도메인>/<스크립트>.js
+#        (BASE_URL 기본 = 배포 BE. k6/lib/config.js 참조)
+# 결과:  터미널 요약 + monitoring-deploy/k6/results/<이름>-summary.md/json
+# 관측:  배포 ③ Grafana http://13.124.63.188:3000 (서버 CPU/힙/DB풀/p95)
+#
+# ⚠️ 배포 BE 는 실 RDS(codebomba)를 쓴다 → README 의 "안전" 절 반드시 읽을 것.
+# =============================================================
 services:
-  prometheus:
-    image: prom/prometheus:v2.53.0
-    container_name: lms-prometheus
-    ports:
-      - "9090:9090"                         # SG: 내 IP만 허용
+  k6:
+    image: grafana/k6:0.52.0
+    container_name: lms-k6-deploy
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --web.enable-remote-write-receiver   # k6 메트릭 remote-write 수신
-    restart: unless-stopped
-
-  loki:
-    image: grafana/loki:3.0.0
-    container_name: lms-loki
-    ports:
-      - "3100:3100"                         # SG: ②④(사설망)만 허용
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - loki-data:/loki
-    restart: unless-stopped
-
-  grafana:
-    image: grafana/grafana:11.1.0
-    container_name: lms-grafana
-    ports:
-      - "3000:3000"                         # SG: 내 IP만 허용
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false       # 아무나 회원가입 차단 (3000 공개라 필수)
-      - GF_AUTH_ANONYMOUS_ENABLED=false    # 익명 접근 차단 (기본값이나 명시)
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - grafana-data:/var/lib/grafana
-    depends_on: [prometheus, loki]
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    container_name: lms-redis
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
-    ports:
-      - "6379:6379"                         # SG: ②만 허용 (OTP 전용)
-    volumes:
-      - redis-data:/data
-    restart: unless-stopped
-
-volumes:
-  prometheus-data:
-  grafana-data:
-  loki-data:
-  redis-data:
+      - ./k6/scripts:/scripts:ro
+      - ./k6/lib:/lib:ro
+      - ./k6/results:/results
