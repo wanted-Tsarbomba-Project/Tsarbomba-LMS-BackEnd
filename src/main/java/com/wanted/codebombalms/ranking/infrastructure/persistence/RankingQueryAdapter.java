@@ -25,11 +25,18 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 u.user_id,
                 u.name,
                 u.nickname,
+                b.object_name as badge_object_name,
                 null as badge_image_url,
                 coalesce(weekly.weekly_point, 0) as weekly_point,
                 up.total_point
             from user_point up
             join users u on u.user_id = up.user_id
+            left join user_badge ub
+              on ub.user_id = u.user_id
+             and ub.is_equipped = true
+            left join badge b
+              on b.badge_id = ub.badge_id
+             and b.deleted_at is null
             left join (
                 select
                     ph.user_id,
@@ -61,6 +68,7 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 u.user_id,
                 u.name,
                 u.nickname,
+                b.object_name as badge_object_name,
                 null as badge_image_url,
                 weekly.weekly_point,
                 coalesce(up.total_point, 0) as total_point
@@ -74,6 +82,12 @@ public class RankingQueryAdapter implements RankingQueryPort {
             ) weekly
             join users u on u.user_id = weekly.user_id
             left join user_point up on up.user_id = u.user_id
+            left join user_badge ub
+              on ub.user_id = u.user_id
+             and ub.is_equipped = true
+            left join badge b
+              on b.badge_id = ub.badge_id
+             and b.deleted_at is null
             where u.deleted_at is null
               and u.role = 'STUDENT'
             order by ranking asc, u.user_id asc
@@ -98,11 +112,18 @@ public class RankingQueryAdapter implements RankingQueryPort {
             u.user_id,
             u.name,
             u.nickname,
+            b.object_name as badge_object_name,
             null as badge_image_url,
             coalesce(weekly.weekly_point, 0) as weekly_point,
             coalesce(up.total_point, 0) as total_point
         from users u
         left join user_point up on up.user_id = u.user_id
+        left join user_badge ub
+          on ub.user_id = u.user_id
+         and ub.is_equipped = true
+        left join badge b
+          on b.badge_id = ub.badge_id
+         and b.deleted_at is null
         left join (
             select
                 ranked_user.user_id,
@@ -154,11 +175,18 @@ public class RankingQueryAdapter implements RankingQueryPort {
             u.user_id,
             u.name,
             u.nickname,
+            b.object_name as badge_object_name,
             null as badge_image_url,
             coalesce(my_weekly.weekly_point, 0) as weekly_point,
             coalesce(up.total_point, 0) as total_point
         from users u
         left join user_point up on up.user_id = u.user_id
+        left join user_badge ub
+          on ub.user_id = u.user_id
+         and ub.is_equipped = true
+        left join badge b
+          on b.badge_id = ub.badge_id
+         and b.deleted_at is null
         left join (
             select
                 ph.user_id,
@@ -209,8 +237,9 @@ public class RankingQueryAdapter implements RankingQueryPort {
                 (String) row[2],
                 (String) row[3],
                 (String) row[4],
-                ((Number) row[5]).intValue(),
-                ((Number) row[6]).intValue()
+                (String) row[5],
+                ((Number) row[6]).intValue(),
+                ((Number) row[7]).intValue()
         );
     }
 }
