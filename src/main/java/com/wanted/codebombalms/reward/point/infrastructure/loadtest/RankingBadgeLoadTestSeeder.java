@@ -239,11 +239,18 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedLoginUserBadges(Long loginUserId) {
+        jdbc.update("""
+        update user_badge
+           set is_equipped = false
+         where user_id = ?
+        """, loginUserId);
         jdbc.batchUpdate("""
-                insert ignore into user_badge
+                insert into user_badge
                   (user_id, badge_id, earned_at, is_equipped)
                 values
                   (?, ?, now(6), ?)
+                on duplicate key update
+                  is_equipped = values(is_equipped)
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
