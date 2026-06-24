@@ -7,6 +7,7 @@ import com.wanted.codebombalms.auth.domain.model.GeoLocation;
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
 import com.wanted.codebombalms.auth.domain.model.TrustedDevice;
+import com.wanted.codebombalms.auth.domain.repository.LockTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.LoginHistoryRepository;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.StepUpTokenRepository;
@@ -50,6 +51,7 @@ class LoginServiceTest {
     @Mock private LoginHistoryRepository loginHistoryRepository;
     @Mock private TrustedDeviceRepository trustedDeviceRepository;
     @Mock private StepUpTokenRepository stepUpTokenRepository;
+    @Mock private LockTokenRepository lockTokenRepository;
     @Mock private GeoIpResolver geoIpResolver;
     @Mock private EmailSender emailSender;
     @Mock private PasswordEncoder passwordEncoder;
