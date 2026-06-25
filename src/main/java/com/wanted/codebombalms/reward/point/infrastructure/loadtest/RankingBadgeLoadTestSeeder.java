@@ -24,9 +24,10 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     private static final String LOGIN_PASSWORD = "Test1234!";
 
     private static final int USER_COUNT = 300;
-    private static final int POINT_HISTORY_PER_USER = 20;
+    private static final int POINT_HISTORY_PER_USER = 1;
     private static final int BADGE_COUNT = 20;
     private static final int RANKING_BADGE_EQUIPPED_USER_COUNT = USER_COUNT;
+    private static final int RANKING_BASE_POINT = 1_000_000_000;
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
@@ -34,25 +35,12 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        Long alreadySeeded = jdbc.queryForObject(
-                "select count(*) from user_point",
-                Long.class
-        );
-
         long startNanos = System.nanoTime();
         Long loginUserId = findOrCreateLoginUser();
 
-        if (alreadySeeded != null && alreadySeeded >= USER_COUNT) {
-            log.info(
-                    "event=ranking_badge_loadtest_seed_skipped reason=already_seeded userPointCount={}",
-                    alreadySeeded
-            );
-        } else {
-            seedRankingUsers();
-            seedUserPoints(loginUserId);
-            seedPointHistories(loginUserId);
-        }
-
+        seedRankingUsers();
+        seedUserPoints(loginUserId);
+        seedPointHistories(loginUserId);
         seedBadges();
         seedRankingUserBadges();
         seedLoginUserBadges(loginUserId);
@@ -100,11 +88,18 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
         String hash = passwordEncoder.encode(LOGIN_PASSWORD);
 
         jdbc.batchUpdate("""
-                insert ignore into users
+                insert into users
                   (user_id, role, email, password, name, nickname, provider,
                    email_verified, is_locked, created_at, updated_at)
                 values
                   (?, 'STUDENT', ?, ?, ?, ?, 'LOCAL', true, false, now(6), now(6))
+                on duplicate key update
+                  role = values(role),
+                  password = values(password),
+                  name = values(name),
+                  nickname = values(nickname),
+                  updated_at = now(6),
+                  deleted_at = null
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
@@ -137,7 +132,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 long userId = 700001L + i;
-                int totalPoint = 1000 + (USER_COUNT - i) * 10;
+                int totalPoint = RANKING_BASE_POINT - i;
 
                 ps.setLong(1, userId);
                 ps.setInt(2, totalPoint);
@@ -161,8 +156,20 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedPointHistories(Long loginUserId) {
+        jdbc.update("""
+                delete from point_history
+                 where user_id between 700001 and ?
+                   and reason like 'LOADTEST%'
+                """, 700000L + USER_COUNT);
+
+        jdbc.update("""
+                delete from point_history
+                 where user_id = ?
+                   and reason = 'LOADTEST_LOGIN_USER'
+                """, loginUserId);
+
         jdbc.batchUpdate("""
-                insert ignore into point_history
+                insert into point_history
                   (user_id, problem_id, submission_id, point, reason, created_at)
                 values
                   (?, ?, ?, ?, 'LOADTEST', now(6))
@@ -175,7 +182,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
                 long userId = 700001L + userIndex;
                 long problemId = 5001L + historyIndex;
                 long submissionId = 900000000L + (userIndex * 100L) + historyIndex;
-                int point = 10 + (historyIndex % 5) * 5;
+                int point = RANKING_BASE_POINT - userIndex;
 
                 ps.setLong(1, userId);
                 ps.setLong(2, problemId);
@@ -190,7 +197,7 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
         });
 
         jdbc.batchUpdate("""
-                insert ignore into point_history
+                insert into point_history
                   (user_id, problem_id, submission_id, point, reason, created_at)
                 values
                   (?, ?, ?, 50, 'LOADTEST_LOGIN_USER', now(6))
@@ -211,12 +218,23 @@ public class RankingBadgeLoadTestSeeder implements ApplicationRunner {
 
     private void seedBadges() {
         jdbc.batchUpdate("""
-                insert ignore into badge
+                insert into badge
                   (badge_id, badge_name, description, required_point,
                    original_file_name, object_name, content_type, file_size,
                    status, created_at, updated_at, deleted_at)
                 values
                   (?, ?, ?, ?, ?, ?, 'image/png', 1024, 'ACTIVE', now(6), now(6), null)
+                on duplicate key update
+                  badge_name = values(badge_name),
+                  description = values(description),
+                  required_point = values(required_point),
+                  original_file_name = values(original_file_name),
+                  object_name = values(object_name),
+                  content_type = values(content_type),
+                  file_size = values(file_size),
+                  status = 'ACTIVE',
+                  updated_at = now(6),
+                  deleted_at = null
                 """, new BatchPreparedStatementSetter() {
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {

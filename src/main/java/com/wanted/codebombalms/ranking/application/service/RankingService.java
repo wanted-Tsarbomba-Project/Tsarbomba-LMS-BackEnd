@@ -2,23 +2,20 @@ package com.wanted.codebombalms.ranking.application.service;
 
 import com.wanted.codebombalms.badge.application.port.BadgeImageStoragePort;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import com.wanted.codebombalms.ranking.application.port.RankingQueryPort;
 import com.wanted.codebombalms.ranking.application.query.RankingItem;
 import com.wanted.codebombalms.ranking.application.query.RankingListResult;
 import com.wanted.codebombalms.ranking.application.usecase.RankingQueryUseCase;
 import com.wanted.codebombalms.ranking.exception.RankingErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class RankingService implements RankingQueryUseCase {
-    private final RankingQueryPort rankingQueryPort;
+    private final RankingReader rankingReader;
     private final BadgeImageStoragePort badgeImageStoragePort;
 
     @Override
@@ -29,7 +26,7 @@ public class RankingService implements RankingQueryUseCase {
 
         return new RankingListResult(
                 withBadgeImageUrls(
-                        rankingQueryPort.findTotalPointRankings(offset, safeSize)
+                        rankingReader.findTotalPointRankings(offset, safeSize)
                 )
         );
     }
@@ -38,7 +35,7 @@ public class RankingService implements RankingQueryUseCase {
     public RankingItem getMyWeeklyPointRanking(Long userId) {
         LocalDateTime from = LocalDateTime.now().minusDays(7);
 
-        return rankingQueryPort.findMyWeeklyPointRanking(userId, from)
+        return rankingReader.findMyWeeklyPointRanking(userId, from)
                 .map(this::withBadgeImageUrl)
                 .orElseThrow(() -> new NotFoundException(
                         RankingErrorCode.RANKING_NOT_FOUND
@@ -54,7 +51,7 @@ public class RankingService implements RankingQueryUseCase {
 
         return new RankingListResult(
                 withBadgeImageUrls(
-                        rankingQueryPort.findWeeklyPointRankings(from, offset, safeSize)
+                        rankingReader.findWeeklyPointRankings(from, offset, safeSize)
                 )
         );
     }
@@ -69,7 +66,7 @@ public class RankingService implements RankingQueryUseCase {
 
     @Override
     public RankingItem getMyPointRanking(Long userId) {
-        return rankingQueryPort.findMyTotalPointRanking(userId)
+        return rankingReader.findMyTotalPointRanking(userId)
                 .map(this::withBadgeImageUrl)
                 .orElseThrow(() -> new NotFoundException(
                         RankingErrorCode.RANKING_NOT_FOUND
