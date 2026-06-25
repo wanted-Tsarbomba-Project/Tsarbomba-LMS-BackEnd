@@ -11,6 +11,8 @@ public interface UserBadgePersistencePort {
 
     List<UserBadge> saveAll(List<UserBadge> userBadges);
 
+    List<UserBadge> insertIgnoreAll(List<UserBadge> userBadges);
+
     List<UserBadge> findAllByUserId(Long userId);
 
     Optional<UserBadge> findByUserIdAndBadgeId(

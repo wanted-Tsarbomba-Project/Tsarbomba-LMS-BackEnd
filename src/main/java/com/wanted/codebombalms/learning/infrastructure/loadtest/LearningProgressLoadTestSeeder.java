@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("loadtest")
+@Profile("loadtest & loadtest-learning")
 @RequiredArgsConstructor
 public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
@@ -31,8 +31,8 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
     private static final long PROBLEM_SET_ID_START = 22000L;
     private static final long LECTURE_PROBLEM_SET_ID_START = 23000L;
 
-    private static final String ADMIN_EMAIL = "admin@test.com";
-    private static final String OPERATOR_EMAIL = "op@test.com";
+    private static final String ADMIN_EMAIL = "learning-loadtest-admin@test.com";
+    private static final String OPERATOR_EMAIL = "learning-loadtest-operator@test.com";
     private static final int STUDENTS = 200;
     private static final int LECTURES = 12;
     private static final int PROBLEM_SETS = 12;

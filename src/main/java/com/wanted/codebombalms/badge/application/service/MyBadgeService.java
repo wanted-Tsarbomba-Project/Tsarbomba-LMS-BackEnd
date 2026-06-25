@@ -13,8 +13,10 @@ import com.wanted.codebombalms.badge.application.usecase.SyncUserBadgesUseCase;
 import com.wanted.codebombalms.badge.domain.model.Badge;
 import com.wanted.codebombalms.badge.domain.model.UserBadge;
 import com.wanted.codebombalms.badge.exception.BadgeErrorCode;
+import com.wanted.codebombalms.badge.infrastructure.metrics.BadgeMetrics;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
 
     private final UserBadgePersistencePort userBadgePersistencePort;
@@ -34,6 +37,7 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     private final BadgeImageStoragePort badgeImageStoragePort;
     private final LoadUserTotalPointPort loadUserTotalPointPort;
     private final LoadMyBadgesPort loadMyBadgesPort;
+    private final BadgeMetrics badgeMetrics;
 
     @Override
     @Transactional(readOnly = true)
@@ -127,24 +131,34 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     @Override
     @Transactional
     public BadgeSyncResult sync(Long userId, int totalPoint) {
+        long syncStartNanos = System.nanoTime();
+        long grantableLookupStartNanos = System.nanoTime();
         List<Badge> grantableBadges =
                 badgePersistencePort.findGrantableBadges(totalPoint);
+        long grantableLookupNanos = System.nanoTime() - grantableLookupStartNanos;
+        badgeMetrics.recordGrantableLookup(grantableLookupNanos);
 
+        long earnedLookupStartNanos = System.nanoTime();
         Set<Long> earnedBadgeIds = userBadgePersistencePort
                 .findAllByUserId(userId)
                 .stream()
                 .map(UserBadge::getBadgeId)
                 .collect(Collectors.toSet());
+        long earnedLookupNanos = System.nanoTime() - earnedLookupStartNanos;
+        badgeMetrics.recordEarnedLookup(earnedLookupNanos);
 
         List<Badge> newlyEarnedBadges = grantableBadges.stream()
                 .filter(badge -> !earnedBadgeIds.contains(badge.getBadgeId()))
                 .toList();
 
-        List<UserBadge> savedUserBadges = userBadgePersistencePort.saveAll(
+        long saveStartNanos = System.nanoTime();
+        List<UserBadge> savedUserBadges = userBadgePersistencePort.insertIgnoreAll(
                 newlyEarnedBadges.stream()
                         .map(badge -> UserBadge.earn(userId, badge.getBadgeId()))
                         .toList()
         );
+        long saveNanos = System.nanoTime() - saveStartNanos;
+        badgeMetrics.recordSave(saveNanos);
 
         Map<Long, UserBadge> savedByBadgeId = savedUserBadges.stream()
                 .collect(Collectors.toMap(
@@ -159,12 +173,33 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
                 ))
                 .toList();
 
-        return new BadgeSyncResult(
+        BadgeSyncResult result = new BadgeSyncResult(
                 userId,
                 totalPoint,
                 results.size(),
                 results
         );
+
+        long syncNanos = System.nanoTime() - syncStartNanos;
+        badgeMetrics.recordSync(syncNanos);
+        log.info(
+                "event=badge_sync_completed userId={} totalPoint={} grantableBadgeCount={} earnedBadgeCount={} newlyEarnedBadgeCount={} grantableLookupMs={} earnedLookupMs={} saveMs={} durationMs={}",
+                userId,
+                totalPoint,
+                grantableBadges.size(),
+                earnedBadgeIds.size(),
+                results.size(),
+                elapsedMillis(grantableLookupNanos),
+                elapsedMillis(earnedLookupNanos),
+                elapsedMillis(saveNanos),
+                elapsedMillis(syncNanos)
+        );
+
+        return result;
+    }
+
+    private long elapsedMillis(long elapsedNanos) {
+        return elapsedNanos / 1_000_000;
     }
 
 
