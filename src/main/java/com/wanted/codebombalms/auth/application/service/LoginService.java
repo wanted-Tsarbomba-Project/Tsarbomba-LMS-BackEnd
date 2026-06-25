@@ -20,6 +20,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.Unauthorized
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -71,7 +72,8 @@ public class LoginService implements LoginUseCase {
         // 5. 적응형 판정 — 신뢰 기기 1차 + 위치 보조
         Optional<TrustedDevice> trusted =
                 trustedDeviceRepository.findByUserIdAndDeviceFp(user.getUserId(), deviceFp);
-        boolean stepUpRequired = trusted.isEmpty() || isCountryChanged(trusted.get(), geo);
+        boolean stepUpRequired = user.getRole() == UserRole.STUDENT
+                && (trusted.isEmpty() || isCountryChanged(trusted.get(), geo));
 
         // 6. 로그인 이력 기록 (의심 여부 = step-up 필요 여부)
         loginHistoryRepository.save(LoginHistory.record(
