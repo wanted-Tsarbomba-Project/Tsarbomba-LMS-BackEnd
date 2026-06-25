@@ -39,11 +39,11 @@ public class LearningUserAdapter implements LearningUserPort {
     }
 
     private String resolveUserName(User user) {
-        if (user.getName() != null) {
-            return user.getName();
-        }
         if (user.getNickname() != null) {
             return user.getNickname();
+        }
+        if (user.getName() != null) {
+            return user.getName();
         }
         return "알 수 없음";
     }
