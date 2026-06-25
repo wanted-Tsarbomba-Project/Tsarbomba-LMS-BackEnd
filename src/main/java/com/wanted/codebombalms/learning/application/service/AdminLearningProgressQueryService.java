@@ -116,19 +116,23 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
             userNames = learningUserPort.findUserNames(studentIds);
             timing.recordUserName(System.nanoTime() - userNameStartedAt);
 
-            long completedLectureCountStartedAt = System.nanoTime();
-            completedLectureCounts = lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
-                    studentIds,
-                    lectureIds
-            );
-            timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+            if (!lectureIds.isEmpty()) {
+                long completedLectureCountStartedAt = System.nanoTime();
+                completedLectureCounts = lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
+                        studentIds,
+                        lectureIds
+                );
+                timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+            }
 
-            long completedProblemCountStartedAt = System.nanoTime();
-            completedProblemCounts = lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
-                    studentIds,
-                    lectureProblemSetIds
-            );
-            timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+            if (!lectureProblemSetIds.isEmpty()) {
+                long completedProblemCountStartedAt = System.nanoTime();
+                completedProblemCounts = lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                        studentIds,
+                        lectureProblemSetIds
+                );
+                timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+            }
         }
 
         for (Long studentId : studentIds) {
@@ -276,22 +280,28 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
             timing.recordUserName(System.nanoTime() - userNameStartedAt);
         }
 
-        long completedLectureCountStartedAt = System.nanoTime();
-        long completedLectureCount = lectureProgressRepository.countCompletedByUserIdAndLectureIds(
-                studentId,
-                lectureIds
-        );
-        if (timing != null) {
-            timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+        long completedLectureCount = 0;
+        if (!lectureIds.isEmpty()) {
+            long completedLectureCountStartedAt = System.nanoTime();
+            completedLectureCount = lectureProgressRepository.countCompletedByUserIdAndLectureIds(
+                    studentId,
+                    lectureIds
+            );
+            if (timing != null) {
+                timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+            }
         }
 
-        long completedProblemCountStartedAt = System.nanoTime();
-        long completedProblemCount = lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                studentId,
-                lectureProblemSetIds
-        );
-        if (timing != null) {
-            timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+        long completedProblemCount = 0;
+        if (!lectureProblemSetIds.isEmpty()) {
+            long completedProblemCountStartedAt = System.nanoTime();
+            completedProblemCount = lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
+                    studentId,
+                    lectureProblemSetIds
+            );
+            if (timing != null) {
+                timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+            }
         }
 
         long itemElapsedNanos = System.nanoTime() - itemStartedAt;

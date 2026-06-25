@@ -303,7 +303,7 @@ class LearningControllerTest {
         given(adminLearningProgressQueryUseCase.findStudentProgresses(101L, 0))
                 .willReturn(StudentLearningProgressPage.of(List.of(StudentLearningProgress.of(
                         10L,
-                        "?숈깮",
+                        "student1",
                         1L,
                         2L,
                         2L,
@@ -316,7 +316,7 @@ class LearningControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(LearningResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.data.content[0].userId").value(10L))
-                .andExpect(jsonPath("$.data.content[0].studentName").value("?숈깮"))
+                .andExpect(jsonPath("$.data.content[0].studentName").value("student1"))
                 .andExpect(jsonPath("$.data.content[0].lectureProgressRate").value(50))
                 .andExpect(jsonPath("$.data.content[0].completedProblemCount").value(2L))
                 .andExpect(jsonPath("$.data.page").value(0))
@@ -372,7 +372,7 @@ class LearningControllerTest {
     @Test
     void findStudentLearningProgressReturnsApiResponse() throws Exception {
         given(adminLearningProgressQueryUseCase.findStudentProgress(101L, 10L))
-                .willReturn(StudentLearningProgress.of(10L, "??덇문", 1L, 2L, 2L, 3L));
+                .willReturn(StudentLearningProgress.of(10L, "student1", 1L, 2L, 2L, 3L));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}/users/{userId}/learning-progress", 101L, 10L)
                         .with(authentication(operatorUser(1L)))

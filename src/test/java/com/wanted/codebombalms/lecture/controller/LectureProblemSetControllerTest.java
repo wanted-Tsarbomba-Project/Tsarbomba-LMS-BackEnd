@@ -2,6 +2,7 @@ package com.wanted.codebombalms.lecture.controller;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
+import com.wanted.codebombalms.global.presentation.api.common.GlobalExceptionHandler;
 import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
@@ -15,9 +16,16 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -33,7 +41,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(LectureProblemSetController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
+@ContextConfiguration(classes = {
+        LectureProblemSetController.class,
+        GlobalExceptionHandler.class,
+        LectureProblemSetControllerTest.TestSecurityConfig.class
+})
 @DisplayName("LectureProblemSetController web test")
 class LectureProblemSetControllerTest {
 
@@ -48,6 +61,19 @@ class LectureProblemSetControllerTest {
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
+
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class TestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .build();
+        }
+    }
 
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
@@ -156,8 +182,36 @@ class LectureProblemSetControllerTest {
                 .andExpect(jsonPath("$.code").value("COMMON-BAD-REQUEST"));
     }
 
+    @Test
+    void configureProblemSetsRejectsNonOperator() throws Exception {
+        String request = """
+                {
+                  "problemSets": [
+                    {
+                      "lectureId": 101,
+                      "problemSetId": 2002,
+                      "role": "MAIN",
+                      "displayOrder": 1
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
+                        .with(authentication(studentUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isForbidden());
+    }
+
     private Authentication operatorUser(Long userId) {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
+        authentication.setAuthenticated(true);
+        return authentication;
+    }
+
+    private Authentication studentUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_STUDENT");
         authentication.setAuthenticated(true);
         return authentication;
     }

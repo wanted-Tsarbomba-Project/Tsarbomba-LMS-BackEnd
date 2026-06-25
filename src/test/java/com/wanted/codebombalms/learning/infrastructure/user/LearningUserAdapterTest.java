@@ -1,7 +1,10 @@
 package com.wanted.codebombalms.learning.infrastructure.user;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
@@ -50,6 +53,35 @@ class LearningUserAdapterTest {
 
         assertEquals("user01", result.get(10L));
         assertEquals("user02", result.get(11L));
+    }
+
+    @Test
+    void findUserNames_withEmptyUserIds_returnsEmptyMapWithoutQuery() {
+        Map<Long, String> result = learningUserAdapter.findUserNames(List.of());
+
+        assertTrue(result.isEmpty());
+        verify(userRepository, never()).findByUserIds(List.of());
+    }
+
+    @Test
+    void findUserNames_returnsFallbackWhenNameAndNicknameAreNull() {
+        List<Long> userIds = List.of(10L);
+        given(userRepository.findByUserIds(userIds))
+                .willReturn(List.of(user(10L, null, null)));
+
+        Map<Long, String> result = learningUserAdapter.findUserNames(userIds);
+
+        assertEquals("알 수 없음", result.get(10L));
+    }
+
+    @Test
+    void findUserName_returnsFallbackWhenUserMissing() {
+        Long userId = 10L;
+        given(userRepository.findByUserId(userId)).willReturn(Optional.empty());
+
+        String result = learningUserAdapter.findUserName(userId);
+
+        assertEquals("알 수 없음", result);
     }
 
     private User user(Long userId, String name, String nickname) {
