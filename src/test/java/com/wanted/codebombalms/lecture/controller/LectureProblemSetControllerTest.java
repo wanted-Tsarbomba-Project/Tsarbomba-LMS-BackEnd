@@ -1,13 +1,14 @@
-package com.wanted.codebombalms.course.controller;
+package com.wanted.codebombalms.lecture.controller;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
-import com.wanted.codebombalms.course.presentation.api.CourseProblemController;
 import com.wanted.codebombalms.course.presentation.api.CourseResponseCode;
+import com.wanted.codebombalms.global.presentation.api.common.GlobalExceptionHandler;
 import com.wanted.codebombalms.lecture.application.command.ConfigureLectureProblemSetsCommand;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetCommandUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
+import com.wanted.codebombalms.lecture.presentation.api.LectureProblemSetController;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,9 +16,16 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,10 +40,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CourseProblemController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@DisplayName("CourseProblemController web test")
-class CourseProblemControllerTest {
+@WebMvcTest(LectureProblemSetController.class)
+@AutoConfigureMockMvc
+@ContextConfiguration(classes = {
+        LectureProblemSetController.class,
+        GlobalExceptionHandler.class,
+        LectureProblemSetControllerTest.TestSecurityConfig.class
+})
+@DisplayName("LectureProblemSetController web test")
+class LectureProblemSetControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,6 +62,19 @@ class CourseProblemControllerTest {
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
 
+    @TestConfiguration
+    @EnableMethodSecurity
+    static class TestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .build();
+        }
+    }
+
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
         given(lectureProblemSetQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
@@ -56,11 +82,11 @@ class CourseProblemControllerTest {
                 LectureProblemSet.restore(6002L, 101L, null, 2003L, LectureProblemSetRole.FINAL, 1)
         ));
 
-        mockMvc.perform(get("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(get("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseProblemSetId").value(6001L))
+                .andExpect(jsonPath("$.data[0].lectureProblemSetId").value(6001L))
                 .andExpect(jsonPath("$.data[0].role").value("MAIN"))
                 .andExpect(jsonPath("$.data[1].role").value("FINAL"));
     }
@@ -71,11 +97,11 @@ class CourseProblemControllerTest {
                 LectureProblemSet.restore(6001L, 101L, 101L, 2002L, LectureProblemSetRole.MAIN, 1)
         ));
 
-        mockMvc.perform(get("/api/v1/lectures/{lectureId}/problem-sets", 101L)
+        mockMvc.perform(get("/api/v1/lectures/{lectureId}/lecture-problem-sets", 101L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(CourseResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseProblemSetId").value(6001L))
+                .andExpect(jsonPath("$.data[0].lectureProblemSetId").value(6001L))
                 .andExpect(jsonPath("$.data[0].problemSetId").value(2002L))
                 .andExpect(jsonPath("$.data[0].lectureId").value(101L));
     }
@@ -107,7 +133,7 @@ class CourseProblemControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
@@ -148,7 +174,7 @@ class CourseProblemControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/v1/courses/{courseId}/problem-sets", 101L)
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
                         .with(authentication(operatorUser(1L)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(request))
@@ -156,8 +182,36 @@ class CourseProblemControllerTest {
                 .andExpect(jsonPath("$.code").value("COMMON-BAD-REQUEST"));
     }
 
+    @Test
+    void configureProblemSetsRejectsNonOperator() throws Exception {
+        String request = """
+                {
+                  "problemSets": [
+                    {
+                      "lectureId": 101,
+                      "problemSetId": 2002,
+                      "role": "MAIN",
+                      "displayOrder": 1
+                    }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lecture-problem-sets", 101L)
+                        .with(authentication(studentUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isForbidden());
+    }
+
     private Authentication operatorUser(Long userId) {
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_OPERATOR");
+        authentication.setAuthenticated(true);
+        return authentication;
+    }
+
+    private Authentication studentUser(Long userId) {
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken(userId, null, "ROLE_STUDENT");
         authentication.setAuthenticated(true);
         return authentication;
     }

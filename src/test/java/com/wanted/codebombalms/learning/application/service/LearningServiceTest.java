@@ -23,6 +23,7 @@ import com.wanted.codebombalms.learning.domain.repository.LectureProgressReposit
 import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -460,12 +462,13 @@ class LearningServiceTest {
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(userId)).willReturn("학생");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                userId,
+        List<Long> userIds = List.of(userId);
+        given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "학생"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds)).willReturn(Map.of(userId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
                 lectureProblemSetIds
-        )).willReturn(2L);
+        )).willReturn(Map.of(userId, 2L));
 
         List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
 
@@ -483,6 +486,39 @@ class LearningServiceTest {
     }
 
     @Test
+    void findStudentProgresses_treatsMissingBulkCountsAsZero() {
+        Long courseId = 101L;
+        Long firstUserId = 10L;
+        Long secondUserId = 11L;
+        List<Long> lectureIds = List.of(101L, 102L);
+        List<Long> lectureProblemSetIds = List.of(6001L, 6002L, 6003L);
+        List<Long> userIds = List.of(firstUserId, secondUserId);
+
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(userIds);
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningUserPort.findUserNames(userIds))
+                .willReturn(Map.of(firstUserId, "student1", secondUserId, "student2"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds))
+                .willReturn(Map.of(firstUserId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
+                lectureProblemSetIds
+        )).willReturn(Map.of(secondUserId, 2L));
+
+        List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
+
+        StudentLearningProgress first = results.get(0);
+        StudentLearningProgress second = results.get(1);
+        assertEquals(1L, first.completedLectureCount());
+        assertEquals(0L, first.completedProblemCount());
+        assertEquals(50, first.lectureProgressRate());
+        assertEquals(0L, second.completedLectureCount());
+        assertEquals(2L, second.completedProblemCount());
+        assertEquals(0, second.lectureProgressRate());
+    }
+
+    @Test
     void findStudentProgresses_reusesCourseItemIdsForMultipleStudents() {
         Long courseId = 101L;
         Long firstUserId = 10L;
@@ -494,18 +530,15 @@ class LearningServiceTest {
                 .willReturn(List.of(firstUserId, secondUserId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(firstUserId)).willReturn("student1");
-        given(learningUserPort.findUserName(secondUserId)).willReturn("student2");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(firstUserId, lectureIds)).willReturn(1L);
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(secondUserId, lectureIds)).willReturn(2L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                firstUserId,
+        List<Long> userIds = List.of(firstUserId, secondUserId);
+        given(learningUserPort.findUserNames(userIds))
+                .willReturn(Map.of(firstUserId, "student1", secondUserId, "student2"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds))
+                .willReturn(Map.of(firstUserId, 1L, secondUserId, 2L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
                 lectureProblemSetIds
-        )).willReturn(2L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                secondUserId,
-                lectureProblemSetIds
-        )).willReturn(3L);
+        )).willReturn(Map.of(firstUserId, 2L, secondUserId, 3L));
 
         List<StudentLearningProgress> results = adminLearningProgressQueryService.findStudentProgresses(courseId);
 
@@ -514,6 +547,99 @@ class LearningServiceTest {
         verify(learningCourseProblemPort, times(1)).findMainLectureProblemSetIdsByCourse(courseId);
         verify(learningMetrics, times(2)).recordStudentProgressItem(anyLong());
         verify(learningMetrics).recordStudentProgressQuery(anyLong());
+    }
+
+    @Test
+    void findStudentProgresses_withPage_returnsPagedProgress() {
+        Long courseId = 101L;
+        Long userId = 10L;
+        List<Long> lectureIds = List.of(101L, 102L);
+        List<Long> lectureProblemSetIds = List.of(6001L, 6002L, 6003L);
+        List<Long> userIds = List.of(userId);
+
+        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(21L);
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 1, 20)).willReturn(userIds);
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "student1"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds))
+                .willReturn(Map.of(userId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
+                lectureProblemSetIds
+        )).willReturn(Map.of(userId, 2L));
+
+        var result = adminLearningProgressQueryService.findStudentProgresses(courseId, 1);
+
+        assertEquals(1, result.content().size());
+        assertEquals(1, result.page());
+        assertEquals(20, result.size());
+        assertEquals(21L, result.totalElements());
+        assertEquals(2, result.totalPages());
+        assertFalse(result.hasNext());
+        verify(learningEnrollmentPort).findActiveStudentIdsByCourse(courseId, 1, 20);
+    }
+
+    @Test
+    void findStudentProgresses_withEmptyCourseItemIds_returnsZeroCountsWithoutBulkCountQueries() {
+        Long courseId = 101L;
+        Long userId = 10L;
+        List<Long> userIds = List.of(userId);
+
+        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(1L);
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 0, 20)).willReturn(userIds);
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(List.of());
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(List.of());
+        given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "student1"));
+
+        var result = adminLearningProgressQueryService.findStudentProgresses(courseId, 0);
+
+        assertEquals(1, result.content().size());
+        assertEquals(0L, result.content().get(0).completedLectureCount());
+        assertEquals(0L, result.content().get(0).totalLectureCount());
+        assertEquals(0L, result.content().get(0).completedProblemCount());
+        assertEquals(0L, result.content().get(0).totalProblemCount());
+        verify(lectureProgressRepository, never())
+                .countCompletedByUserIdsAndLectureIds(userIds, List.of());
+        verify(lectureProblemProgressRepository, never())
+                .countCompletedByUserIdsAndLectureProblemSetIds(userIds, List.of());
+    }
+
+    @Test
+    void findStudentProgress_withEmptyCourseItemIds_returnsZeroCountsWithoutCountQueries() {
+        Long courseId = 101L;
+        Long userId = 10L;
+
+        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(List.of());
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(List.of());
+        given(learningUserPort.findUserName(userId)).willReturn("student1");
+
+        StudentLearningProgress result = adminLearningProgressQueryService.findStudentProgress(courseId, userId);
+
+        assertEquals(0L, result.completedLectureCount());
+        assertEquals(0L, result.totalLectureCount());
+        assertEquals(0L, result.completedProblemCount());
+        assertEquals(0L, result.totalProblemCount());
+        verify(lectureProgressRepository, never()).countCompletedByUserIdAndLectureIds(userId, List.of());
+        verify(lectureProblemProgressRepository, never())
+                .countCompletedByUserIdAndLectureProblemSetIds(userId, List.of());
+    }
+
+    @Test
+    void findStudentProgresses_withNegativePage_usesFirstPage() {
+        Long courseId = 101L;
+
+        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(21L);
+        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 0, 20)).willReturn(List.of());
+
+        var result = adminLearningProgressQueryService.findStudentProgresses(courseId, -1);
+
+        assertEquals(0, result.page());
+        assertEquals(20, result.size());
+        assertEquals(21L, result.totalElements());
+        assertEquals(2, result.totalPages());
+        assertTrue(result.hasNext());
+        verify(learningEnrollmentPort).findActiveStudentIdsByCourse(courseId, 0, 20);
     }
 
     @Test
@@ -527,12 +653,13 @@ class LearningServiceTest {
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(userId)).willReturn("?숈깮");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                userId,
+        given(learningUserPort.findUserNames(List.of(userId))).willReturn(Map.of(userId, "student1"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(List.of(userId), lectureIds))
+                .willReturn(Map.of(userId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                List.of(userId),
                 lectureProblemSetIds
-        )).willReturn(2L);
+        )).willReturn(Map.of(userId, 2L));
 
         CourseLearningProgress result = adminLearningProgressQueryService.findCourseProgress(courseId);
 
@@ -589,12 +716,13 @@ class LearningServiceTest {
         given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId)).willReturn(List.of(userId));
         given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
         given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
-        given(learningUserPort.findUserName(userId)).willReturn("?숈깮");
-        given(lectureProgressRepository.countCompletedByUserIdAndLectureIds(userId, lectureIds)).willReturn(1L);
-        given(lectureProblemProgressRepository.countCompletedByUserIdAndLectureProblemSetIds(
-                userId,
+        List<Long> userIds = List.of(userId);
+        given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "학생"));
+        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds)).willReturn(Map.of(userId, 1L));
+        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                userIds,
                 lectureProblemSetIds
-        )).willReturn(2L);
+        )).willReturn(Map.of(userId, 2L));
 
         LearningProgressSummary result = adminLearningProgressQueryService.summarizeLearningProgress();
 

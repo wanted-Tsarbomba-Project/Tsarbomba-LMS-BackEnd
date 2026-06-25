@@ -62,9 +62,9 @@ course
 | `PATCH` | `/api/v1/courses/{courseId}/publish` | 강좌 공개 | `ROLE_OPERATOR` |
 | `DELETE` | `/api/v1/courses/{courseId}` | 강좌 삭제 | `ROLE_OPERATOR` |
 | `GET` | `/api/v1/course-categories` | 강좌 카테고리 목록 조회 | 전체 |
-| `GET` | `/api/v1/courses/{courseId}/problem-sets` | 강좌 기준 문제 세트 목록 조회 | 전체 |
-| `GET` | `/api/v1/lectures/{lectureId}/problem-sets` | 강의 기준 문제 세트 목록 조회 | 전체 |
-| `PUT` | `/api/v1/courses/{courseId}/problem-sets` | 강좌 문제 세트 연결 설정 | `ROLE_OPERATOR` |
+| `GET` | `/api/v1/courses/{courseId}/lecture-problem-sets` | 강좌 기준 강의 문제 세트 목록 조회 | 전체 |
+| `GET` | `/api/v1/lectures/{lectureId}/lecture-problem-sets` | 강의 기준 강의 문제 세트 목록 조회 | 전체 |
+| `PUT` | `/api/v1/courses/{courseId}/lecture-problem-sets` | 강좌 강의 문제 세트 연결 설정 | `ROLE_OPERATOR` |
 | `GET` | `/api/v1/users/{userId}/courses` | 강사별 강좌 목록 조회 | 전체 |
 
 ## 핵심 흐름
@@ -91,7 +91,7 @@ course
 
 ### 강좌 문제 세트 연결
 
-1. 운영자가 `/api/v1/courses/{courseId}/problem-sets`에 연결 목록을 전달한다.
+1. 운영자가 `/api/v1/courses/{courseId}/lecture-problem-sets`에 연결 목록을 전달한다.
 2. `LectureProblemSetCommandService`가 강좌 존재 여부를 확인한다.
 3. `LectureProblemSetPolicy`가 강의, 문제 세트, 역할 등의 연결 조건을 검증한다.
 4. 기존 연결이 있으면 식별자를 재사용하고, 없으면 새 연결로 저장한다.

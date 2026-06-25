@@ -2,6 +2,7 @@ package com.wanted.codebombalms.global.presentation.api.common;
 
 import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.exception.*;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.Arrays;
@@ -41,6 +43,8 @@ public class GlobalExceptionHandler {
             MissingServletRequestParameterException.class,
             MissingServletRequestPartException.class,
             MethodArgumentTypeMismatchException.class,
+            ConstraintViolationException.class,
+            HandlerMethodValidationException.class,
             HttpMessageNotReadableException.class,
             HttpMediaTypeNotSupportedException.class
     })

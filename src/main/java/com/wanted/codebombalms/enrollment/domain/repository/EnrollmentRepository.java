@@ -18,6 +18,10 @@ public interface EnrollmentRepository {
 
     List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
 
+    List<Enrollment> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status, int page, int size);
+
+    long countByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
+
     Optional<Enrollment> findByEnrollmentIdAndStatus(Long enrollmentId, EnrollmentStatus status);
 
     Optional<Enrollment> findByCourseIdAndUserIdAndStatus(Long courseId, Long userId, EnrollmentStatus status);
