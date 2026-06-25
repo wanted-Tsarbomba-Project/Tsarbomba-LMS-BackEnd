@@ -3,10 +3,17 @@ package com.wanted.codebombalms.auth.application.service;
 import com.wanted.codebombalms.auth.application.command.LoginCommand;
 import com.wanted.codebombalms.auth.application.dto.LoginResult;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.auth.domain.model.GeoLocation;
 import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
+import com.wanted.codebombalms.auth.domain.model.TrustedDevice;
+import com.wanted.codebombalms.auth.domain.repository.LockTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.LoginHistoryRepository;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
+import com.wanted.codebombalms.auth.domain.repository.StepUpTokenRepository;
+import com.wanted.codebombalms.auth.domain.repository.TrustedDeviceRepository;
+import com.wanted.codebombalms.auth.domain.service.EmailSender;
+import com.wanted.codebombalms.auth.domain.service.GeoIpResolver;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
@@ -29,7 +36,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -37,9 +44,16 @@ import static org.mockito.Mockito.*;
 @DisplayName("LoginService 단위 테스트")
 class LoginServiceTest {
 
+    private static final String DEVICE_FP = "DEVICE_FP";
+
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private LoginHistoryRepository loginHistoryRepository;
+    @Mock private TrustedDeviceRepository trustedDeviceRepository;
+    @Mock private StepUpTokenRepository stepUpTokenRepository;
+    @Mock private LockTokenRepository lockTokenRepository;
+    @Mock private GeoIpResolver geoIpResolver;
+    @Mock private EmailSender emailSender;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private HttpServletRequest httpRequest;
@@ -55,26 +69,54 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("정상 로그인 시 LoginResult(토큰 2개 + 닉네임)를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
-    void 로그인_성공() {
+    @DisplayName("신뢰 기기 로그인 시 LoginResult(토큰 2개 + 닉네임)를 반환하고 새 Refresh Token + LoginHistory를 저장한다.")
+    void 신뢰기기_로그인_성공() {
         // given
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
+        given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
+        given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP))
+                .willReturn(Optional.of(TrustedDevice.register(1L, DEVICE_FP, "Chrome", null, null)));
         given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        LoginResult result = loginService.login(command, httpRequest);
+        LoginResult result = loginService.login(command, httpRequest, DEVICE_FP);
 
         // then
+        assertFalse(result.stepUpRequired());
         assertEquals("ACCESS_TOKEN", result.accessToken());
         assertEquals("REFRESH_TOKEN", result.refreshToken());
         assertEquals("길동이", result.nickname());
         verify(refreshTokenRepository).deleteByUserId(1L);
         verify(refreshTokenRepository).save(any(RefreshToken.class));
         verify(loginHistoryRepository).save(any(LoginHistory.class));
+    }
+
+    @Test
+    @DisplayName("미신뢰 기기 로그인 시 step-up(이메일 OTP)을 요구하고 정식 토큰은 발급하지 않는다.")
+    void 미신뢰기기_stepup() {
+        // given
+        User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
+        given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
+        given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
+        given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP)).willReturn(Optional.empty());
+
+        // when
+        LoginResult result = loginService.login(command, httpRequest, DEVICE_FP);
+
+        // then
+        assertTrue(result.stepUpRequired());
+        assertNotNull(result.stepUpToken());
+        assertNotNull(result.maskedEmail());
+        assertNull(result.accessToken());
+        verify(emailSender).sendStepUpCode(eq("test@example.com"), anyString(), anyString());        verify(stepUpTokenRepository).save(anyString(), any());
+        verify(loginHistoryRepository).save(any(LoginHistory.class));
+        verify(jwtTokenProvider, never()).generateAccessToken(anyLong(), anyString(), any());
+        verify(refreshTokenRepository, never()).save(any());
     }
 
     @Test
@@ -86,7 +128,7 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command, httpRequest)
+                () -> loginService.login(command, httpRequest, DEVICE_FP)
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
@@ -104,7 +146,7 @@ class LoginServiceTest {
         // when & then
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
-                () -> loginService.login(command, httpRequest)
+                () -> loginService.login(command, httpRequest, DEVICE_FP)
         );
         assertEquals(AuthErrorCode.AUTH_LOGIN_FAIL, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
@@ -122,7 +164,7 @@ class LoginServiceTest {
         // when & then
         ForbiddenException ex = assertThrows(
                 ForbiddenException.class,
-                () -> loginService.login(command, httpRequest)
+                () -> loginService.login(command, httpRequest, DEVICE_FP)
         );
         assertEquals(UserErrorCode.USER_ACCOUNT_LOCKED, ex.getErrorCode());
         verify(refreshTokenRepository, never()).save(any());
@@ -130,18 +172,21 @@ class LoginServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 시 기존 Refresh Token을 전부 삭제하고 새 토큰을 저장한다 (단일 세션 강제).")
+    @DisplayName("신뢰 기기 로그인 시 기존 Refresh Token을 전부 삭제하고 새 토큰을 저장한다 (단일 세션 강제).")
     void 단일_세션_강제() {
         // given
         User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
         given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
+        given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
+        given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP))
+                .willReturn(Optional.of(TrustedDevice.register(1L, DEVICE_FP, "Chrome", null, null)));
         given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
         // when
-        loginService.login(command, httpRequest);
+        loginService.login(command, httpRequest, DEVICE_FP);
 
         // then — 삭제 후 저장 순서 검증
         var inOrder = inOrder(refreshTokenRepository);

@@ -1,6 +1,6 @@
 # Problems 도메인 M4 메트릭 / 로그 설계
 
-> 병목 가설: `monitoring/docs/domains/problems/bottleneck-hypothesis.md`
+> 병목 가설: `monitoring-local/docs/domains/problems/bottleneck-hypothesis.md`
 > 현재 M4 측정 대상은 Problems 하위 기능 중 Ranking, Badge 입니다.
 
 ---

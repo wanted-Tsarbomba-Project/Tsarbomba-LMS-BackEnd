@@ -42,6 +42,32 @@ public class JavaMailEmailSender implements EmailSender {
         log.info("[EmailSender] 비밀번호 재설정 코드 발송 완료 - to: {}", maskEmail(to));
     }
 
+    // sendPasswordResetCode 메서드 아래에 추가
+    @Override
+    public void sendStepUpCode(String to, String code, String lockUrl) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(fromAddress);
+        message.setTo(to);
+        message.setSubject("[Code-Bomba LMS] 새로운 기기 로그인 — 추가 인증 코드");
+        message.setText(buildStepUpBody(code, lockUrl));
+
+        mailSender.send(message);
+        log.info("[EmailSender] step-up 코드 발송 완료 - to: {}", maskEmail(to));
+    }
+
+    private String buildStepUpBody(String code, String lockUrl) {
+        return """
+                평소와 다른 기기 또는 위치에서 로그인이 시도되었습니다.
+
+                본인이 맞다면 아래 인증 코드를 입력해주세요.
+                인증 코드: %s
+                (이 코드는 5분간 유효합니다.)
+
+                본인이 시도한 로그인이 아니라면, 아래 링크를 눌러 계정을 즉시 잠그세요.
+                %s
+                """.formatted(code, lockUrl);
+    }
+
     /** 로그에 이메일 평문(PII) 노출 방지 — 앞 1글자 + *** + 도메인만 남긴다. (예: j***@gmail.com) */
     private String maskEmail(String email) {
         if (email == null) {

@@ -19,4 +19,9 @@ public class AuthResponseCode {
     public static final String OAUTH_AUTH_URL_ISSUED = "AUTH-OAUTH-AUTH-URL-ISSUED";
     public static final String OAUTH_SIGNUP_COMPLETED = "AUTH-OAUTH-SIGNUP-COMPLETED";
     public static final String OAUTH_TEMP_INFO_RETRIEVED = "AUTH-OAUTH-TEMP-INFO-RETRIEVED";
+
+    public static final String STEP_UP_REQUIRED = "AUTH-STEP-UP-REQUIRED";
+    public static final String STEP_UP_VERIFIED = "AUTH-STEP-UP-VERIFIED";
+    public static final String STEP_UP_CODE_RESENT = "AUTH-STEP-UP-CODE-RESENT";
+    public static final String ACCOUNT_LOCKED = "AUTH-ACCOUNT-LOCKED";
 }

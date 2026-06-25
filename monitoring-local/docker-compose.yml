@@ -6,7 +6,7 @@
 # 완전 초기화:  docker compose down -v     (메트릭/로그/DB 전부 삭제 ⚠️)
 # 부하테스트:   docker compose run --rm k6 run -o experimental-prometheus-rw /scripts/<스크립트>.js
 #
-# 자세한 내용: ./README.md
+# 자세한 내용: ./monitoring-deploy.md
 # =============================================================
 
 

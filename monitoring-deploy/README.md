@@ -1,161 +1,98 @@
-# 모니터링 배포 방법 (③ EC2)
+# 배포 BE 부하테스트 (monitoring-deploy)
 
-CodeBomb LMS 모니터링 스택(Prometheus·Loki·Grafana·Redis)을 AWS EC2에 배포하는 전체 절차.
-**처음(AWS 계정만 있는 상태)부터 배포·검증까지** 재현 가능하게 정리한다.
+> **배포된 ② Spring(EC2)** 에 k6로 부하를 주고, **배포 ③ Grafana로 서버를 관측**하는 키트.
+> 로컬 앱 부하는 [`../monitoring-local`](../monitoring-local) 을 쓴다 — 여긴 **배포 전용**.
 
-> 로컬 부하테스트용 스택은 `../monitoring-local/`. 이 디렉토리(`monitoring-deploy/`)는 **EC2 배포 전용**이다.
-
----
-
-## 0. 아키텍처 / 방식
-
-- **배포 방식**: 생짜 EC2 + GitHub Actions SSH (Elastic Beanstalk 아님)
-- **모니터링은 ECR 불필요** — prom/grafana/loki/redis 전부 기성 이미지라 Docker Hub에서 직접 pull. compose 파일과 설정만 EC2로 scp 후 `docker compose up`.
-- **③ EC2 구성**: `prometheus(9090) + loki(3100) + grafana(3000) + redis(6379)`
-- **흐름**:
-  ```
-  deploy 브랜치에 monitoring-deploy/** push
-    → GitHub Actions
-       ├ scp: monitoring-deploy/* → ③ EC2 /opt/monitoring
-       └ ssh: docker compose --env-file .env up -d
-  ```
-
----
-
-## 1. AWS 기본 세팅 (최초 1회)
-
-### 1-1. IAM (3종)
-| IAM | 용도 | 권한 |
+| | monitoring-local | **monitoring-deploy (여기)** |
 |---|---|---|
-| 작업용 사용자 (`codebomb-admin`) | 콘솔 관리. root 대신 | `AdministratorAccess` |
-| CI 사용자 (`codebomb-ci`) | GitHub Actions ECR push (챗봇/프론트/Spring용) | `AmazonEC2ContainerRegistryPowerUser` + Access Key |
-| EC2 Role (`codebomb-ec2-ecr`) | EC2가 ECR pull (①②④용) | `AmazonEC2ContainerRegistryReadOnly` |
+| 대상 | 내 PC의 로컬 앱(loadtest 프로파일, 도커 MySQL) | **배포 ② Spring `43.200.241.157:8080`** (실 RDS) |
+| 관측 스택 | 로컬 prometheus/grafana/loki 직접 띄움 | **안 띄움** — 배포 ③ Grafana가 이미 BE 스크랩 |
+| 구성 | 풀스택 compose | **k6 단독** |
 
-> 모니터링(③)은 ECR 안 쓰므로 CI 사용자·EC2 Role 불필요. 위 ②③은 챗봇/프론트/Spring 단계에서 쓴다.
+---
 
-### 1-2. 키페어
-EC2 → 네트워크 및 보안 → 키 페어 → 생성. 이름 `codebomb-ec2-key`, **RSA / .pem**. (리전 ap-northeast-2). 전체 EC2가 이 키 하나 공유.
+## ⚠️ 안전 — 이것부터 읽어라
 
-### 1-3. 보안그룹 (모니터링용, 이름 `sg-` 불가 → 예 `codebomb-mon`)
-| 포트 | 소스 | 용도 |
+배포 BE는 **진짜 RDS(codebomba)** 를 쓴다. 그래서:
+
+- ✅ **읽기(GET) 시나리오만** 여기 담겨 있다. 쓰기/생성류(`badge-sync`·`hide-today`·`generation`·`operation-rule-run`)는 **일부러 뺐다** → 그건 `monitoring-local`(격리 DB)에서만.
+- ✅ **계정은 전용 테스트 계정**을 써라. 일반 사용자 계정으로 로그인 부하 주지 말 것.
+- ❌ VU를 무리하게 올리지 마라. BE는 t3.small(SUT) — README의 기본 스테이지 수준으로.
+
+---
+
+## 시나리오 티어
+
+### Tier 0 — 무인증·무시드 (지금 바로, 가장 안전) ⭐ 여기서 시작
+| 스크립트 | 엔드포인트 | 비고 |
 |---|---|---|
-| 22 (SSH) | 내 IP | 접속·배포 |
-| 9090 (Prometheus) | 내 IP | UI (인증 없음 — 절대 공개 금지) |
-| 3000 (Grafana) | `0.0.0.0/0` | 팀 공유 (비번·가입/익명차단으로 방어) |
-| 6379 (Redis) | (나중) sg-spring | OTP. ② 생성 시 추가 |
-| 3100 (Loki) | (나중) sg-spring·sg-chatbot | ②④ promtail push. ②④ 생성 시 추가 |
+| `auth/01-email-check.js` | `GET /auth/check/email` | 랜덤 이메일 중복확인. 로그인·시드 불필요, 순수 읽기 |
 
-- 아웃바운드: 기본(전체 허용) 유지.
-- "내 IP"는 현재 공인 IP. **네트워크 바뀌면(집·카페·핫스팟) 22·9090 소스 갱신** 필요.
+### Tier 1 — 실계정 로그인 + 시드 데이터 필요
+> `setup()`에서 **1회 로그인**(POST /auth/login) 후 GET. **배포 RDS에 해당 계정·데이터가 있어야** 동작/의미가 있다. 로그인 계정은 `-e LOGIN_EMAIL=... -e LOGIN_PASSWORD=...` 로 주입.
 
-### 1-4. EC2 인스턴스
-| 항목 | 값 |
+| 스크립트 | 엔드포인트 | 필요 권한 |
+|---|---|---|
+| `user/01-student-list-baseline.js` | `GET /users` | **ADMIN** 계정 + 학생 다수 시드 |
+| `admin/01-alert-list-baseline.js` | `GET /admin/alerts...` | ADMIN |
+| `admin/02-alert-detail-baseline.js` | `GET /admin/alerts/{id}...` | ADMIN |
+| `ranking/01-ranking-baseline.js` | `GET /ranking...` | 일반 사용자 |
+| `learning/01-student-progress-baseline.js` | `GET /learning...` | 일반 사용자 |
+| `recommendation/01-list-baseline.js` | `GET /recommendation...` | 일반 사용자 |
+| `chat/01-list-baseline.js` | `GET /chat/list` | 일반 사용자 |
+
+### 제외 (쓰기/생성 — 로컬 전용, 여기 없음)
+`admin/03-operation-rule-run`, `badge/01-badge-sync`, `recommendation/02-hide-today`, `recommendation/03-generation`
+
+---
+
+## 실행
+
+### 0. 사전
+- Docker Desktop 실행 중
+- 배포 BE 살아있는지: `curl http://43.200.241.157:8080/actuator/health` → `{"status":"UP"}`
+- 배포 ③ Grafana 열어두기: `http://13.124.63.188:3000` (Spring/JVM 대시보드)
+
+### 1. Tier 0 — 바로 쏘기 (`monitoring-deploy/` 에서)
+```bash
+docker compose run --rm k6 run /scripts/auth/01-email-check.js
+```
+> `BASE_URL` 기본값이 배포 BE라 **따로 안 줘도 배포로 간다**(`k6/lib/config.js`).
+> ⚠️ `-o experimental-prometheus-rw` **붙이지 마라** — 그건 로컬 prometheus로 push하는 옵션. 배포 ③ Prometheus가 이미 BE를 스크랩하므로 불필요(붙이면 에러).
+
+### 2. Tier 1 — 실계정으로 쏘기
+```bash
+docker compose run --rm \
+  -e LOGIN_EMAIL=admin@test.com -e LOGIN_PASSWORD='****' \
+  k6 run /scripts/user/01-student-list-baseline.js
+```
+
+### 전/후 비교용 이름
+```bash
+docker compose run --rm -e RESULT_NAME=user-list-deploy k6 run /scripts/user/01-student-list-baseline.js
+```
+
+---
+
+## 결과 보기
+
+| 어디 | 무엇 |
 |---|---|
-| AMI | Ubuntu Server 26.04 LTS **x86_64** (앱 이미지가 amd64라 Arm 금지) |
-| 타입 | **t3.small** (RAM 2GB — 컨테이너 4개. micro는 OOM. ⚠️프리티어 아님) |
-| 키페어 | codebomb-ec2-key |
-| 보안그룹 | 기존 선택 → codebomb-mon |
-| 퍼블릭 IP | 활성 |
-| 스토리지 | gp3 20GB |
+| 터미널(끝나면) | `http_req_duration p95`, `http_req_failed` — 합격선 통과? |
+| `k6/results/<이름>-summary.md` / `.json` | 자동 저장(해석 가이드 포함). *콘솔이 `monitoring/k6/results/`로 표기해도 실제 저장 위치는 여기 `monitoring-deploy/k6/results/`* |
+| 배포 ③ Grafana | **서버측** CPU·힙·HikariCP active·http p95 — 병목 위치 |
+| 배포 ③ Grafana → Loki | `{job="spring"}` — 느린 요청/에러 로그 |
 
-### 1-5. EIP (선택, 권장)
-네트워크 → 탄력적 IP → 할당 → 인스턴스에 연결. IP 고정(stop/start해도 안 바뀜).
-- ⚠️ 미연결 방치 시 과금. terminate 후엔 **릴리스**해야 과금 정지.
+> k6 터미널 = **클라이언트 체감**(네트워크 포함), Grafana = **서버 내부**. 둘을 같이 봐야 병목이 네트워크냐 서버/DB냐 갈린다.
 
 ---
 
-## 2. EC2 셋업 (SSH, 최초 1회)
-
-```bash
-# 접속 (PowerShell). pem 권한 에러 시: icacls <pem> /inheritance:r ; icacls <pem> /grant:r "%USERNAME%:(R)"
-ssh -i "C:\path\codebomb-ec2-key.pem" ubuntu@<EIP>
-
-# docker 설치
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker ubuntu
-exit                       # 그룹 적용 위해 재접속
-# (재접속 후) 확인
-docker compose version
-docker ps
-
-# 배포 디렉토리 + .env
-sudo mkdir -p /opt/monitoring
-sudo chown ubuntu:ubuntu /opt/monitoring
-nano /opt/monitoring/.env
-```
-
-`.env` 내용 (비번은 `openssl rand -base64 18`로 강하게, git 커밋 금지):
-```bash
-GRAFANA_USER=admin
-GRAFANA_PASSWORD=<랜덤 16자+>
-REDIS_PASSWORD=<랜덤 16자+>
-```
-
----
-
-## 3. GitHub Secrets (BE 레포)
-
-Settings → Secrets and variables → Actions:
-
-| Secret | 값 |
-|---|---|
-| `MON_EC2_HOST` | EIP (순수 IP만. `http://`·포트 X) |
-| `EC2_SSH_USER` | `ubuntu` |
-| `EC2_SSH_KEY` | `.pem` 내용 전체 (BEGIN~END 포함, 줄바꿈 유지) |
-
----
-
-## 4. 파일 구조
-
-```
-monitoring-deploy/
-├ docker-compose.yml          prom+loki+grafana+redis
-├ prometheus/prometheus.yml   ② scrape + remote-write
-├ grafana/provisioning/       datasources(prometheus/loki) + dashboards
-├ .env.example                샘플 (실제 .env는 EC2에만)
-└ .gitignore                  .env
-.github/workflows/monitoring-deploy.yml   배포 워크플로
-```
-
----
-
-## 5. 배포
-
-- **자동**: `monitoring-deploy/**`를 `deploy` 브랜치에 push → 워크플로 자동 실행
-- **수동**: Actions 탭 → "Deploy Monitoring (③ EC2)" → Run workflow (workflow_dispatch)
-- secret 고친 뒤 재시도: 실패한 run → **Re-run jobs**
-
----
-
-## 6. 검증
-
-```bash
-# EC2에서
-docker ps        # prometheus/loki/grafana/redis 4개 Up
-```
-- 브라우저 `http://<EIP>:3000` → Grafana 로그인(admin / .env 비번)
-- Grafana → Connections → Data sources에 Prometheus·Loki 자동 등록 확인
-- 팀원은 Grafana에서 **Viewer 계정** 발급해 공유
-
-> Prometheus의 spring 타깃은 `<SPRING_PRIVATE_IP>` 플레이스홀더라 "down"이 정상. ② Spring 생성 후 채운다.
-
----
-
-## 7. 운영
-
-- **측정/시연 때만 켜고 평소 stop** (t3.small 과금 절감). EIP라 start해도 IP 유지.
-- 코드 안 바뀌면 start 후 `cd /opt/monitoring && docker compose --env-file .env up -d`로 재기동.
-- **네트워크 바뀌면** SG 22·9090 소스를 현재 IP로 갱신.
-- 프로젝트 종료 시: EC2 terminate + **EIP 릴리스** + 키페어 정리.
-
----
-
-## 8. 트러블슈팅
+## 트러블슈팅
 
 | 증상 | 원인 / 해결 |
 |---|---|
-| SSH `Connection timed out` | SG 22 소스가 현재 IP 아님 → "내 IP" 갱신 (네트워크 바뀜) |
-| `UNPROTECTED PRIVATE KEY` | Windows pem 권한 과다 → `icacls /inheritance:r` + 본인 읽기만 |
-| scp `no such host` | `MON_EC2_HOST` 값 오류 → 순수 IP로 수정 후 Re-run |
-| `docker` permission denied | usermod 후 재접속 안 함 → exit 후 재접속 |
-| Grafana 접속 안 됨 | SG 3000 / 컨테이너 Up / EIP 확인 |
+| `[auth] 로그인 실패 status=401` | 배포 RDS에 그 계정 없음 → `-e LOGIN_EMAIL/PASSWORD`를 **배포에 실제 있는 계정**으로 |
+| Tier1 GET이 403 | 권한 부족 → ADMIN 필요한 스크립트는 admin 계정으로 |
+| 응답은 200인데 데이터 빈약 | 배포 RDS에 시드가 적음 → 부하 의미 약함(로컬 시드 환경과 다름) |
+| `connection refused` | 배포 BE 꺼져있음 → EC2 start / health 확인 |
+| Grafana에 k6 지표 안 보임 | 정상 — 여긴 서버측만 본다(k6 클라 지표는 터미널/results). |

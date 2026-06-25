@@ -6,8 +6,8 @@ positions:
   filename: /tmp/positions.yaml
 
 clients:
-  # ③ 모니터링 EC2의 Loki 사설IP (같은 VPC 내부 통신)
-  - url: http://172.31.39.210:3100/loki/api/v1/push
+  # ③ 모니터링 EC2의 Loki (사설IP는 .env의 LOKI_HOST로 주입 — compose의 expand-env=true가 치환)
+  - url: http://${LOKI_HOST}:3100/loki/api/v1/push
 
 scrape_configs:
   - job_name: docker

@@ -11,4 +11,6 @@ public interface LoginHistoryRepository {
     LoginHistory save(LoginHistory loginHistory);
 
     Map<Long, LocalDateTime> findLatestLoginAtByUserIds(List<Long> userIds);
+
+    List<LoginHistory> findByUserId(Long userId, int page, int size);
 }
