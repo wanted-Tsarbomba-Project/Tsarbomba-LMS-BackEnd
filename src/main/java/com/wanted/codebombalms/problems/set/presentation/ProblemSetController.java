@@ -8,7 +8,7 @@ import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuer
 import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase;
 import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetEnterResponse;
-import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetListResponse;
+import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetPageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Tag(name = "문제 세트", description = "학생이 문제 세트 목록을 조회하고 문제 풀이에 진입하는 API")
 @RestController
@@ -118,15 +116,16 @@ public class ProblemSetController {
             )
     })
     @GetMapping("/api/v1/problem-sets")
-    public ResponseEntity<ApiResponse<List<ProblemSetListResponse>>> findProblemSets(
+    public ResponseEntity<ApiResponse<ProblemSetPageResponse>> findProblemSets(
             @Parameter(description = "조회할 문제 카테고리 ID", example = "3001")
-            @RequestParam(required = false) Long categoryId
+            @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "20")
+            @RequestParam(defaultValue = "20") int size
     ) {
-        var query = new GetProblemSetsQuery(categoryId);
-        var response = getProblemSetsUseCase.handle(query)
-                .stream()
-                .map(ProblemSetListResponse::new)
-                .toList();
+        var query = new GetProblemSetsQuery(categoryId, page, size);
+        var response = ProblemSetPageResponse.from(getProblemSetsUseCase.handle(query));
 
         return ResponseEntity.ok(ApiResponse.success(
                 ApiResponseCode.SUCCESS,
