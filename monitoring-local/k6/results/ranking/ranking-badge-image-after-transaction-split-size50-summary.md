@@ -4,21 +4,21 @@
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 4363 |
-| iterations | 2181 |
-| checks success rate | 100.00% |
-| http_req_failed | 0.00% |
-| data_received bytes | 221677007 |
-| data_sent bytes | 1542175 |
+| http_reqs | 1 |
+| iterations |  |
+| checks success rate |  |
+| http_req_failed | 100.00% |
+| data_received bytes | 0 |
+| data_sent bytes | 0 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 17.85 | 9.72 | 16.65 | 22.42 | 25.51 | 34.76 | 604.83 |
-| http_req_waiting | 14.61 | 8.30 | 13.58 | 18.66 | 21.22 | 28.27 | 601.26 |
-| http_req_blocked | 0.05 | 0.00 | 0.00 | 0.01 | 0.01 | 2.50 | 5.43 |
-| http_req_connecting | 0.04 | 0 | 0 | 0 | 0 | 2.35 | 4.84 |
+| http_req_duration | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| http_req_waiting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| http_req_blocked | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| http_req_connecting | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 
 ## Metric Meaning
 
@@ -36,12 +36,7 @@
 
 | Check | Result |
 | --- | --- |
-| GET /rankings/points status is 200 | 2181 pass / 0 fail |
-| GET /rankings/points has rankings array | 2181 pass / 0 fail |
-| GET /rankings/points has badge image urls | 2181 pass / 0 fail |
-| GET /rankings/points/weekly status is 200 | 2181 pass / 0 fail |
-| GET /rankings/points/weekly has rankings array | 2181 pass / 0 fail |
-| GET /rankings/points/weekly has badge image urls | 2181 pass / 0 fail |
+| check details | Check console output or JSON summary. |
 
 ## How To Compare
 
