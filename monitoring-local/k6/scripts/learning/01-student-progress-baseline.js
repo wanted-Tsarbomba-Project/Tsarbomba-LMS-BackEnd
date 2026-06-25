@@ -65,4 +65,4 @@ export default function (data) {
 }
 
 // 결과 저장, 테스트 결과 자동 저장
-export const handleSummary = createSummaryHandler("learning-student-progress-baseline");
+export const handleSummary = createSummaryHandler("learning-student-progress-baseline", "learning");

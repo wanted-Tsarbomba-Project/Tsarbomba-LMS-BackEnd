@@ -79,7 +79,7 @@ docker compose run --rm -e RESULT_NAME=user-list-deploy k6 run /scripts/user/01-
 | 어디 | 무엇 |
 |---|---|
 | 터미널(끝나면) | `http_req_duration p95`, `http_req_failed` — 합격선 통과? |
-| `k6/results/<이름>-summary.md` / `.json` | 자동 저장(해석 가이드 포함). *콘솔이 `monitoring/k6/results/`로 표기해도 실제 저장 위치는 여기 `monitoring-deploy/k6/results/`* |
+| `k6/results/<이름>-summary.md` / `.json` | 자동 저장(해석 가이드 포함). 콘솔에도 `monitoring-deploy/k6/results/` 기준으로 표기된다. |
 | 배포 ③ Grafana | **서버측** CPU·힙·HikariCP active·http p95 — 병목 위치 |
 | 배포 ③ Grafana → Loki | `{job="spring"}` — 느린 요청/에러 로그 |
 

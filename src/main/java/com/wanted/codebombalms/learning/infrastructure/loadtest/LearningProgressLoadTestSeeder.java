@@ -1,12 +1,18 @@
 package com.wanted.codebombalms.learning.infrastructure.loadtest;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HexFormat;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,7 +20,8 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@Profile("loadtest & loadtest-learning")
+@Profile("loadtest & !loadtest-admin")
+@Order(0)
 @RequiredArgsConstructor
 public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
@@ -33,22 +40,28 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
     private static final String ADMIN_EMAIL = "learning-loadtest-admin@test.com";
     private static final String OPERATOR_EMAIL = "learning-loadtest-operator@test.com";
-    private static final int STUDENTS = 200;
     private static final int LECTURES = 12;
     private static final int PROBLEM_SETS = 12;
     private static final String LOGIN_PASSWORD = "Test1234!";
+    private static final String LOADTEST_DEVICE_ID = "learning-loadtest-device";
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${learning.loadtest.students:10000}")
+    private int students;
+
     @Override
     public void run(ApplicationArguments args) {
+        log.info("event=learning_loadtest_seed_started courseId={} students={}", COURSE_ID, students);
+
         Long enrollmentCount = jdbc.queryForObject(
                 "select count(*) from enrollment where course_id = ?",
                 Long.class,
                 COURSE_ID
         );
-        if (enrollmentCount != null && enrollmentCount >= STUDENTS) {
+        if (enrollmentCount != null && enrollmentCount >= students) {
+            seedTrustedDevices();
             log.info("event=learning_loadtest_seed_skipped courseId={} studentCount={}", COURSE_ID, enrollmentCount);
             return;
         }
@@ -56,16 +69,26 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
         long startedAt = System.nanoTime();
 
         seedUsers();
+        log.info("event=learning_loadtest_seed_step_completed step=users students={}", students);
+        seedTrustedDevices();
+        log.info("event=learning_loadtest_seed_step_completed step=trusted_devices");
         seedCourse();
+        log.info("event=learning_loadtest_seed_step_completed step=course courseId={}", COURSE_ID);
         seedLectures();
+        log.info("event=learning_loadtest_seed_step_completed step=lectures lectures={}", LECTURES);
         seedProblemSets();
+        log.info("event=learning_loadtest_seed_step_completed step=problem_sets problemSets={}", PROBLEM_SETS);
         seedLectureProblemSets();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_sets");
         seedEnrollments();
+        log.info("event=learning_loadtest_seed_step_completed step=enrollments students={}", students);
         seedLectureProgresses();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_progresses rows={}", students * LECTURES);
         seedLectureProblemProgresses();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_progresses rows={}", students * PROBLEM_SETS);
 
         log.info("event=learning_loadtest_seed_completed courseId={} students={} lectures={} problemSets={} durationMs={}",
-                COURSE_ID, STUDENTS, LECTURES, PROBLEM_SETS, (System.nanoTime() - startedAt) / 1_000_000);
+                COURSE_ID, students, LECTURES, PROBLEM_SETS, (System.nanoTime() - startedAt) / 1_000_000);
     }
 
     private void seedUsers() {
@@ -113,9 +136,41 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return STUDENTS;
+                return students;
             }
         });
+    }
+
+    private void seedTrustedDevices() {
+        String deviceFp = sha256(LOADTEST_DEVICE_ID);
+
+        seedTrustedDevice(ADMIN_USER_ID, deviceFp, "learning-loadtest-k6");
+        seedTrustedDevice(INSTRUCTOR_USER_ID, deviceFp, "learning-loadtest-k6");
+    }
+
+    private void seedTrustedDevice(Long userId, String deviceFp, String deviceName) {
+        jdbc.update("""
+                delete from trusted_devices
+                where user_id = ?
+                  and device_fp = ?
+                """, userId, deviceFp);
+
+        jdbc.update("""
+                insert into trusted_devices
+                  (user_id, device_fp, device_name, last_country, last_city, last_used_at, created_at)
+                values
+                  (?, ?, ?, null, null, now(6), now(6))
+                """, userId, deviceFp, deviceName);
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm is not available.", e);
+        }
     }
 
     private void seedCourse() {
@@ -234,7 +289,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return STUDENTS;
+                return students;
             }
         });
     }
@@ -261,7 +316,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return STUDENTS * LECTURES;
+                return students * LECTURES;
             }
         });
     }
@@ -288,7 +343,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return STUDENTS * PROBLEM_SETS;
+                return students * PROBLEM_SETS;
             }
         });
     }
