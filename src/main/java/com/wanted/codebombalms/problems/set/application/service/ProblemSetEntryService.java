@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
 
 @Service
 @RequiredArgsConstructor
