@@ -44,33 +44,40 @@ public class ProblemSetController {
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
-                                    name = "문제 세트 목록",
+                                    name = "문제 세트 페이지 목록",
                                     value = """
                                             {
                                               "timestamp": "2026-05-27T12:00:00",
                                               "status": 200,
                                               "code": "COMMON-SUCCESS",
                                               "message": "요청이 성공적으로 처리되었습니다.",
-                                              "data": [
-                                                {
-                                                  "problemSetId": 3001,
-                                                  "problemNumber": 1,
-                                                  "title": "pandas 기초 분석 문제 세트",
-                                                  "description": "CSV 데이터를 불러와 기본 정보를 확인하는 문제 세트입니다.",
-                                                  "difficulty": "EASY",
-                                                  "accuracyRate": 75.5,
-                                                  "createdAt": "2026-05-27T10:00:00"
-                                                },
-                                                {
-                                                  "problemSetId": 3002,
-                                                  "problemNumber": 2,
-                                                  "title": "DataFrame 필터링 문제 세트",
-                                                  "description": "조건에 맞는 데이터를 필터링하는 문제 세트입니다.",
-                                                  "difficulty": "MEDIUM",
-                                                  "accuracyRate": null,
-                                                  "createdAt": "2026-05-27T11:00:00"
-                                                }
-                                              ]
+                                              "data": {
+                                                "content": [
+                                                  {
+                                                    "problemSetId": 3001,
+                                                    "problemNumber": 1,
+                                                    "title": "pandas 기초 분석 문제 세트",
+                                                    "description": "CSV 데이터를 불러와 기본 정보를 확인하는 문제 세트입니다.",
+                                                    "difficulty": "EASY",
+                                                    "accuracyRate": 75.5,
+                                                    "createdAt": "2026-05-27T10:00:00"
+                                                  },
+                                                  {
+                                                    "problemSetId": 3002,
+                                                    "problemNumber": 2,
+                                                    "title": "DataFrame 필터링 문제 세트",
+                                                    "description": "조건에 맞는 데이터를 필터링하는 문제 세트입니다.",
+                                                    "difficulty": "MEDIUM",
+                                                    "accuracyRate": null,
+                                                    "createdAt": "2026-05-27T11:00:00"
+                                                  }
+                                                ],
+                                                "page": 0,
+                                                "size": 20,
+                                                "totalElements": 2,
+                                                "totalPages": 1,
+                                                "hasNext": false
+                                              }
                                             }
                                             """
                             )
@@ -78,21 +85,35 @@ public class ProblemSetController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "PRB-CAT-002 - 잘못된 문제 분야",
+                    description = "PRB-CAT-002 - 잘못된 문제 분야 또는 PRB-INP-001 - 잘못된 페이징 요청",
                     content = @Content(
                             mediaType = "application/json",
-                            examples = @ExampleObject(
-                                    name = "잘못된 카테고리",
-                                    value = """
-                                            {
-                                              "timestamp": "2026-05-27T12:00:00",
-                                              "status": 400,
-                                              "code": "PRB-CAT-002",
-                                              "message": "잘못된 문제 분야입니다.",
-                                              "path": "/api/v1/problem-sets"
-                                            }
-                                            """
-                            )
+                            examples = {
+                                    @ExampleObject(
+                                            name = "잘못된 카테고리",
+                                            value = """
+                                                    {
+                                                      "timestamp": "2026-05-27T12:00:00",
+                                                      "status": 400,
+                                                      "code": "PRB-CAT-002",
+                                                      "message": "잘못된 문제 분야입니다.",
+                                                      "path": "/api/v1/problem-sets"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "잘못된 페이징 요청",
+                                            value = """
+                                                    {
+                                                      "timestamp": "2026-05-27T12:00:00",
+                                                      "status": 400,
+                                                      "code": "PRB-INP-001",
+                                                      "message": "문제 입력값이 올바르지 않습니다.",
+                                                      "path": "/api/v1/problem-sets"
+                                                    }
+                                                    """
+                                    )
+                            }
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

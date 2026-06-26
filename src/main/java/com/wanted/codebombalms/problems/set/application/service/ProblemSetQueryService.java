@@ -44,8 +44,16 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
         return toPageView(problemSets);
     }
 
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final long MAX_PAGE_OFFSET = 100_000L;
+
     private void validatePageRequest(int page, int size) {
-        if (page < 0 || size < 1 || size > 100) {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+
+        long offset = (long) page * size;
+        if (offset > MAX_PAGE_OFFSET) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
         }
     }

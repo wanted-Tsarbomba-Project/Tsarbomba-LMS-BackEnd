@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.zaxxer.hikari.util.ClockSource.elapsedNanos;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -108,7 +110,6 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
         );
 
         long totalNanos = elapsedNanos(startNanos);
-        problemSetEntryMetrics.recordTotal(totalNanos);
 
         log.info(
                 "event=problem_set_entered userId={} problemSetId={} problemCount={} solvedProblemCount={} "
@@ -136,6 +137,8 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                     e
             );
             throw e;
+        } finally {
+            problemSetEntryMetrics.recordTotal(elapsedNanos(startNanos));
         }
     }
 

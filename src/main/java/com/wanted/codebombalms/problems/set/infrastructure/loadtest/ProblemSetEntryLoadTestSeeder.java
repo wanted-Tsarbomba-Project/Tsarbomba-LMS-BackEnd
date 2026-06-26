@@ -138,6 +138,7 @@ public class ProblemSetEntryLoadTestSeeder implements ApplicationRunner {
                   difficulty = values(difficulty),
                   status = values(status),
                   total_problem_count = values(total_problem_count),
+                completed_user_count = values(completed_user_count),
                   started_user_count = values(started_user_count),
                   created_by = values(created_by),
                   deleted_at = null
@@ -232,14 +233,16 @@ public class ProblemSetEntryLoadTestSeeder implements ApplicationRunner {
 
     private void clearSubmissions() {
         jdbc.update("""
-                delete from submission
-                 where user_id between ? and ?
-                   and problem_id between ? and ?
-                """,
+            delete s
+              from submission s
+              join problem p
+                on p.problem_id = s.problem_id
+             where s.user_id between ? and ?
+               and p.problem_set_id = ?
+            """,
                 USER_ID_START,
                 USER_ID_START + USER_COUNT - 1,
-                PROBLEM_ID_START,
-                PROBLEM_ID_START + PROBLEM_COUNT - 1
+                PROBLEM_SET_ID
         );
     }
 
