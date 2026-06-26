@@ -61,6 +61,10 @@ export default function (data) {
         "has page content array": (r) => Array.isArray(r.json("data.content")),
         "page matches request": (r) => r.json("data.page") === page,
         "page size is 20": (r) => r.json("data.size") === 20,
+        "page content has 20 items": (r) => {
+            const content = r.json("data.content");
+            return Array.isArray(content) && content.length === 20;
+        },
     });
 
     sleep(randomSleep());

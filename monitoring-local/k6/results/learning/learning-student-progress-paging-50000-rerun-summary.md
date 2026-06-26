@@ -1,24 +1,24 @@
-# k6 Result - learning-student-progress-paging-10000-final
+# k6 Result - learning-student-progress-paging-50000-rerun
 
 ## Summary
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 501 |
-| iterations | 500 |
+| http_reqs | 2501 |
+| iterations | 2500 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 308419 |
-| data_sent bytes | 201696 |
+| data_received bytes | 10445566 |
+| data_sent bytes | 1009196 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 27.25 | 9.23 | 15.22 | 23.28 | 166.81 | 235.25 | 421.64 |
-| http_req_waiting | 26.63 | 8.80 | 14.56 | 22.18 | 165.34 | 234.30 | 420.23 |
-| http_req_blocked | 0.42 | 0.00 | 0.01 | 0.01 | 3.21 | 9.29 | 9.67 |
-| http_req_connecting | 0.41 | 0 | 0 | 0 | 3.17 | 9.26 | 9.62 |
+| http_req_duration | 163.94 | 75.58 | 142.43 | 240.48 | 300.44 | 582.70 | 809.03 |
+| http_req_waiting | 163.38 | 74.98 | 142.03 | 238.99 | 299.60 | 582.12 | 808.64 |
+| http_req_blocked | 0.09 | 0.00 | 0.01 | 0.01 | 0.01 | 3.24 | 10.38 |
+| http_req_connecting | 0.08 | 0 | 0 | 0 | 0 | 3.20 | 10.34 |
 
 ## Metric Meaning
 
@@ -36,10 +36,11 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 500 pass / 0 fail |
-| has page content array | 500 pass / 0 fail |
-| page matches request | 500 pass / 0 fail |
-| page size is 20 | 500 pass / 0 fail |
+| status is 200 | 2500 pass / 0 fail |
+| has page content array | 2500 pass / 0 fail |
+| page matches request | 2500 pass / 0 fail |
+| page size is 20 | 2500 pass / 0 fail |
+| page content has 20 items | 2500 pass / 0 fail |
 
 ## How To Compare
 

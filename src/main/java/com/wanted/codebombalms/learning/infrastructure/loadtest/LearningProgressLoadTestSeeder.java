@@ -6,11 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HexFormat;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -40,6 +40,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
     private static final String ADMIN_EMAIL = "learning-loadtest-admin@test.com";
     private static final String OPERATOR_EMAIL = "learning-loadtest-operator@test.com";
+    private static final int STUDENTS = 100000;
     private static final int LECTURES = 12;
     private static final int PROBLEM_SETS = 12;
     private static final String LOGIN_PASSWORD = "Test1234!";
@@ -48,19 +49,21 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${learning.loadtest.students:10000}")
-    private int students;
+    @PostConstruct
+    void logBeanRegistered() {
+        log.info("event=learning_loadtest_seed_bean_registered courseId={} students={}", COURSE_ID, STUDENTS);
+    }
 
     @Override
     public void run(ApplicationArguments args) {
-        log.info("event=learning_loadtest_seed_started courseId={} students={}", COURSE_ID, students);
+        log.info("event=learning_loadtest_seed_started courseId={} students={}", COURSE_ID, STUDENTS);
 
         Long enrollmentCount = jdbc.queryForObject(
                 "select count(*) from enrollment where course_id = ?",
                 Long.class,
                 COURSE_ID
         );
-        if (enrollmentCount != null && enrollmentCount >= students) {
+        if (enrollmentCount != null && enrollmentCount >= STUDENTS) {
             seedTrustedDevices();
             log.info("event=learning_loadtest_seed_skipped courseId={} studentCount={}", COURSE_ID, enrollmentCount);
             return;
@@ -69,7 +72,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
         long startedAt = System.nanoTime();
 
         seedUsers();
-        log.info("event=learning_loadtest_seed_step_completed step=users students={}", students);
+        log.info("event=learning_loadtest_seed_step_completed step=users students={}", STUDENTS);
         seedTrustedDevices();
         log.info("event=learning_loadtest_seed_step_completed step=trusted_devices");
         seedCourse();
@@ -81,14 +84,14 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
         seedLectureProblemSets();
         log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_sets");
         seedEnrollments();
-        log.info("event=learning_loadtest_seed_step_completed step=enrollments students={}", students);
+        log.info("event=learning_loadtest_seed_step_completed step=enrollments students={}", STUDENTS);
         seedLectureProgresses();
-        log.info("event=learning_loadtest_seed_step_completed step=lecture_progresses rows={}", students * LECTURES);
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_progresses rows={}", STUDENTS * LECTURES);
         seedLectureProblemProgresses();
-        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_progresses rows={}", students * PROBLEM_SETS);
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_progresses rows={}", STUDENTS * PROBLEM_SETS);
 
         log.info("event=learning_loadtest_seed_completed courseId={} students={} lectures={} problemSets={} durationMs={}",
-                COURSE_ID, students, LECTURES, PROBLEM_SETS, (System.nanoTime() - startedAt) / 1_000_000);
+                COURSE_ID, STUDENTS, LECTURES, PROBLEM_SETS, (System.nanoTime() - startedAt) / 1_000_000);
     }
 
     private void seedUsers() {
@@ -136,7 +139,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return students;
+                return STUDENTS;
             }
         });
     }
@@ -289,7 +292,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return students;
+                return STUDENTS;
             }
         });
     }
@@ -316,7 +319,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return students * LECTURES;
+                return STUDENTS * LECTURES;
             }
         });
     }
@@ -343,7 +346,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
             @Override
             public int getBatchSize() {
-                return students * PROBLEM_SETS;
+                return STUDENTS * PROBLEM_SETS;
             }
         });
     }

@@ -40,6 +40,9 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     private final LearningUserPort learningUserPort;
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
+    private final LearningEnrollmentCacheService learningEnrollmentCacheService;
+    private final LearningCourseStructureCacheService learningCourseStructureCacheService;
+    private final LearningProgressCountCacheService learningProgressCountCacheService;
     private final LearningMetrics learningMetrics;
 
     @Override
@@ -69,8 +72,8 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     @Transactional(readOnly = true)
     public StudentLearningProgressPage findStudentProgresses(Long courseId, int page) {
         int requestedPage = Math.max(page, 0);
-        long totalStudentCount = learningEnrollmentPort.countActiveStudentsByCourse(courseId);
-        List<Long> studentIds = learningEnrollmentPort.findActiveStudentIdsByCourse(
+        long totalStudentCount = learningEnrollmentCacheService.countActiveStudentsByCourse(courseId);
+        List<Long> studentIds = learningEnrollmentCacheService.findActiveStudentIdsByCourse(
                 courseId,
                 requestedPage,
                 STUDENT_PROGRESS_PAGE_SIZE
@@ -105,11 +108,11 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
         Map<Long, Long> completedProblemCounts = Map.of();
         if (!studentIds.isEmpty()) {
             long lectureIdsStartedAt = System.nanoTime();
-            lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
+            lectureIds = learningCourseStructureCacheService.findLectureIdsByCourse(courseId);
             timing.recordLectureIds(System.nanoTime() - lectureIdsStartedAt, lectureIds.size());
 
             long problemSetIdsStartedAt = System.nanoTime();
-            lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
+            lectureProblemSetIds = learningCourseStructureCacheService.findMainLectureProblemSetIdsByCourse(courseId);
             timing.recordProblemSetIds(System.nanoTime() - problemSetIdsStartedAt, lectureProblemSetIds.size());
 
             long userNameStartedAt = System.nanoTime();
@@ -118,7 +121,8 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
 
             if (!lectureIds.isEmpty()) {
                 long completedLectureCountStartedAt = System.nanoTime();
-                completedLectureCounts = lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
+                completedLectureCounts = learningProgressCountCacheService.countCompletedLectures(
+                        courseId,
                         studentIds,
                         lectureIds
                 );
@@ -127,7 +131,8 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
 
             if (!lectureProblemSetIds.isEmpty()) {
                 long completedProblemCountStartedAt = System.nanoTime();
-                completedProblemCounts = lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                completedProblemCounts = learningProgressCountCacheService.countCompletedProblems(
+                        courseId,
                         studentIds,
                         lectureProblemSetIds
                 );

@@ -14,11 +14,17 @@ import java.util.List;
 @EnableCaching
 public class LocalCacheConfig {
 
-    private static final int DEFAULT_MAXIMUM_SIZE = 1_000;
-    private static final Duration DEFAULT_EXPIRE_AFTER_WRITE = Duration.ofMinutes(9);
+    private static final int DEFAULT_MAXIMUM_SIZE = 20_000;
+    private static final Duration DEFAULT_EXPIRE_AFTER_WRITE = Duration.ofMinutes(10);
 
     private static final List<String> CACHE_NAMES = List.of(
-            CacheNames.BADGE_IMAGE_ACCESS_URL
+            CacheNames.BADGE_IMAGE_ACCESS_URL,
+            CacheNames.LEARNING_ACTIVE_STUDENT_COUNT,
+            CacheNames.LEARNING_STUDENT_ID_PAGE,
+            CacheNames.LEARNING_COURSE_LECTURE_IDS,
+            CacheNames.LEARNING_COURSE_PROBLEM_SET_IDS,
+            CacheNames.LEARNING_COMPLETED_LECTURE_COUNTS,
+            CacheNames.LEARNING_COMPLETED_PROBLEM_COUNTS
     );
 
     @Bean
