@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.learning.infrastructure.cache;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class LearningCacheKeys {
 
@@ -11,8 +12,9 @@ public final class LearningCacheKeys {
         if (studentIds == null || studentIds.isEmpty()) {
             return courseId + ":empty";
         }
-        return courseId + ":" + studentIds.get(0) + ":" + studentIds.get(studentIds.size() - 1) + ":"
-                + studentIds.size();
+        return courseId + ":" + studentIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
     }
 
     public static String activeStudentCount(Long courseId) {
