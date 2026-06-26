@@ -8,11 +8,13 @@ import com.wanted.codebombalms.problems.set.application.port.IncreaseProblemSetC
 import com.wanted.codebombalms.problems.set.application.port.IncreaseProblemSetStartedCountPort;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetStatus;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummaryPage;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -27,19 +29,14 @@ public class ProblemSetPersistenceAdapter implements
     private final SpringDataProblemSetRepository problemSetRepository;
 
     @Override
-    public List<ProblemSetSummary> loadActiveProblemSetsByCategory(Long categoryId) {
-        var problemSets =
-                problemSetRepository.findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
-                        categoryId,
-                        ProblemSetStatus.ACTIVE
-                );
+    public ProblemSetSummaryPage loadActiveProblemSetsByCategory(Long categoryId, int page, int size) {
+        var problemSets = problemSetRepository.findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
+                categoryId,
+                ProblemSetStatus.ACTIVE,
+                PageRequest.of(page, size)
+        );
 
-        return IntStream.range(0, problemSets.size())
-                .mapToObj(index -> ProblemSetMapper.toSummary(
-                        problemSets.get(index),
-                        index + 1
-                ))
-                .toList();
+        return toSummaryPage(problemSets, page, size);
     }
 
     @Override
@@ -70,17 +67,37 @@ public class ProblemSetPersistenceAdapter implements
     }
 
     @Override
-    public List<ProblemSetSummary> loadActiveProblemSets() {
+    public ProblemSetSummaryPage loadActiveProblemSets(int page, int size) {
         var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc(
-                ProblemSetStatus.ACTIVE
+                ProblemSetStatus.ACTIVE,
+                PageRequest.of(page, size)
         );
 
-        return IntStream.range(0, problemSets.size())
+        return toSummaryPage(problemSets, page, size);
+    }
+
+    private ProblemSetSummaryPage toSummaryPage(
+            Page<ProblemSetJpaEntity> problemSets,
+            int page,
+            int size
+    ) {
+        int startNumber = page * size + 1;
+
+        var content = IntStream.range(0, problemSets.getContent().size())
                 .mapToObj(index -> ProblemSetMapper.toSummary(
-                        problemSets.get(index),
-                        index + 1
+                        problemSets.getContent().get(index),
+                        startNumber + index
                 ))
                 .toList();
+
+        return new ProblemSetSummaryPage(
+                content,
+                page,
+                size,
+                problemSets.getTotalElements(),
+                problemSets.getTotalPages(),
+                problemSets.hasNext()
+        );
     }
 
     @Override

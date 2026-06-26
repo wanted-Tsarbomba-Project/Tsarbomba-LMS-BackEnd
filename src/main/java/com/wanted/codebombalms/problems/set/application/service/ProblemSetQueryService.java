@@ -1,17 +1,17 @@
 package com.wanted.codebombalms.problems.set.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.set.application.port.CheckProblemSetCategoryPort;
 import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetPort;
 import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummaryPage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,22 +22,54 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProblemSetSummaryView> handle(GetProblemSetsQuery query) {
+    public ProblemSetPageView handle(GetProblemSetsQuery query) {
+        validatePageRequest(query.page(), query.size());
+
+        ProblemSetSummaryPage problemSets;
+
         if (query.categoryId() == null) {
-            return loadProblemSetPort.loadActiveProblemSets()
-                    .stream()
-                    .map(this::toView)
-                    .toList();
+            problemSets = loadProblemSetPort.loadActiveProblemSets(query.page(), query.size());
+            return toPageView(problemSets);
         }
 
         if (!checkProblemSetCategoryPort.existsActiveCategory(query.categoryId())) {
             throw new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND);
         }
 
-        return loadProblemSetPort.loadActiveProblemSetsByCategory(query.categoryId())
+        problemSets = loadProblemSetPort.loadActiveProblemSetsByCategory(
+                query.categoryId(),
+                query.page(),
+                query.size()
+        );
+        return toPageView(problemSets);
+    }
+
+    private static final int MAX_PAGE_SIZE = 100;
+    private static final long MAX_PAGE_OFFSET = 100_000L;
+
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+
+        long offset = (long) page * size;
+        if (offset > MAX_PAGE_OFFSET) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
+    }
+
+    private ProblemSetPageView toPageView(ProblemSetSummaryPage page) {
+        return new ProblemSetPageView(
+                page.content()
                 .stream()
                 .map(this::toView)
-                .toList();
+                .toList(),
+                page.page(),
+                page.size(),
+                page.totalElements(),
+                page.totalPages(),
+                page.hasNext()
+        );
     }
 
     // === 챗봇 adapter용 메서드 ===

@@ -1,28 +1,24 @@
 package com.wanted.codebombalms.badge.infrastructure.storage;
 
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import com.wanted.codebombalms.badge.application.port.BadgeImageStoragePort;
 import com.wanted.codebombalms.badge.exception.BadgeErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.cache.CacheNames;
+import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFactory;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
+@Slf4j
 @Component
 public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
 
@@ -36,16 +32,16 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
     );
 
     private final GcpStorageProperties properties;
-    private final ResourceLoader resourceLoader;
+    private final GcpStorageClientFactory storageClientFactory;
 
     private volatile Storage storage;
 
     public GcsBadgeImageStorageAdapter(
             GcpStorageProperties properties,
-            ResourceLoader resourceLoader
+            GcpStorageClientFactory storageClientFactory
     ) {
         this.properties = properties;
-        this.resourceLoader = resourceLoader;
+        this.storageClientFactory = storageClientFactory;
     }
 
     @Override
@@ -85,7 +81,18 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
                     contentType,
                     fileSize
             );
+        } catch (ExternalServiceException e) {
+            throw e;
         } catch (Exception e) {
+            log.error(
+                    "GCS badge image upload failed. bucket={}, objectName={}, contentType={}, fileSize={}",
+                    properties.getStorage().getBucket(),
+                    objectName,
+                    contentType,
+                    fileSize,
+                    e
+            );
+
             throw new ExternalServiceException(
                     BadgeErrorCode.BADGE_IMAGE_UPLOAD_FAILED,
                     e
@@ -211,7 +218,7 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
                 .replace("/", "_");
     }
 
-    private Storage getStorage() {
+    private Storage getStorage(){
         if (storage == null) {
             synchronized (this) {
                 if (storage == null) {
@@ -225,26 +232,12 @@ public class GcsBadgeImageStorageAdapter implements BadgeImageStoragePort {
 
     private Storage createStorage() {
         try {
-            return StorageOptions.newBuilder()
-                    .setProjectId(properties.getProjectId())
-                    .setCredentials(loadCredentials())
-                    .build()
-                    .getService();
+            return storageClientFactory.create();
         } catch (Exception e) {
             throw new ExternalServiceException(
                     BadgeErrorCode.BADGE_IMAGE_ACCESS_URL_FAILED,
                     e
             );
-        }
-    }
-
-    private GoogleCredentials loadCredentials() throws IOException {
-        Resource resource = resourceLoader.getResource(
-                properties.getCredentials().getLocation()
-        );
-
-        try (InputStream inputStream = resource.getInputStream()) {
-            return GoogleCredentials.fromStream(inputStream);
         }
     }
 }
