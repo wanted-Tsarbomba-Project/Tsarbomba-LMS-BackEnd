@@ -33,27 +33,25 @@ class GcsConnectionTest {
                 + LocalDateTime.now().format(FILE_TIME_FORMATTER)
                 + ".txt";
 
-        try (InputStream inputStream = Files.newInputStream(Path.of(config.credentialsPath()))) {
-            var storage = StorageOptions.newBuilder()
-                    .setProjectId(config.projectId())
-                    .setCredentials(GoogleCredentials.fromStream(inputStream))
-                    .build()
-                    .getService();
+        var storage = StorageOptions.newBuilder()
+                .setProjectId(config.projectId())
+                .setCredentials(GoogleCredentials.getApplicationDefault())
+                .build()
+                .getService();
 
-            BlobInfo blobInfo = BlobInfo.newBuilder(
-                            BlobId.of(config.bucket(), objectName)
-                    )
-                    .setContentType("text/plain; charset=utf-8")
-                    .build();
+        BlobInfo blobInfo = BlobInfo.newBuilder(
+                        BlobId.of(config.bucket(), objectName)
+                )
+                .setContentType("text/plain; charset=utf-8")
+                .build();
 
-            storage.create(
-                    blobInfo,
-                    ("GCS connection test: " + TESTER_NAME).getBytes(StandardCharsets.UTF_8)
-            );
+        storage.create(
+                blobInfo,
+                ("GCS connection test: " + TESTER_NAME).getBytes(StandardCharsets.UTF_8)
+        );
 
-            assertThat(storage.get(config.bucket(), objectName)).isNotNull();
-            System.out.println("GCS connection test uploaded: gs://" + config.bucket() + "/" + objectName);
-        }
+        assertThat(storage.get(config.bucket(), objectName)).isNotNull();
+        System.out.println("GCS connection test uploaded: gs://" + config.bucket() + "/" + objectName);
     }
 
     private GcsConfig loadGcsConfig() throws Exception {
@@ -61,12 +59,10 @@ class GcsConnectionTest {
 
         String projectId = resolvePlaceholder(findValue(lines, "project-id:"));
         String bucket = resolvePlaceholder(findValue(lines, "bucket:"));
-        String credentialsLocation = resolvePlaceholder(findValue(lines, "location:"));
 
         return new GcsConfig(
                 projectId,
-                bucket,
-                credentialsLocation.replaceFirst("^file:", "")
+                bucket
         );
     }
 
@@ -101,8 +97,7 @@ class GcsConnectionTest {
 
     private record GcsConfig(
             String projectId,
-            String bucket,
-            String credentialsPath
+            String bucket
     ) {
     }
 }

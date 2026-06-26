@@ -65,9 +65,6 @@ gcp:
     badge-image-prefix: ${GCP_BADGE_IMAGE_PREFIX:badge_image}
     course-thumbnail-prefix: ${GCP_COURSE_THUMBNAIL_PREFIX:course_thumbnail_images}
     lecture-material-prefix: ${GCP_STORAGE_LECTURE_MATERIAL_PREFIX:lecture_materials}
-  credentials:
-    location: ${GCP_CREDENTIALS_LOCATION:file:./secrets/gcp-storage-key.json}
-
 
 code-runner:
   type: cloud-run
