@@ -78,11 +78,17 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                         Function.identity()
                 ));
 
-        long problemDetailsStartedAt = System.nanoTime();
-        var problems = loadProblemForEntryPort.loadProblems(query.problemSetId())
-                .stream()
-                .map(problem -> toDetailItemView(problem, progressItemMap.get(problem.getProblemId())))
-                .toList();
+            long problemDetailsStartedAt = System.nanoTime();
+            String startCode = loadProblemStartCodePort.loadStartCodeByProblemSetId(query.problemSetId());
+
+            var problems = loadProblemForEntryPort.loadProblems(query.problemSetId())
+                    .stream()
+                    .map(problem -> toDetailItemView(
+                            problem,
+                            progressItemMap.get(problem.getProblemId()),
+                            startCode
+                    ))
+                    .toList();
         long problemDetailsNanos = elapsedNanos(problemDetailsStartedAt);
         problemSetEntryMetrics.recordProblemDetails(problemDetailsNanos);
 
@@ -151,10 +157,9 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
 
     private ProblemDetailItemView toDetailItemView(
             ProblemDetail problem,
-            ProblemProgressItem progressItem
+            ProblemProgressItem progressItem,
+            String startCode
     ) {
-        String startCode = loadProblemStartCodePort.loadStartCode(problem.getProblemId());
-
         return new ProblemDetailItemView(
                 problem.getProblemId(),
                 problem.getProblemNumber(),

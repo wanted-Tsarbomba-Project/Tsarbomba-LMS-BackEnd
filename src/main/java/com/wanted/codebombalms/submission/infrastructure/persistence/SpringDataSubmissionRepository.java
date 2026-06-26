@@ -50,4 +50,23 @@ public interface SpringDataSubmissionRepository extends JpaRepository<Submission
             having count(s.submissionId) >= :minSampleCount
             """)
     List<ProblemWrongRateMetric> findProblemWrongRateMetrics(@Param("minSampleCount") Long minSampleCount);
+
+
+    @Query("""
+        select s
+          from SubmissionJpaEntity s
+          join fetch s.problem p
+         where s.userId = :userId
+           and p.problemId in :problemIds
+           and s.submittedAt = (
+               select max(s2.submittedAt)
+                 from SubmissionJpaEntity s2
+                where s2.userId = :userId
+                  and s2.problem.problemId = p.problemId
+           )
+        """)
+    List<SubmissionJpaEntity> findLatestByUserIdAndProblemIds(
+            @Param("userId") Long userId,
+            @Param("problemIds") List<Long> problemIds
+    );
 }

@@ -4,21 +4,21 @@
 
 | Metric | Value |
 | --- | ---: |
-| http_reqs | 600 |
-| iterations | 300 |
-| checks success rate | 100.00% |
+| http_reqs | 1 |
+| iterations |  |
+| checks success rate |  |
 | http_req_failed | 0.00% |
-| data_received bytes | 2407380 |
-| data_sent bytes | 322997 |
+| data_received bytes | 903 |
+| data_sent bytes | 234 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 318.62 |  | 217.75 | 678.59 | 723.42 | 804.99 | 877.31 |
-| http_req_waiting | 317.90 |  | 216.92 | 676.48 | 722.59 | 803.98 | 875.31 |
-| http_req_blocked | 0.73 |  | 0.00 | 0.01 | 9.21 | 11.09 | 12.04 |
-| http_req_connecting | 0.71 |  | 0 | 0 | 9.16 | 11.05 | 11.96 |
+| http_req_duration | 3511.94 |  | 3511.94 | 3511.94 | 3511.94 | 3511.94 | 3511.94 |
+| http_req_waiting | 3510.27 |  | 3510.27 | 3510.27 | 3510.27 | 3510.27 | 3510.27 |
+| http_req_blocked | 4.97 |  | 4.97 | 4.97 | 4.97 | 4.97 | 4.97 |
+| http_req_connecting | 3.34 |  | 3.34 | 3.34 | 3.34 | 3.34 | 3.34 |
 
 ## Metric Meaning
 
@@ -36,11 +36,7 @@
 
 | Check | Result |
 | --- | --- |
-| status is 200 | 300 pass / 0 fail |
-| has data | 300 pass / 0 fail |
-| problem count is 20 | 300 pass / 0 fail |
-| problems length is 20 | 300 pass / 0 fail |
-| start code exists | 300 pass / 0 fail |
+| check details | Check console output or JSON summary. |
 
 ## How To Compare
 
