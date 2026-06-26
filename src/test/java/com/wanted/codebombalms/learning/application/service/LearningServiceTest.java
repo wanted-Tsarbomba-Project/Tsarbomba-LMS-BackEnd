@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.lenient;
@@ -72,6 +73,15 @@ class LearningServiceTest {
     private LearningUserPort learningUserPort;
 
     @Mock
+    private LearningEnrollmentCacheService learningEnrollmentCacheService;
+
+    @Mock
+    private LearningCourseStructureCacheService learningCourseStructureCacheService;
+
+    @Mock
+    private LearningProgressCountCacheService learningProgressCountCacheService;
+
+    @Mock
     private LearningMetrics learningMetrics;
 
     @InjectMocks
@@ -84,6 +94,30 @@ class LearningServiceTest {
     void setUp() {
         lenient().when(learningLecturePort.findCourseIdByLecture(anyLong())).thenReturn(1L);
         lenient().when(learningEnrollmentPort.isActiveStudentOfCourse(anyLong(), anyLong())).thenReturn(true);
+        lenient().when(learningEnrollmentCacheService.countActiveStudentsByCourse(anyLong()))
+                .thenAnswer(invocation -> learningEnrollmentPort.countActiveStudentsByCourse(invocation.getArgument(0)));
+        lenient().when(learningEnrollmentCacheService.findActiveStudentIdsByCourse(anyLong(), anyInt(), anyInt()))
+                .thenAnswer(invocation -> learningEnrollmentPort.findActiveStudentIdsByCourse(
+                        invocation.getArgument(0),
+                        invocation.getArgument(1),
+                        invocation.getArgument(2)
+                ));
+        lenient().when(learningCourseStructureCacheService.findLectureIdsByCourse(anyLong()))
+                .thenAnswer(invocation -> learningLecturePort.findLectureIdsByCourse(invocation.getArgument(0)));
+        lenient().when(learningCourseStructureCacheService.findMainLectureProblemSetIdsByCourse(anyLong()))
+                .thenAnswer(invocation -> learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(
+                        invocation.getArgument(0)
+                ));
+        lenient().when(learningProgressCountCacheService.countCompletedLectures(anyLong(), any(), any()))
+                .thenAnswer(invocation -> lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
+                        invocation.getArgument(1),
+                        invocation.getArgument(2)
+                ));
+        lenient().when(learningProgressCountCacheService.countCompletedProblems(anyLong(), any(), any()))
+                .thenAnswer(invocation -> lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                        invocation.getArgument(1),
+                        invocation.getArgument(2)
+                ));
     }
 
     @Test
