@@ -70,7 +70,7 @@ management:
 ### 도메인 태그 (모놀리식 핵심)
 `DomainObservationConvention`이 모든 `http_server_requests` 메트릭에 **컨트롤러 패키지 기준 `domain` 태그**를 자동 부착한다. → 도메인별 대시보드가 이 태그 하나로 가능.
 
-### 스택 (monitoring/docker-compose.yml)
+### 스택 (monitoring-local/docker-compose.yml)
 Prometheus + Grafana + Loki + Promtail + loadtest MySQL(3307) + k6. 실행법은 [`../README.md`](../README.md).
 
 ---
@@ -169,7 +169,7 @@ metric을 시간 순서로 저장할 때. 앱은 재시작하면 메모리 metri
 
 ⚠️ Timer 등록명에 `_seconds`를 직접 붙이지 말 것(자동 부착됨). 정확한 이름은 `/actuator/prometheus`에서 확인이 가장 안전.
 
-### scrape 설정 (우리 실제, monitoring/prometheus/prometheus.yml)
+### scrape 설정 (우리 실제, monitoring-local/prometheus/prometheus.yml)
 ```yaml
 scrape_configs:
   - job_name: "lms-app"

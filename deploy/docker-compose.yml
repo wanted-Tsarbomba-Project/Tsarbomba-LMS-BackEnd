@@ -20,7 +20,10 @@ services:
     image: grafana/promtail:3.0.0
     container_name: lms-promtail
     restart: unless-stopped
-    command: -config.file=/etc/promtail/config.yml
+    # expand-env: config.yml의 ${LOKI_HOST}를 컨테이너 환경변수로 치환
+    command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+    environment:
+      - LOKI_HOST=${LOKI_HOST}
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro

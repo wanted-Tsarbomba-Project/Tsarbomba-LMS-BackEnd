@@ -9,6 +9,7 @@ import com.wanted.codebombalms.problems.set.domain.model.ProblemDetail;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetEntry;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetProgressState;
 import com.wanted.codebombalms.problems.set.application.usecase.ValidateProblemSetAccessUseCase;
+import com.wanted.codebombalms.problems.set.infrastructure.metrics.ProblemSetEntryMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
     private final LoadProgressProblemPort loadProgressProblemPort;
     private final IncreaseProblemSetStartedCountPort increaseProblemSetStartedCountPort;
     private final ValidateProblemSetAccessUseCase validateProblemSetAccessUseCase;
+    private final ProblemSetEntryMetrics problemSetEntryMetrics;
 
     @Override
     @Transactional
@@ -37,24 +40,37 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
         long startNanos = System.nanoTime();
 
         try {
+        long accessStartedAt = System.nanoTime();
         validateProblemSetAccessUseCase.validate(
                 query.userId(),
                 query.problemSetId()
         );
+        long accessNanos = elapsedNanos(accessStartedAt);
+        problemSetEntryMetrics.recordAccess(accessNanos);
+
+        long problemSetStartedAt = System.nanoTime();
         ProblemSetEntry problemSet =
                 loadProblemSetEntryPort.loadProblemSetEntry(query.problemSetId());
+        long problemSetNanos = elapsedNanos(problemSetStartedAt);
+        problemSetEntryMetrics.recordProblemSet(problemSetNanos);
 
+        long progressStartedAt = System.nanoTime();
         ProblemSetProgressState progress =
                 findOrCreateProblemSetProgressPort.findOrCreateProgress(query.userId(), query.problemSetId());
         if (Boolean.TRUE.equals(progress.created())) {
             increaseProblemSetStartedCountPort.increaseStartedUserCount(query.problemSetId());
         }
+        long progressNanos = elapsedNanos(progressStartedAt);
+        problemSetEntryMetrics.recordProgress(progressNanos);
 
+        long progressItemsStartedAt = System.nanoTime();
         var progressItems = loadProgressProblemPort.loadProgressProblems(
                 query.userId(),
                 query.problemSetId(),
                 progress.currentProblemNumber()
         );
+        long progressItemsNanos = elapsedNanos(progressItemsStartedAt);
+        problemSetEntryMetrics.recordProgressItems(progressItemsNanos);
 
         Map<Long, ProblemProgressItem> progressItemMap = progressItems.stream()
                 .collect(Collectors.toMap(
@@ -62,10 +78,13 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                         Function.identity()
                 ));
 
+        long problemDetailsStartedAt = System.nanoTime();
         var problems = loadProblemForEntryPort.loadProblems(query.problemSetId())
                 .stream()
                 .map(problem -> toDetailItemView(problem, progressItemMap.get(problem.getProblemId())))
                 .toList();
+        long problemDetailsNanos = elapsedNanos(problemDetailsStartedAt);
+        problemSetEntryMetrics.recordProblemDetails(problemDetailsNanos);
 
         Long currentProblemId = problems.stream()
                 .filter(problem -> problem.problemNumber().equals(progress.currentProblemNumber()))
@@ -89,13 +108,21 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                 problems
         );
 
+        long totalNanos = elapsedNanos(startNanos);
+
         log.info(
-                "event=problem_set_entered userId={} problemSetId={} problemCount={} solvedProblemCount={} durationMs={}",
+                "event=problem_set_entered userId={} problemSetId={} problemCount={} solvedProblemCount={} "
+                        + "accessMs={} problemSetMs={} progressMs={} progressItemsMs={} problemDetailsMs={} durationMs={}",
                 query.userId(),
                 query.problemSetId(),
                 problems.size(),
                 solvedProblemCount,
-                elapsedMillis(startNanos)
+                nanosToMillis(accessNanos),
+                nanosToMillis(problemSetNanos),
+                nanosToMillis(progressNanos),
+                nanosToMillis(progressItemsNanos),
+                nanosToMillis(problemDetailsNanos),
+                nanosToMillis(totalNanos)
         );
 
         return view;
@@ -105,15 +132,21 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                     query.userId(),
                     query.problemSetId(),
                     e.getClass().getSimpleName(),
-                    elapsedMillis(startNanos),
+                    nanosToMillis(elapsedNanos(startNanos)),
                     e
             );
             throw e;
+        } finally {
+            problemSetEntryMetrics.recordTotal(elapsedNanos(startNanos));
         }
     }
 
-    private long elapsedMillis(long startNanos) {
-        return (System.nanoTime() - startNanos) / 1_000_000;
+    private long elapsedNanos(long startNanos) {
+        return System.nanoTime() - startNanos;
+    }
+
+    private long nanosToMillis(long elapsedNanos) {
+        return elapsedNanos / 1_000_000;
     }
 
     private ProblemDetailItemView toDetailItemView(

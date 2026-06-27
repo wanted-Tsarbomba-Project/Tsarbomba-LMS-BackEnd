@@ -13,4 +13,10 @@ public class UserResponseCode {
     public static final String PROFILE_UPDATED = "USER-ME-PROFILE-UPDATED";
     public static final String PASSWORD_CHANGED = "USER-ME-PASSWORD-CHANGED";
     public static final String EMAIL_FOUND = "USER-EMAIL-FOUND";
+
+    // 적응형 인증 - 신뢰 기기
+    public static final String TRUSTED_DEVICES_RETRIEVED = "USER-TRUSTED-DEVICES-RETRIEVED";
+    public static final String TRUSTED_DEVICE_REMOVED = "USER-TRUSTED-DEVICE-REMOVED";
+
+    public static final String LOGIN_HISTORY_RETRIEVED = "USER-LOGIN-HISTORY-RETRIEVED";
 }

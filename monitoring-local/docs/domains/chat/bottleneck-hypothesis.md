@@ -46,4 +46,4 @@ N+1이라 인덱스로 안 풀린다. 해소 수단 후보(전후 비교로 택1
 ## 다음 단계
 
 - **2단계**: 커스텀 메트릭 심기 — `chat_list_query_*`(또는 트랙B `chat_active_streams` Gauge), `event=chat_*` 로그. → [`metrics.md`](metrics.md)
-- **4·5단계**: `monitoring/k6/scripts/chat/` 시나리오 + baseline (방 다수 시드 선행, `db/seed/`)
+- **4·5단계**: `monitoring-local/k6/scripts/chat/` 시나리오 + baseline (방 다수 시드 선행, `db/seed/`)

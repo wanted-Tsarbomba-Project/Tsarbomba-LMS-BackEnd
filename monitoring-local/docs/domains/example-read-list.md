@@ -63,7 +63,7 @@ GET /api/v1/chat/list (조회형): http_req_duration{type:list} p95 < 500ms, htt
 
 ## 4단계 — k6 시나리오
 
-`monitoring/k6/scripts/chat/01-list-baseline.js` (인증 필요 → `setup()`에서 로그인):
+`monitoring-local/k6/scripts/chat/01-list-baseline.js` (인증 필요 → `setup()`에서 로그인):
 ```javascript
 import http from "k6/http";
 import { check, sleep } from "k6";
@@ -166,7 +166,7 @@ loadtest는 SQL DEBUG가 켜져 있어, 느린 요청 traceId로 추적하면 **
 ## 7단계 — 최적화 → 전후 비교
 
 이 예시의 정석 해법은 **batch 조회** (방들의 id를 모아 `IN` 한 번 → `1+2N → 1+2`).
-> 단 이 케이스는 `problems`(타 도메인) 수정이 필요해 파일럿에선 **보류**하고 변경 지점만 기록했습니다 (`monitoring/docs/domains/chat/compare.md`).
+> 단 이 케이스는 `problems`(타 도메인) 수정이 필요해 파일럿에선 **보류**하고 변경 지점만 기록했습니다 (`monitoring-local/docs/domains/chat/compare.md`).
 
 전후 비교 방법:
 ```bash

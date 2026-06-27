@@ -7,7 +7,7 @@ public class GcpStorageProperties {
 
     private String projectId;
     private final Storage storage = new Storage();
-    private final Credentials credentials = new Credentials();
+
 
     public String getProjectId() {
         return projectId;
@@ -21,9 +21,6 @@ public class GcpStorageProperties {
         return storage;
     }
 
-    public Credentials getCredentials() {
-        return credentials;
-    }
 
     public static class Storage {
 
@@ -73,18 +70,5 @@ public class GcpStorageProperties {
             this.lectureMaterialPrefix = lectureMaterialPrefix;
         }
     }
-
-    public static class Credentials {
-        private String location;
-
-        public String getLocation() {
-            return location;
-        }
-
-        public void setLocation(String location) {
-            this.location = location;
-        }
-    }
-
 
 }

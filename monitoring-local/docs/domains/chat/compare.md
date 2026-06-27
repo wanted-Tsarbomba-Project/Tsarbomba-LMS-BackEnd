@@ -13,7 +13,7 @@
 | 커스텀 `chat_room_list_query_duration` avg | **408ms** | 목록 쿼리 구간만 408ms |
 | `http_req_failed` | 0% | 기능 정상(느린 것뿐) |
 
-**결론**: `GET /api/v1/chat/list` 1회 = `1 + 2N`쿼리(N=방 수). [`ChatRoomQueryService.toResult`](../../../../src/main/java/com/wanted/codebombalms/chatbot/application/service/ChatRoomQueryService.java#L41)가 방마다 [`ProblemTitleAdapter`](../../../../src/main/java/com/wanted/codebombalms/chatbot/infrastructure/adapter/ProblemTitleAdapter.java)로 제목 2회 조회 → 전형적 N+1. raw 결과: `monitoring/k6/results/chat-list-before-summary.md`.
+**결론**: `GET /api/v1/chat/list` 1회 = `1 + 2N`쿼리(N=방 수). [`ChatRoomQueryService.toResult`](../../../../src/main/java/com/wanted/codebombalms/chatbot/application/service/ChatRoomQueryService.java#L41)가 방마다 [`ProblemTitleAdapter`](../../../../src/main/java/com/wanted/codebombalms/chatbot/infrastructure/adapter/ProblemTitleAdapter.java)로 제목 2회 조회 → 전형적 N+1. raw 결과: `monitoring-local/k6/results/chat-list-before-summary.md`.
 
 ## ⏸ 추후 변경 지점 (최적화 보류)
 

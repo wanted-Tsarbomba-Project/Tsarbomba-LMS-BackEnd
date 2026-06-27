@@ -5,6 +5,7 @@ import com.wanted.codebombalms.auth.application.usecase.LoginUseCase;
 import com.wanted.codebombalms.auth.presentation.api.dto.request.LoginRequest;
 import com.wanted.codebombalms.auth.presentation.api.dto.response.LoginResponse;
 import com.wanted.codebombalms.auth.presentation.api.support.AuthCookieFactory;
+import com.wanted.codebombalms.auth.presentation.api.support.DeviceFingerprintResolver;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,15 +26,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class LoginController {
 
+    private static final int STEP_UP_COOKIE_MAX_AGE = 300; // 5분 (step-up TTL과 동일)
+
     private final LoginUseCase loginUseCase;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieFactory authCookieFactory;
+    private final DeviceFingerprintResolver deviceFingerprintResolver;
 
     @Operation(
             summary = "로그인",
-            description = "이메일/비밀번호 검증 후 accessToken/refreshToken 쿠키 2개 발급. 단일 세션 강제 + 로그인 이력 저장. 응답 body 의 data.nickname 으로 닉네임 노출."
+            description = "이메일/비밀번호 검증 후 적응형 인증. 신뢰 기기면 토큰 2개 발급, 미신뢰/위치급변이면 stepupToken 발급 후 이메일 OTP 추가 인증 필요(data.stepUpRequired=true)."
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공 — 쿠키 2개 발급 + body 에 nickname 포함")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공 또는 추가 인증 필요 (data.stepUpRequired 로 분기)")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUT-001 이메일 또는 비밀번호 불일치")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "USR-007 계정 잠금 상태")
     @PostMapping("/login")
@@ -42,20 +46,24 @@ public class LoginController {
             HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
-        LoginResult result = loginUseCase.login(request.toCommand(), httpRequest);
+        String deviceFp = deviceFingerprintResolver.resolve(httpRequest, response);
+        LoginResult result = loginUseCase.login(request.toCommand(), httpRequest, deviceFp);
 
-        // 쿠키 2개 설정 (토큰은 body 노출 X — HttpOnly 쿠키로만)
-        response.addCookie(authCookieFactory.create(
-                "accessToken",
-                result.accessToken(),
-                (int) (jwtTokenProvider.getAccessExpiration() / 1000)
-        ));
-        response.addCookie(authCookieFactory.create(
-                "refreshToken",
-                result.refreshToken(),
-                (int) (jwtTokenProvider.getRefreshExpiration() / 1000)
-        ));
+        // 미신뢰 기기 → stepupToken 쿠키만 발급 (정식 토큰 보류)
+        if (result.stepUpRequired()) {
+            response.addCookie(authCookieFactory.create("stepupToken", result.stepUpToken(), STEP_UP_COOKIE_MAX_AGE));
+            return ResponseEntity.ok(ApiResponse.success(
+                    AuthResponseCode.STEP_UP_REQUIRED,
+                    AuthResponseMessage.STEP_UP_REQUIRED,
+                    LoginResponse.from(result)
+            ));
+        }
 
+        // 신뢰 기기 → 정식 토큰 쿠키 2개
+        response.addCookie(authCookieFactory.create(
+                "accessToken", result.accessToken(), (int) (jwtTokenProvider.getAccessExpiration() / 1000)));
+        response.addCookie(authCookieFactory.create(
+                "refreshToken", result.refreshToken(), (int) (jwtTokenProvider.getRefreshExpiration() / 1000)));
         return ResponseEntity.ok(ApiResponse.success(
                 AuthResponseCode.LOGIN_COMPLETED,
                 AuthResponseMessage.LOGIN_COMPLETED,
