@@ -1,4 +1,4 @@
-# k6 Result - problem-set-entry-before-optimization
+# k6 Result - problem-set-entry-after-start-code-once
 
 ## Summary
 
@@ -8,17 +8,17 @@
 | iterations | 300 |
 | checks success rate | 100.00% |
 | http_req_failed | 0.00% |
-| data_received bytes | 2407380 |
+| data_received bytes | 2413380 |
 | data_sent bytes | 322997 |
 
 ## Duration Metrics
 
 | Metric | avg(ms) | min(ms) | med(ms) | p90(ms) | p95(ms) | p99(ms) | max(ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| http_req_duration | 318.62 |  | 217.75 | 678.59 | 723.42 | 804.99 | 877.31 |
-| http_req_waiting | 317.90 |  | 216.92 | 676.48 | 722.59 | 803.98 | 875.31 |
-| http_req_blocked | 0.73 |  | 0.00 | 0.01 | 9.21 | 11.09 | 12.04 |
-| http_req_connecting | 0.71 |  | 0 | 0 | 9.16 | 11.05 | 11.96 |
+| http_req_duration | 201.29 |  | 127.47 | 354.68 | 365.64 | 492.82 | 506.70 |
+| http_req_waiting | 200.74 |  | 126.28 | 354.18 | 365.30 | 492.44 | 505.68 |
+| http_req_blocked | 0.82 |  | 0.00 | 0.01 | 10.47 | 13.49 | 15.68 |
+| http_req_connecting | 0.81 |  | 0 | 0 | 10.40 | 13.46 | 15.59 |
 
 ## Metric Meaning
 

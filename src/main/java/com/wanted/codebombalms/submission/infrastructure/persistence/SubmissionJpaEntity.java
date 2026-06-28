@@ -1,19 +1,20 @@
 package com.wanted.codebombalms.submission.infrastructure.persistence;
 
 import com.wanted.codebombalms.problems.problem.infrastructure.persistence.ProblemJpaEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "submission")
+@Table(
+        name = "submission",
+        indexes = {
+                @Index(
+                        name = "idx_submission_user_problem_submitted_id",
+                        columnList = "user_id, problem_id, submitted_at, submission_id"
+                )
+        }
+)
 public class SubmissionJpaEntity {
 
     @Id

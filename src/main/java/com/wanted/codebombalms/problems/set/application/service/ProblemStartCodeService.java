@@ -20,6 +20,11 @@ public class ProblemStartCodeService implements LoadProblemStartCodePort {
         Long problemSetId =
                 loadProblemSetIdByProblemIdPort.loadProblemSetIdByProblemId(problemId);
 
+        return loadStartCodeByProblemSetId(problemSetId);
+    }
+
+    @Override
+    public String loadStartCodeByProblemSetId(Long problemSetId) {
         String datasetFilePath =
                 loadActiveDatasetFilePathPort.loadActiveDatasetFilePath(problemSetId);
 
