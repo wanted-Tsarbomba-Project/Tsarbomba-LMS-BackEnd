@@ -23,7 +23,7 @@ services:
     # expand-env: config.yml의 ${LOKI_HOST}를 컨테이너 환경변수로 치환
     command: -config.file=/etc/promtail/config.yml -config.expand-env=true
     environment:
-      - LOKI_HOST=${LOKI_HOST}   # compose가 ./.env에서 보간 → 컨테이너로 주입
+      - LOKI_HOST=${LOKI_HOST}
     volumes:
       - ./promtail-config.yml:/etc/promtail/config.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
