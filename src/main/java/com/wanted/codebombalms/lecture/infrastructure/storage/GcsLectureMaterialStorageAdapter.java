@@ -1,17 +1,14 @@
 package com.wanted.codebombalms.lecture.infrastructure.storage;
 
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFactory;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
 import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +16,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.ContentDisposition;
 import org.springframework.stereotype.Component;
 
@@ -43,7 +38,7 @@ public class GcsLectureMaterialStorageAdapter implements LectureMaterialStorageP
     );
 
     private final GcpStorageProperties properties;
-    private final ResourceLoader resourceLoader;
+    private final GcpStorageClientFactory storageClientFactory;
     private volatile Storage storage;
 
     @Override
@@ -192,11 +187,7 @@ public class GcsLectureMaterialStorageAdapter implements LectureMaterialStorageP
 
     private Storage createStorage() {
         try {
-            return StorageOptions.newBuilder()
-                    .setProjectId(properties.getProjectId())
-                    .setCredentials(loadCredentials())
-                    .build()
-                    .getService();
+            return storageClientFactory.create();
         } catch (Exception e) {
             throw new ExternalServiceException(
                     LectureErrorCode.LECTURE_MATERIAL_UPLOAD_FAILED,
@@ -205,10 +196,4 @@ public class GcsLectureMaterialStorageAdapter implements LectureMaterialStorageP
         }
     }
 
-    private GoogleCredentials loadCredentials() throws IOException {
-        Resource resource = resourceLoader.getResource(properties.getCredentials().getLocation());
-        try (InputStream inputStream = resource.getInputStream()) {
-            return GoogleCredentials.fromStream(inputStream);
-        }
-    }
 }
