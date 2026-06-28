@@ -38,7 +38,9 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
                         .stream()
                         .collect(Collectors.toMap(
                                 LatestSubmission::problemId,
-                                Function.identity()
+                                Function.identity(),
+                                this::selectLatestSubmission
+
                         ));
 
         return problems.stream()
@@ -48,6 +50,22 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
                         latestSubmissionByProblemId.get(problem.problemId())
                 ))
                 .toList();
+    }
+
+    private LatestSubmission selectLatestSubmission(
+            LatestSubmission first,
+            LatestSubmission second
+    ) {
+        int submittedAtComparison =
+                first.submittedAt().compareTo(second.submittedAt());
+
+        if (submittedAtComparison != 0) {
+            return submittedAtComparison > 0 ? first : second;
+        }
+
+        return first.submissionId() >= second.submissionId()
+                ? first
+                : second;
     }
 
     private ProblemProgressItem toProgressItem(
