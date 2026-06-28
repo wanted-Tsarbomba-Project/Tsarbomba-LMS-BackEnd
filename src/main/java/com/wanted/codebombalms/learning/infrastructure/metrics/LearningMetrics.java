@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.learning.infrastructure.metrics;
 
+import com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.util.Map;
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LearningMetrics {
+public class LearningMetrics implements LearningProgressMetricsPort {
 
     private final MeterRegistry registry;
     private final Timer studentProgressQueryTimer;
@@ -25,14 +26,17 @@ public class LearningMetrics {
                 .register(registry);
     }
 
+    @Override
     public void recordStudentProgressQuery(long elapsedNanos) {
         studentProgressQueryTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 
+    @Override
     public void recordStudentProgressItem(long elapsedNanos) {
         studentProgressItemTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 
+    @Override
     public void recordStudentProgressSection(String section, long elapsedNanos) {
         studentProgressSectionTimers.computeIfAbsent(section, this::createStudentProgressSectionTimer)
                 .record(elapsedNanos, TimeUnit.NANOSECONDS);

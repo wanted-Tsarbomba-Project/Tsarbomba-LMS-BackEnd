@@ -9,6 +9,7 @@ import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPo
 import com.wanted.codebombalms.learning.application.port.LearningEnrollmentPort;
 import com.wanted.codebombalms.learning.application.port.LearningLecture;
 import com.wanted.codebombalms.learning.application.port.LearningLecturePort;
+import com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort;
 import com.wanted.codebombalms.learning.application.port.LearningUserPort;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
 import com.wanted.codebombalms.learning.domain.model.CourseLearningProgress;
@@ -20,7 +21,6 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
-import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -82,7 +83,7 @@ class LearningServiceTest {
     private LearningProgressCountCacheService learningProgressCountCacheService;
 
     @Mock
-    private LearningMetrics learningMetrics;
+    private LearningProgressMetricsPort learningMetrics;
 
     @InjectMocks
     private LectureProgressService lectureProgressService;
@@ -591,17 +592,19 @@ class LearningServiceTest {
         List<Long> lectureProblemSetIds = List.of(6001L, 6002L, 6003L);
         List<Long> userIds = List.of(userId);
 
-        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(21L);
-        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 1, 20)).willReturn(userIds);
-        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(lectureIds);
-        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(lectureProblemSetIds);
+        doReturn(21L).when(learningEnrollmentCacheService).countActiveStudentsByCourse(courseId);
+        doReturn(userIds).when(learningEnrollmentCacheService).findActiveStudentIdsByCourse(courseId, 1, 20);
+        doReturn(lectureIds).when(learningCourseStructureCacheService).findLectureIdsByCourse(courseId);
+        doReturn(lectureProblemSetIds)
+                .when(learningCourseStructureCacheService)
+                .findMainLectureProblemSetIdsByCourse(courseId);
         given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "student1"));
-        given(lectureProgressRepository.countCompletedByUserIdsAndLectureIds(userIds, lectureIds))
-                .willReturn(Map.of(userId, 1L));
-        given(lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
-                userIds,
-                lectureProblemSetIds
-        )).willReturn(Map.of(userId, 2L));
+        doReturn(Map.of(userId, 1L))
+                .when(learningProgressCountCacheService)
+                .countCompletedLectures(courseId, userIds, lectureIds);
+        doReturn(Map.of(userId, 2L))
+                .when(learningProgressCountCacheService)
+                .countCompletedProblems(courseId, userIds, lectureProblemSetIds);
 
         var result = adminLearningProgressQueryService.findStudentProgresses(courseId, 1);
 
@@ -611,7 +614,19 @@ class LearningServiceTest {
         assertEquals(21L, result.totalElements());
         assertEquals(2, result.totalPages());
         assertFalse(result.hasNext());
-        verify(learningEnrollmentPort).findActiveStudentIdsByCourse(courseId, 1, 20);
+        verify(learningEnrollmentCacheService).countActiveStudentsByCourse(courseId);
+        verify(learningEnrollmentCacheService).findActiveStudentIdsByCourse(courseId, 1, 20);
+        verify(learningCourseStructureCacheService).findLectureIdsByCourse(courseId);
+        verify(learningCourseStructureCacheService).findMainLectureProblemSetIdsByCourse(courseId);
+        verify(learningProgressCountCacheService).countCompletedLectures(courseId, userIds, lectureIds);
+        verify(learningProgressCountCacheService).countCompletedProblems(courseId, userIds, lectureProblemSetIds);
+        verify(learningEnrollmentPort, never()).countActiveStudentsByCourse(courseId);
+        verify(learningEnrollmentPort, never()).findActiveStudentIdsByCourse(courseId, 1, 20);
+        verify(learningLecturePort, never()).findLectureIdsByCourse(courseId);
+        verify(learningCourseProblemPort, never()).findMainLectureProblemSetIdsByCourse(courseId);
+        verify(lectureProgressRepository, never()).countCompletedByUserIdsAndLectureIds(userIds, lectureIds);
+        verify(lectureProblemProgressRepository, never())
+                .countCompletedByUserIdsAndLectureProblemSetIds(userIds, lectureProblemSetIds);
     }
 
     @Test
@@ -620,10 +635,12 @@ class LearningServiceTest {
         Long userId = 10L;
         List<Long> userIds = List.of(userId);
 
-        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(1L);
-        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 0, 20)).willReturn(userIds);
-        given(learningLecturePort.findLectureIdsByCourse(courseId)).willReturn(List.of());
-        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId)).willReturn(List.of());
+        doReturn(1L).when(learningEnrollmentCacheService).countActiveStudentsByCourse(courseId);
+        doReturn(userIds).when(learningEnrollmentCacheService).findActiveStudentIdsByCourse(courseId, 0, 20);
+        doReturn(List.of()).when(learningCourseStructureCacheService).findLectureIdsByCourse(courseId);
+        doReturn(List.of())
+                .when(learningCourseStructureCacheService)
+                .findMainLectureProblemSetIdsByCourse(courseId);
         given(learningUserPort.findUserNames(userIds)).willReturn(Map.of(userId, "student1"));
 
         var result = adminLearningProgressQueryService.findStudentProgresses(courseId, 0);
@@ -637,6 +654,8 @@ class LearningServiceTest {
                 .countCompletedByUserIdsAndLectureIds(userIds, List.of());
         verify(lectureProblemProgressRepository, never())
                 .countCompletedByUserIdsAndLectureProblemSetIds(userIds, List.of());
+        verify(learningProgressCountCacheService, never()).countCompletedLectures(anyLong(), any(), any());
+        verify(learningProgressCountCacheService, never()).countCompletedProblems(anyLong(), any(), any());
     }
 
     @Test
@@ -663,8 +682,8 @@ class LearningServiceTest {
     void findStudentProgresses_withNegativePage_usesFirstPage() {
         Long courseId = 101L;
 
-        given(learningEnrollmentPort.countActiveStudentsByCourse(courseId)).willReturn(21L);
-        given(learningEnrollmentPort.findActiveStudentIdsByCourse(courseId, 0, 20)).willReturn(List.of());
+        doReturn(21L).when(learningEnrollmentCacheService).countActiveStudentsByCourse(courseId);
+        doReturn(List.of()).when(learningEnrollmentCacheService).findActiveStudentIdsByCourse(courseId, 0, 20);
 
         var result = adminLearningProgressQueryService.findStudentProgresses(courseId, -1);
 
@@ -673,7 +692,10 @@ class LearningServiceTest {
         assertEquals(21L, result.totalElements());
         assertEquals(2, result.totalPages());
         assertTrue(result.hasNext());
-        verify(learningEnrollmentPort).findActiveStudentIdsByCourse(courseId, 0, 20);
+        verify(learningEnrollmentCacheService).countActiveStudentsByCourse(courseId);
+        verify(learningEnrollmentCacheService).findActiveStudentIdsByCourse(courseId, 0, 20);
+        verify(learningEnrollmentPort, never()).countActiveStudentsByCourse(courseId);
+        verify(learningEnrollmentPort, never()).findActiveStudentIdsByCourse(courseId, 0, 20);
     }
 
     @Test

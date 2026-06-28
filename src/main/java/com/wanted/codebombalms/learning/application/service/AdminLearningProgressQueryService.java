@@ -5,6 +5,7 @@ import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.application.port.LearningEnrollmentPort;
 import com.wanted.codebombalms.learning.application.port.LearningLecture;
 import com.wanted.codebombalms.learning.application.port.LearningLecturePort;
+import com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort;
 import com.wanted.codebombalms.learning.application.port.LearningUserPort;
 import com.wanted.codebombalms.learning.domain.model.CourseLearningProgress;
 import com.wanted.codebombalms.learning.domain.model.LearningCourse;
@@ -20,11 +21,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_BUILD_TOTAL;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_COMPLETED_LECTURE_COUNTS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_COMPLETED_PROBLEM_COUNTS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_LECTURE_IDS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_PROBLEM_SET_IDS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_STUDENT_COUNT;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_STUDENT_ID_PAGE;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_USER_NAMES;
 
 @Slf4j
 @Service
@@ -32,14 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminLearningProgressQueryService implements AdminLearningProgressQueryUseCase {
 
     private static final int STUDENT_PROGRESS_PAGE_SIZE = 20;
-    private static final String SECTION_STUDENT_COUNT = "student_count";
-    private static final String SECTION_STUDENT_ID_PAGE = "student_id_page";
-    private static final String SECTION_LECTURE_IDS = "lecture_ids";
-    private static final String SECTION_PROBLEM_SET_IDS = "problem_set_ids";
-    private static final String SECTION_USER_NAMES = "user_names";
-    private static final String SECTION_COMPLETED_LECTURE_COUNTS = "completed_lecture_counts";
-    private static final String SECTION_COMPLETED_PROBLEM_COUNTS = "completed_problem_counts";
-    private static final String SECTION_BUILD_TOTAL = "build_total";
 
     private final LearningCoursePort learningCoursePort;
     private final LearningEnrollmentPort learningEnrollmentPort;
@@ -51,7 +52,7 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     private final LearningEnrollmentCacheService learningEnrollmentCacheService;
     private final LearningCourseStructureCacheService learningCourseStructureCacheService;
     private final LearningProgressCountCacheService learningProgressCountCacheService;
-    private final LearningMetrics learningMetrics;
+    private final LearningProgressMetricsPort learningMetrics;
 
     @Override
     @Transactional(readOnly = true)
