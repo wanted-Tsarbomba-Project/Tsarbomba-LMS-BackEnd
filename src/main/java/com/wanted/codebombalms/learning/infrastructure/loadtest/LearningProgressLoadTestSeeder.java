@@ -40,7 +40,7 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
     private static final String ADMIN_EMAIL = "learning-loadtest-admin@test.com";
     private static final String OPERATOR_EMAIL = "learning-loadtest-operator@test.com";
-    private static final int STUDENTS = 200;
+    private static final int STUDENTS = 100000;
     private static final int LECTURES = 12;
     private static final int PROBLEM_SETS = 12;
     private static final String LOGIN_PASSWORD = "Test1234!";
