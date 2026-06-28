@@ -29,6 +29,9 @@ spring:
             enable: true
             required: true
 
+server:
+  forward-headers-strategy: framework
+
 jwt:
   secret: ${JWT_SECRET}
 
