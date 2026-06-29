@@ -5,10 +5,13 @@ import com.wanted.codebombalms.auth.domain.repository.LoginHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import org.springframework.data.domain.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.PageRequest;
 
 @Component
 @RequiredArgsConstructor
@@ -33,5 +36,14 @@ public class LoginHistoryRepositoryAdapter implements LoginHistoryRepository {
                         SpringDataLoginHistoryRepository.LatestLoginAtProjection::getUserId,
                         SpringDataLoginHistoryRepository.LatestLoginAtProjection::getLatestLoginAt
                 ));
+    }
+
+    @Override
+    public List<LoginHistory> findByUserId(Long userId, int page, int size) {
+        return springDataLoginHistoryRepository
+                .findByUserIdOrderByCreatedAtDescLoginHistoryIdDesc(userId, PageRequest.of(page, size))
+                .stream()
+                .map(LoginHistoryJpaEntity::toDomain)
+                .toList();
     }
 }

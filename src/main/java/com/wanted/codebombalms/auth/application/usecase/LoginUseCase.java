@@ -6,5 +6,5 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface LoginUseCase {
 
-    LoginResult login(LoginCommand command, HttpServletRequest request);
+    LoginResult login(LoginCommand command, HttpServletRequest request, String deviceFp);
 }

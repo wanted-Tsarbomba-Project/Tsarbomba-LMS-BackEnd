@@ -55,6 +55,22 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
     }
 
     @Override
+    public List<Long> findActiveStudentIdsByCourse(Long courseId, int page, int size) {
+        log.info("[EnrollmentQueryService] find active student ids page - courseId: {}, page: {}, size: {}",
+                courseId, page, size);
+
+        return enrollmentRepository.findByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE, page, size)
+                .stream()
+                .map(Enrollment::getUserId)
+                .toList();
+    }
+
+    @Override
+    public long countActiveStudentsByCourse(Long courseId) {
+        return enrollmentRepository.countByCourseIdAndStatus(courseId, EnrollmentStatus.ACTIVE);
+    }
+
+    @Override
     public boolean isActiveStudentOfCourse(Long courseId, Long userId) {
         log.debug("[EnrollmentQueryService] check active enrollment - courseId: {}, userId: {}", courseId, userId);
 

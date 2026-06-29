@@ -45,7 +45,11 @@ public enum AuthErrorCode implements ErrorCode {
 
     OAUTH_STATE_INVALID("AUT-021", "유효하지 않은 인증 요청입니다. 다시 시도해주세요."),
     OAUTH_EMAIL_ALREADY_LOCAL("AUT-022", "이미 일반 가입된 이메일입니다. 일반 로그인을 이용해주세요."),
-    OAUTH_EMAIL_NOT_VERIFIED("AUT-023", "구글에서 인증되지 않은 이메일입니다.");
+    OAUTH_EMAIL_NOT_VERIFIED("AUT-023", "구글에서 인증되지 않은 이메일입니다."),
+
+    // 적응형 인증 (step-up)
+    AUTH_STEP_UP_TOKEN_INVALID("AUT-024", "추가 인증 세션이 유효하지 않거나 만료되었습니다."),
+    AUTH_STEP_UP_TOO_MANY("AUT-025", "추가 인증 시도 횟수를 초과했습니다. 다시 로그인해주세요.");
 
     private final String code;
     private final String message;

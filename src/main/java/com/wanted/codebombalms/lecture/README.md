@@ -69,3 +69,10 @@ lecture
 | `course` | 강의가 속할 강좌의 존재 여부와 상태 확인 |
 | `learning` | 강의 진행률 기록과 조회의 기준 |
 | `problems` | 강의에 연결된 문제 세트 조회 기준 |
+# Lecture Problem Set API
+
+| Method | Path | Description | Role |
+| --- | --- | --- | --- |
+| `GET` | `/api/v1/courses/{courseId}/lecture-problem-sets` | Find lecture problem sets by course | All |
+| `GET` | `/api/v1/lectures/{lectureId}/lecture-problem-sets` | Find lecture problem sets by lecture | All |
+| `PUT` | `/api/v1/courses/{courseId}/lecture-problem-sets` | Configure course lecture problem sets | `ROLE_OPERATOR` |

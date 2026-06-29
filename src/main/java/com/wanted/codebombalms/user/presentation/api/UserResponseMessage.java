@@ -13,4 +13,10 @@ public class UserResponseMessage {
     public static final String PROFILE_UPDATED = "개인정보 수정 성공";
     public static final String PASSWORD_CHANGED = "비밀번호 변경 성공";
     public static final String EMAIL_FOUND = "이메일 찾기 성공";
+
+    // 적응형 인증 - 신뢰 기기
+    public static final String TRUSTED_DEVICES_RETRIEVED = "신뢰 기기 목록 조회 성공";
+    public static final String TRUSTED_DEVICE_REMOVED = "신뢰 기기를 해제했습니다.";
+
+    public static final String LOGIN_HISTORY_RETRIEVED = "로그인 이력 조회 성공";
 }

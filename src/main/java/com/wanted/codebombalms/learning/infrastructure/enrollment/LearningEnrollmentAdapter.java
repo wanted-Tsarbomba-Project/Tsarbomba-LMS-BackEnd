@@ -20,6 +20,16 @@ public class LearningEnrollmentAdapter implements LearningEnrollmentPort {
     }
 
     @Override
+    public List<Long> findActiveStudentIdsByCourse(Long courseId, int page, int size) {
+        return enrollmentQueryUseCase.findActiveStudentIdsByCourse(courseId, page, size);
+    }
+
+    @Override
+    public long countActiveStudentsByCourse(Long courseId) {
+        return enrollmentQueryUseCase.countActiveStudentsByCourse(courseId);
+    }
+
+    @Override
     public boolean isActiveStudentOfCourse(Long courseId, Long userId) {
         return enrollmentQueryUseCase.isActiveStudentOfCourse(courseId, userId);
     }

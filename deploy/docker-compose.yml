@@ -1,0 +1,35 @@
+# ② Spring (SUT) + promtail 사이드카 — ③ Loki로 로그 전송
+services:
+  spring:
+    image: ${ECR_REGISTRY}/codebomb-spring:latest
+    container_name: lms-spring
+    restart: unless-stopped
+    env_file: .env                 # DB/Redis/JWT/OAuth/GCP 등 런타임 비밀값
+    ports:
+      - "8080:8080"
+    volumes:
+      # GCP 스토리지 키 (EC2 /opt/spring/secrets/gcp-storage-key.json 배치)
+      - ./secrets:/app/secrets:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: lms-promtail
+    restart: unless-stopped
+    # expand-env: config.yml의 ${LOKI_HOST}를 컨테이너 환경변수로 치환
+    command: -config.file=/etc/promtail/config.yml -config.expand-env=true
+    environment:
+      - LOKI_HOST=${LOKI_HOST}
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

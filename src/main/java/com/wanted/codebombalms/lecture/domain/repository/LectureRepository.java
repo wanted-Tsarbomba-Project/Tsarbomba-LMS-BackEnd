@@ -15,6 +15,10 @@ public interface LectureRepository {
 
     List<Lecture> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
+    List<Long> findPreviousLectureIds(Long courseId, Integer lectureOrder);
+
+    boolean existsNextLecture(Long courseId, Integer lectureOrder);
+
     boolean existsByCourseIdAndDeletedAtIsNull(Long courseId);
 
     boolean existsByCourseIdAndLectureIdAndDeletedAtIsNull(Long courseId, Long lectureId);

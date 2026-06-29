@@ -4,6 +4,7 @@ import com.wanted.codebombalms.submission.domain.model.LatestSubmission;
 import com.wanted.codebombalms.submission.application.port.SubmissionQueryPort;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,5 +32,17 @@ public class SubmissionQueryPersistenceAdapter implements SubmissionQueryPort {
                 submission.getCorrect(),
                 submission.getSubmittedAt()
         );
+    }
+
+    @Override
+    public List<LatestSubmission> findLatestResults(Long userId, List<Long> problemIds) {
+        if (problemIds.isEmpty()) {
+            return List.of();
+        }
+
+        return submissionRepository.findLatestByUserIdAndProblemIds(userId, problemIds)
+                .stream()
+                .map(this::toResult)
+                .toList();
     }
 }
