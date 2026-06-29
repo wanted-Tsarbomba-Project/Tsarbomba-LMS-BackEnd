@@ -82,16 +82,15 @@ public class OperationRuleExecutionService implements RunOperationRuleUseCase {
         }
 
         long startedAt = System.nanoTime();
-        List<OperationRuleDetectionResult> results = handler.detect(rule);
+        int detectedCount = handler.detect(rule, result -> saveAlert(rule, result));
         long elapsedNanos = System.nanoTime() - startedAt;
 
         adminMetrics.recordRuleDetect(rule.getRuleCode(), elapsedNanos);
-        adminMetrics.incrementRuleDetected(rule.getRuleCode(), results.size());
+        adminMetrics.incrementRuleDetected(rule.getRuleCode(), detectedCount);
         log.info("event=admin_operation_rule_detected ruleCode={} detectedCount={} durationMs={}",
-                rule.getRuleCode(), results.size(), elapsedNanos / 1_000_000);
+                rule.getRuleCode(), detectedCount, elapsedNanos / 1_000_000);
 
-        results.forEach(result -> saveAlert(rule, result));
-        return results.size();
+        return detectedCount;
     }
 
     private void saveAlert(AutomationRule rule, OperationRuleDetectionResult result) {

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
@@ -24,5 +25,13 @@ public class UserInactiveNoCourseRuleHandler implements OperationRuleHandler {
     @Override
     public List<OperationRuleDetectionResult> detect(AutomationRule rule) {
         return userOperationMetricPort.findInactiveUsers(rule.getThresholdValue());
+    }
+
+    @Override
+    public int detect(AutomationRule rule, Consumer<OperationRuleDetectionResult> resultConsumer) {
+        return userOperationMetricPort.findInactiveUsers(
+                rule.getThresholdValue(),
+                resultConsumer
+        );
     }
 }
