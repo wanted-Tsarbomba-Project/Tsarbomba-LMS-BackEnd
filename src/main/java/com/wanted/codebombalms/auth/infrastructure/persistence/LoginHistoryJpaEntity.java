@@ -11,7 +11,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "login_history")
+@Table(
+        name = "login_history",
+        indexes = {
+                @Index(name = "idx_login_history_user_created_id",
+                        columnList = "user_id, created_at, login_history_id")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
