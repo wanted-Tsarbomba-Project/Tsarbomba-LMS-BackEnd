@@ -80,8 +80,6 @@ AGENTS.md
 CLAUDE.md
 .ai/
 .github/CODEOWNERS
-.claude/*
-.ai/local/
 demo
 
 architecture-user-auth.html
