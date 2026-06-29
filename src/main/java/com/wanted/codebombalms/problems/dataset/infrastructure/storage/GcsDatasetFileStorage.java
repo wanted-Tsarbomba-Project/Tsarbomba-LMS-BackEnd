@@ -1,22 +1,18 @@
 package com.wanted.codebombalms.problems.dataset.infrastructure.storage;
 
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFactory;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 
 @Primary
@@ -28,14 +24,14 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
     private static final String STORAGE_PUBLIC_URL = "https://storage.googleapis.com";
 
     private final GcpStorageProperties properties;
-    private final ResourceLoader resourceLoader;
+    private final GcpStorageClientFactory storageClientFactory;
 
     public GcsDatasetFileStorage(
             GcpStorageProperties properties,
-            ResourceLoader resourceLoader
+            GcpStorageClientFactory storageClientFactory
     ) {
         this.properties = properties;
-        this.resourceLoader = resourceLoader;
+        this.storageClientFactory = storageClientFactory;
     }
 
     @Override
@@ -61,14 +57,6 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
         );
     }
 
-    private Storage createStorage() throws IOException {
-        return StorageOptions.newBuilder()
-                .setProjectId(properties.getProjectId())
-                .setCredentials(loadCredentials())
-                .build()
-                .getService();
-    }
-
     @Override
     public void delete(String filePath) {
         if (filePath == null || filePath.isBlank()) {
@@ -84,11 +72,8 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
         }
     }
 
-    private GoogleCredentials loadCredentials() throws IOException {
-        Resource resource = resourceLoader.getResource(properties.getCredentials().getLocation());
-        try (InputStream inputStream = resource.getInputStream()) {
-            return GoogleCredentials.fromStream(inputStream);
-        }
+    private Storage createStorage() throws IOException {
+        return storageClientFactory.create();
     }
 
     private String buildObjectName(String storedFileName) {

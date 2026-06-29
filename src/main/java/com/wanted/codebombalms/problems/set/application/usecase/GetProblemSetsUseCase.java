@@ -7,7 +7,17 @@ import java.util.List;
 
 public interface GetProblemSetsUseCase {
 
-    List<ProblemSetSummaryView> handle(GetProblemSetsQuery query);
+    ProblemSetPageView handle(GetProblemSetsQuery query);
+
+    record ProblemSetPageView(
+            List<ProblemSetSummaryView> content,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages,
+            boolean hasNext
+    ) {
+    }
 
     record ProblemSetSummaryView(
             Long problemSetId,

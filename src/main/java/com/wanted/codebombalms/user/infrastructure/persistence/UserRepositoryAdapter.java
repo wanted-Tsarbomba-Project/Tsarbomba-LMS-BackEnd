@@ -29,6 +29,14 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
+    public List<User> findByUserIds(List<Long> userIds) {
+        return springDataUserRepository.findByUserIdIn(userIds)
+                .stream()
+                .map(UserJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<User> findByNameAndPhone(String name, String phone) {
         return springDataUserRepository
                 .findByNameAndPhoneAndDeletedAtIsNullOrderByCreatedAtDesc(name, phone)

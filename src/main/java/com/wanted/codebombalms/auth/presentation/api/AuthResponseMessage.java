@@ -19,4 +19,9 @@ public class AuthResponseMessage {
     public static final String OAUTH_AUTH_URL_ISSUED = "구글 인증 URL 발급 성공";
     public static final String OAUTH_SIGNUP_COMPLETED = "소셜 가입 완료";
     public static final String OAUTH_TEMP_INFO_RETRIEVED = "소셜 임시정보 조회 성공";
+
+    public static final String STEP_UP_REQUIRED = "추가 인증이 필요합니다.";
+    public static final String STEP_UP_VERIFIED = "추가 인증이 완료되었습니다.";
+    public static final String STEP_UP_CODE_RESENT = "인증 코드를 재발송했습니다.";
+    public static final String ACCOUNT_LOCKED = "계정이 잠겼습니다. 비밀번호 재설정 후 이용해주세요.";
 }

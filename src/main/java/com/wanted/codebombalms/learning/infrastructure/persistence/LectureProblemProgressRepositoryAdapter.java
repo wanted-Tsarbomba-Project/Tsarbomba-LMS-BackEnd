@@ -3,7 +3,9 @@ package com.wanted.codebombalms.learning.infrastructure.persistence;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -56,6 +58,23 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
         }
         return springDataLectureProblemProgressRepository
                 .countByUserIdAndLectureProblemSetIdInAndCompletedTrue(userId, lectureProblemSetIds);
+    }
+
+    @Override
+    public Map<Long, Long> countCompletedByUserIdsAndLectureProblemSetIds(
+            List<Long> userIds,
+            List<Long> lectureProblemSetIds
+    ) {
+        if (userIds.isEmpty() || lectureProblemSetIds.isEmpty()) {
+            return Map.of();
+        }
+        return springDataLectureProblemProgressRepository
+                .countCompletedByUserIdsAndLectureProblemSetIds(userIds, lectureProblemSetIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        SpringDataLectureProblemProgressRepository.UserCompletedProblemSetCount::getUserId,
+                        SpringDataLectureProblemProgressRepository.UserCompletedProblemSetCount::getCompletedCount
+                ));
     }
 
     @Override

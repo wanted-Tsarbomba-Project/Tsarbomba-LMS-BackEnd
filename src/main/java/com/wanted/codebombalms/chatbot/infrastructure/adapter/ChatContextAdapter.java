@@ -27,6 +27,7 @@ public class ChatContextAdapter implements ChatContextPort {
         return new ProblemSetInfo(ps.problemSetId(), ps.title(), ps.description());
     }
 
+
     @Override
     public List<ProblemInfo> findProblems(Long problemSetId, Long userId) {
         return problemQueryService.findProblemsForChat(problemSetId).stream()

@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.enrollment.infrastructure.persistence;
 
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -19,6 +20,14 @@ public interface SpringDataEnrollmentRepository extends JpaRepository<Enrollment
     List<EnrollmentJpaEntity> findByUserIdAndStatus(Long userId, EnrollmentStatus status);
 
     List<EnrollmentJpaEntity> findByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
+
+    List<EnrollmentJpaEntity> findByCourseIdAndStatusOrderByUserIdAsc(
+            Long courseId,
+            EnrollmentStatus status,
+            Pageable pageable
+    );
+
+    long countByCourseIdAndStatus(Long courseId, EnrollmentStatus status);
 
     List<EnrollmentJpaEntity> findByStatus(EnrollmentStatus status);
 

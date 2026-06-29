@@ -1,23 +1,18 @@
 package com.wanted.codebombalms.course.infrastructure.storage;
 
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFactory;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,16 +27,16 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
     );
 
     private final GcpStorageProperties properties;
-    private final ResourceLoader resourceLoader;
+    private final GcpStorageClientFactory storageClientFactory;
 
     private volatile Storage storage;
 
     public GcsCourseThumbnailStorageAdapter(
             GcpStorageProperties properties,
-            ResourceLoader resourceLoader
+            GcpStorageClientFactory storageClientFactory
     ) {
         this.properties = properties;
-        this.resourceLoader = resourceLoader;
+        this.storageClientFactory = storageClientFactory;
     }
 
     @Override
@@ -230,11 +225,7 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
 
     private Storage createStorage() {
         try {
-            return StorageOptions.newBuilder()
-                    .setProjectId(properties.getProjectId())
-                    .setCredentials(loadCredentials())
-                    .build()
-                    .getService();
+            return storageClientFactory.create();
         } catch (Exception e) {
             throw new ExternalServiceException(
                     CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED,
@@ -243,13 +234,4 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
         }
     }
 
-    private GoogleCredentials loadCredentials() throws IOException {
-        Resource resource = resourceLoader.getResource(
-                properties.getCredentials().getLocation()
-        );
-
-        try (InputStream inputStream = resource.getInputStream()) {
-            return GoogleCredentials.fromStream(inputStream);
-        }
-    }
 }

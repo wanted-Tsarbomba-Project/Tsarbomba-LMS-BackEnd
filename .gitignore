@@ -40,6 +40,8 @@ out/
 application-*.properties
 application-*.yml
 application-*.yaml
+# 배포 프로파일은 ${...} 자리표시자만 담는다(비밀값 없음) → 커밋해야 CI 빌드에 포함됨
+!src/main/resources/application-deploy.yml
 *.env
 .env*
 /secrets/
@@ -67,10 +69,13 @@ _배포용*/
 !.claude/agents/
 
 /ai/
-# docs는 통째로 ignore하되, develop의 공용 팀 문서 2개는 예외(계속 추적)
+# docs는 통째로 ignore하되, develop의 공용 팀 문서는 예외(계속 추적)
 docs/*
 !docs/CONVENTION.md
 !docs/README.md
+# 디렉터리부터 다시 포함해야 그 안의 파일 예외가 먹는다(부모가 ignore면 자식 재포함 불가)
+!.ai/deploy/
+!.ai/deploy/*
 AGENTS.md
 CLAUDE.md
 .ai/
@@ -85,11 +90,8 @@ architecture-user-auth.html
 /forme/HOME.md
 /forme/부하테스트_모니터링_구축기.md
 /forme/
-/monitoring/k6/results/user-student-list-after-summary.json
-/monitoring/k6/results/user-student-list-before-50k-summary.json
-/monitoring/k6/results/user-student-list-before-summary.json
 
 
-## deploy 액기스
-.deploy 엑기스/*
-
+/monitoring-local/k6/results/user-student-list-after-summary.json
+/monitoring-local/k6/results/user-student-list-before-50k-summary.json
+/monitoring-local/k6/results/user-student-list-before-summary.json

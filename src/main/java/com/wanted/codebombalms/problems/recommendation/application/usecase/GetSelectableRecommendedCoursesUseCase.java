@@ -10,6 +10,8 @@ public interface GetSelectableRecommendedCoursesUseCase {
 
     record SelectableRecommendedCourseView(
             Long courseId,
+            Long categoryId,
+            String categoryName,
             String title,
             String description,
             String thumbnailUrl

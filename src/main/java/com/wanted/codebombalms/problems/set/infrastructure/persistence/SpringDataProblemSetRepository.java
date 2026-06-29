@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.List;
 
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,8 +20,19 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             ProblemSetStatus status
     );
 
+    Page<ProblemSetJpaEntity> findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
+            Long categoryId,
+            ProblemSetStatus status,
+            Pageable pageable
+    );
+
     List<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(
             ProblemSetStatus status
+    );
+
+    Page<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(
+            ProblemSetStatus status,
+            Pageable pageable
     );
 
     @Transactional

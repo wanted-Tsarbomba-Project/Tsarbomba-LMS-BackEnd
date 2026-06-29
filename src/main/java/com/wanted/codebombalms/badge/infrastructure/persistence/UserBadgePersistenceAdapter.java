@@ -14,6 +14,7 @@ public class UserBadgePersistenceAdapter
         implements UserBadgePersistencePort {
 
     private final SpringDataUserBadgeRepository userBadgeRepository;
+    private final UserBadgeBulkInserter userBadgeBulkInserter;
 
     @Override
     public UserBadge save(UserBadge userBadge) {
@@ -85,5 +86,10 @@ public class UserBadgePersistenceAdapter
     @Override
     public void deleteAllByBadgeId(Long badgeId) {
         userBadgeRepository.deleteAllByBadgeId(badgeId);
+    }
+
+    @Override
+    public List<UserBadge> insertIgnoreAll(List<UserBadge> userBadges) {
+        return userBadgeBulkInserter.insertIgnoreAll(userBadges);
     }
 }
