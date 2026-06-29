@@ -125,6 +125,15 @@
 
 -
 
+운영 반영 필요 여부:
+
+- [ ] 없음
+- [ ] GitHub Secrets 변경 필요
+- [ ] EC2 `.env` 변경 필요
+- [ ] SSM Parameter Store 변경 필요
+
+> Secret 값은 PR에 작성하지 않고, 키 이름과 반영 위치만 작성합니다.
+
 ---
 
 # 🧪 릴리즈 체크리스트
@@ -138,6 +147,9 @@
 - [ ] API 변경사항이 Swagger 또는 `.ai/API.md`에 반영되었습니다.
 - [ ] DB 스키마 / 시드 데이터 변경사항을 확인했습니다.
 - [ ] 운영 환경변수 또는 Secrets 변경사항을 확인했습니다.
+- [ ] 환경변수 / Secrets 키 추가·변경·삭제 여부를 확인했습니다.
+- [ ] 변경이 있는 경우 GitHub Secrets / EC2 `.env` / SSM Parameter Store 반영 대상을 확인했습니다.
+- [ ] Secret 값은 PR 본문에 노출하지 않았습니다.
 - [ ] Docker / EC2 배포 설정 변경사항을 확인했습니다.
 - [ ] Merge Conflict가 없습니다.
 - [ ] 릴리즈 노트를 작성했습니다.
@@ -173,26 +185,3 @@ git pull origin main
 
 git tag v0.0.0
 git push origin v0.0.0
-```
-
----
-
-# ✅ 배포 후 검증
-
-```bash
-curl http://<BACKEND_HOST>:8080/actuator/health
-```
-
-- [ ] `/actuator/health` 상태가 정상입니다.
-- [ ] 로그인 / 회원가입이 정상 동작합니다.
-- [ ] 주요 조회 API가 정상 동작합니다.
-- [ ] DB / Redis / GCP Storage 연결이 정상입니다.
-- [ ] EC2 Docker 컨테이너 로그를 확인했습니다.
-
----
-
-# 💬 기타 사항
-
-> 리뷰어가 확인해야 할 사항이나 배포 시 주의사항을 작성해주세요.
-
--
