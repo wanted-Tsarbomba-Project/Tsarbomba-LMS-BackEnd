@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.metrics;
 
+import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
 import io.micrometer.common.KeyValues;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.server.observation.DefaultServerRequestObservationConvention;
@@ -25,11 +26,23 @@ public class DomainObservationConvention extends DefaultServerRequestObservation
 
     private static final String BASE_PACKAGE = "com.wanted.codebombalms.";
     private static final String UNKNOWN = "unknown";
+    private static final String ANONYMOUS = "anonymous";
 
     @Override
     public KeyValues getLowCardinalityKeyValues(ServerRequestObservationContext context) {
         return super.getLowCardinalityKeyValues(context)
-                .and("domain", resolveDomain(context));
+                .and("domain", resolveDomain(context))
+                .and("role", resolveRole(context));
+    }
+
+    private String resolveRole(ServerRequestObservationContext context) {
+        HttpServletRequest request = context.getCarrier();
+        if (request == null) {
+            return ANONYMOUS;
+        }
+
+        Object role = request.getAttribute(JwtAuthenticationFilter.AUTHENTICATED_ROLE_ATTRIBUTE);
+        return role == null ? ANONYMOUS : String.valueOf(role);
     }
 
     private String resolveDomain(ServerRequestObservationContext context) {
