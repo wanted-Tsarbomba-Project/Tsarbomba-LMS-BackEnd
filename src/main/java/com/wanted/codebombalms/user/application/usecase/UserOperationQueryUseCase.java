@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UserOperationQueryUseCase {
 
-    List<UserOperationView> findStudents();
+    List<UserOperationView> findStudents(int page, int size);
 
     record UserOperationView(
             Long userId,

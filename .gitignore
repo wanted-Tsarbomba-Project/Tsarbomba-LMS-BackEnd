@@ -88,3 +88,8 @@ architecture-user-auth.html
 /monitoring/k6/results/user-student-list-after-summary.json
 /monitoring/k6/results/user-student-list-before-50k-summary.json
 /monitoring/k6/results/user-student-list-before-summary.json
+
+
+## deploy 액기스
+.deploy 엑기스/*
+
