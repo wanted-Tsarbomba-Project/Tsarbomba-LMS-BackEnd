@@ -1,0 +1,127 @@
+name: Create GitHub Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: create-release-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find merged release PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          PR_JSON=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$REPO/commits/$SHA/pulls")
+
+          PR_COUNT=$(echo "$PR_JSON" | jq 'length')
+
+          if [ "$PR_COUNT" -eq 0 ]; then
+            echo "No PR associated with this push. Skip release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR=$(echo "$PR_JSON" | jq -c '
+            map(select(.base.ref == "main" and .head.ref == "develop"))
+            | .[0]
+          ')
+
+          if [ "$PR" = "null" ]; then
+            echo "Merged PR is not develop -> main. Skip release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TITLE=$(echo "$PR" | jq -r '.title')
+          NUMBER=$(echo "$PR" | jq -r '.number')
+          BODY=$(echo "$PR" | jq -r '.body // ""')
+
+          if [[ ! "$TITLE" =~ ^\[Release\]\ (v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "Release PR title is not release format: $TITLE"
+            echo "Expected: [Release] vX.Y.Z"
+            exit 1
+          fi
+
+          VERSION="${BASH_REMATCH[1]}"
+
+          {
+            echo "should_release=true"
+            echo "version=$VERSION"
+            echo "pr_number=$NUMBER"
+            echo "pr_title=$TITLE"
+          } >> "$GITHUB_OUTPUT"
+
+          printf "%s\n" "$BODY" > release_body.md
+
+      - name: Check duplicate tag
+        if: steps.pr.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.pr.outputs.version }}"
+
+          git fetch --tags
+
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag already exists: $VERSION"
+            exit 1
+          fi
+
+      - name: Create tag
+        if: steps.pr.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.pr.outputs.version }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag -a "$VERSION" "${{ github.sha }}" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+      - name: Create GitHub Release
+        if: steps.pr.outputs.should_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.pr.outputs.version }}
+          PR_NUMBER: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+
+          if [ ! -s release_body.md ]; then
+            cat > release_body.md <<EOF
+          Release $VERSION
+
+          Merged from develop to main.
+
+          PR: #$PR_NUMBER
+          EOF
+          fi
+
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes-file release_body.md \
+            --verify-tag
