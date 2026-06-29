@@ -20,6 +20,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    public static final String AUTHENTICATED_USER_ID_ATTRIBUTE = "authenticatedUserId";
+    public static final String AUTHENTICATED_ROLE_ATTRIBUTE = "authenticatedRole";
+
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
@@ -41,6 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtTokenProvider.getClaims(token);
                 Long userId = Long.parseLong(claims.getSubject());
                 String role = claims.get("role", String.class);
+                request.setAttribute(AUTHENTICATED_USER_ID_ATTRIBUTE, userId);
+                request.setAttribute(AUTHENTICATED_ROLE_ATTRIBUTE, role);
 
                 // 4. SecurityContextHolder에 저장
                 UsernamePasswordAuthenticationToken auth =

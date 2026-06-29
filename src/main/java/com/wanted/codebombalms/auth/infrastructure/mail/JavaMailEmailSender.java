@@ -49,13 +49,13 @@ public class JavaMailEmailSender implements EmailSender {
         message.setFrom(fromAddress);
         message.setTo(to);
         message.setSubject("[Code-Bomba LMS] 새로운 기기 로그인 — 추가 인증 코드");
-        message.setText(buildStepUpBody(code, lockUrl));
+        message.setText(buildStepUpBody(code));
 
         mailSender.send(message);
         log.info("[EmailSender] step-up 코드 발송 완료 - to: {}", maskEmail(to));
     }
 
-    private String buildStepUpBody(String code, String lockUrl) {
+    private String buildStepUpBody(String code) {
         return """
                 평소와 다른 기기 또는 위치에서 로그인이 시도되었습니다.
 
@@ -63,9 +63,8 @@ public class JavaMailEmailSender implements EmailSender {
                 인증 코드: %s
                 (이 코드는 5분간 유효합니다.)
 
-                본인이 시도한 로그인이 아니라면, 아래 링크를 눌러 계정을 즉시 잠그세요.
-                %s
-                """.formatted(code, lockUrl);
+                본인이 시도한 로그인이 아니라면, 계정 보호를 위해 즉시 비밀번호를 변경해주세요.
+                """.formatted(code);
     }
 
     /** 로그에 이메일 평문(PII) 노출 방지 — 앞 1글자 + *** + 도메인만 남긴다. (예: j***@gmail.com) */

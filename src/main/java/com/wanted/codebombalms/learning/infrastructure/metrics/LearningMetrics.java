@@ -1,17 +1,23 @@
 package com.wanted.codebombalms.learning.infrastructure.metrics;
 
+import com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LearningMetrics {
+public class LearningMetrics implements LearningProgressMetricsPort {
 
+    private final MeterRegistry registry;
     private final Timer studentProgressQueryTimer;
     private final Timer studentProgressItemTimer;
+    private final Map<String, Timer> studentProgressSectionTimers = new ConcurrentHashMap<>();
 
     public LearningMetrics(MeterRegistry registry) {
+        this.registry = registry;
         this.studentProgressQueryTimer = Timer.builder("learning_student_progress_query_duration")
                 .description("강좌별 학생 학습률 목록 조회 구간 시간")
                 .register(registry);
@@ -20,12 +26,27 @@ public class LearningMetrics {
                 .register(registry);
     }
 
+    @Override
     public void recordStudentProgressQuery(long elapsedNanos) {
         studentProgressQueryTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 
+    @Override
     public void recordStudentProgressItem(long elapsedNanos) {
         studentProgressItemTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
+    }
+
+    @Override
+    public void recordStudentProgressSection(String section, long elapsedNanos) {
+        studentProgressSectionTimers.computeIfAbsent(section, this::createStudentProgressSectionTimer)
+                .record(elapsedNanos, TimeUnit.NANOSECONDS);
+    }
+
+    private Timer createStudentProgressSectionTimer(String section) {
+        return Timer.builder("learning_student_progress_section_duration")
+                .description("Student progress query section duration")
+                .tag("section", section)
+                .register(registry);
     }
 }
 

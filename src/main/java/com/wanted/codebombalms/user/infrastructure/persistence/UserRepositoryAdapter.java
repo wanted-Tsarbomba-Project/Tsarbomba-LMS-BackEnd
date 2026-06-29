@@ -86,13 +86,6 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public List<User> findAllByRole(UserRole role) {
-        return springDataUserRepository.findAllByRoleOrderByCreatedAtDesc(role).stream()
-                .map(UserJpaEntity::toDomain)
-                .toList();
-    }
-
-    @Override
     public long countByRole(UserRole role) {
         return springDataUserRepository.countByRole(role);
     }

@@ -49,6 +49,9 @@ spring:
             enable: true
             required: true
 
+server:
+  forward-headers-strategy: framework
+
 jwt:
   secret: ${JWT_SECRET}
   access-expiration: ${JWT_ACCESS_EXPIRATION:3600000}      # 1시간
@@ -67,6 +70,7 @@ oauth:
   # 신규 가입 시 추가정보 입력 페이지 (콜백 redirect 대상)
   additional-info-uri: ${OAUTH_ADDITIONAL_INFO_URI:http://localhost:3001/oauth2/additional-info}
   success-uri: ${OAUTH_SUCCESS_URI:http://localhost:3001}
+  error-uri: ${OAUTH_ERROR_URI:http://localhost:3001/auth/login}
 
 app:
   cookie:

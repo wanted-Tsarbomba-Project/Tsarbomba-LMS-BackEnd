@@ -12,6 +12,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -22,6 +23,8 @@ import reactor.netty.http.client.HttpClient;
 @Component
 @RequiredArgsConstructor
 public class FastApiProblemRecommendationGenerationClient implements ProblemRecommendationGenerationClient {
+
+    private static final int MAX_PYTHON_RESPONSE_IN_MEMORY_BYTES = 2 * 1024 * 1024;
 
     private final RecommendationPythonProperties properties;
     private final RecommendationMetrics recommendationMetrics;
@@ -84,7 +87,12 @@ public class FastApiProblemRecommendationGenerationClient implements ProblemReco
         return WebClient.builder()
                 .baseUrl(fastApiBaseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .codecs(this::configureCodecs)
                 .build();
+    }
+
+    private void configureCodecs(ClientCodecConfigurer configurer) {
+        configurer.defaultCodecs().maxInMemorySize(MAX_PYTHON_RESPONSE_IN_MEMORY_BYTES);
     }
 
     private String classifyFailure(RuntimeException exception) {

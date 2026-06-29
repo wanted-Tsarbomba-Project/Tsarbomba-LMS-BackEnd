@@ -11,7 +11,15 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "refresh_tokens")
+@Table(
+        name = "refresh_tokens",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_refresh_tokens_token", columnNames = "token")
+        },
+        indexes = {
+                @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id")
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
