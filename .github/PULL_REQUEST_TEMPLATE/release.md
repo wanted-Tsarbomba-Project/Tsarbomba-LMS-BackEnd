@@ -1,5 +1,11 @@
 # 🚀 Backend Release Pull Request
 
+> PR 제목은 반드시 `[Release] vX.Y.Z` 형식으로 작성해주세요.
+>
+> 예시: `[Release] v1.2.0`
+>
+> Release PR이 `main`에 머지되면 GitHub Actions가 PR 제목의 버전을 기준으로 태그와 GitHub Release를 생성합니다.
+
 ## 📌 릴리즈 정보
 
 | 항목 | 내용 |
