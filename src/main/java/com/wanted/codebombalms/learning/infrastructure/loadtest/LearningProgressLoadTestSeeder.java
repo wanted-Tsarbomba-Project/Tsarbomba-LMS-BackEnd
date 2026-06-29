@@ -1,20 +1,28 @@
 package com.wanted.codebombalms.learning.infrastructure.loadtest;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HexFormat;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
 @Profile("loadtest & loadtest-learning")
+@Order(0)
 @RequiredArgsConstructor
 public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
@@ -33,22 +41,32 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
 
     private static final String ADMIN_EMAIL = "learning-loadtest-admin@test.com";
     private static final String OPERATOR_EMAIL = "learning-loadtest-operator@test.com";
-    private static final int STUDENTS = 200;
+    private static final int STUDENTS = 100000;
     private static final int LECTURES = 12;
     private static final int PROBLEM_SETS = 12;
     private static final String LOGIN_PASSWORD = "Test1234!";
+    private static final String LOADTEST_DEVICE_ID = "learning-loadtest-device";
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
 
+    @PostConstruct
+    void logBeanRegistered() {
+        log.info("event=learning_loadtest_seed_bean_registered courseId={} students={}", COURSE_ID, STUDENTS);
+    }
+
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
+        log.info("event=learning_loadtest_seed_started courseId={} students={}", COURSE_ID, STUDENTS);
+
         Long enrollmentCount = jdbc.queryForObject(
                 "select count(*) from enrollment where course_id = ?",
                 Long.class,
                 COURSE_ID
         );
         if (enrollmentCount != null && enrollmentCount >= STUDENTS) {
+            seedTrustedDevices();
             log.info("event=learning_loadtest_seed_skipped courseId={} studentCount={}", COURSE_ID, enrollmentCount);
             return;
         }
@@ -56,13 +74,23 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
         long startedAt = System.nanoTime();
 
         seedUsers();
+        log.info("event=learning_loadtest_seed_step_completed step=users students={}", STUDENTS);
+        seedTrustedDevices();
+        log.info("event=learning_loadtest_seed_step_completed step=trusted_devices");
         seedCourse();
+        log.info("event=learning_loadtest_seed_step_completed step=course courseId={}", COURSE_ID);
         seedLectures();
+        log.info("event=learning_loadtest_seed_step_completed step=lectures lectures={}", LECTURES);
         seedProblemSets();
+        log.info("event=learning_loadtest_seed_step_completed step=problem_sets problemSets={}", PROBLEM_SETS);
         seedLectureProblemSets();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_sets");
         seedEnrollments();
+        log.info("event=learning_loadtest_seed_step_completed step=enrollments students={}", STUDENTS);
         seedLectureProgresses();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_progresses rows={}", STUDENTS * LECTURES);
         seedLectureProblemProgresses();
+        log.info("event=learning_loadtest_seed_step_completed step=lecture_problem_progresses rows={}", STUDENTS * PROBLEM_SETS);
 
         log.info("event=learning_loadtest_seed_completed courseId={} students={} lectures={} problemSets={} durationMs={}",
                 COURSE_ID, STUDENTS, LECTURES, PROBLEM_SETS, (System.nanoTime() - startedAt) / 1_000_000);
@@ -116,6 +144,46 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
                 return STUDENTS;
             }
         });
+    }
+
+    private void seedTrustedDevices() {
+        String deviceFp = sha256(LOADTEST_DEVICE_ID);
+
+        seedTrustedDevice(ADMIN_USER_ID, deviceFp, "learning-loadtest-k6");
+        seedTrustedDevice(INSTRUCTOR_USER_ID, deviceFp, "learning-loadtest-k6");
+    }
+
+    private void seedTrustedDevice(Long userId, String deviceFp, String deviceName) {
+        int updated = jdbc.update("""
+                update trusted_devices
+                set device_name = ?,
+                    last_country = null,
+                    last_city = null,
+                    last_used_at = now(6)
+                where user_id = ?
+                  and device_fp = ?
+                """, deviceName, userId, deviceFp);
+
+        if (updated > 0) {
+            return;
+        }
+
+        jdbc.update("""
+                insert into trusted_devices
+                  (user_id, device_fp, device_name, last_country, last_city, last_used_at, created_at)
+                values
+                  (?, ?, ?, null, null, now(6), now(6))
+                """, userId, deviceFp, deviceName);
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 algorithm is not available.", e);
+        }
     }
 
     private void seedCourse() {
@@ -240,6 +308,14 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedLectureProgresses() {
+        jdbc.update("""
+                delete from lecture_progress
+                where user_id >= ?
+                  and user_id < ?
+                  and lecture_id >= ?
+                  and lecture_id < ?
+                """, STUDENT_ID_START, STUDENT_ID_START + STUDENTS, LECTURE_ID_START, LECTURE_ID_START + LECTURES);
+
         jdbc.batchUpdate("""
                 insert into lecture_progress
                   (user_id, lecture_id, is_completed, completed_at, last_position_sec,
@@ -267,6 +343,15 @@ public class LearningProgressLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedLectureProblemProgresses() {
+        jdbc.update("""
+                delete from lecture_problem_progress
+                where user_id >= ?
+                  and user_id < ?
+                  and lecture_problem_set_id >= ?
+                  and lecture_problem_set_id < ?
+                """, STUDENT_ID_START, STUDENT_ID_START + STUDENTS,
+                LECTURE_PROBLEM_SET_ID_START, LECTURE_PROBLEM_SET_ID_START + PROBLEM_SETS);
+
         jdbc.batchUpdate("""
                 insert into lecture_problem_progress
                   (user_id, lecture_problem_set_id, current_problem_number, is_completed,
