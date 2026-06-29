@@ -37,26 +37,50 @@ jobs:
 
           PR_COUNT=$(echo "$PR_JSON" | jq 'length')
 
-          if [ "$PR_COUNT" -eq 0 ]; then
-            echo "No PR associated with this push. Skip release."
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ "$PR_COUNT" -gt 0 ]; then
+            PR=$(echo "$PR_JSON" | jq -c '
+              map(select(.base.ref == "main" and .head.ref == "develop"))
+              | .[0]
+            ')
+          else
+            PR="null"
           fi
-
-          PR=$(echo "$PR_JSON" | jq -c '
-            map(select(.base.ref == "main" and .head.ref == "develop"))
-            | .[0]
-          ')
 
           if [ "$PR" = "null" ]; then
-            echo "Merged PR is not develop -> main. Skip release."
-            echo "should_release=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+            echo "No associated develop -> main PR found from commit API. Try merge commit message fallback."
 
-          TITLE=$(echo "$PR" | jq -r '.title')
-          NUMBER=$(echo "$PR" | jq -r '.number')
-          BODY=$(echo "$PR" | jq -r '.body // ""')
+            COMMIT_MESSAGE=$(git log -1 --pretty=%B "$SHA")
+            PR_NUMBER_FROM_MESSAGE=$(echo "$COMMIT_MESSAGE" | sed -nE 's/^Merge pull request #([0-9]+).*/\1/p')
+
+            if [ -z "$PR_NUMBER_FROM_MESSAGE" ]; then
+              echo "No PR number found in merge commit message. Skip release."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            echo "Found PR number from merge commit message: #$PR_NUMBER_FROM_MESSAGE"
+
+            PR_VIEW=$(gh pr view "$PR_NUMBER_FROM_MESSAGE" \
+              --repo "$REPO" \
+              --json title,body,baseRefName,headRefName,number)
+
+            BASE_REF=$(echo "$PR_VIEW" | jq -r '.baseRefName')
+            HEAD_REF=$(echo "$PR_VIEW" | jq -r '.headRefName')
+
+            if [ "$BASE_REF" != "main" ] || [ "$HEAD_REF" != "develop" ]; then
+              echo "Merged PR is not develop -> main. base=$BASE_REF head=$HEAD_REF"
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            TITLE=$(echo "$PR_VIEW" | jq -r '.title')
+            NUMBER=$(echo "$PR_VIEW" | jq -r '.number')
+            BODY=$(echo "$PR_VIEW" | jq -r '.body // ""')
+          else
+            TITLE=$(echo "$PR" | jq -r '.title')
+            NUMBER=$(echo "$PR" | jq -r '.number')
+            BODY=$(echo "$PR" | jq -r '.body // ""')
+          fi
 
           if [[ ! "$TITLE" =~ ^\[Release\]\ (v[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             echo "Release PR title is not release format: $TITLE"
