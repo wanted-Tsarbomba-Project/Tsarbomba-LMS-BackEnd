@@ -73,7 +73,14 @@ jobs:
             echo "pr_title=$TITLE"
           } >> "$GITHUB_OUTPUT"
 
-          printf "%s\n" "$BODY" > release_body.md
+          printf "%s\n" "$BODY" > pr_body.md
+
+          awk '
+            /^# 📖 릴리즈 요약/ { keep=1 }
+            /^# 🧪 릴리즈 체크리스트/ { keep=0 }
+            /^# 💬 기타 사항/ { keep=1 }
+            keep { print }
+          ' pr_body.md > release_body.md
 
       - name: Check duplicate tag
         if: steps.pr.outputs.should_release == 'true'
