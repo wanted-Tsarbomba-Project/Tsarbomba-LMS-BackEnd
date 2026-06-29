@@ -13,8 +13,10 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @Component
 @RequiredArgsConstructor
@@ -22,26 +24,54 @@ import java.util.Map;
 // 사용자와 로그인 이력을 조회해 장기 미접속 학생 지표를 만든다.
 public class UserOperationMetricAdapter implements UserOperationMetricPort {
 
+    private static final int STUDENT_QUERY_BATCH_SIZE = 1_000;
+
     private final UserOperationQueryUseCase userOperationQueryUseCase;
     private final LoginActivityQueryUseCase loginActivityQueryUseCase;
     private final Clock clock;
 
     @Override
     public List<OperationRuleDetectionResult> findInactiveUsers(BigDecimal inactiveDaysThreshold) {
+        List<OperationRuleDetectionResult> results = new ArrayList<>();
+        findInactiveUsers(inactiveDaysThreshold, results::add);
+        return results;
+    }
+
+    @Override
+    public int findInactiveUsers(
+            BigDecimal inactiveDaysThreshold,
+            Consumer<OperationRuleDetectionResult> resultConsumer
+    ) {
         long inactiveDays = inactiveDaysThreshold.longValue();
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime cutoff = now.minusDays(inactiveDays);
-        List<UserOperationQueryUseCase.UserOperationView> students = userOperationQueryUseCase.findStudents();
-        List<Long> userIds = students.stream()
-                .map(UserOperationQueryUseCase.UserOperationView::userId)
-                .toList();
-        Map<Long, LocalDateTime> latestLoginAtByUserId = loginActivityQueryUseCase.findLatestLoginAtByUserIds(userIds);
+        int page = 0;
+        int detectedCount = 0;
 
-        return students.stream()
-                .map(student -> toMetric(student, now, latestLoginAtByUserId))
-                .filter(metric -> !metric.lastActivityAt().isAfter(cutoff))
-                .map(metric -> toResult(metric, inactiveDaysThreshold))
-                .toList();
+        while (true) {
+            List<UserOperationQueryUseCase.UserOperationView> students =
+                    userOperationQueryUseCase.findStudents(page, STUDENT_QUERY_BATCH_SIZE);
+
+            if (students.isEmpty()) {
+                return detectedCount;
+            }
+
+            List<Long> userIds = students.stream()
+                    .map(UserOperationQueryUseCase.UserOperationView::userId)
+                    .toList();
+            Map<Long, LocalDateTime> latestLoginAtByUserId =
+                    loginActivityQueryUseCase.findLatestLoginAtByUserIds(userIds);
+
+            for (UserOperationQueryUseCase.UserOperationView student : students) {
+                UserInactiveMetric metric = toMetric(student, now, latestLoginAtByUserId);
+                if (!metric.lastActivityAt().isAfter(cutoff)) {
+                    resultConsumer.accept(toResult(metric, inactiveDaysThreshold));
+                    detectedCount++;
+                }
+            }
+
+            page++;
+        }
     }
 
     private UserInactiveMetric toMetric(

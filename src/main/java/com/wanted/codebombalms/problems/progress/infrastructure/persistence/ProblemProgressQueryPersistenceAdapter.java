@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -24,27 +27,59 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
             Long problemSetId,
             Integer currentProblemNumber
     ) {
-        return loadProblemsForProgressPort.loadActiveProblems(problemSetId)
-                .stream()
-                .map(problem -> toProgressItem(userId, currentProblemNumber, problem))
+        var problems = loadProblemsForProgressPort.loadActiveProblems(problemSetId);
+
+        var problemIds = problems.stream()
+                .map(LoadProblemsForProgressPort.ProgressProblem::problemId)
+                .toList();
+
+        Map<Long, LatestSubmission> latestSubmissionByProblemId =
+                submissionQueryPort.findLatestResults(userId, problemIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                LatestSubmission::problemId,
+                                Function.identity(),
+                                this::selectLatestSubmission
+
+                        ));
+
+        return problems.stream()
+                .map(problem -> toProgressItem(
+                        currentProblemNumber,
+                        problem,
+                        latestSubmissionByProblemId.get(problem.problemId())
+                ))
                 .toList();
     }
 
-    private ProblemProgressItem toProgressItem(
-            Long userId,
-            Integer currentProblemNumber,
-            LoadProblemsForProgressPort.ProgressProblem problem
+    private LatestSubmission selectLatestSubmission(
+            LatestSubmission first,
+            LatestSubmission second
     ) {
-        var latestSubmission = submissionQueryPort
-                .findLatestResult(userId, problem.problemId());
+        int submittedAtComparison =
+                first.submittedAt().compareTo(second.submittedAt());
 
-        Boolean latestCorrect = latestSubmission
-                .map(LatestSubmission::correct)
-                .orElse(null);
+        if (submittedAtComparison != 0) {
+            return submittedAtComparison > 0 ? first : second;
+        }
 
-        Long latestSubmissionId = latestSubmission
-                .map(LatestSubmission::submissionId)
-                .orElse(null);
+        return first.submissionId() >= second.submissionId()
+                ? first
+                : second;
+    }
+
+    private ProblemProgressItem toProgressItem(
+            Integer currentProblemNumber,
+            LoadProblemsForProgressPort.ProgressProblem problem,
+            LatestSubmission latestSubmission
+    ) {
+        Boolean latestCorrect = latestSubmission == null
+                ? null
+                : latestSubmission.correct();
+
+        Long latestSubmissionId = latestSubmission == null
+                ? null
+                : latestSubmission.submissionId();
 
         return ProblemProgressItem.of(
                 problem.problemId(),

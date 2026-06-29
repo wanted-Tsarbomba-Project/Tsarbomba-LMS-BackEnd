@@ -18,8 +18,8 @@ public class UserOperationQueryService implements UserOperationQueryUseCase {
     private final UserRepository userRepository;
 
     @Override
-    public List<UserOperationView> findStudents() {
-        return userRepository.findAllByRole(UserRole.STUDENT).stream()
+    public List<UserOperationView> findStudents(int page, int size) {
+        return userRepository.findAllByRole(UserRole.STUDENT, page, size).stream()
                 .map(this::toView)
                 .toList();
     }

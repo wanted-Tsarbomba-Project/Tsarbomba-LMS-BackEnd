@@ -5,6 +5,7 @@ import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.application.port.LearningEnrollmentPort;
 import com.wanted.codebombalms.learning.application.port.LearningLecture;
 import com.wanted.codebombalms.learning.application.port.LearningLecturePort;
+import com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort;
 import com.wanted.codebombalms.learning.application.port.LearningUserPort;
 import com.wanted.codebombalms.learning.domain.model.CourseLearningProgress;
 import com.wanted.codebombalms.learning.domain.model.LearningCourse;
@@ -20,11 +21,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.wanted.codebombalms.learning.infrastructure.metrics.LearningMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_BUILD_TOTAL;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_COMPLETED_LECTURE_COUNTS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_COMPLETED_PROBLEM_COUNTS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_LECTURE_IDS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_PROBLEM_SET_IDS;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_STUDENT_COUNT;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_STUDENT_ID_PAGE;
+import static com.wanted.codebombalms.learning.application.port.LearningProgressMetricsPort.SECTION_USER_NAMES;
 
 @Slf4j
 @Service
@@ -40,7 +49,10 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     private final LearningUserPort learningUserPort;
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
-    private final LearningMetrics learningMetrics;
+    private final LearningEnrollmentCacheService learningEnrollmentCacheService;
+    private final LearningCourseStructureCacheService learningCourseStructureCacheService;
+    private final LearningProgressCountCacheService learningProgressCountCacheService;
+    private final LearningProgressMetricsPort learningMetrics;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,11 +81,22 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
     @Transactional(readOnly = true)
     public StudentLearningProgressPage findStudentProgresses(Long courseId, int page) {
         int requestedPage = Math.max(page, 0);
-        long totalStudentCount = learningEnrollmentPort.countActiveStudentsByCourse(courseId);
-        List<Long> studentIds = learningEnrollmentPort.findActiveStudentIdsByCourse(
+        long studentCountStartedAt = System.nanoTime();
+        long totalStudentCount = learningEnrollmentCacheService.countActiveStudentsByCourse(courseId);
+        learningMetrics.recordStudentProgressSection(
+                SECTION_STUDENT_COUNT,
+                System.nanoTime() - studentCountStartedAt
+        );
+
+        long studentIdPageStartedAt = System.nanoTime();
+        List<Long> studentIds = learningEnrollmentCacheService.findActiveStudentIdsByCourse(
                 courseId,
                 requestedPage,
                 STUDENT_PROGRESS_PAGE_SIZE
+        );
+        learningMetrics.recordStudentProgressSection(
+                SECTION_STUDENT_ID_PAGE,
+                System.nanoTime() - studentIdPageStartedAt
         );
 
         return StudentLearningProgressPage.of(
@@ -105,33 +128,51 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
         Map<Long, Long> completedProblemCounts = Map.of();
         if (!studentIds.isEmpty()) {
             long lectureIdsStartedAt = System.nanoTime();
-            lectureIds = learningLecturePort.findLectureIdsByCourse(courseId);
-            timing.recordLectureIds(System.nanoTime() - lectureIdsStartedAt, lectureIds.size());
+            lectureIds = learningCourseStructureCacheService.findLectureIdsByCourse(courseId);
+            long lectureIdsElapsedNanos = System.nanoTime() - lectureIdsStartedAt;
+            timing.recordLectureIds(lectureIdsElapsedNanos, lectureIds.size());
+            learningMetrics.recordStudentProgressSection(SECTION_LECTURE_IDS, lectureIdsElapsedNanos);
 
             long problemSetIdsStartedAt = System.nanoTime();
-            lectureProblemSetIds = learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(courseId);
-            timing.recordProblemSetIds(System.nanoTime() - problemSetIdsStartedAt, lectureProblemSetIds.size());
+            lectureProblemSetIds = learningCourseStructureCacheService.findMainLectureProblemSetIdsByCourse(courseId);
+            long problemSetIdsElapsedNanos = System.nanoTime() - problemSetIdsStartedAt;
+            timing.recordProblemSetIds(problemSetIdsElapsedNanos, lectureProblemSetIds.size());
+            learningMetrics.recordStudentProgressSection(SECTION_PROBLEM_SET_IDS, problemSetIdsElapsedNanos);
 
             long userNameStartedAt = System.nanoTime();
             userNames = learningUserPort.findUserNames(studentIds);
-            timing.recordUserName(System.nanoTime() - userNameStartedAt);
+            long userNameElapsedNanos = System.nanoTime() - userNameStartedAt;
+            timing.recordUserName(userNameElapsedNanos);
+            learningMetrics.recordStudentProgressSection(SECTION_USER_NAMES, userNameElapsedNanos);
 
             if (!lectureIds.isEmpty()) {
                 long completedLectureCountStartedAt = System.nanoTime();
-                completedLectureCounts = lectureProgressRepository.countCompletedByUserIdsAndLectureIds(
+                completedLectureCounts = learningProgressCountCacheService.countCompletedLectures(
+                        courseId,
                         studentIds,
                         lectureIds
                 );
-                timing.recordCompletedLectureCount(System.nanoTime() - completedLectureCountStartedAt);
+                long completedLectureCountElapsedNanos = System.nanoTime() - completedLectureCountStartedAt;
+                timing.recordCompletedLectureCount(completedLectureCountElapsedNanos);
+                learningMetrics.recordStudentProgressSection(
+                        SECTION_COMPLETED_LECTURE_COUNTS,
+                        completedLectureCountElapsedNanos
+                );
             }
 
             if (!lectureProblemSetIds.isEmpty()) {
                 long completedProblemCountStartedAt = System.nanoTime();
-                completedProblemCounts = lectureProblemProgressRepository.countCompletedByUserIdsAndLectureProblemSetIds(
+                completedProblemCounts = learningProgressCountCacheService.countCompletedProblems(
+                        courseId,
                         studentIds,
                         lectureProblemSetIds
                 );
-                timing.recordCompletedProblemCount(System.nanoTime() - completedProblemCountStartedAt);
+                long completedProblemCountElapsedNanos = System.nanoTime() - completedProblemCountStartedAt;
+                timing.recordCompletedProblemCount(completedProblemCountElapsedNanos);
+                learningMetrics.recordStudentProgressSection(
+                        SECTION_COMPLETED_PROBLEM_COUNTS,
+                        completedProblemCountElapsedNanos
+                );
             }
         }
 
@@ -146,6 +187,7 @@ public class AdminLearningProgressQueryService implements AdminLearningProgressQ
             ));
         }
         long progressBuildElapsedNanos = System.nanoTime() - progressBuildStartedAt;
+        learningMetrics.recordStudentProgressSection(SECTION_BUILD_TOTAL, progressBuildElapsedNanos);
 
         log.info("event=learning_student_progress_built courseId={} studentCount={} totalStudentCount={} durationMs={}",
                 courseId, studentIds.size(), totalStudentCount, progressBuildElapsedNanos / 1_000_000);

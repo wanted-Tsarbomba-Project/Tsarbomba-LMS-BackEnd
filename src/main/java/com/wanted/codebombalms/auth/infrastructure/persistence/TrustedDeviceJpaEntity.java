@@ -11,7 +11,13 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "trusted_devices")
+@Table(
+        name = "trusted_devices",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "idx_trusted_devices_user_fp",
+                        columnNames = {"user_id", "device_fp"})
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)

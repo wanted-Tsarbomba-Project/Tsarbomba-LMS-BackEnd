@@ -16,6 +16,11 @@ function safeName(name) {
         .replace(/-+/g, "-");
 }
 
+function safePathSegment(segment) {
+    const value = safeName(segment);
+    return value === "k6-result" ? "" : value;
+}
+
 function metricValue(data, metricName, key) {
     const metric = data.metrics[metricName];
     if (!metric || !metric.values || metric.values[key] === undefined) {
@@ -119,7 +124,9 @@ function buildMarkdown(data, name) {
     return `${lines.join("\n")}\n`;
 }
 
-function buildConsoleTable(data, name) {
+function buildConsoleTable(data, name, resultDir) {
+    const resultPath = resultDir ? `monitoring-local/k6/results/${resultDir}` : "monitoring-local/k6/results";
+
     return [
         "",
         `k6 summary: ${name}`,
@@ -137,20 +144,22 @@ function buildConsoleTable(data, name) {
         `  p99             : ${metricValue(data, "http_req_duration", "p(99)")}`,
         `  max             : ${metricValue(data, "http_req_duration", "max")}`,
         "------------------------------------------------------------",
-        `Markdown report  : monitoring-local/k6/results/${name}-summary.md`,
-        `JSON report      : monitoring-local/k6/results/${name}-summary.json`,
+        `Markdown report  : ${resultPath}/${name}-summary.md`,
+        `JSON report      : ${resultPath}/${name}-summary.json`,
         "",
     ].join("\n");
 }
 
-export function createSummaryHandler(defaultName) {
+export function createSummaryHandler(defaultName, resultDir = "") {
     return function handleSummary(data) {
         const name = safeName(__ENV.RESULT_NAME || defaultName);
+        const dir = safePathSegment(resultDir);
+        const prefix = dir ? `/results/${dir}` : "/results";
 
         return {
-            stdout: buildConsoleTable(data, name),
-            [`/results/${name}-summary.md`]: buildMarkdown(data, name),
-            [`/results/${name}-summary.json`]: JSON.stringify(data, null, 2),
+            stdout: buildConsoleTable(data, name, dir),
+            [`${prefix}/${name}-summary.md`]: buildMarkdown(data, name),
+            [`${prefix}/${name}-summary.json`]: JSON.stringify(data, null, 2),
         };
     };
 }

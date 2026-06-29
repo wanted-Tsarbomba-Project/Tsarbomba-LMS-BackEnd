@@ -31,13 +31,20 @@ const LOGIN_EMAIL = __ENV.LOGIN_EMAIL || "u01@test.com";
 const LOGIN_PASSWORD = __ENV.LOGIN_PASSWORD || "Test1234!";
 
 // 로그인해서 accessToken 쿠키 값을 반환한다. (setup() 에서 호출 권장)
-export function login(email = LOGIN_EMAIL, password = LOGIN_PASSWORD) {
+export function login(email = LOGIN_EMAIL, password = LOGIN_PASSWORD, options = {}) {
+    const headers = options.headers || {};
+    headers["Content-Type"] = "application/json";
+
+    const tags = options.tags || {};
+    tags.api = "POST /auth/login";
+
     const res = http.post(
         `${BASE_URL}/api/v1/auth/login`,
         JSON.stringify({ email, password }),
         {
-            headers: { "Content-Type": "application/json" },
-            tags: { api: "POST /auth/login" },
+            cookies: options.cookies || {},
+            headers,
+            tags,
         }
     );
 

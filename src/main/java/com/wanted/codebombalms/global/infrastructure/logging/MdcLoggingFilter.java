@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.logging;
 
+import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import java.util.UUID;
 public class MdcLoggingFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(MdcLoggingFilter.class);
+    private static final String ANONYMOUS = "anonymous";
 
     @Override
     protected void doFilterInternal(
@@ -38,14 +40,27 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
         } finally {
             // MDC.clear() 전에 남겨야 완료 로그에도 traceId 가 붙는다.
             long durationMs = (System.nanoTime() - startAt) / 1_000_000;
-            log.info("event=request_completed method={} uri={} status={} durationMs={}",
+            String userId = resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_USER_ID_ATTRIBUTE);
+            String role = resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_ROLE_ATTRIBUTE);
+            MDC.put("userId", userId);
+            MDC.put("role", role);
+
+            log.info("event=request_completed method={} uri={} status={} durationMs={} userId={} role={} clientIp={}",
                     request.getMethod(),
                     request.getRequestURI(),
                     response.getStatus(),
-                    durationMs);
+                    durationMs,
+                    userId,
+                    role,
+                    resolveClientIp(request));
 
             MDC.clear();
         }
+    }
+
+    private String resolveAttribute(HttpServletRequest request, String name) {
+        Object value = request.getAttribute(name);
+        return value == null ? ANONYMOUS : String.valueOf(value);
     }
 
     private String resolveClientIp(HttpServletRequest request) {

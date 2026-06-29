@@ -7,8 +7,8 @@ POST http://localhost:8080/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@codebomba.com",
-  "password": "password"
+  "email": "u01@test.com",
+  "password": "Test1234!"
 }
 
 ### 1. 내 정보 조회 — 정상 (0번 직후 실행)

@@ -36,8 +36,11 @@ export function setup() {
     for (let i = 0; i < USER_COUNT; i += 1) {
         const userId = USER_ID_START + i;
         const email = `problem-entry-loadtest-${userId}@test.com`;
+        const deviceId = `problem-entry-loadtest-device-${userId}`;
 
-        tokens.push(login(email, PASSWORD));
+        tokens.push(login(email, PASSWORD, {
+            cookies: { deviceId },
+        }));
     }
 
     return { tokens };

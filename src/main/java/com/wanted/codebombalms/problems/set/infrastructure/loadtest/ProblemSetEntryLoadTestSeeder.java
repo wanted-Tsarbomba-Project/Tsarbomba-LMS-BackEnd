@@ -82,7 +82,7 @@ public class ProblemSetEntryLoadTestSeeder implements ApplicationRunner {
                   (user_id, role, email, password, name, nickname, provider,
                    email_verified, is_locked, created_at, updated_at)
                 values
-                  (?, 'STUDENT', ?, ?, ?, ?, 'LOCAL', true, false, now(6), now(6))
+                  (?, 'OPERATOR', ?, ?, ?, ?, 'LOCAL', true, false, now(6), now(6))
                 on duplicate key update
                   role = values(role),
                   password = values(password),
