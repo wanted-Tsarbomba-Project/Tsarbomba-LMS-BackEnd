@@ -24,4 +24,16 @@ public class SchedulingConfig {
         executor.initialize();
         return executor;
     }
+
+    /** 이메일(SMTP) 발송을 로그인 응답 스레드와 분리 — 발송 지연이 응답을 막지 않도록 전용 풀 사용. */
+    @Bean(name = "mailTaskExecutor")
+    public Executor mailTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("mail-async-");
+        executor.initialize();
+        return executor;
+    }
 }

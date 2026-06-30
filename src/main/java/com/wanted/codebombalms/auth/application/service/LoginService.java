@@ -94,9 +94,17 @@ public class LoginService implements LoginUseCase {
     }
 
     private LoginResult issueStepUp(User user, String deviceFp, GeoLocation geo) {
-        // OTP (step-up) 발급
-        String code = generateCode();
         String stepUpToken = UUID.randomUUID().toString();
+
+        // 멱등성 유지: 같은 기기에 이미 유효한 챌린지가 있으면 재사용 (코드 재발급/메일 재발송 차단)
+        Optional<String> existing =
+                stepUpTokenRepository.reserveDeviceChallenge(user.getUserId(), deviceFp, stepUpToken);
+        if (existing.isPresent()) {
+            return LoginResult.stepUp(existing.get(), maskEmail(user.getEmail()));
+        }
+
+        // 신규 발급 — OTP(step-up) 생성
+        String code = generateCode();
         stepUpTokenRepository.save(stepUpToken,
                 new StepUpChallenge(user.getUserId(), deviceFp, geo.country(), code));
 

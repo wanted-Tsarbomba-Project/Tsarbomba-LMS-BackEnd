@@ -22,6 +22,8 @@ public class RedisStepUpTokenAdapter implements StepUpTokenRepository {
     private static final String KEY_ATTEMPTS  = "stepup:attempts:";  // + {token}
     private static final Duration TTL = Duration.ofMinutes(5);
 
+    private static final String KEY_DEVICE = "stepup:device:"; // + {userId}:{deviceFp}
+
     @Override
     public void save(String token, StepUpChallenge challenge) {
         // 본문 + TTL 단일 SET EX (원자)
@@ -47,6 +49,20 @@ public class RedisStepUpTokenAdapter implements StepUpTokenRepository {
             redisTemplate.expire(key, TTL); // 첫 시도 시 TTL 부여 (토큰과 동기 만료)
         }
         return count == null ? 0 : count.intValue();
+    }
+
+    @Override
+    public Optional<String> reserveDeviceChallenge(Long userId, String deviceFp, String newToken) {
+        String key = KEY_DEVICE + userId + ":" + deviceFp;
+
+        // 원자적 SETNX — 키가 없을 때만 newToken 으로 선점 (TTL 5분)
+        Boolean reserved = redisTemplate.opsForValue().setIfAbsent(key, newToken, TTL);
+        if (Boolean.TRUE.equals(reserved)) {
+            return Optional.empty(); // 선점 성공 → 신규 발급 진행
+        }
+
+        // 이미 발급 진행 중/완료 → 기존 토큰 재사용
+        return Optional.ofNullable(redisTemplate.opsForValue().get(key));
     }
 
     private String serialize(StepUpChallenge challenge) {
