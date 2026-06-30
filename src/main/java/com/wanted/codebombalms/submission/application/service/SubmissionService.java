@@ -1,220 +1,138 @@
 package com.wanted.codebombalms.submission.application.service;
 
 import com.wanted.codebombalms.problems.dataset.application.port.GenerateDatasetAccessUrlPort;
-import com.wanted.codebombalms.problems.dataset.application.port.LoadActiveDatasetFilePathPort;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
-import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
 import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
-import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
-import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort.ProblemForSubmission;
-import com.wanted.codebombalms.submission.application.port.LoadTestCasesForGradingPort;
-import com.wanted.codebombalms.submission.application.port.ProblemProgressPort;
-import com.wanted.codebombalms.submission.application.port.ProblemSetCompletionEventPort;
-import com.wanted.codebombalms.submission.application.port.ProblemSolvedEventPort;
-import com.wanted.codebombalms.submission.application.port.SubmissionCommandPort;
+import com.wanted.codebombalms.submission.application.port.RecordSubmissionMetricsPort;
+import com.wanted.codebombalms.submission.application.service.CodeGradingService.CodeGradingResult;
+import com.wanted.codebombalms.submission.application.service.SubmissionTransactionService.SubmissionPreparation;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
-import com.wanted.codebombalms.submission.domain.model.CodeSubmission;
+import com.wanted.codebombalms.submission.infrastructure.metrics.SubmissionMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class SubmissionService implements SubmissionCommandUseCase {
 
-    private final SubmissionCommandPort submissionCommandPort;
-    private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
-    private final LoadTestCasesForGradingPort loadTestCasesForGradingPort;
-    private final ProblemProgressPort problemProgressPort;
-    private final ProblemSetCompletionEventPort problemSetCompletionEventPort;
+    private final SubmissionTransactionService submissionTransactionService;
     private final CodeGradingService codeGradingService;
-    private final SubmissionAttemptPolicy submissionAttemptPolicy;
     private final SubmissionCodePolicy submissionCodePolicy;
-    private final ProblemSolvedEventPort problemSolvedEventPort;
-    private final LoadActiveDatasetFilePathPort loadActiveDatasetFilePathPort;
     private final GenerateDatasetAccessUrlPort generateDatasetAccessUrlPort;
-
+    private final RecordSubmissionMetricsPort submissionMetrics;
     @Override
-    @Transactional
-    public SubmissionView handle(Long problemId, SubmitCodeCommand command) {
-        long startNanos = System.nanoTime();
+    public SubmissionView handle(
+            Long problemId,
+            SubmitCodeCommand command
+    ) {
+        long totalStartNanos = System.nanoTime();
+
+        long prepareNanos = 0;
+        long gradingNanos = 0;
+        long saveNanos = 0;
 
         try {
-        submissionCodePolicy.validate(command.code());
+            submissionCodePolicy.validate(command.code());
 
-        ProblemForSubmission problem =
-                loadProblemForSubmissionPort.loadProblemForSubmission(problemId);
+            long prepareStartNanos = System.nanoTime();
+            SubmissionPreparation preparation;
 
-        Long problemSetId = problem.problemSetId();
-
-        validateNotAlreadySolved(command.userId(), problemId);
-
-        problemProgressPort.validateCurrentProblem(
-                command.userId(),
-                problemSetId,
-                problem.problemOrder()
-        );
-
-        int previousAttemptCount =
-                submissionCommandPort.countAttempts(
-                        command.userId(),
-                        problemId
+            try {
+                preparation = submissionTransactionService.prepare(
+                        problemId,
+                        command
                 );
+            } finally {
+                prepareNanos = elapsedNanos(prepareStartNanos);
+                submissionMetrics.recordPrepare(prepareNanos);
+            }
 
-        submissionAttemptPolicy.validateAttemptLimit(
-                problem.attemptLimit(),
-                problem.retriable(),
-                previousAttemptCount
-        );
+            String datasetAccessUrl =
+                    generateDatasetAccessUrl(preparation.datasetFilePath());
 
-        String datasetAccessUrl = generateDatasetAccessUrl(problemSetId);
+            long gradingStartNanos = System.nanoTime();
+            CodeGradingResult gradingResult;
 
-        var testCases = loadTestCasesForGradingPort.loadActiveTestCases(problemId);
-
-        var gradingResult = codeGradingService.grade(
-                command.code(),
-                datasetAccessUrl,
-                testCases
-        );
-
-        boolean isCorrect = gradingResult.correct();
-        int attemptNo = previousAttemptCount + 1;
-        Integer remainingAttemptCount = null;
-
-        boolean canRetry = submissionAttemptPolicy.canRetry(
-                problem.retriable(),
-                remainingAttemptCount,
-                isCorrect
-        );
-
-        Long submissionId = submissionCommandPort.saveCodeSubmission(
-                new CodeSubmission(
-                        command.userId(),
-                        problem.problemId(),
+            try {
+                gradingResult = codeGradingService.grade(
                         command.code(),
-                        isCorrect,
-                        attemptNo,
-                        gradingResult.passedTestCount(),
-                        gradingResult.totalTestCount(),
-                        gradingResult.executionStatus(),
-                        gradingResult.errorMessage()
-                )
-        );
+                        datasetAccessUrl,
+                        preparation.testCases()
+                );
+            } finally {
+                gradingNanos = elapsedNanos(gradingStartNanos);
+                submissionMetrics.recordGrading(gradingNanos);
+            }
 
-        submissionCommandPort.saveTestResults(
-                submissionId,
-                gradingResult.testResults()
-        );
+            long saveStartNanos = System.nanoTime();
+            SubmissionView view;
 
-        Long nextProblemId = null;
-        boolean isProblemSetCompleted = false;
-        int earnedPoint = 0;
-        boolean pointGranted = false;
+            try {
+                view = submissionTransactionService.complete(
+                        problemId,
+                        command,
+                        gradingResult
+                );
+            } finally {
+                saveNanos = elapsedNanos(saveStartNanos);
+                submissionMetrics.recordSave(saveNanos);
+            }
 
-        if (isCorrect) {
-            problemSolvedEventPort.publishSolved(
+            log.info(
+                    "event=submission_completed userId={} problemId={} submissionId={} "
+                            + "isCorrect={} passedTestCount={} totalTestCount={} "
+                            + "prepareMs={} gradingMs={} saveMs={} durationMs={}",
                     command.userId(),
-                    problem.problemId(),
-                    submissionId,
-                    problem.point()
+                    view.problemId(),
+                    view.submissionId(),
+                    view.correct(),
+                    view.passedTestCount(),
+                    view.totalTestCount(),
+                    nanosToMillis(prepareNanos),
+                    nanosToMillis(gradingNanos),
+                    nanosToMillis(saveNanos),
+                    elapsedMillis(totalStartNanos)
             );
 
-            earnedPoint = problem.point();
-            pointGranted = true;
-
-            nextProblemId = loadProblemForSubmissionPort
-                    .findNextProblemId(
-                            problemSetId,
-                            problem.problemOrder() + 1
-                    )
-                    .orElse(null);
-
-            if (nextProblemId == null) {
-                isProblemSetCompleted = true;
-
-                problemProgressPort.completeProblemSet(
-                        command.userId(),
-                        problemSetId
-                );
-
-                problemSetCompletionEventPort.publishCompleted(
-                        command.userId(),
-                        problemSetId
-                );
-            } else {
-                problemProgressPort.openNextProblem(
-                        command.userId(),
-                        problemSetId
-                );
-            }
-        }
-
-        SubmissionView view = new SubmissionView(
-                submissionId,
-                problem.problemId(),
-                isCorrect,
-                gradingResult.passedTestCount(),
-                gradingResult.totalTestCount(),
-                gradingResult.executionStatus(),
-                gradingResult.errorMessage(),
-                attemptNo,
-                remainingAttemptCount,
-                canRetry,
-                nextProblemId,
-                isProblemSetCompleted,
-                earnedPoint,
-                pointGranted,
-                isCorrect ? problem.explanation() : null
-        );
-
-        log.info(
-                "event=submission_completed userId={} problemId={} submissionId={} isCorrect={} passedTestCount={} totalTestCount={} durationMs={}",
-                command.userId(),
-                problem.problemId(),
-                submissionId,
-                isCorrect,
-                gradingResult.passedTestCount(),
-                gradingResult.totalTestCount(),
-                elapsedMillis(startNanos)
-        );
-
-        return view;
+            return view;
         } catch (RuntimeException e) {
             log.warn(
-                    "event=submission_failed userId={} problemId={} exceptionType={} durationMs={}",
+                    "event=submission_failed userId={} problemId={} "
+                            + "exceptionType={} durationMs={}",
                     command.userId(),
                     problemId,
                     e.getClass().getSimpleName(),
-                    elapsedMillis(startNanos),
+                    elapsedMillis(totalStartNanos),
                     e
             );
+
             throw e;
+        } finally {
+            submissionMetrics.recordTotal(
+                    elapsedNanos(totalStartNanos)
+            );
         }
     }
 
-    private long elapsedMillis(long startNanos) {
-        return (System.nanoTime() - startNanos) / 1_000_000;
-    }
-
-    private void validateNotAlreadySolved(Long userId, Long problemId) {
-        boolean alreadySolved =
-                submissionCommandPort.existsCorrectSubmission(
-                        userId,
-                        problemId
-                );
-
-        submissionAttemptPolicy.validateNotAlreadySolved(alreadySolved);
-    }
-    private String generateDatasetAccessUrl(Long problemSetId) {
-        String filePath =
-                loadActiveDatasetFilePathPort.loadActiveDatasetFilePath(problemSetId);
-
+    private String generateDatasetAccessUrl(String filePath) {
         if (filePath == null || filePath.isBlank()) {
             return null;
         }
 
         return generateDatasetAccessUrlPort.generate(filePath);
+    }
+
+    private long elapsedNanos(long startNanos) {
+        return System.nanoTime() - startNanos;
+    }
+
+    private long nanosToMillis(long nanos) {
+        return nanos / 1_000_000;
+    }
+
+    private long elapsedMillis(long startNanos) {
+        return nanosToMillis(elapsedNanos(startNanos));
     }
 }

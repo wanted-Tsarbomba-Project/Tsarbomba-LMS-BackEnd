@@ -28,14 +28,35 @@ public class ChatMessageJpaEntity {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "prompt_tokens")
+    private Integer promptTokens;
+
+    @Column(name = "completion_tokens")
+    private Integer completionTokens;
+
+    @Column(name = "total_tokens")
+    private Integer totalTokens;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    public ChatMessageJpaEntity(Long id, Long roomId, MessageRole role, String content, Instant createdAt) {
+    public ChatMessageJpaEntity(
+            Long id,
+            Long roomId,
+            MessageRole role,
+            String content,
+            Integer promptTokens,
+            Integer completionTokens,
+            Integer totalTokens,
+            Instant createdAt
+    ) {
         this.id = id;
         this.roomId = roomId;
         this.role = role;
         this.content = content;
+        this.promptTokens = promptTokens;
+        this.completionTokens = completionTokens;
+        this.totalTokens = totalTokens;
         this.createdAt = createdAt;
     }
 

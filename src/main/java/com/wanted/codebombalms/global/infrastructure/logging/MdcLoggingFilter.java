@@ -64,10 +64,6 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty()) {
-            return ip.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 }
