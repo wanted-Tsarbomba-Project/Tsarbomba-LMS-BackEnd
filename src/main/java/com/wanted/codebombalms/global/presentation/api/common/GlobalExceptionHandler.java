@@ -38,7 +38,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleDomainException(
             DomainException e, HttpServletRequest request) {
         log.warn("[{}] {} - path: {}", e.getHttpStatus(), e.getMessage(), request.getRequestURI());
-        securityEventReporter.ifAvailable(r -> r.reportByErrorCode(e.getErrorCode().getCode()));
+        // 보안 이벤트 기록 실패가 원래 에러 응답을 깨지 않도록 삼킨다.
+        try {
+            securityEventReporter.ifAvailable(r -> r.reportByErrorCode(e.getErrorCode().getCode()));
+        } catch (Exception ignored) {
+            log.warn("보안 이벤트 기록 실패 (무시): {}", ignored.getMessage());
+        }
         return ResponseEntity.status(e.getHttpStatus())
                 .body(ApiErrorResponse.of(e.getHttpStatus(), e.getErrorCode(), request.getRequestURI()));
     }

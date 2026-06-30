@@ -124,8 +124,9 @@ public class LoginService implements LoginUseCase {
         String lockToken = UUID.randomUUID().toString();
         lockTokenRepository.save(lockToken, user.getUserId());
         String lockUrl = lockUrlBase + "?token=" + lockToken;
-        securityEventRecorder.record(AuthSecurityEvent.STEPUP_ISSUED, user.getUserId());
         emailSender.sendStepUpCode(user.getEmail(), code, lockUrl);
+        // 메일 발송 성공 후 기록 (발송 실패 시엔 발급 성공으로 집계하지 않음)
+        securityEventRecorder.record(AuthSecurityEvent.STEPUP_ISSUED, user.getUserId());
         return LoginResult.stepUp(stepUpToken, maskEmail(user.getEmail()));
     }
 
