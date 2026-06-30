@@ -31,4 +31,6 @@ public interface SpringDataPointRewardTaskRepository
             LocalDateTime now,
             Pageable pageable
     );
+
+    long countByStatus(PointRewardTaskStatus status);
 }

@@ -1,0 +1,323 @@
+{
+  "uid": "lms-ranking-domain",
+  "title": "[LMS][도메인 상세] 랭킹",
+  "description": "공용 대시보드에서 랭킹 이상을 발견한 뒤, 랭킹 데이터 정합성, 내 랭킹 없음, 대표 뱃지 URL 비용 후보를 확인합니다.",
+  "tags": [
+    "lms",
+    "domain-detail",
+    "ranking",
+    "ddd",
+    "korean"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 5,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "text",
+      "title": "공용 대시보드 다음 확인 순서",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "mode": "markdown",
+        "content": "### 이 화면의 역할\n- 공용 대시보드에서 `ranking` 도메인의 지연이나 4xx/5xx 증가를 먼저 확인합니다.\n- 현재 랭킹 도메인은 전용 내부 처리 시간 지표가 없으므로, 이 화면은 요청 로그와 정합성 후보를 중심으로 봅니다.\n- 내 랭킹 404가 늘면 포인트 이력/랭킹 조회 모델/시드 데이터 정합성을 먼저 확인합니다."
+      }
+    },
+    {
+      "type": "row",
+      "title": "랭킹 정합성 / 오류 이벤트",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "랭킹 오류 로그(5분)",
+      "description": "랭킹 요청 중 실패 상태 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"/api/v1/rankings/\" |~ \"status=4..|status=5..\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "내 랭킹 없음(5분)",
+      "description": "내 랭킹 404는 데이터 정합성 문제일 수 있습니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"/api/v1/rankings/points/me\" |= \"status=404\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "대표 뱃지 후보 오류(5분)",
+      "description": "랭킹 응답에 대표 뱃지 URL이 포함될 때의 후보 오류입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\", level=~\"WARN|ERROR\"} |~ \"ranking|Ranking|badge|Badge|Signed URL\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "title": "추가 계측 판단",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "id": 6,
+      "options": {
+        "mode": "markdown",
+        "content": "### 아직 공용 지표만으로 부족할 때\n- 전체/주간/내 랭킹 중 어느 조회가 느린지는 공용 대시보드의 URI별 지연에서 확인합니다.\n- 그 다음 원인이 DB 집계인지 대표 뱃지 URL 생성인지 구분이 필요해질 때만 `ranking_query_duration`, `ranking_badge_url_duration`을 추가합니다.\n- 사용자 ID를 메트릭 태그로 넣으면 시계열이 폭증하므로 로그에서만 봅니다."
+      }
+    },
+    {
+      "type": "row",
+      "title": "랭킹 도메인 로그",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 7,
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "랭킹 요청 / 오류 로그",
+      "description": "status, durationMs, traceId로 공용 대시보드의 이상 구간과 연결합니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "id": 8,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\"} |= \"/api/v1/rankings/\"",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "랭킹 관련 경고 / 오류 로그",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 9,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\", level=~\"WARN|ERROR\"} |~ \"ranking|Ranking|rankings|badge|Badge\"",
+          "queryType": "range"
+        }
+      ]
+    }
+  ]
+}

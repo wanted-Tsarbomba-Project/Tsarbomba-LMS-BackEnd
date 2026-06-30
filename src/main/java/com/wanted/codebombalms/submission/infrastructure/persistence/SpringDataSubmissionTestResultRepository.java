@@ -23,7 +23,7 @@ public interface SpringDataSubmissionTestResultRepository
             from SubmissionTestResultJpaEntity result
             join result.testCase testCase
             where result.submission.submissionId = :submissionId
-            order by testCase.testOrder asc
+            order by testCase.testOrder asc, testCase.testCaseId asc
             """)
     List<CodeSubmissionTestCaseResult> findResultDetailsBySubmissionId(
             @Param("submissionId") Long submissionId
