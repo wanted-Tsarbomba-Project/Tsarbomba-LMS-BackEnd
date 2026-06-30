@@ -32,17 +32,24 @@ public class FastApiChatClient implements AiChatClient {
     private final ObjectMapper objectMapper;
 
     @Override
-    public Flux<AiChatStreamChunk> stream(ChatContext context) {
+    public Flux<AiChatStreamChunk> stream(ChatContext context, String traceId) {
         FastApiChatRequest request = toRequest(context);
 
         return webClient.post()
                 .uri("/chat")
+                // BE↔FastAPI 로그를 같은 traceId로 엮기 위해 상관 ID를 헤더로 전파한다.
+                .headers(h -> {
+                    if (traceId != null) {
+                        h.set("X-Trace-Id", traceId);
+                    }
+                })
                 .bodyValue(request)
                 .retrieve()
                 .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {})
                 .map(this::toChunk)
                 .onErrorResume(e -> {
-                    log.error("FastAPI 스트리밍 호출 실패", e);
+                    // raw 예외는 stack trace 만(WARN). "누구/어디" 책임 로그는 application(chat_ai_error_chunk)에서.
+                    log.warn("event=chat_ai_call_failed traceId={} - FastAPI 스트리밍 호출 실패", traceId, e);
                     return Flux.just(new AiChatStreamChunk.Error(
                             ChatErrorCode.AI_RESPONSE_FAILED.getCode(),
                             ChatErrorCode.AI_RESPONSE_FAILED.getMessage()

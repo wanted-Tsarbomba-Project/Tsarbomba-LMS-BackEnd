@@ -34,7 +34,7 @@ public class ChatRoomCommandService implements ChatRoomCommandUseCase {
         return Flux.concat(
                 Flux.just(new AiChatStreamChunk.Room(room.getId())),
                 chatMessageCommandUseCase.send(
-                        new SendMessageCommand(command.userId(), room.getId(), command.userMessage()))
+                        new SendMessageCommand(command.userId(), room.getId(), command.userMessage(), command.traceId()))
         );
     }
 
