@@ -28,11 +28,9 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
         SubmissionJpaEntity submission = submissionRepository.findBySubmissionIdAndUserId(submissionId, userId)
                 .orElseThrow(() -> new NotFoundException(SubmissionErrorCode.SUBMISSION_NOT_FOUND));
 
-        List<CodeSubmissionTestCaseResult> testCaseResults = submissionTestResultRepository
-                .findBySubmission_SubmissionIdOrderByTestCase_TestOrderAsc(submissionId)
-                .stream()
-                .map(this::toTestCaseResult)
-                .toList();
+        List<CodeSubmissionTestCaseResult> testCaseResults =
+                submissionTestResultRepository
+                        .findResultDetailsBySubmissionId(submissionId);
 
         return new CodeSubmissionResult(
                 submission.getSubmissionId(),
@@ -48,14 +46,4 @@ public class SubmissionResultQueryPersistenceAdapter implements SubmissionResult
         );
     }
 
-    private CodeSubmissionTestCaseResult toTestCaseResult(SubmissionTestResultJpaEntity result) {
-        return new CodeSubmissionTestCaseResult(
-                result.getTestCase().getTestCaseId(),
-                result.getPassed(),
-                result.getTestCase().getHidden(),
-                result.getActualOutput(),
-                result.getErrorMessage(),
-                result.getExecutionTimeMs()
-        );
-    }
 }

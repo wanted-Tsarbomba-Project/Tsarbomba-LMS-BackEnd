@@ -1,4 +1,4 @@
-zimport os
+import os
 import subprocess
 import sys
 import tempfile

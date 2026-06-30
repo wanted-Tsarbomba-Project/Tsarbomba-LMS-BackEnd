@@ -44,4 +44,9 @@ public class PointRewardTaskPersistenceAdapter
                 .map(PointRewardTaskJpaEntity::toDomain)
                 .toList();
     }
+
+    @Override
+    public long countByStatus(PointRewardTaskStatus status) {
+        return repository.countByStatus(status);
+    }
 }
