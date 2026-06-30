@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.chatbot.application.service;
 
 import com.wanted.codebombalms.chatbot.application.command.SendMessageCommand;
+import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import com.wanted.codebombalms.chatbot.application.model.ChatContext;
 import com.wanted.codebombalms.chatbot.domain.model.ChatMessage;
 import com.wanted.codebombalms.chatbot.domain.model.ChatRoom;
@@ -38,10 +39,16 @@ public class ChatMessageTransactionService {
         return chatContextBuilder.build(command, chatRoom);
     }
 
-    /** 스트림 정상 완료 시에만 호출: AI 답변 저장 + 방 타임스탬프 갱신. */
+    /** 스트림 정상 완료 시에만 호출: AI 답변(토큰 사용량 포함) 저장 + 방 타임스탬프 갱신. */
     @Transactional
-    public void saveAiAnswer(Long roomId, String answer) {
-        chatMessageRepository.save(ChatMessage.createAiMessage(roomId, answer));
+    public void saveAiAnswer(Long roomId, String answer, AiChatStreamChunk.TokenUsage usage) {
+        chatMessageRepository.save(ChatMessage.createAiMessage(
+                roomId,
+                answer,
+                usage.promptTokens(),
+                usage.completionTokens(),
+                usage.totalTokens()
+        ));
 
         ChatRoom chatRoom = chatRoomRepository.getById(roomId);
         chatRoom.updateTimestamp(Instant.now());

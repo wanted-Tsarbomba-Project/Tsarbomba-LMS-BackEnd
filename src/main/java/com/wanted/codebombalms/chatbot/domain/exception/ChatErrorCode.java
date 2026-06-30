@@ -11,7 +11,8 @@ public enum ChatErrorCode implements ErrorCode {
     CHAT_ROOM_NOT_FOUND("CHT-001", "채팅방을 찾을 수 없습니다."),
     CHAT_ROOM_FORBIDDEN("CHT-002", "채팅방에 접근 권한이 없습니다."),
     AI_RESPONSE_FAILED("CHT-003", "AI 응답 생성에 실패했습니다."),
-    CHAT_ROOM_TITLE_INVALID("CHT-004", "채팅방 제목이 올바르지 않습니다.");
+    CHAT_ROOM_TITLE_INVALID("CHT-004", "채팅방 제목이 올바르지 않습니다."),
+    INVALID_TOKEN_USAGE("CHT-005", "토큰 사용량 값이 올바르지 않습니다.");
 
     private final String code;
     private final String message;

@@ -4,11 +4,13 @@ import com.wanted.codebombalms.auth.application.dto.GoogleCallbackResult;
 import com.wanted.codebombalms.auth.application.usecase.GoogleCallbackUseCase;
 import com.wanted.codebombalms.auth.infrastructure.oauth.OAuthProperties;
 import com.wanted.codebombalms.auth.presentation.api.support.AuthCookieFactory;
+import com.wanted.codebombalms.auth.presentation.api.support.DeviceFingerprintResolver;
 import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,6 +35,8 @@ public class OAuthCallbackController {
     private final JwtTokenProvider jwtTokenProvider;
     private final OAuthProperties oAuthProperties;
 
+    private final DeviceFingerprintResolver deviceFingerprintResolver;
+
     private static final int TEMP_TOKEN_MAX_AGE = 600; // 10분
 
     @Operation(
@@ -43,10 +47,12 @@ public class OAuthCallbackController {
     public ResponseEntity<Void> googleCallback(
             @RequestParam String code,
             @RequestParam String state,
+            HttpServletRequest httpRequest,
             HttpServletResponse response
     ) {
         try {
-            GoogleCallbackResult result = googleCallbackUseCase.handleCallback(code, state);
+            String deviceFp = deviceFingerprintResolver.resolve(httpRequest, response);
+            GoogleCallbackResult result = googleCallbackUseCase.handleCallback(code, state, httpRequest, deviceFp);
 
             if (result.newUser()) {
                 // 신규 회원 → TEMP_TOKEN 쿠키 + 추가정보 페이지로
@@ -70,16 +76,19 @@ public class OAuthCallbackController {
         }
     }
 
-    /** 성공 흐름 redirect */
+    /**
+     * 성공 흐름 redirect
+     */
     private ResponseEntity<Void> redirect(String uri) {
         return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(uri)).build();
     }
 
-    /** 실패 흐름 redirect — 로그인 페이지에 error code + message 전달(모달 표시용) */
+    /**
+     * 실패 흐름 redirect — 로그인 페이지에 error code 전달(문구는 프론트가 코드로 매핑)
+     */
     private ResponseEntity<Void> redirectError(ErrorCode errorCode) {
         String uri = UriComponentsBuilder.fromUriString(oAuthProperties.getErrorUri())
                 .queryParam("error", errorCode.getCode())
-                .queryParam("message", errorCode.getMessage())
                 .encode(StandardCharsets.UTF_8)
                 .build()
                 .toUriString();

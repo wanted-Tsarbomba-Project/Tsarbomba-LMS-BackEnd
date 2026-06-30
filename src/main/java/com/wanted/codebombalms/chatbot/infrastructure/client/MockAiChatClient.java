@@ -25,8 +25,12 @@ public class MockAiChatClient implements AiChatClient {
                 .delayElements(Duration.ofMillis(50))
                 .map(AiChatStreamChunk.Token::new);
 
+        // 토큰 저장/메트릭을 로컬에서 검증할 수 있도록 0이 아닌 임의 사용량을 방출한다.
+        int completion = answer.split("\\s+").length;
+        int prompt = 20 + completion;
         Flux<AiChatStreamChunk> done = Flux.just(
-                new AiChatStreamChunk.Done(new AiChatStreamChunk.TokenUsage(0, 0, 0))
+                new AiChatStreamChunk.Done(
+                        new AiChatStreamChunk.TokenUsage(prompt, completion, prompt + completion))
         );
 
         return Flux.concat(tokens, done);

@@ -194,6 +194,32 @@ class LoginServiceTest {
         inOrder.verify(refreshTokenRepository).save(any(RefreshToken.class));
     }
 
+    @Test
+    @DisplayName("미신뢰 기기에서 동일 요청이 중복 유입돼도 step-up 메일은 1회만 발송한다. (멱등)")
+    void 미신뢰기기_중복요청_메일_1회만() {
+        // given — 같은 userId+deviceFp 로 두 번째 요청은 이미 발급된 토큰을 재사용
+        User user = createUser(1L, "test@example.com", "ENCODED_PW", false);
+        given(userRepository.findByEmail("test@example.com")).willReturn(Optional.of(user));
+        given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
+        given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
+        given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP)).willReturn(Optional.empty());
+        given(stepUpTokenRepository.reserveDeviceChallenge(eq(1L), eq(DEVICE_FP), anyString()))
+                .willReturn(Optional.empty())               // 1번째 요청 → 발급권 선점
+                .willReturn(Optional.of("EXISTING_TOKEN"));  // 2번째 요청 → 기존 토큰 재사용
+
+        // when — 동일 로그인 2회(재시도 시뮬레이션)
+        LoginResult first = loginService.login(command, httpRequest, DEVICE_FP);
+        LoginResult second = loginService.login(command, httpRequest, DEVICE_FP);
+
+        // then — 메일·잠금토큰은 신규 발급분 1회만, 2번째는 같은 토큰 재사용
+        assertTrue(first.stepUpRequired());
+        assertTrue(second.stepUpRequired());
+        assertEquals("EXISTING_TOKEN", second.stepUpToken());
+        verify(emailSender, times(1)).sendStepUpCode(eq("test@example.com"), anyString(), anyString());
+        verify(lockTokenRepository, times(1)).save(anyString(), anyLong());  // 잠금 토큰도 1회만 (#10)
+        verify(stepUpTokenRepository, times(2)).save(anyString(), any());    // 챌린지는 예약 전 저장 → 호출 2회(2번째 미사용)
+    }
+
     // ===== 테스트 헬퍼 =====
 
     private User createUser(Long userId, String email, String encodedPassword, boolean isLocked) {
