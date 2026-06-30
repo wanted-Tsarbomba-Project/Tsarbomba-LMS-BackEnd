@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.reward.point.domain.repository;
 
 import com.wanted.codebombalms.reward.point.domain.model.PointRewardTask;
+import com.wanted.codebombalms.reward.point.domain.model.PointRewardTaskStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,4 +17,6 @@ public interface PointRewardTaskRepository {
             LocalDateTime now,
             int limit
     );
+
+    long countByStatus(PointRewardTaskStatus status);
 }

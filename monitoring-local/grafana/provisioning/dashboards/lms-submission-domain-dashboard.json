@@ -1,13 +1,13 @@
 {
-  "uid": "lms-user-domain",
-  "title": "[LMS][도메인 상세] 사용자/인증",
-  "description": "공용 대시보드에서 사용자/인증 이상을 발견한 뒤, 로그인 실패, 추가 인증 실패, 계정 잠금, 조회 쿼리 지연을 확인합니다.",
+  "uid": "lms-submission-domain",
+  "title": "[LMS][도메인 상세] 제출",
+  "description": "공용 대시보드에서 제출 지연이나 오류를 발견한 뒤, 제출 준비, 채점, 저장 중 어느 구간이 원인인지 확인합니다.",
   "tags": [
     "lms",
     "domain-detail",
-    "user",
-    "auth",
+    "submission",
     "ddd",
+    "operations",
     "korean"
   ],
   "timezone": "browser",
@@ -31,12 +31,12 @@
       "id": 1,
       "options": {
         "mode": "markdown",
-        "content": "### 이 화면의 역할\n- 공용 대시보드에서 `auth` 또는 `user` 계열 API 오류와 지연을 먼저 확인합니다.\n- 이 상세 화면에서는 로그인 실패, 추가 인증 검증 실패, 계정 잠금 변경, 학생 목록/로그인 이력 조회 구간을 봅니다.\n- 의심 로그인과 추가 인증 잠금은 현재 DB 값/정책 결과라 전용 지표를 추가해야 자동 집계됩니다."
+        "content": "### 이 화면의 역할\n- 공용 대시보드에서 `submission` 도메인의 지연, 오류율, Hikari 상태를 먼저 확인합니다.\n- 이 상세 화면에서는 요청량을 반복하지 않고 `준비`, `채점`, `저장` 구간을 분리해서 봅니다.\n- 채점 평균만 높으면 코드 실행기 또는 테스트케이스 비용, 저장 평균이 높으면 DB 쓰기/락, 준비 평균이 높으면 조회 쿼리를 먼저 의심합니다."
       }
     },
     {
       "type": "row",
-      "title": "인증 보안 이벤트",
+      "title": "제출 처리 구간 분해",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -48,356 +48,8 @@
     },
     {
       "type": "stat",
-      "title": "로그인 실패(5분)",
-      "description": "로그인 API의 실패 상태 응답입니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 0,
-        "y": 6
-      },
-      "id": 3,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 5
-              },
-              {
-                "color": "red",
-                "value": 20
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/auth/login\",status=~\"4..|5..\"}[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "추가 인증 검증 실패(5분)",
-      "description": "추가 인증 코드 검증 실패/오류입니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 4,
-        "y": 6
-      },
-      "id": 4,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 3
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/auth/step-up/verify\",status=~\"4..|5..\"}[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "계정 잠금 변경(5분)",
-      "description": "관리자 계정 잠금/해제 요청 수입니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 8,
-        "y": 6
-      },
-      "id": 5,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/users/{userId}/lock\"}[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "신뢰기기 삭제(5분)",
-      "description": "사용자 신뢰기기 삭제 요청 수입니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 12,
-        "y": 6
-      },
-      "id": 6,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0"
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/users/me/trusted-devices/{deviceId}\"}[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "의심 로그인(전용 지표 필요)",
-      "description": "현재는 login_history.is_suspicious DB 값입니다. 자동 집계가 필요하면 전용 지표나 이벤트 로그를 추가해야 합니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 16,
-        "y": 6
-      },
-      "id": 7,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(auth_suspicious_login_total[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "추가 인증 잠금(전용 지표 필요)",
-      "description": "추가 인증 시도 초과/잠금 정책을 운영 지표로 보고 싶을 때 추가할 후보입니다.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 20,
-        "y": 6
-      },
-      "id": 8,
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "colorMode": "value",
-        "graphMode": "area",
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum(increase(auth_stepup_locked_total[5m])) or vector(0)",
-          "legendFormat": ""
-        }
-      ]
-    },
-    {
-      "type": "row",
-      "title": "사용자 조회 원인 분해",
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 12
-      },
-      "id": 9,
-      "collapsed": false
-    },
-    {
-      "type": "stat",
-      "title": "학생 목록 쿼리 평균",
-      "description": "학생 목록 list + count 쿼리 구간입니다.",
+      "title": "준비 평균",
+      "description": "문제/테스트케이스 조회와 제출 준비 구간입니다.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -406,9 +58,9 @@
         "h": 5,
         "w": 6,
         "x": 0,
-        "y": 13
+        "y": 6
       },
-      "id": 10,
+      "id": 3,
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -422,11 +74,11 @@
               },
               {
                 "color": "orange",
-                "value": 0.2
+                "value": 0.1
               },
               {
                 "color": "red",
-                "value": 0.5
+                "value": 0.3
               }
             ]
           }
@@ -452,15 +104,15 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(user_student_list_query_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(user_student_list_query_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "(rate(submission_prepare_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_prepare_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
           "legendFormat": ""
         }
       ]
     },
     {
       "type": "stat",
-      "title": "로그인 이력 쿼리 평균",
-      "description": "내 로그인 이력 페이지 조회 쿼리 구간입니다.",
+      "title": "채점 평균",
+      "description": "Mock 기준 300ms x 5개면 약 1.5초가 자연스럽습니다.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -469,9 +121,9 @@
         "h": 5,
         "w": 6,
         "x": 6,
-        "y": 13
+        "y": 6
       },
-      "id": 11,
+      "id": 4,
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -485,11 +137,11 @@
               },
               {
                 "color": "orange",
-                "value": 0.2
+                "value": 1.8
               },
               {
                 "color": "red",
-                "value": 0.5
+                "value": 2.5
               }
             ]
           }
@@ -515,41 +167,152 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(auth_login_history_query_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(auth_login_history_query_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "(rate(submission_grading_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_grading_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
           "legendFormat": ""
         }
       ]
     },
     {
-      "type": "text",
-      "title": "추가 계측 판단",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 13
+      "type": "stat",
+      "title": "저장 평균",
+      "description": "제출과 테스트 결과 저장 구간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
       },
-      "id": 12,
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.1
+              },
+              {
+                "color": "red",
+                "value": 0.3
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
       "options": {
-        "mode": "markdown",
-        "content": "### 지금 없는 상세 지표\n- 의심 로그인 건수: `auth_suspicious_login_total` 또는 `event=suspicious_login_detected` 추가 후보입니다.\n- 추가 인증 잠금 건수: `auth_stepup_locked_total` 추가 후보입니다.\n- 지금은 로그인 실패/추가 인증 실패는 요청 상태와 요청 로그로 확인합니다."
-      }
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(submission_save_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_save_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "전체 처리 평균",
+      "description": "SubmissionService 내부 전체 처리 시간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "id": 6,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 2
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(submission_total_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_total_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
     },
     {
       "type": "timeseries",
-      "title": "사용자 조회 내부 구간 평균",
+      "title": "제출 처리 단계별 평균",
       "description": "",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 9,
+        "w": 24,
         "x": 0,
-        "y": 18
+        "y": 11
       },
-      "id": 13,
+      "id": 7,
       "fieldConfig": {
         "defaults": {
           "unit": "s",
@@ -564,8 +327,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(user_student_list_query_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(user_student_list_query_duration_seconds_count[$__rate_interval]), 0.0001)",
-          "legendFormat": "학생 목록"
+          "expr": "rate(submission_total_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_total_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "전체"
         },
         {
           "refId": "B",
@@ -573,36 +336,347 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(auth_login_history_query_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(auth_login_history_query_duration_seconds_count[$__rate_interval]), 0.0001)",
-          "legendFormat": "로그인 이력"
+          "expr": "rate(submission_prepare_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_prepare_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "준비"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(submission_grading_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_grading_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "채점"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(submission_save_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(submission_save_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "저장"
         }
       ]
     },
     {
       "type": "row",
-      "title": "보안/사용자 로그",
+      "title": "제출 도메인 이벤트",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 20
       },
-      "id": 14,
+      "id": 8,
       "collapsed": false
     },
     {
+      "type": "stat",
+      "title": "제출 완료(5분)",
+      "description": "정상 완료된 제출 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 21
+      },
+      "id": 9,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=submission_completed\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "제출 실패(5분)",
+      "description": "SubmissionService 실패 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 21
+      },
+      "id": 10,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=submission_failed\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "코드 실행기 실패(5분)",
+      "description": "외부 채점 호출 실패입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 21
+      },
+      "id": 11,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=code_execution_runner_failed\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "느린 제출 로그(5분)",
+      "description": "2초 이상 걸린 제출 요청 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 21
+      },
+      "id": 12,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=request_completed\" |= \"/api/v1/problems/\" |= \"/submissions\" |~ \"durationMs=([2-9][0-9]{3}|[1-9][0-9]{4,})\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
       "type": "logs",
-      "title": "로그인 / 추가 인증 실패 요청",
-      "description": "비정상 로그인 증가, 추가 인증 검증 실패를 빠르게 확인합니다.",
+      "title": "제출 완료 로그",
+      "description": "prepareMs, gradingMs, saveMs, durationMs를 함께 봅니다.",
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
         "h": 10,
-        "w": 12,
+        "w": 8,
         "x": 0,
-        "y": 27
+        "y": 26
+      },
+      "id": 13,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\"} |= \"event=submission_completed\"",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "제출 실패 / 코드 실행기 실패 로그",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 8,
+        "y": 26
+      },
+      "id": 14,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\"} |~ \"event=submission_failed|event=code_execution_runner_failed|Connection is not available\"",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "느린 제출 요청 로그",
+      "description": "traceId로 제출 처리 로그와 연결해서 봅니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 8,
+        "x": 16,
+        "y": 26
       },
       "id": 15,
       "options": {
@@ -618,119 +692,10 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"lms\"} |= \"event=request_completed\" |~ \"/api/v1/auth/(login|step-up/verify)\" |~ \"status=4..|status=5..\"",
-          "queryType": "range"
-        }
-      ]
-    },
-    {
-      "type": "logs",
-      "title": "학생 목록 / 로그인 이력 조회 로그",
-      "description": "durationMs, resultCount, page/size를 같이 봅니다.",
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 27
-      },
-      "id": 16,
-      "options": {
-        "showTime": true,
-        "wrapLogMessage": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{job=\"lms\"} |~ \"event=user_student_list_queried|event=auth_login_history_queried\"",
-          "queryType": "range"
-        }
-      ]
-    },
-    {
-      "type": "logs",
-      "title": "계정 잠금 / 신뢰기기 요청 로그",
-      "description": "",
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 24,
-        "x": 0,
-        "y": 37
-      },
-      "id": 17,
-      "options": {
-        "showTime": true,
-        "wrapLogMessage": true,
-        "sortOrder": "Descending",
-        "enableLogDetails": true
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "{job=\"lms\"} |= \"event=request_completed\" |~ \"/api/v1/users/.*/lock|/api/v1/users/me/trusted-devices\"",
+          "expr": "{job=\"lms\"} |= \"event=request_completed\" |= \"/api/v1/problems/\" |= \"/submissions\" |~ \"durationMs=([2-9][0-9]{3}|[1-9][0-9]{4,})\"",
           "queryType": "range"
         }
       ]
     }
-  ],
-  "templating": {
-    "list": [
-      {
-        "name": "category",
-        "label": "카테고리",
-        "type": "custom",
-        "query": "전체,로그인,추가 인증,학생조회,계정잠금",
-        "current": {
-          "text": "전체",
-          "value": "전체"
-        },
-        "includeAll": false,
-        "multi": false,
-        "options": [
-          {
-            "text": "전체",
-            "value": "전체",
-            "selected": true
-          },
-          {
-            "text": "로그인",
-            "value": "로그인",
-            "selected": false
-          },
-          {
-            "text": "추가 인증",
-            "value": "추가 인증",
-            "selected": false
-          },
-          {
-            "text": "학생조회",
-            "value": "학생조회",
-            "selected": false
-          },
-          {
-            "text": "계정잠금",
-            "value": "계정잠금",
-            "selected": false
-          }
-        ]
-      }
-    ]
-  }
+  ]
 }

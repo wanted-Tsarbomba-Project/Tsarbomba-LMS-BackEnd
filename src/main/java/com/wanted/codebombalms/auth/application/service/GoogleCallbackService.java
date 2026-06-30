@@ -4,17 +4,26 @@ import com.wanted.codebombalms.auth.application.dto.GoogleCallbackResult;
 import com.wanted.codebombalms.auth.application.dto.OAuthUserInfo;
 import com.wanted.codebombalms.auth.application.usecase.GoogleCallbackUseCase;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
+import com.wanted.codebombalms.auth.domain.model.GeoLocation;
+import com.wanted.codebombalms.auth.domain.model.LoginHistory;
 import com.wanted.codebombalms.auth.domain.model.OAuthTempData;
 import com.wanted.codebombalms.auth.domain.model.RefreshToken;
+import com.wanted.codebombalms.auth.domain.model.TrustedDevice;
+import com.wanted.codebombalms.auth.domain.repository.LoginHistoryRepository;
 import com.wanted.codebombalms.auth.domain.repository.OAuthStateRepository;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.TempTokenRepository;
+import com.wanted.codebombalms.auth.domain.repository.TrustedDeviceRepository;
+import com.wanted.codebombalms.auth.domain.service.GeoIpResolver;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEvent;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import com.wanted.codebombalms.auth.infrastructure.oauth.GoogleOAuthClient;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +42,13 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TempTokenRepository tempTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GeoIpResolver geoIpResolver;
+    private final LoginHistoryRepository loginHistoryRepository;
+    private final TrustedDeviceRepository trustedDeviceRepository;
+    private final AuthSecurityEventRecorder securityEventRecorder;
 
     @Override
-    public GoogleCallbackResult handleCallback(String code, String state) {
+    public GoogleCallbackResult handleCallback(String code, String state, HttpServletRequest request, String deviceFp) {
 
         // 1. state 검증 (CSRF 방지, 단일 사용)
         if (!oAuthStateRepository.validateAndDelete(state)) {
@@ -62,7 +75,7 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
             }
 
             // 3-2. 기존 구글 회원 → 토큰 발급 (로그인)
-            return issueTokens(user);
+            return issueTokens(user, request, deviceFp);
         }
 
         // 4. 신규 회원 → TEMP_TOKEN 발급 후 Redis 임시 저장
@@ -71,18 +84,89 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
         return GoogleCallbackResult.newUser(tempToken);
     }
 
-    /** 기존 회원 토큰 발급 — 단일 세션 강제 후 AT/RT 생성·저장 (LoginService 동일 패턴) */
-    private GoogleCallbackResult issueTokens(User user) {
-        refreshTokenRepository.deleteByUserId(user.getUserId());
+    /**
+     * 기존 회원 토큰 발급 — 로그인 이력 기록 + 신뢰기기 upsert 후 AT/RT 발급.
+     * step-up(이메일 OTP)은 제외한다 (구글이 이미 인증을 보장).
+     */
+    private GoogleCallbackResult issueTokens(User user, HttpServletRequest request, String deviceFp) {
+        String ip = extractIpAddress(request);
+        GeoLocation geo = geoIpResolver.resolve(ip);
 
-        String accessToken = jwtTokenProvider.generateAccessToken(
+        // 신뢰기기 1회 조회로 suspicious 판정 + upsert 모두 처리
+        Optional<TrustedDevice> trusted =
+                trustedDeviceRepository.findByUserIdAndDeviceFp(user.getUserId(), deviceFp);
+        boolean countryChanged = trusted.isPresent() && isCountryChanged(trusted.get(), geo);
+        boolean suspicious = trusted.isEmpty() || countryChanged;
+
+        // 로그인 이력 기록 — step-up 은 생략하되, 의심 여부는 실제 계산값으로 남김
+        loginHistoryRepository.save(LoginHistory.record(
+                user.getUserId(), ip, request.getHeader("User-Agent"),
+                deviceFp, geo.country(), geo.city(), suspicious));
+
+        // 비정상 행위 기록
+        if (suspicious) {
+            securityEventRecorder.record(AuthSecurityEvent.SUSPICIOUS_LOGIN, user.getUserId());
+        }
+        if (countryChanged) {
+            securityEventRecorder.record(AuthSecurityEvent.COUNTRY_CHANGED, user.getUserId());
+        }
+
+        // 신뢰기기 upsert — 있으면 갱신, 없으면 등록 (유니크 (user_id, device_fp) 위반 방지)
+        TrustedDevice device = trusted
+                .map(existing -> {
+                    existing.markUsed(geo.country(), geo.city());
+                    return existing;
+                })
+                .orElseGet(() -> TrustedDevice.register(
+                        user.getUserId(),
+                        deviceFp,
+                        parseDeviceName(request.getHeader("User-Agent")),
+                        geo.country(),
+                        geo.city()
+                ));
+        trustedDeviceRepository.save(device);
+
+        // 단일 세션 강제 후 AT/RT 발급
+        refreshTokenRepository.deleteByUserId(user.getUserId());
+        String token = jwtTokenProvider.generateAccessToken(
                 user.getUserId(), user.getNickname(), user.getRole());
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
-
         refreshTokenRepository.save(
                 RefreshToken.issue(user.getUserId(), refreshToken, jwtTokenProvider.getRefreshExpiration())
         );
 
-        return GoogleCallbackResult.existingUser(accessToken, refreshToken);
+        return GoogleCallbackResult.existingUser(token, refreshToken);
+    }
+
+    /** 신뢰기기의 마지막 국가와 현재 국가가 다르면 의심 (LoginService 와 동일 규칙) */
+    private boolean isCountryChanged(TrustedDevice device, GeoLocation geo) {
+        return device.getLastCountry() != null
+                && geo.country() != null
+                && !device.getLastCountry().equals(geo.country());
+    }
+
+    /** User-Agent → "브라우저 · OS" 표시명 (간이 파싱, StepUpVerifyService 와 동일 규칙) */
+    private String parseDeviceName(String userAgent) {
+        if (userAgent == null || userAgent.isBlank()) {
+            return "Unknown device";
+        }
+        String browser = userAgent.contains("Edg") ? "Edge"
+                : userAgent.contains("Chrome") ? "Chrome"
+                  : userAgent.contains("Firefox") ? "Firefox"
+                    : userAgent.contains("Safari") ? "Safari" : "Unknown";
+        String os = userAgent.contains("Windows") ? "Windows"
+                : userAgent.contains("Mac OS") ? "macOS"
+                  : userAgent.contains("Android") ? "Android"
+                    : (userAgent.contains("iPhone") || userAgent.contains("iPad")) ? "iOS"
+                      : userAgent.contains("Linux") ? "Linux" : "Unknown";
+        return browser + " · " + os;
+    }
+
+    private String extractIpAddress(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

@@ -1,0 +1,618 @@
+{
+  "uid": "lms-badge-domain",
+  "title": "[LMS][도메인 상세] 뱃지",
+  "description": "공용 대시보드에서 뱃지 도메인 이상을 발견한 뒤, 뱃지 동기화 내부 단계와 이미지 저장소/이미지 오류를 확인합니다.",
+  "tags": [
+    "lms",
+    "domain-detail",
+    "badge",
+    "ddd",
+    "korean"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 5,
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "text",
+      "title": "공용 대시보드 다음 확인 순서",
+      "gridPos": {
+        "h": 5,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "mode": "markdown",
+        "content": "### 이 화면의 역할\n- 공용 대시보드에서 `badge` 도메인의 지연이나 오류를 먼저 확인합니다.\n- 이 상세 화면에서는 요청량/요청 오류율을 반복하지 않고, 뱃지 동기화 내부 구간을 봅니다.\n- `저장 평균`이 높으면 다건 저장/락, `지급 가능 조회`가 높으면 조건 조회, `이미지 저장소 오류`가 있으면 이미지 저장/URL 생성을 확인합니다."
+      }
+    },
+    {
+      "type": "row",
+      "title": "뱃지 동기화 원인 분해",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 2,
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "동기화 전체 평균",
+      "description": "내 뱃지 동기화 전체 내부 처리 시간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      "id": 3,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(badge_sync_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "지급 가능 조회 평균",
+      "description": "현재 포인트로 받을 수 있는 뱃지 조회 구간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      "id": 4,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.2
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(badge_sync_grantable_lookup_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_grantable_lookup_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "보유 뱃지 조회 평균",
+      "description": "이미 획득한 뱃지 조회 구간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 5,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.2
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(badge_sync_earned_lookup_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_earned_lookup_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "저장 평균",
+      "description": "새로 획득한 뱃지 저장 구간입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 6
+      },
+      "id": 6,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.2
+              },
+              {
+                "color": "red",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "(rate(badge_sync_save_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_save_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "legendFormat": ""
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "뱃지 동기화 단계별 평균",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 7,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(badge_sync_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "전체"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(badge_sync_grantable_lookup_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_grantable_lookup_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "지급 가능 조회"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(badge_sync_earned_lookup_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_earned_lookup_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "보유 뱃지 조회"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(badge_sync_save_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(badge_sync_save_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "legendFormat": "저장"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "뱃지 도메인 이벤트",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 8,
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "동기화 완료(5분)",
+      "description": "뱃지 동기화 성공 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 21
+      },
+      "id": 9,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=badge_sync_completed\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "뱃지/이미지 저장소 오류(5분)",
+      "description": "뱃지 이미지 저장, 삭제, URL 생성 후보 오류입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 21
+      },
+      "id": 10,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\", level=~\"WARN|ERROR\"} |~ \"badge|Badge|GCS|Signed URL\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "신규 획득 발생 로그(5분)",
+      "description": "신규 획득 뱃지가 1개 이상 발생한 동기화 로그입니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 21
+      },
+      "id": 11,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "0"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=badge_sync_completed\" |~ \"newlyEarnedBadgeCount=([1-9][0-9]*)\" [5m]))",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "title": "추가 계측 판단",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 21
+      },
+      "id": 12,
+      "options": {
+        "mode": "markdown",
+        "content": "### 현재 로그로 보는 값\n- `newlyEarnedBadgeCount`는 현재 로그 본문에서 확인합니다.\n- 시계열 카드로 정확히 보고 싶으면 `badge_sync_newly_earned` 또는 `badge_sync_processed_total{result}` 같은 전용 지표를 추가합니다.\n- 공용 대시보드의 요청 지표와 이 화면의 동기화 단계 지표를 같이 보면 원인을 좁힐 수 있습니다."
+      }
+    },
+    {
+      "type": "row",
+      "title": "뱃지 도메인 로그",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
+      "id": 13,
+      "collapsed": false
+    },
+    {
+      "type": "logs",
+      "title": "뱃지 동기화 로그",
+      "description": "newlyEarnedBadgeCount, grantableLookupMs, earnedLookupMs, saveMs, durationMs를 같이 봅니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 14,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\"} |= \"event=badge_sync_completed\"",
+          "queryType": "range"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "뱃지 / 이미지 저장소 오류 로그",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 15,
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "{job=\"lms\", level=~\"WARN|ERROR\"} |~ \"badge|Badge|GCS|Signed URL\"",
+          "queryType": "range"
+        }
+      ]
+    }
+  ]
+}

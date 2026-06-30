@@ -17,7 +17,7 @@ public class MockAiChatClient implements AiChatClient {
     private final AtomicInteger callCount = new AtomicInteger(0);
 
     @Override
-    public Flux<AiChatStreamChunk> stream(ChatContext context) {
+    public Flux<AiChatStreamChunk> stream(ChatContext context, String traceId) {
         int count = callCount.incrementAndGet();
         String answer = "Fastapi 반환 mock입니다." + count + " 토큰 단위로 스트리밍됩니다.";
 

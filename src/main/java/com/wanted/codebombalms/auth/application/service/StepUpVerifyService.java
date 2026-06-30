@@ -12,6 +12,8 @@ import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.StepUpTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.TrustedDeviceRepository;
 import com.wanted.codebombalms.auth.domain.service.GeoIpResolver;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEvent;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import com.wanted.codebombalms.global.domain.common.error.exception.TooManyRequestsException;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -36,6 +38,7 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final GeoIpResolver geoIpResolver;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSecurityEventRecorder securityEventRecorder;
 
     @Override
     public LoginResult verify(StepUpVerifyCommand command, HttpServletRequest request) {
@@ -53,8 +56,10 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
             int attempts = stepUpTokenRepository.incrementAttempts(token);
             if (attempts >= MAX_ATTEMPTS) {
                 stepUpTokenRepository.delete(token);
+                securityEventRecorder.record(AuthSecurityEvent.STEPUP_LOCKED, challenge.userId());
                 throw new TooManyRequestsException(AuthErrorCode.AUTH_STEP_UP_TOO_MANY);
             }
+            securityEventRecorder.record(AuthSecurityEvent.STEPUP_OTP_FAIL, challenge.userId());
             throw new ValidationException(AuthErrorCode.AUTH_CODE_INVALID);
         }
 

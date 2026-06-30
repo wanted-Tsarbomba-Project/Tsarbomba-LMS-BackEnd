@@ -45,5 +45,5 @@ N+1이라 인덱스로 안 풀린다. 해소 수단 후보(전후 비교로 택1
 
 ## 다음 단계
 
-- **2단계**: 커스텀 메트릭 심기 — `chat_list_query_*`(또는 트랙B `chat_active_streams` Gauge), `event=chat_*` 로그. → [`metrics.md`](metrics.md)
+- **2단계** ✅: 커스텀 메트릭 심기 완료 — 트랙A `chat_room_list_query_*`, 트랙B `chat_active_streams` Gauge·`chat_ai_stream_duration`(outcome)·`chat_ai_time_to_first_token`(TTFT)·`chat_stream_terminations`(signal), `event=chat_*` 로그 + BE↔FastAPI traceId 전파. → [`metrics.md`](metrics.md), 운영 대시보드 [`lms-chat-ops-dashboard.json`](../../../grafana/provisioning/dashboards/lms-chat-ops-dashboard.json)
 - **4·5단계**: `monitoring-local/k6/scripts/chat/` 시나리오 + baseline (방 다수 시드 선행, `db/seed/`)
