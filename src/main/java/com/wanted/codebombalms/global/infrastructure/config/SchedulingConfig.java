@@ -33,6 +33,8 @@ public class SchedulingConfig {
         executor.setMaxPoolSize(5);
         executor.setQueueCapacity(50);
         executor.setThreadNamePrefix("mail-async-");
+        // 풀+큐 포화 시 호출 스레드에서 직접 실행 — 메일 유실·로그인 실패(TaskRejectedException) 방지
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
         return executor;
     }

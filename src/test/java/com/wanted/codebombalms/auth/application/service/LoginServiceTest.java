@@ -211,12 +211,13 @@ class LoginServiceTest {
         LoginResult first = loginService.login(command, httpRequest, DEVICE_FP);
         LoginResult second = loginService.login(command, httpRequest, DEVICE_FP);
 
-        // then — 메일/챌린지 저장은 1회만, 2번째는 같은 토큰 재사용
+        // then — 메일·잠금토큰은 신규 발급분 1회만, 2번째는 같은 토큰 재사용
         assertTrue(first.stepUpRequired());
         assertTrue(second.stepUpRequired());
         assertEquals("EXISTING_TOKEN", second.stepUpToken());
         verify(emailSender, times(1)).sendStepUpCode(eq("test@example.com"), anyString(), anyString());
-        verify(stepUpTokenRepository, times(1)).save(anyString(), any());
+        verify(lockTokenRepository, times(1)).save(anyString(), anyLong());  // 잠금 토큰도 1회만 (#10)
+        verify(stepUpTokenRepository, times(2)).save(anyString(), any());    // 챌린지는 예약 전 저장 → 호출 2회(2번째 미사용)
     }
 
     // ===== 테스트 헬퍼 =====

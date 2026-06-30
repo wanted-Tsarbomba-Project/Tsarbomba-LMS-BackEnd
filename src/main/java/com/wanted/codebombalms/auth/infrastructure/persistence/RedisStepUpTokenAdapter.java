@@ -37,6 +37,9 @@ public class RedisStepUpTokenAdapter implements StepUpTokenRepository {
 
     @Override
     public void delete(String token) {
+        // 챌린지에 담긴 userId+deviceFp 로 기기 예약 키(KEY_DEVICE)도 함께 정리 — 생명주기 동기화
+        find(token).ifPresent(challenge ->
+                redisTemplate.delete(KEY_DEVICE + challenge.userId() + ":" + challenge.deviceFp()));
         redisTemplate.delete(KEY_CHALLENGE + token);
         redisTemplate.delete(KEY_ATTEMPTS + token);
     }

@@ -89,14 +89,18 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
         String ip = extractIpAddress(request);
         GeoLocation geo = geoIpResolver.resolve(ip);
 
-        // 로그인 이력 기록 — 구글 인증 통과이므로 suspicious=false
+        // 신뢰기기 1회 조회로 suspicious 판정 + upsert 모두 처리
+        Optional<TrustedDevice> trusted =
+                trustedDeviceRepository.findByUserIdAndDeviceFp(user.getUserId(), deviceFp);
+        boolean suspicious = trusted.isEmpty() || isCountryChanged(trusted.get(), geo);
+
+        // 로그인 이력 기록 — step-up 은 생략하되, 의심 여부는 실제 계산값으로 남김
         loginHistoryRepository.save(LoginHistory.record(
                 user.getUserId(), ip, request.getHeader("User-Agent"),
-                deviceFp, geo.country(), geo.city(), false));
+                deviceFp, geo.country(), geo.city(), suspicious));
 
         // 신뢰기기 upsert — 있으면 갱신, 없으면 등록 (유니크 (user_id, device_fp) 위반 방지)
-        TrustedDevice device = trustedDeviceRepository
-                .findByUserIdAndDeviceFp(user.getUserId(), deviceFp)
+        TrustedDevice device = trusted
                 .map(existing -> {
                     existing.markUsed(geo.country(), geo.city());
                     return existing;
@@ -120,6 +124,13 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
         );
 
         return GoogleCallbackResult.existingUser(token, refreshToken);
+    }
+
+    /** 신뢰기기의 마지막 국가와 현재 국가가 다르면 의심 (LoginService 와 동일 규칙) */
+    private boolean isCountryChanged(TrustedDevice device, GeoLocation geo) {
+        return device.getLastCountry() != null
+                && geo.country() != null
+                && !device.getLastCountry().equals(geo.country());
     }
 
     /** User-Agent → "브라우저 · OS" 표시명 (간이 파싱, StepUpVerifyService 와 동일 규칙) */

@@ -95,24 +95,23 @@ public class LoginService implements LoginUseCase {
 
     private LoginResult issueStepUp(User user, String deviceFp, GeoLocation geo) {
         String stepUpToken = UUID.randomUUID().toString();
+        String code = generateCode();
 
-        // 멱등성 유지: 같은 기기에 이미 유효한 챌린지가 있으면 재사용 (코드 재발급/메일 재발송 차단)
+        // 챌린지를 먼저 저장 — 예약 키가 가리키는 토큰은 항상 유효 챌린지를 보유 (유령 토큰 방지)
+        stepUpTokenRepository.save(stepUpToken,
+                new StepUpChallenge(user.getUserId(), deviceFp, geo.country(), code));
+
+        // 멱등 예약 — 충돌이면 기존 토큰 재사용 (방금 저장분은 미사용 → TTL 5분 후 자동 만료)
         Optional<String> existing =
                 stepUpTokenRepository.reserveDeviceChallenge(user.getUserId(), deviceFp, stepUpToken);
         if (existing.isPresent()) {
             return LoginResult.stepUp(existing.get(), maskEmail(user.getEmail()));
         }
 
-        // 신규 발급 — OTP(step-up) 생성
-        String code = generateCode();
-        stepUpTokenRepository.save(stepUpToken,
-                new StepUpChallenge(user.getUserId(), deviceFp, geo.country(), code));
-
-        // 계정 잠금 토큰 발급 + 링크 조립
+        // 신규 발급분만 계정 잠금 토큰 + 메일 발송
         String lockToken = UUID.randomUUID().toString();
         lockTokenRepository.save(lockToken, user.getUserId());
         String lockUrl = lockUrlBase + "?token=" + lockToken;
-
         emailSender.sendStepUpCode(user.getEmail(), code, lockUrl);
         return LoginResult.stepUp(stepUpToken, maskEmail(user.getEmail()));
     }
