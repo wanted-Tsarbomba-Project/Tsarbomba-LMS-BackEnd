@@ -3,6 +3,7 @@ package com.wanted.codebombalms.chatbot.application.service;
 import com.wanted.codebombalms.chatbot.application.command.SendMessageCommand;
 import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
 import com.wanted.codebombalms.chatbot.application.port.AiChatClient;
+import com.wanted.codebombalms.chatbot.application.port.ChatStreamMetricsPort;
 import com.wanted.codebombalms.chatbot.application.port.RecordTokenUsagePort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,16 +41,18 @@ class ChatMessageCommandServiceTest {
     private ChatMessageTransactionService txService;
     @Mock
     private RecordTokenUsagePort recordTokenUsagePort;
+    @Mock
+    private ChatStreamMetricsPort streamMetricsPort;
     @InjectMocks
     private ChatMessageCommandService service;
 
-    private final SendMessageCommand command = new SendMessageCommand(1L, 10L, "안녕");
+    private final SendMessageCommand command = new SendMessageCommand(1L, 10L, "안녕", "test-trace");
 
     @Test
     @DisplayName("AI 답변 저장이 실패해도 스트림은 onError 로 끊기지 않고 done 으로 정상 완료된다")
     void 저장실패_정상종료() {
         given(txService.prepare(any())).willReturn(null);
-        given(aiChatClient.stream(any())).willReturn(Flux.just(
+        given(aiChatClient.stream(any(), any())).willReturn(Flux.just(
                 new AiChatStreamChunk.Token("안"),
                 new AiChatStreamChunk.Token("녕"),
                 new AiChatStreamChunk.Done(new AiChatStreamChunk.TokenUsage(10, 2, 12))
@@ -69,7 +72,7 @@ class ChatMessageCommandServiceTest {
     @DisplayName("스트림 중간 에러 신호도 error 프레임으로 변환되어 정상 완료된다")
     void 중간에러_정상종료() {
         given(txService.prepare(any())).willReturn(null);
-        given(aiChatClient.stream(any())).willReturn(Flux.concat(
+        given(aiChatClient.stream(any(), any())).willReturn(Flux.concat(
                 Flux.just(new AiChatStreamChunk.Token("부분")),
                 Flux.error(new RuntimeException("stream broke"))
         ));
