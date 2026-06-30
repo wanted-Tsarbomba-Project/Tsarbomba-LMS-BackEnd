@@ -3,6 +3,7 @@ package com.wanted.codebombalms.submission.application.service;
 import com.wanted.codebombalms.problems.dataset.application.port.GenerateDatasetAccessUrlPort;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.application.policy.SubmissionCodePolicy;
+import com.wanted.codebombalms.submission.application.port.RecordSubmissionMetricsPort;
 import com.wanted.codebombalms.submission.application.service.CodeGradingService.CodeGradingResult;
 import com.wanted.codebombalms.submission.application.service.SubmissionTransactionService.SubmissionPreparation;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase;
@@ -20,8 +21,7 @@ public class SubmissionService implements SubmissionCommandUseCase {
     private final CodeGradingService codeGradingService;
     private final SubmissionCodePolicy submissionCodePolicy;
     private final GenerateDatasetAccessUrlPort generateDatasetAccessUrlPort;
-    private final SubmissionMetrics submissionMetrics;
-
+    private final RecordSubmissionMetricsPort submissionMetrics;
     @Override
     public SubmissionView handle(
             Long problemId,

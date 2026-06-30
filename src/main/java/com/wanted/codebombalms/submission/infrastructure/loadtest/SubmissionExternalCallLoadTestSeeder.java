@@ -2,6 +2,7 @@ package com.wanted.codebombalms.submission.infrastructure.loadtest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -17,7 +18,6 @@ import java.sql.SQLException;
 @Slf4j
 @Component
 @Profile("loadtest-submission")
-@RequiredArgsConstructor
 public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
 
     private static final int USER_COUNT = 300;
@@ -29,10 +29,25 @@ public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
     private static final long PROBLEM_ID = 840001L;
     private static final long TEST_CASE_ID_START = 840001L;
 
-    private static final String PASSWORD = "Test1234!";
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
+
+    private final String password;
+
+    public SubmissionExternalCallLoadTestSeeder(
+            JdbcTemplate jdbc,
+            PasswordEncoder passwordEncoder,
+            @Value("${loadtest.submission.password:}") String password
+    ) {
+        this.jdbc = jdbc;
+        this.passwordEncoder = passwordEncoder;
+        this.password = password;
+
+        if (password.isBlank()) {
+            throw new IllegalArgumentException("loadtest.submission.password 설정이 필요합니다.");
+        }
+    }
 
     @Override
     @Transactional
@@ -46,6 +61,7 @@ public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
         seedProblem();
 
         clearPreviousSubmissionData();
+        clearProgresses();
         seedTestCases();
         disableDatasets();
         seedProgresses();
@@ -62,7 +78,7 @@ public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
     }
 
     private void seedUsers() {
-        String passwordHash = passwordEncoder.encode(PASSWORD);
+        String passwordHash = passwordEncoder.encode(password);
 
         jdbc.batchUpdate("""
                 insert into users
@@ -281,6 +297,17 @@ public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
                    and status = 'ACTIVE'
                 """,
                 PROBLEM_SET_ID
+        );
+    }
+    private void clearProgresses() {
+        jdbc.update("""
+                delete from problem_progress
+                 where problem_set_id = ?
+                   and user_id between ? and ?
+                """,
+                PROBLEM_SET_ID,
+                USER_ID_START,
+                USER_ID_START + USER_COUNT - 1
         );
     }
 

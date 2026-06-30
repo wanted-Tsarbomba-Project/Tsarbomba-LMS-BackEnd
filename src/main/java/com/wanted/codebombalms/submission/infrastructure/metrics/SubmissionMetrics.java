@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.submission.infrastructure.metrics;
 
+import com.wanted.codebombalms.submission.application.port.RecordSubmissionMetricsPort;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.stereotype.Component;
@@ -7,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class SubmissionMetrics {
+public class SubmissionMetrics implements RecordSubmissionMetricsPort {
 
     private final Timer totalTimer;
     private final Timer prepareTimer;
@@ -31,19 +32,19 @@ public class SubmissionMetrics {
                 .description("Submission and test result save duration")
                 .register(registry);
     }
-
+    @Override
     public void recordTotal(long elapsedNanos) {
         totalTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
-
+    @Override
     public void recordPrepare(long elapsedNanos) {
         prepareTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
-
+    @Override
     public void recordGrading(long elapsedNanos) {
         gradingTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
-
+    @Override
     public void recordSave(long elapsedNanos) {
         saveTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
