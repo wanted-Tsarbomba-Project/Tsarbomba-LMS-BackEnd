@@ -15,6 +15,8 @@ import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.TempTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.TrustedDeviceRepository;
 import com.wanted.codebombalms.auth.domain.service.GeoIpResolver;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEvent;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import com.wanted.codebombalms.auth.infrastructure.oauth.GoogleOAuthClient;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
@@ -43,6 +45,7 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
     private final GeoIpResolver geoIpResolver;
     private final LoginHistoryRepository loginHistoryRepository;
     private final TrustedDeviceRepository trustedDeviceRepository;
+    private final AuthSecurityEventRecorder securityEventRecorder;
 
     @Override
     public GoogleCallbackResult handleCallback(String code, String state, HttpServletRequest request, String deviceFp) {
@@ -92,12 +95,21 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
         // 신뢰기기 1회 조회로 suspicious 판정 + upsert 모두 처리
         Optional<TrustedDevice> trusted =
                 trustedDeviceRepository.findByUserIdAndDeviceFp(user.getUserId(), deviceFp);
-        boolean suspicious = trusted.isEmpty() || isCountryChanged(trusted.get(), geo);
+        boolean countryChanged = trusted.isPresent() && isCountryChanged(trusted.get(), geo);
+        boolean suspicious = trusted.isEmpty() || countryChanged;
 
         // 로그인 이력 기록 — step-up 은 생략하되, 의심 여부는 실제 계산값으로 남김
         loginHistoryRepository.save(LoginHistory.record(
                 user.getUserId(), ip, request.getHeader("User-Agent"),
                 deviceFp, geo.country(), geo.city(), suspicious));
+
+        // 비정상 행위 기록
+        if (suspicious) {
+            securityEventRecorder.record(AuthSecurityEvent.SUSPICIOUS_LOGIN, user.getUserId());
+        }
+        if (countryChanged) {
+            securityEventRecorder.record(AuthSecurityEvent.COUNTRY_CHANGED, user.getUserId());
+        }
 
         // 신뢰기기 upsert — 있으면 갱신, 없으면 등록 (유니크 (user_id, device_fp) 위반 방지)
         TrustedDevice device = trusted
