@@ -14,6 +14,9 @@ public class MockCodeRunnerAdapter implements RunCodePort {
     public MockCodeRunnerAdapter(
             @Value("${code-runner.mock.delay-ms:300}") long mockDelayMs
     ) {
+        if (mockDelayMs < 0) {
+            throw new IllegalArgumentException("code-runner.mock.delay-ms는 0 이상이어야 합니다.");
+        }
         this.mockDelayMs = mockDelayMs;
     }
 
