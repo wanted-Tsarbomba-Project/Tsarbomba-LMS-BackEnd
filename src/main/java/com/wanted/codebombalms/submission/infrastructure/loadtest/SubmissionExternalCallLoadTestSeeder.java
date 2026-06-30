@@ -301,10 +301,13 @@ public class SubmissionExternalCallLoadTestSeeder implements ApplicationRunner {
     }
     private void clearProgresses() {
         jdbc.update("""
-            delete from problem_progress
-             where problem_set_id = ?
-            """,
-                PROBLEM_SET_ID
+                delete from problem_progress
+                 where problem_set_id = ?
+                   and user_id between ? and ?
+                """,
+                PROBLEM_SET_ID,
+                USER_ID_START,
+                USER_ID_START + USER_COUNT - 1
         );
     }
 
