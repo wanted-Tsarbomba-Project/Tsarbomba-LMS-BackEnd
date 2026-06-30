@@ -2,6 +2,7 @@ package com.wanted.codebombalms.global.infrastructure.config.security;
 
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -49,6 +50,11 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // SSE(servlet async) 완료 시 Tomcat 이 ASYNC 로 필터체인을 재진입하는데,
+                        // OncePerRequestFilter 인 JwtAuthenticationFilter 는 ASYNC 에서 재실행되지 않아
+                        // SecurityContext 가 비고 → AuthorizationFilter 가 Access Denied → 응답 이미 커밋됨
+                        // → ERR_INCOMPLETE_CHUNKED_ENCODING. 최초 REQUEST 는 이미 인가되므로 ASYNC/ERROR 는 허용한다.
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Swagger
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()

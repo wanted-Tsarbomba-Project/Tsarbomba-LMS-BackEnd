@@ -12,6 +12,9 @@ public class ChatMessageMapper {
                 entity.getRoomId(),
                 entity.getRole(),
                 entity.getContent(),
+                entity.getPromptTokens(),
+                entity.getCompletionTokens(),
+                entity.getTotalTokens(),
                 entity.getCreatedAt()
         );
     }
@@ -22,6 +25,9 @@ public class ChatMessageMapper {
                 domain.getRoomId(),
                 domain.getRole(),
                 domain.getContent(),
+                domain.getPromptTokens(),
+                domain.getCompletionTokens(),
+                domain.getTotalTokens(),
                 domain.getCreatedAt()
         );
     }
