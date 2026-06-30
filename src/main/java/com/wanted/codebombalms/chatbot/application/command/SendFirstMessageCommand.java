@@ -4,5 +4,6 @@ public record SendFirstMessageCommand(
         Long userId,
         String userMessage,
         Long problemSetId,
-        Long problemId
+        Long problemId,
+        String traceId
 ) {}

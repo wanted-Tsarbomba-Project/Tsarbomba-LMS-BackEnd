@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -55,6 +56,7 @@ class GoogleCallbackServiceTest {
     @Mock private LoginHistoryRepository loginHistoryRepository;
     @Mock private TrustedDeviceRepository trustedDeviceRepository;
     @Mock private HttpServletRequest request;
+    @Mock private AuthSecurityEventRecorder securityEventRecorder;
 
     @InjectMocks
     private GoogleCallbackService service;

@@ -1,0 +1,170 @@
+{
+  "uid": "lms-chat-ops",
+  "title": "LMS Chatbot - Ops",
+  "tags": ["lms", "ops", "chat"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "textbox",
+        "name": "traceId",
+        "label": "traceId",
+        "description": "에러 로그에서 본 traceId를 입력하면 Row6에서 BE+FastAPI 로그가 함께 뜬다",
+        "query": "",
+        "current": { "text": "", "value": "" }
+      }
+    ]
+  },
+  "panels": [
+    { "id": 100, "type": "row", "title": "1. 비용 (Tokens)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 } },
+    {
+      "id": 1, "type": "stat", "title": "누적 입력(prompt) 토큰",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 1 },
+      "targets": [ { "refId": "A", "expr": "chat_prompt_tokens_total", "legendFormat": "prompt" } ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+    {
+      "id": 2, "type": "stat", "title": "누적 출력(completion) 토큰",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 1 },
+      "targets": [ { "refId": "A", "expr": "chat_completion_tokens_total", "legendFormat": "completion" } ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+    {
+      "id": 3, "type": "timeseries", "title": "토큰 소비율 (tokens/s)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 1 },
+      "targets": [
+        { "refId": "A", "expr": "rate(chat_prompt_tokens_total[5m])", "legendFormat": "prompt/s" },
+        { "refId": "B", "expr": "rate(chat_completion_tokens_total[5m])", "legendFormat": "completion/s" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+
+    { "id": 101, "type": "row", "title": "2. 외부 AI 의존 (FastAPI/Gemini)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 } },
+    {
+      "id": 4, "type": "stat", "title": "AI 스트림 p95",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 6, "x": 0, "y": 9 },
+      "targets": [ { "refId": "A", "expr": "histogram_quantile(0.95, sum(rate(chat_ai_stream_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" } ],
+      "fieldConfig": { "defaults": { "unit": "s", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 2 }, { "color": "red", "value": 5 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+    {
+      "id": 5, "type": "stat", "title": "AI 실패율 (outcome=error)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 6, "x": 6, "y": 9 },
+      "targets": [ { "refId": "A", "expr": "sum(rate(chat_ai_stream_duration_seconds_count{outcome=\"error\"}[5m])) / clamp_min(sum(rate(chat_ai_stream_duration_seconds_count[5m])), 1e-9)", "legendFormat": "fail rate" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.01 }, { "color": "red", "value": 0.05 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "TTFT (첫 토큰까지) 평균 / p95",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 9 },
+      "targets": [
+        { "refId": "A", "expr": "rate(chat_ai_time_to_first_token_seconds_sum[5m]) / clamp_min(rate(chat_ai_time_to_first_token_seconds_count[5m]), 1e-9)", "legendFormat": "avg" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum(rate(chat_ai_time_to_first_token_seconds_bucket[5m])) by (le))", "legendFormat": "p95" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+
+    { "id": 102, "type": "row", "title": "3. 스트리밍 건강성 (SSE)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 } },
+    {
+      "id": 7, "type": "timeseries", "title": "활성 스트림 수 (동시 SSE)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 17 },
+      "targets": [ { "refId": "A", "expr": "chat_active_streams", "legendFormat": "active" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 20 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "스트림 종료 분포 (signal) — cancel/onError=중도이탈",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 17 },
+      "targets": [ { "refId": "A", "expr": "sum by (signal) (rate(chat_stream_terminations_total[5m]))", "legendFormat": "{{signal}}" } ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10, "stacking": { "mode": "normal" } } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+
+    { "id": 103, "type": "row", "title": "4. API 성능 (RED)", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 24 } },
+    {
+      "id": 9, "type": "timeseries", "title": "RPS by URI",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 25 },
+      "targets": [ { "refId": "A", "expr": "sum by (uri) (rate(http_server_requests_seconds_count{domain=\"chatbot\"}[1m]))", "legendFormat": "{{uri}}" } ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 10, "type": "timeseries", "title": "5xx 에러율",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 25 },
+      "targets": [ { "refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{domain=\"chatbot\",status=~\"5..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{domain=\"chatbot\"}[1m])), 1e-9)", "legendFormat": "5xx rate" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 11, "type": "timeseries", "title": "채팅방 목록 조회 평균(내부 구간)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 25 },
+      "targets": [ { "refId": "A", "expr": "rate(chat_room_list_query_duration_seconds_sum[5m]) / clamp_min(rate(chat_room_list_query_duration_seconds_count[5m]), 1e-9)", "legendFormat": "list query avg" } ],
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+
+    { "id": 104, "type": "row", "title": "5. 인프라 포화", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 } },
+    {
+      "id": 12, "type": "timeseries", "title": "Hikari 커넥션 (active/pending)",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 33 },
+      "targets": [
+        { "refId": "A", "expr": "hikaricp_connections_active", "legendFormat": "active" },
+        { "refId": "B", "expr": "hikaricp_connections_pending", "legendFormat": "pending" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 13, "type": "timeseries", "title": "JVM Heap 사용량",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 33 },
+      "targets": [ { "refId": "A", "expr": "sum(jvm_memory_used_bytes{area=\"heap\"})", "legendFormat": "heap used" } ],
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 10 } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } }
+    },
+    {
+      "id": 14, "type": "stat", "title": "Process CPU",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 33 },
+      "targets": [ { "refId": "A", "expr": "process_cpu_usage", "legendFormat": "cpu" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.7 }, { "color": "red", "value": 0.9 } ] } }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+    },
+
+    { "id": 105, "type": "row", "title": "6. 로그 (Loki) — 실패율↑ 보이면 여기서 traceId 확인", "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 } },
+    {
+      "id": 15, "type": "logs", "title": "챗봇 에러 로그 (BE)",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+      "targets": [ { "refId": "A", "expr": "{job=\"lms\", level=\"ERROR\"} |= \"event=chat_\"" } ],
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Descending", "dedupStrategy": "none" }
+    },
+    {
+      "id": 16, "type": "logs", "title": "traceId 통합 추적 (BE + FastAPI) — 위 traceId 변수 입력",
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 49 },
+      "targets": [ { "refId": "A", "expr": "{job=~\".+\"} |= \"$traceId\"" } ],
+      "options": { "showTime": true, "wrapLogMessage": true, "sortOrder": "Ascending", "dedupStrategy": "none" }
+    }
+  ]
+}

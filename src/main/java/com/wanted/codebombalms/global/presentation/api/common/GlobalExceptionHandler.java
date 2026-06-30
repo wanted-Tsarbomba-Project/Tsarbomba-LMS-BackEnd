@@ -2,10 +2,12 @@ package com.wanted.codebombalms.global.presentation.api.common;
 
 import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.exception.*;
+import com.wanted.codebombalms.global.infrastructure.metrics.SecurityEventReporter;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -30,11 +32,18 @@ import java.util.Arrays;
 public class GlobalExceptionHandler {
 
     private final Environment env;
+    private final ObjectProvider<SecurityEventReporter> securityEventReporter;
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiErrorResponse> handleDomainException(
             DomainException e, HttpServletRequest request) {
         log.warn("[{}] {} - path: {}", e.getHttpStatus(), e.getMessage(), request.getRequestURI());
+        // 보안 이벤트 기록 실패가 원래 에러 응답을 깨지 않도록 삼킨다.
+        try {
+            securityEventReporter.ifAvailable(r -> r.reportByErrorCode(e.getErrorCode().getCode()));
+        } catch (Exception ignored) {
+            log.warn("보안 이벤트 기록 실패 (무시): {}", ignored.getMessage());
+        }
         return ResponseEntity.status(e.getHttpStatus())
                 .body(ApiErrorResponse.of(e.getHttpStatus(), e.getErrorCode(), request.getRequestURI()));
     }
