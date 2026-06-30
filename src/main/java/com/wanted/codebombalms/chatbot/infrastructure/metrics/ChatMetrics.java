@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.chatbot.infrastructure.metrics;
 
 import com.wanted.codebombalms.chatbot.application.model.AiChatStreamChunk;
+import com.wanted.codebombalms.chatbot.application.port.RecordTokenUsagePort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-public class ChatMetrics {
+public class ChatMetrics implements RecordTokenUsagePort {
 
     private final Timer listQueryTimer;
     private final Counter promptTokensCounter;
@@ -33,10 +34,12 @@ public class ChatMetrics {
         this.listQueryTimer = Timer.builder("chat_room_list_query_duration")
                 .description("채팅방 목록 조회 구간 시간(문제 제목 fanout 포함)")
                 .register(registry);
-        this.promptTokensCounter = Counter.builder("chat_prompt_tokens_total")
+        // Prometheus 가 counter 에 _total 을 자동으로 붙이므로 등록명에는 붙이지 않는다
+        // (chat_prompt_tokens → chat_prompt_tokens_total 로 노출됨).
+        this.promptTokensCounter = Counter.builder("chat_prompt_tokens")
                 .description("AI 응답 입력(prompt) 토큰 누적량")
                 .register(registry);
-        this.completionTokensCounter = Counter.builder("chat_completion_tokens_total")
+        this.completionTokensCounter = Counter.builder("chat_completion_tokens")
                 .description("AI 응답 출력(completion) 토큰 누적량")
                 .register(registry);
     }
@@ -50,6 +53,7 @@ public class ChatMetrics {
      * AI 응답 1건의 토큰 사용량을 누적한다. DB 저장 성공 여부와 무관하게,
      * 실제 소비된 토큰(=발생한 비용)을 반영하기 위해 항상 호출된다.
      */
+    @Override
     public void recordUsage(AiChatStreamChunk.TokenUsage usage) {
         if (usage.totalTokens() == 0) {
             log.warn("event=chat_token_usage_empty - FastAPI 가 토큰 사용량을 0 으로 반환함(계약 확인 필요)");

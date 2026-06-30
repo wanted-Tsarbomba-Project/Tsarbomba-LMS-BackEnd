@@ -1,5 +1,8 @@
 package com.wanted.codebombalms.chatbot.domain.model;
 
+import com.wanted.codebombalms.chatbot.domain.exception.ChatErrorCode;
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+
 import java.time.Instant;
 
 public class ChatMessage {
@@ -45,10 +48,22 @@ public class ChatMessage {
             Integer completionTokens,
             Integer totalTokens
     ) {
+        // AI 메시지의 토큰 사용량은 음수일 수 없다(존재하면 0 이상).
+        // 합계 일치(total = prompt + completion)는 강제하지 않는다 — 외부(LLM) 제공 원값을
+        // 그대로 보존·관측하기로 했고, 불일치로 영속을 막으면 답변만 유실되기 때문.
+        requireNonNegative(promptTokens);
+        requireNonNegative(completionTokens);
+        requireNonNegative(totalTokens);
         return new ChatMessage(
                 null, roomId, MessageRole.AI, content,
                 promptTokens, completionTokens, totalTokens, null
         );
+    }
+
+    private static void requireNonNegative(Integer tokenCount) {
+        if (tokenCount != null && tokenCount < 0) {
+            throw new ValidationException(ChatErrorCode.INVALID_TOKEN_USAGE);
+        }
     }
 
     public static ChatMessage restore(
