@@ -15,6 +15,8 @@ import com.wanted.codebombalms.auth.domain.repository.StepUpTokenRepository;
 import com.wanted.codebombalms.auth.domain.repository.TrustedDeviceRepository;
 import com.wanted.codebombalms.auth.domain.service.EmailSender;
 import com.wanted.codebombalms.auth.domain.service.GeoIpResolver;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEvent;
+import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
@@ -51,6 +53,7 @@ public class LoginService implements LoginUseCase {
     private final EmailSender emailSender;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSecurityEventRecorder securityEventRecorder;
 
     @Override
     public LoginResult login(LoginCommand command, HttpServletRequest request, String deviceFp) {
@@ -72,13 +75,22 @@ public class LoginService implements LoginUseCase {
         // 5. 적응형 판정 — 신뢰 기기 1차 + 위치 보조
         Optional<TrustedDevice> trusted =
                 trustedDeviceRepository.findByUserIdAndDeviceFp(user.getUserId(), deviceFp);
-        boolean suspicious = trusted.isEmpty() || isCountryChanged(trusted.get(), geo);
+        boolean countryChanged = trusted.isPresent() && isCountryChanged(trusted.get(), geo);
+        boolean suspicious = trusted.isEmpty() || countryChanged;
         boolean stepUpRequired = user.getRole() == UserRole.STUDENT && suspicious;
 
         // 6. 로그인 이력 기록 (의심 여부 = 신뢰기기/국가 기준, 역할 무관)
         loginHistoryRepository.save(LoginHistory.record(
                 user.getUserId(), ip, request.getHeader("User-Agent"),
                 deviceFp, geo.country(), geo.city(), suspicious));
+
+        // 비정상 행위 기록
+        if (suspicious) {
+            securityEventRecorder.record(AuthSecurityEvent.SUSPICIOUS_LOGIN, user.getUserId());
+        }
+        if (countryChanged) {
+            securityEventRecorder.record(AuthSecurityEvent.COUNTRY_CHANGED, user.getUserId());
+        }
 
         // 7. 미신뢰/위치 급변 → step-up
         if (stepUpRequired) {
@@ -112,6 +124,7 @@ public class LoginService implements LoginUseCase {
         String lockToken = UUID.randomUUID().toString();
         lockTokenRepository.save(lockToken, user.getUserId());
         String lockUrl = lockUrlBase + "?token=" + lockToken;
+        securityEventRecorder.record(AuthSecurityEvent.STEPUP_ISSUED, user.getUserId());
         emailSender.sendStepUpCode(user.getEmail(), code, lockUrl);
         return LoginResult.stepUp(stepUpToken, maskEmail(user.getEmail()));
     }
