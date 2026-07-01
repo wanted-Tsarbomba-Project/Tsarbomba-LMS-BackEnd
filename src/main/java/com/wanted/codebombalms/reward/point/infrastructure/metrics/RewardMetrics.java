@@ -17,8 +17,8 @@ public class RewardMetrics implements RecordRewardMetricsPort {
 
     private final Counter scheduledCounter;
     private final Map<ProcessResult, Counter> processedCounters;
-    private final Timer processTimer;
     private final AtomicLong pendingTasks = new AtomicLong();
+    private final Map<ProcessResult, Timer> processTimers;
 
     public RewardMetrics(MeterRegistry registry) {
         this.scheduledCounter = Counter.builder("reward_point_task_scheduled")
@@ -36,10 +36,6 @@ public class RewardMetrics implements RecordRewardMetricsPort {
             );
         }
 
-        this.processTimer = Timer.builder("reward_point_task_process_duration")
-                .description("Point reward task processing duration")
-                .register(registry);
-
         Gauge.builder(
                         "reward_point_task_pending",
                         pendingTasks,
@@ -47,6 +43,16 @@ public class RewardMetrics implements RecordRewardMetricsPort {
                 )
                 .description("Current pending point reward task count")
                 .register(registry);
+        this.processTimers = new EnumMap<>(ProcessResult.class);
+        for (ProcessResult result : ProcessResult.values()) {
+            processTimers.put(
+                    result,
+                    Timer.builder("reward_point_task_process_duration")
+                            .description("Point reward task processing duration")
+                            .tag("result", result.tagValue())
+                            .register(registry)
+            );
+        }
     }
 
     @Override
@@ -59,13 +65,14 @@ public class RewardMetrics implements RecordRewardMetricsPort {
         processedCounters.get(result).increment();
     }
 
-    @Override
-    public void recordProcess(long elapsedNanos) {
-        processTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
-    }
 
     @Override
     public void updatePending(long pendingCount) {
         pendingTasks.set(Math.max(pendingCount, 0));
+    }
+
+    @Override
+    public void recordProcess(ProcessResult result, long elapsedNanos) {
+        processTimers.get(result).record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 }

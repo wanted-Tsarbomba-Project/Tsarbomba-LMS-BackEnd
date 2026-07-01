@@ -6,7 +6,7 @@ public interface RecordRewardMetricsPort {
 
     void recordProcessed(ProcessResult result);
 
-    void recordProcess(long elapsedNanos);
+    void recordProcess(ProcessResult result, long elapsedNanos);
 
     void updatePending(long pendingCount);
 
