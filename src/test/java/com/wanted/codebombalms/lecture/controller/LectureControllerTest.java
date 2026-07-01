@@ -198,6 +198,27 @@ class LectureControllerTest {
     }
 
     @Test
+    void createLecture_returnsBadRequest_whenProblemCategoryIdIsNull() throws Exception {
+        LectureCreateRequest request = new LectureCreateRequest(
+                "Java 1",
+                "description",
+                "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "java-1.png",
+                null,
+                1,
+                LectureStatus.ACTIVE
+        );
+
+        mockMvc.perform(post("/api/v1/courses/{courseId}/lectures", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).createLecture(any(CreateLectureCommand.class));
+    }
+
+    @Test
     void updateLecture_returnsBadRequest_whenProblemCategoryIdIsNotPositive() throws Exception {
         LectureUpdateRequest request = new LectureUpdateRequest(
                 "Updated Java",
@@ -205,6 +226,27 @@ class LectureControllerTest {
                 "https://youtu.be/dQw4w9WgXcQ",
                 "updated.png",
                 -1L,
+                2,
+                LectureStatus.INACTIVE
+        );
+
+        mockMvc.perform(put("/api/v1/lectures/{lectureId}", 1L)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).updateLecture(any(UpdateLectureCommand.class));
+    }
+
+    @Test
+    void updateLecture_returnsBadRequest_whenProblemCategoryIdIsNull() throws Exception {
+        LectureUpdateRequest request = new LectureUpdateRequest(
+                "Updated Java",
+                "updated",
+                "https://youtu.be/dQw4w9WgXcQ",
+                "updated.png",
+                null,
                 2,
                 LectureStatus.INACTIVE
         );
