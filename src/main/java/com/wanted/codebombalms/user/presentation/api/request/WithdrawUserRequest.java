@@ -1,10 +1,11 @@
 package com.wanted.codebombalms.user.presentation.api.request;
 
-import jakarta.validation.constraints.NotBlank;
-
 public record WithdrawUserRequest(
 
-        @NotBlank(message = "비밀번호는 필수입니다.")
-        String password
+        // LOCAL 계정: 현재 비밀번호 (본인 재확인)
+        String password,
+
+        // 소셜 계정: 확인 문구 ("탈퇴하겠습니다")
+        String confirmText
 ) {
 }

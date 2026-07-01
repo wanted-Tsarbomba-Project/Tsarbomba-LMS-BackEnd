@@ -112,5 +112,6 @@ architecture-user-auth.html
 /monitoring-local/k6/results/auth-reissue-before-summary.json
 /monitoring-local/k6/results/auth-reissue-after-summary.md
 /monitoring-local/k6/results/auth-reissue-after-summary.json
+/monitoring-deploy/k6/results/
 /src/main/resources/db/seed/03_trusted_device_loadtest.sql
 /rds-tunnel.sh

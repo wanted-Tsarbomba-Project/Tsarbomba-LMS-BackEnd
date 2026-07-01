@@ -29,7 +29,9 @@ public enum UserErrorCode implements ErrorCode {
 
     USER_REVERIFICATION_REQUIRED("USR-011", "비밀번호 재인증이 필요합니다. 다시 인증해주세요."),
 
-    TRUSTED_DEVICE_NOT_FOUND("USR-012", "신뢰 기기를 찾을 수 없습니다.");
+    TRUSTED_DEVICE_NOT_FOUND("USR-012", "신뢰 기기를 찾을 수 없습니다."),
+
+    USER_WITHDRAW_CONFIRM_MISMATCH("USR-013", "탈퇴 확인 문구가 일치하지 않습니다.");
 
     private final String code;
     private final String message;
