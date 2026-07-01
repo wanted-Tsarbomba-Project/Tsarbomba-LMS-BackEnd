@@ -190,7 +190,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
 
         Long nextProblemId = null;
         boolean completed = false;
-        if (gradingResult.correct()) {
+        if (gradingResult.correct() && isCurrentProblem(progress, problem.problemNumber())) {
             var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
             nextProblemId = findNextProblemId(problemSet.problems(), problem.problemNumber());
             completed = nextProblemId == null;
@@ -307,9 +307,13 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         if (progress.isCompleted()) {
             throw new ConflictException(LearningErrorCode.LECTURE_PROBLEM_SET_ALREADY_COMPLETED);
         }
-        if (!progress.getCurrentProblemNumber().equals(problemNumber)) {
+        if (problemNumber > progress.getCurrentProblemNumber()) {
             throw new ValidationException(LearningErrorCode.LECTURE_PROBLEM_NOT_UNLOCKED);
         }
+    }
+
+    private boolean isCurrentProblem(LectureProblemProgress progress, Integer problemNumber) {
+        return progress.getCurrentProblemNumber().equals(problemNumber);
     }
 
     private void validateAttempt(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {

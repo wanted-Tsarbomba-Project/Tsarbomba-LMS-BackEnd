@@ -18,6 +18,11 @@ spring:
       request-timeout: 120000  # SSE: WebClient responseTimeout(100s)보다 길게 둬야 error 이벤트 전송 가능
 
   # 환경종속 — 실제 값은 프로파일/.env. driver 만 공통.
+  servlet:
+    multipart:
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE:20MB}
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:25MB}
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
