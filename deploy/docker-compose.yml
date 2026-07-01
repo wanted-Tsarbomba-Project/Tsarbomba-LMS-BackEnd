@@ -5,6 +5,9 @@ services:
     container_name: lms-spring
     restart: unless-stopped
     env_file: .env                 # DB/Redis/JWT/OAuth/GCP 등 런타임 비밀값
+    environment:
+      # Default path for GoogleCredentials.getApplicationDefault() inside the container.
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-/app/secrets/gcp-storage-key.json}
     ports:
       - "8080:8080"
     volumes:

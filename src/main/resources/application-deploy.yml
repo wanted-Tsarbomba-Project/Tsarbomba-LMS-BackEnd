@@ -6,7 +6,7 @@
 #   - DB_URL / DB_USERNAME / DB_PASSWORD / DDL_AUTO
 #   - REDIS_HOST / REDIS_PORT / REDIS_PASSWORD
 #   - CORS_ALLOWED_ORIGINS / FASTAPI_URL / JWT_SECRET
-#   - MAIL_* / GOOGLE_* / OAUTH_* / COOKIE_SECURE / GCP_*
+#   - MAIL_* / GOOGLE_* / OAUTH_* / COOKIE_SECURE / GCP_* / GOOGLE_APPLICATION_CREDENTIALS
 #
 # 활성화: .env 의 SPRING_PROFILES_ACTIVE=deploy
 #   (base 의 profiles.active=local 을 환경변수 우선순위로 override → local.yml 미로드)
