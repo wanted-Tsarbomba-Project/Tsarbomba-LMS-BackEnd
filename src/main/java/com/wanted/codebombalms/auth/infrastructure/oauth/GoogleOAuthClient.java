@@ -4,20 +4,25 @@ import com.wanted.codebombalms.auth.application.dto.OAuthUserInfo;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import java.time.Duration;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class GoogleOAuthClient {
@@ -30,6 +35,20 @@ public class GoogleOAuthClient {
             .clientConnector(new ReactorClientHttpConnector(
                     HttpClient.create().responseTimeout(Duration.ofSeconds(5))))
             .build();
+
+    /**
+     * 구글 응답 4xx/5xx 를 도메인 예외로 매핑한다.
+     * 업스트림 상태코드/응답본문을 로깅해 4xx(요청 오류) vs 5xx(구글 장애) 원인 추적을 남긴다.
+     */
+    private Mono<? extends Throwable> mapUpstreamError(ClientResponse resp, AuthErrorCode errorCode) {
+        return resp.bodyToMono(String.class)
+                .defaultIfEmpty("")
+                .map(body -> {
+                    log.warn("구글 OAuth 호출 실패 - upstreamStatus={}, mappedCode={}, body={}",
+                            resp.statusCode(), errorCode.getCode(), body);
+                    return new ValidationException(errorCode);
+                });
+    }
 
     /** 구글 동의 화면으로 보낼 authorization URL 생성 */
     public String buildAuthorizationUri(String state) {
@@ -63,6 +82,8 @@ public class GoogleOAuthClient {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .bodyValue(form)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError,
+                        resp -> mapUpstreamError(resp, AuthErrorCode.OAUTH_TOKEN_EXCHANGE_FAILED))
                 .bodyToMono(Map.class)
                 .block();
 
@@ -81,6 +102,8 @@ public class GoogleOAuthClient {
                 .uri(g.getUserInfoUri())
                 .headers(h -> h.setBearerAuth(accessToken))
                 .retrieve()
+                .onStatus(HttpStatusCode::isError,
+                        resp -> mapUpstreamError(resp, AuthErrorCode.OAUTH_USER_INFO_FAILED))
                 .bodyToMono(Map.class)
                 .block();
 
