@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -96,10 +98,44 @@ public class PointRewardTaskService
             throw e;
         } finally {
             if (result != null) {
-                rewardMetrics.recordProcessed(result);
+                recordMetricsAfterTransaction(
+                        result,
+                        System.nanoTime() - startedAtNanos
+                );
             }
-            rewardMetrics.recordProcess(System.nanoTime() - startedAtNanos);
         }
+    }
+
+    private void recordMetricsAfterTransaction(
+            ProcessResult result,
+            long elapsedNanos
+    ) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            rewardMetrics.recordProcessed(result);
+            rewardMetrics.recordProcess(result, elapsedNanos);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        ProcessResult finalResult = status == STATUS_COMMITTED
+                                ? result
+                                : rollbackResult(result);
+
+                        rewardMetrics.recordProcessed(finalResult);
+                        rewardMetrics.recordProcess(finalResult, elapsedNanos);
+                    }
+                }
+        );
+    }
+
+    private ProcessResult rollbackResult(ProcessResult result) {
+        return switch (result) {
+            case NOT_FOUND, ERROR -> result;
+            default -> ProcessResult.ERROR;
+        };
     }
 
     private ProcessResult processPendingTask(
