@@ -12,11 +12,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +30,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class PointRewardTaskServiceTest {
@@ -132,6 +136,50 @@ class PointRewardTaskServiceTest {
                 .recordProcess(eq(ProcessResult.SKIPPED), anyLong());
     }
 
+    @Test
+    void defersCompletedMetricsUntilTransactionCommits() {
+        PointRewardTask task = task(PointRewardTaskStatus.PENDING, 0);
+        given(pointRewardTaskRepository.findBySubmissionIdForUpdate(30L))
+                .willReturn(Optional.of(task));
+
+        initTransactionSynchronization();
+        try {
+            service.process(30L);
+
+            verifyNoInteractions(rewardMetrics);
+
+            completeTransaction(TransactionSynchronization.STATUS_COMMITTED);
+        } finally {
+            clearTransactionSynchronization();
+        }
+
+        verify(rewardMetrics).recordProcessed(ProcessResult.COMPLETED);
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.COMPLETED), anyLong());
+    }
+
+    @Test
+    void recordsErrorMetricsWhenTransactionRollsBackAfterCompletedResult() {
+        PointRewardTask task = task(PointRewardTaskStatus.PENDING, 0);
+        given(pointRewardTaskRepository.findBySubmissionIdForUpdate(30L))
+                .willReturn(Optional.of(task));
+
+        initTransactionSynchronization();
+        try {
+            service.process(30L);
+
+            verifyNoInteractions(rewardMetrics);
+
+            completeTransaction(TransactionSynchronization.STATUS_ROLLED_BACK);
+        } finally {
+            clearTransactionSynchronization();
+        }
+
+        verify(rewardMetrics).recordProcessed(ProcessResult.ERROR);
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.ERROR), anyLong());
+    }
+
     private PointRewardTask task(
             PointRewardTaskStatus status,
             int retryCount
@@ -150,5 +198,26 @@ class PointRewardTaskServiceTest {
                 now,
                 now
         );
+    }
+
+    private void initTransactionSynchronization() {
+        TransactionSynchronizationManager.initSynchronization();
+    }
+
+    private void completeTransaction(int status) {
+        List<TransactionSynchronization> synchronizations =
+                TransactionSynchronizationManager.getSynchronizations();
+
+        assertThat(synchronizations).hasSize(1);
+
+        synchronizations.forEach(
+                synchronization -> synchronization.afterCompletion(status)
+        );
+    }
+
+    private void clearTransactionSynchronization() {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 }
