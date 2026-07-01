@@ -10,5 +10,7 @@ public interface LectureMaterialRepository {
 
     List<LectureMaterial> findByLectureIdAndDeletedAtIsNull(Long lectureId);
 
+    List<LectureMaterial> findByLectureIdInAndDeletedAtIsNull(List<Long> lectureIds);
+
     Optional<LectureMaterial> findByLectureMaterialIdAndDeletedAtIsNull(Long lectureMaterialId);
 }
