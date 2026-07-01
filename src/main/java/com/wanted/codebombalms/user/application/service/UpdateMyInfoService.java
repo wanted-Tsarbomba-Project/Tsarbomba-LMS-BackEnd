@@ -46,7 +46,8 @@ public class UpdateMyInfoService implements UpdateMyInfoUseCase {
         try {
             userRepository.saveAndFlush(user); // 즉시 flush — 제약 위반을 이 자리에서 포착
         } catch (DataIntegrityViolationException e) {
-            throw new ValidationException(UserErrorCode.USER_NICKNAME_DUPLICATED);
+            // 사전 체크 통과했어도 동시성 레이스로 닉네임 unique 충돌 가능 → 닉네임 중복으로 정밀 매핑 (원인 보존)
+            throw new ValidationException(UserErrorCode.USER_NICKNAME_DUPLICATED, e);
         }
 
         log.info("개인정보 수정 완료 - userId={}, nicknameChanged={}", userId, nicknameChanged);

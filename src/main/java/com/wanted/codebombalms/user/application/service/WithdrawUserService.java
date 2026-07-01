@@ -40,8 +40,10 @@ public class WithdrawUserService implements WithdrawUserUseCase {
                 throw new ValidationException(UserErrorCode.USER_WITHDRAW_CONFIRM_MISMATCH);
             }
         } else {
-            // LOCAL 계정: 비밀번호 재확인 (불일치 시 400 AUT-013)
-            if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            // LOCAL 계정: 비밀번호 필수 + 재확인
+            // null/blank 를 먼저 400 으로 정리 (BCrypt matches(null,...) IllegalArgument → 500 방지)
+            if (rawPassword == null || rawPassword.isBlank()
+                    || !passwordEncoder.matches(rawPassword, user.getPassword())) {
                 throw new ValidationException(AuthErrorCode.AUTH_PASSWORD_MISMATCH);
             }
         }
