@@ -40,8 +40,8 @@ public class WithdrawUserController {
             @Valid @RequestBody WithdrawUserRequest request,
             HttpServletResponse response
     ) {
-        // 1. 비번 재확인 + Soft Delete + RT 전체 삭제
-        withdrawUserUseCase.withdraw(userId, request.password());
+        // 1. 본인 재확인(LOCAL=비번 / 소셜=확인문구) + Soft Delete + RT 전체 삭제
+        withdrawUserUseCase.withdraw(userId, request.password(), request.confirmText());
 
         // 2. 쿠키 만료
         response.addCookie(authCookieFactory.expired("accessToken"));
