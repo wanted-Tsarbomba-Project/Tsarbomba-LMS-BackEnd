@@ -9,6 +9,8 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServ
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFactory;
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
+import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -80,6 +82,53 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
                     CourseErrorCode.COURSE_THUMBNAIL_UPLOAD_FAILED,
                     e
             );
+        }
+    }
+
+    @Override
+    public void delete(String thumbnailUrl) {
+        String objectName = extractObjectName(thumbnailUrl);
+        if (objectName == null || objectName.isBlank()) {
+            return;
+        }
+
+        try {
+            getStorage().delete(
+                    BlobId.of(
+                            properties.getStorage().getBucket(),
+                            objectName
+                    )
+            );
+        } catch (Exception e) {
+            throw new ExternalServiceException(
+                    CourseErrorCode.COURSE_THUMBNAIL_DELETE_FAILED,
+                    e
+            );
+        }
+    }
+
+    private String extractObjectName(String thumbnailUrl) {
+        if (thumbnailUrl == null || thumbnailUrl.isBlank()) {
+            return null;
+        }
+
+        try {
+            URI uri = URI.create(thumbnailUrl);
+            String expectedHost = "storage.googleapis.com";
+            String bucket = properties.getStorage().getBucket();
+            String path = uri.getPath();
+            String bucketPrefix = "/" + bucket + "/";
+
+            if (!expectedHost.equals(uri.getHost()) || path == null || !path.startsWith(bucketPrefix)) {
+                return null;
+            }
+
+            return URLDecoder.decode(
+                    path.substring(bucketPrefix.length()),
+                    StandardCharsets.UTF_8
+            );
+        } catch (IllegalArgumentException e) {
+            return null;
         }
     }
 

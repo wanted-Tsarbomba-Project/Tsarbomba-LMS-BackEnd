@@ -6,6 +6,7 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.port.LectureManagementPort;
 import com.wanted.codebombalms.course.application.service.CourseCommandService;
 import com.wanted.codebombalms.course.application.service.CourseQueryService;
@@ -52,6 +53,9 @@ class CourseServiceTest {
 
     @Mock
     private LectureManagementPort lectureManagementPort;
+
+    @Mock
+    private CourseThumbnailStoragePort courseThumbnailStoragePort;
 
     @InjectMocks
     private CourseCommandService courseCommandService;
@@ -238,9 +242,10 @@ class CourseServiceTest {
 
         assertEquals(CourseStatus.DELETED, course.getStatus());
         assertNotNull(course.getDeletedAt());
-        var inOrder = inOrder(lectureManagementPort, courseRepository);
+        var inOrder = inOrder(lectureManagementPort, courseRepository, courseThumbnailStoragePort);
         inOrder.verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
         inOrder.verify(courseRepository).save(course);
+        inOrder.verify(courseThumbnailStoragePort).delete("java.png");
     }
 
     @Test
