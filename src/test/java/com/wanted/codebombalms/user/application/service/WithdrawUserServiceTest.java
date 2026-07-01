@@ -49,8 +49,18 @@ class WithdrawUserServiceTest {
         );
     }
 
+    private User socialUser() {
+        return User.restore(
+                2L, UserRole.STUDENT, "g01@gmail.com", null,     // 소셜은 비밀번호 없음
+                "김구글", "구글01", "010-2222-3333",
+                AuthProvider.GOOGLE, "google-sub-123",
+                true, false, null, null,
+                LocalDateTime.now(), LocalDateTime.now(), null
+        );
+    }
+
     @Test
-    @DisplayName("비밀번호가 일치하면 softDelete 후 저장하고 Refresh Token을 전부 삭제한다.")
+    @DisplayName("[LOCAL] 비밀번호가 일치하면 softDelete 후 저장하고 Refresh Token을 전부 삭제한다.")
     void 탈퇴_성공() {
         // given
         User user = activeUser();
@@ -58,7 +68,7 @@ class WithdrawUserServiceTest {
         given(passwordEncoder.matches("Test1234!", "ENCODED_PW")).willReturn(true);
 
         // when
-        withdrawUserService.withdraw(1L, "Test1234!");
+        withdrawUserService.withdraw(1L, "Test1234!", null);
 
         // then — softDelete 반영된 User가 저장되는지 캡처해서 검증
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
@@ -68,7 +78,7 @@ class WithdrawUserServiceTest {
     }
 
     @Test
-    @DisplayName("비밀번호가 불일치하면 ValidationException(AUTH_PASSWORD_MISMATCH)을 던지고, 저장/RT삭제는 일어나지 않는다.")
+    @DisplayName("[LOCAL] 비밀번호가 불일치하면 ValidationException(AUTH_PASSWORD_MISMATCH)을 던지고, 저장/RT삭제는 일어나지 않는다.")
     void 비밀번호_불일치_예외() {
         // given
         User user = activeUser();
@@ -78,9 +88,44 @@ class WithdrawUserServiceTest {
         // when & then
         ValidationException ex = assertThrows(
                 ValidationException.class,
-                () -> withdrawUserService.withdraw(1L, "wrong")
+                () -> withdrawUserService.withdraw(1L, "wrong", null)
         );
         assertEquals(AuthErrorCode.AUTH_PASSWORD_MISMATCH, ex.getErrorCode());
+
+        verify(userRepository, never()).save(any());
+        verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+    }
+
+    @Test
+    @DisplayName("[소셜] 확인 문구가 '탈퇴하겠습니다' 와 일치하면 비밀번호 검증 없이 탈퇴에 성공한다.")
+    void 소셜_탈퇴_성공() {
+        // given
+        User user = socialUser();
+        given(userRepository.findByUserId(2L)).willReturn(Optional.of(user));
+
+        // when
+        withdrawUserService.withdraw(2L, null, "탈퇴하겠습니다");
+
+        // then
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(captor.capture());
+        assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
+        verify(refreshTokenRepository).deleteByUserId(2L);
+    }
+
+    @Test
+    @DisplayName("[소셜] 확인 문구가 불일치하면 ValidationException(USER_WITHDRAW_CONFIRM_MISMATCH)을 던지고, 저장/RT삭제는 일어나지 않는다.")
+    void 소셜_확인문구_불일치_예외() {
+        // given
+        User user = socialUser();
+        given(userRepository.findByUserId(2L)).willReturn(Optional.of(user));
+
+        // when & then
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> withdrawUserService.withdraw(2L, null, "탈퇴할래요")
+        );
+        assertEquals(UserErrorCode.USER_WITHDRAW_CONFIRM_MISMATCH, ex.getErrorCode());
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
@@ -95,7 +140,7 @@ class WithdrawUserServiceTest {
         // when & then
         NotFoundException ex = assertThrows(
                 NotFoundException.class,
-                () -> withdrawUserService.withdraw(99L, "Test1234!")
+                () -> withdrawUserService.withdraw(99L, "Test1234!", null)
         );
         assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
 

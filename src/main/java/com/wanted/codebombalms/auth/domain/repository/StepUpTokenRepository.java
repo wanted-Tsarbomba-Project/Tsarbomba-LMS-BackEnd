@@ -17,4 +17,11 @@ public interface StepUpTokenRepository {
 
     /** OTP 오입력 시 시도 횟수 +1 → 누적값 반환 (토큰 TTL과 동기) */
     int incrementAttempts(String token);
+
+    /**
+     * 같은 기기(userId+deviceFp)의 step-up 발급을 원자적으로 1건으로 제한한다. (TTL 5분)
+     * - 신규 발급권을 선점하면 Optional.empty() 반환 → 호출측이 코드 생성 + 메일 발송 진행
+     * - 이미 유효한 발급이 있으면 그 토큰을 반환 → 호출측은 메일 재발송 없이 재사용
+     */
+    Optional<String> reserveDeviceChallenge(Long userId, String deviceFp, String newToken);
 }

@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -59,11 +60,14 @@ public class ChatRoomController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody SendFirstMessageRequest request
     ) {
+        // SSE 스트림 콜백은 별도 reactor 스레드라 MDC(traceId)가 전파되지 않는다.
+        // 호출 스레드인 여기서 캡처해 command 로 넘겨야 스트림 로그에 traceId 가 박힌다.
         SendFirstMessageCommand command = new SendFirstMessageCommand(
                 userId,
                 request.userMessage(),
                 request.problemSetId(),
-                request.problemId()
+                request.problemId(),
+                MDC.get("traceId")
         );
 
         // sendFirst() 호출 시 방 준비(tx)가 동기 실행됨 → 진입부 예외는 여기서 JSON으로 처리됨
@@ -165,7 +169,8 @@ public class ChatRoomController {
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody ChatMessageRequest request
     ) {
-        SendMessageCommand command = new SendMessageCommand(userId, roomId, request.userMessage());
+        SendMessageCommand command = new SendMessageCommand(
+                userId, roomId, request.userMessage(), MDC.get("traceId"));
 
         Flux<ServerSentEvent<Object>> body = chatMessageCommandUseCase.send(command)
                 .map(this::toServerSentEvent);

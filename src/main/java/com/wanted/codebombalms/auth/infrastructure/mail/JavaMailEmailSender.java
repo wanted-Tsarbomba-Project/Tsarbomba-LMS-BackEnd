@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -18,6 +19,7 @@ public class JavaMailEmailSender implements EmailSender {
     @Value("${spring.mail.username}")
     private String fromAddress;
 
+    @Async("mailTaskExecutor")
     @Override
     public void sendVerificationCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -29,7 +31,7 @@ public class JavaMailEmailSender implements EmailSender {
         mailSender.send(message);
         log.info("[EmailSender] 인증 코드 발송 완료 - to: {}", maskEmail(to));
     }
-
+    @Async("mailTaskExecutor")
     @Override
     public void sendPasswordResetCode(String to, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -42,7 +44,7 @@ public class JavaMailEmailSender implements EmailSender {
         log.info("[EmailSender] 비밀번호 재설정 코드 발송 완료 - to: {}", maskEmail(to));
     }
 
-    // sendPasswordResetCode 메서드 아래에 추가
+    @Async("mailTaskExecutor")
     @Override
     public void sendStepUpCode(String to, String code, String lockUrl) {
         SimpleMailMessage message = new SimpleMailMessage();

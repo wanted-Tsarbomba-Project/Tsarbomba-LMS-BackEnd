@@ -124,7 +124,8 @@ public class User {
     }    public void lock()       { this.isLocked = true; }
     public void unlock()     { this.isLocked = false; }
     public boolean isDeleted() { return this.deletedAt != null; }
-
+    /** 소셜 가입 계정 여부. provider 가 null 이면 소셜로 보지 않음(fail-closed) — 비번 검증 우회 방지 */
+    public boolean isSocialAccount() { return this.provider != null && this.provider != AuthProvider.LOCAL; }
 
     // ===== 신규 소셜 회원 생성 (구글) =====
     public static User createSocialUser(
