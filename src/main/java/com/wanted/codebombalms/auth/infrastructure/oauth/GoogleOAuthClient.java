@@ -4,6 +4,7 @@ import com.wanted.codebombalms.auth.application.dto.OAuthUserInfo;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -12,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import java.time.Duration;
 
@@ -63,6 +65,8 @@ public class GoogleOAuthClient {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .bodyValue(form)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, resp ->
+                        Mono.error(new ValidationException(AuthErrorCode.OAUTH_TOKEN_EXCHANGE_FAILED)))
                 .bodyToMono(Map.class)
                 .block();
 
@@ -81,6 +85,8 @@ public class GoogleOAuthClient {
                 .uri(g.getUserInfoUri())
                 .headers(h -> h.setBearerAuth(accessToken))
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, resp ->
+                        Mono.error(new ValidationException(AuthErrorCode.OAUTH_USER_INFO_FAILED)))
                 .bodyToMono(Map.class)
                 .block();
 

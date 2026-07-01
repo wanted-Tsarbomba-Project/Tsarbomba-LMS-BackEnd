@@ -124,6 +124,7 @@ public class User {
     }    public void lock()       { this.isLocked = true; }
     public void unlock()     { this.isLocked = false; }
     public boolean isDeleted() { return this.deletedAt != null; }
+    public boolean isSocialAccount() { return this.provider != AuthProvider.LOCAL; }
 
 
     // ===== 신규 소셜 회원 생성 (구글) =====
