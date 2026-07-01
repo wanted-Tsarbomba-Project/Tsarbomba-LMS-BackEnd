@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -67,7 +68,8 @@ class PointRewardTaskServiceTest {
         assertThat(savedTask.getValue().status())
                 .isEqualTo(PointRewardTaskStatus.COMPLETED);
         verify(rewardMetrics).recordProcessed(ProcessResult.COMPLETED);
-        verify(rewardMetrics).recordProcess(anyLong());
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.COMPLETED), anyLong());
     }
 
     @Test
@@ -88,6 +90,8 @@ class PointRewardTaskServiceTest {
                 .isEqualTo(PointRewardTaskStatus.PENDING);
         assertThat(savedTask.getValue().retryCount()).isEqualTo(1);
         verify(rewardMetrics).recordProcessed(ProcessResult.RETRY);
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.RETRY), anyLong());
     }
 
     @Test
@@ -108,6 +112,8 @@ class PointRewardTaskServiceTest {
                 .isEqualTo(PointRewardTaskStatus.FAILED);
         assertThat(savedTask.getValue().retryCount()).isEqualTo(5);
         verify(rewardMetrics).recordProcessed(ProcessResult.FAILED);
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.FAILED), anyLong());
     }
 
     @Test
@@ -122,6 +128,8 @@ class PointRewardTaskServiceTest {
                 .grant(10L, 20L, 30L, 100);
         verify(pointRewardTaskRepository, never()).save(any(PointRewardTask.class));
         verify(rewardMetrics).recordProcessed(ProcessResult.SKIPPED);
+        verify(rewardMetrics)
+                .recordProcess(eq(ProcessResult.SKIPPED), anyLong());
     }
 
     private PointRewardTask task(

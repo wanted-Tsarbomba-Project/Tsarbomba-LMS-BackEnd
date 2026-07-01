@@ -19,7 +19,10 @@ class RewardMetricsTest {
         metrics.recordProcessed(ProcessResult.COMPLETED);
         metrics.recordProcessed(ProcessResult.RETRY);
         metrics.recordProcessed(ProcessResult.FAILED);
-        metrics.recordProcess(TimeUnit.MILLISECONDS.toNanos(250));
+        metrics.recordProcess(
+                ProcessResult.COMPLETED,
+                TimeUnit.MILLISECONDS.toNanos(250)
+        );
         metrics.updatePending(7);
 
         assertThat(registry.get("reward_point_task_scheduled").counter().count())
@@ -37,6 +40,7 @@ class RewardMetricsTest {
                 .counter()
                 .count()).isEqualTo(1.0);
         assertThat(registry.get("reward_point_task_process_duration")
+                .tag("result", "completed")
                 .timer()
                 .totalTime(TimeUnit.MILLISECONDS)).isEqualTo(250.0);
         assertThat(registry.get("reward_point_task_pending").gauge().value())
