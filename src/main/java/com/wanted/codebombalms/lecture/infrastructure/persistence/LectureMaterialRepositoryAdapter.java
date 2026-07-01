@@ -39,6 +39,15 @@ public class LectureMaterialRepositoryAdapter implements LectureMaterialReposito
     }
 
     @Override
+    public List<LectureMaterial> findByLectureIdInAndDeletedAtIsNull(List<Long> lectureIds) {
+        return springDataLectureMaterialRepository
+                .findByLectureIdInAndDeletedAtIsNull(lectureIds)
+                .stream()
+                .map(LectureMaterialJpaEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public Optional<LectureMaterial> findByLectureMaterialIdAndDeletedAtIsNull(Long lectureMaterialId) {
         return springDataLectureMaterialRepository.findByLectureMaterialIdAndDeletedAtIsNull(lectureMaterialId)
                 .map(LectureMaterialJpaEntity::toDomain);

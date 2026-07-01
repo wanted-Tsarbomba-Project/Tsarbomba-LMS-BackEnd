@@ -268,6 +268,24 @@ class CourseServiceTest {
     }
 
     @Test
+    void deleteCourse_keepsCourseDeleted_whenThumbnailDeleteFails() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
+
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        doThrow(new RuntimeException("thumbnail delete failed"))
+                .when(courseThumbnailStoragePort)
+                .delete("java.png");
+
+        courseCommandService.deleteCourse(courseId);
+
+        assertEquals(CourseStatus.DELETED, course.getStatus());
+        assertNotNull(course.getDeletedAt());
+        verify(courseRepository).save(course);
+        verify(courseThumbnailStoragePort).delete("java.png");
+    }
+
+    @Test
     void publishCourse_activatesDraftCourse() {
         Long courseId = 1L;
         Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.DRAFT);

@@ -3,7 +3,9 @@ package com.wanted.codebombalms.course.infrastructure.lecture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
 
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
@@ -46,7 +48,7 @@ class LectureManagementAdapterTest {
 
         given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
                 .willReturn(List.of(lecture));
-        given(lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lecture.getLectureId()))
+        given(lectureMaterialRepository.findByLectureIdInAndDeletedAtIsNull(List.of(lecture.getLectureId())))
                 .willReturn(List.of(material));
 
         lectureManagementAdapter.deleteLecturesByCourseId(courseId);
@@ -63,6 +65,29 @@ class LectureManagementAdapterTest {
         inOrder.verify(lectureMaterialRepository).save(material);
         inOrder.verify(lectureMaterialStoragePort).delete("lecture_materials/stored-guide.pdf");
         inOrder.verify(lectureRepository).save(lecture);
+    }
+
+    @Test
+    void deleteLecturesByCourseId_keepsLectureDeleted_whenMaterialFileDeleteFails() {
+        Long courseId = 1L;
+        Lecture lecture = createLecture(10L, courseId);
+        LectureMaterial material = createMaterial(100L, lecture.getLectureId());
+
+        given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
+                .willReturn(List.of(lecture));
+        given(lectureMaterialRepository.findByLectureIdInAndDeletedAtIsNull(List.of(lecture.getLectureId())))
+                .willReturn(List.of(material));
+        doThrow(new RuntimeException("material delete failed"))
+                .when(lectureMaterialStoragePort)
+                .delete("lecture_materials/stored-guide.pdf");
+
+        lectureManagementAdapter.deleteLecturesByCourseId(courseId);
+
+        assertNotNull(material.getDeletedAt());
+        assertEquals(LectureStatus.DELETED, lecture.getStatus());
+        assertNotNull(lecture.getDeletedAt());
+        verify(lectureMaterialRepository).save(material);
+        verify(lectureRepository).save(lecture);
     }
 
     private Lecture createLecture(Long lectureId, Long courseId) {

@@ -123,10 +123,16 @@ public class GcsCourseThumbnailStorageAdapter implements CourseThumbnailStorageP
                 return null;
             }
 
-            return URLDecoder.decode(
+            String objectName = URLDecoder.decode(
                     path.substring(bucketPrefix.length()),
                     StandardCharsets.UTF_8
             );
+            String thumbnailPrefix = normalizePrefix(properties.getStorage().getCourseThumbnailPrefix());
+            if (!thumbnailPrefix.isBlank() && !objectName.startsWith(thumbnailPrefix + "/")) {
+                return null;
+            }
+
+            return objectName;
         } catch (IllegalArgumentException e) {
             return null;
         }
