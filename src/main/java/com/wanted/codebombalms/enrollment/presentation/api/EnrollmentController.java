@@ -3,6 +3,7 @@ package com.wanted.codebombalms.enrollment.presentation.api;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
@@ -30,6 +31,7 @@ public class EnrollmentController {
     private final EnrollmentCommandUseCase enrollmentCommandUseCase;
     private final EnrollmentQueryUseCase enrollmentQueryUseCase;
     private final CourseCatalogPort courseCatalogPort;
+    private final EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @PostMapping("/courses/{courseId}/enrollments")
     @Operation(summary = "수강신청 생성")
@@ -83,7 +85,11 @@ public class EnrollmentController {
                         .stream()
                         .map(enrollment -> MyCourseResponse.from(
                                 enrollment,
-                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
+                                enrollmentLearningProgressPort.findProgress(
+                                        enrollment.getUserId(),
+                                        enrollment.getCourseId()
+                                )
                         ))
                         .toList()
         ));

@@ -5,6 +5,8 @@ import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCo
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
@@ -60,6 +62,9 @@ class EnrollmentControllerTest {
 
     @MockitoBean
     private CourseCatalogPort courseCatalogPort;
+
+    @MockitoBean
+    private EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
@@ -126,7 +131,9 @@ class EnrollmentControllerTest {
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"))
+                .andExpect(jsonPath("$.data[0].learningCompleted").value(true))
+                .andExpect(jsonPath("$.data[0].displayStatus").value("COMPLETED"));
     }
 
     @Test
@@ -144,7 +151,9 @@ class EnrollmentControllerTest {
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.message").value(EnrollmentResponseMessage.RETRIEVED))
                 .andExpect(jsonPath("$.data[0].studentId").value(studentId))
-                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"))
+                .andExpect(jsonPath("$.data[0].learningCompleted").value(true))
+                .andExpect(jsonPath("$.data[0].lectureProgressRate").value(100));
     }
 
     @Test
@@ -154,6 +163,8 @@ class EnrollmentControllerTest {
         given(enrollmentQueryUseCase.findAllActiveEnrollments()).willReturn(List.of(enrollment));
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+        given(enrollmentLearningProgressPort.findProgress(10L, 1L))
+                .willReturn(createCompletedProgress());
 
         mockMvc.perform(get("/api/v1/enrollments")
                         .with(authentication(operatorPrincipal(1L)))
@@ -161,7 +172,8 @@ class EnrollmentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
-                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"));
+                .andExpect(jsonPath("$.data[0].courseTitle").value("Java"))
+                .andExpect(jsonPath("$.data[0].displayStatus").value("COMPLETED"));
     }
 
     @Test
@@ -255,7 +267,18 @@ class EnrollmentControllerTest {
                 "description",
                 "java.png",
                 enrollment.getStatus(),
-                enrollment.getEnrolledAt()
+                enrollment.getEnrolledAt(),
+                true,
+                "COMPLETED",
+                100,
+                2,
+                2,
+                1,
+                1
         );
+    }
+
+    private EnrollmentLearningProgress createCompletedProgress() {
+        return new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1);
     }
 }

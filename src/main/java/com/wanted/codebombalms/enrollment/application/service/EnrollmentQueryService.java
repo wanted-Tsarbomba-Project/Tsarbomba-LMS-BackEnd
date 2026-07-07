@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.enrollment.application.service;
 
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
@@ -23,6 +24,7 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseCatalogPort courseCatalogPort;
+    private final EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @Override
     public List<MyCourseResult> findMyCourses(Long userId) {
@@ -32,7 +34,8 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
                 .stream()
                 .map(enrollment -> MyCourseResult.from(
                         enrollment,
-                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
+                        enrollmentLearningProgressPort.findProgress(userId, enrollment.getCourseId())
                 ))
                 .toList();
     }

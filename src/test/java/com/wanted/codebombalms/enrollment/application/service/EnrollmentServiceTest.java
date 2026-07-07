@@ -6,6 +6,8 @@ import com.wanted.codebombalms.enrollment.application.command.EnrollCourseComman
 import com.wanted.codebombalms.enrollment.application.policy.EnrollmentEligibilityPolicy;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.service.EnrollmentCommandService;
 import com.wanted.codebombalms.enrollment.application.service.EnrollmentQueryService;
@@ -42,6 +44,9 @@ class EnrollmentServiceTest {
 
     @Mock
     private EnrollmentEligibilityPolicy enrollmentEligibilityPolicy;
+
+    @Mock
+    private EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @InjectMocks
     private EnrollmentCommandService enrollmentCommandService;
@@ -123,6 +128,8 @@ class EnrollmentServiceTest {
         given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
                 .willReturn(List.of(enrollment));
         given(courseCatalogPort.getPublicationStatus(1L)).willReturn(course);
+        given(enrollmentLearningProgressPort.findProgress(userId, 1L))
+                .willReturn(new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1));
 
         List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
 
@@ -130,7 +137,11 @@ class EnrollmentServiceTest {
         assertEquals(userId, results.get(0).studentId());
         assertEquals(1L, results.get(0).courseId());
         assertEquals("Java", results.get(0).courseTitle());
+        assertTrue(results.get(0).learningCompleted());
+        assertEquals("COMPLETED", results.get(0).displayStatus());
+        assertEquals(100, results.get(0).lectureProgressRate());
         verify(courseCatalogPort).getPublicationStatus(1L);
+        verify(enrollmentLearningProgressPort).findProgress(userId, 1L);
     }
 
     @Test
