@@ -207,6 +207,37 @@ class LectureProblemSetServiceTest {
     }
 
     @Test
+    void submit_unlockedPreviousProblem_doesNotRegressLectureProgress() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 2, false);
+        givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 1, 3);
+        given(learningProblemGradingPort.grade(problemSetId, problemId, "retry"))
+                .willReturn(new LearningProblemGradingPort.GradingResult(
+                        true,
+                        2,
+                        2,
+                        "SUCCESS",
+                        null
+                ));
+        given(lectureProblemSubmissionRepository.save(any(LectureProblemSubmission.class)))
+                .willReturn(submission(9002L, userId, lectureProblemSetId, problemId, true, 2));
+
+        var result = lectureProblemSetService.submit(
+                lectureProblemSetId,
+                problemId,
+                new SubmitCodeCommand(userId, "retry")
+        );
+
+        assertEquals(9002L, result.submissionId());
+        assertEquals(null, result.nextProblemId());
+        assertFalse(result.problemSetCompleted());
+        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+    }
+
+    @Test
     void submit_attemptLimitExceeded_doesNotGradeOrSave() {
         Long userId = 10L;
         Long lectureProblemSetId = 6001L;
