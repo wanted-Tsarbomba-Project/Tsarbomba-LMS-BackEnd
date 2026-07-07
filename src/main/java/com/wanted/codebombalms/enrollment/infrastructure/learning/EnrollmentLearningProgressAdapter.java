@@ -4,11 +4,11 @@ import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningPro
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
-import com.wanted.codebombalms.lecture.application.usecase.LectureProblemSetQueryUseCase;
-import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
+import com.wanted.codebombalms.lecture.domain.repository.LectureProblemSetRepository;
+import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,18 +19,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class EnrollmentLearningProgressAdapter implements EnrollmentLearningProgressPort {
 
-    private final LectureQueryUseCase lectureQueryUseCase;
-    private final LectureProblemSetQueryUseCase lectureProblemSetQueryUseCase;
+    private final LectureRepository lectureRepository;
+    private final LectureProblemSetRepository lectureProblemSetRepository;
     private final LectureProgressRepository lectureProgressRepository;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
 
     @Override
     public EnrollmentLearningProgress findProgress(Long userId, Long courseId) {
-        List<Long> lectureIds = lectureQueryUseCase.findLecturesByCourseId(courseId)
+        List<Long> lectureIds = lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
                 .stream()
                 .map(Lecture::getLectureId)
                 .toList();
-        List<Long> lectureProblemSetIds = lectureProblemSetQueryUseCase.findProblemSetsByCourseAndRole(
+        List<Long> lectureProblemSetIds = lectureProblemSetRepository.findByCourseIdAndRole(
                         courseId,
                         LectureProblemSetRole.MAIN
                 )
