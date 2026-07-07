@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.enrollment.infrastructure.user;
 
 import com.wanted.codebombalms.enrollment.application.port.UserCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.UserCatalogPort.UserEnrollmentEligibility;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
@@ -18,12 +19,13 @@ public class UserAdapter implements UserCatalogPort {
     private final UserRepository userRepository;
 
     @Override
-    public boolean isActiveStudent(Long userId) {
+    public UserEnrollmentEligibility getEnrollmentEligibility(Long userId) {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException(UserErrorCode.USER_NOT_FOUND));
 
-        return user.getRole() == UserRole.STUDENT
+        boolean activeStudent = user.getRole() == UserRole.STUDENT
                 && !user.isLocked()
                 && !user.isDeleted();
+        return new UserEnrollmentEligibility(activeStudent, user.isLocked());
     }
 }
