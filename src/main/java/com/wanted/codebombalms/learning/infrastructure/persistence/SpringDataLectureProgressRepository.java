@@ -15,6 +15,14 @@ public interface SpringDataLectureProgressRepository extends JpaRepository<Lectu
         long getCompletedCount();
     }
 
+    interface UserCourseCompletedLectureCount {
+        Long getUserId();
+
+        Long getCourseId();
+
+        long getCompletedCount();
+    }
+
     Optional<LectureProgressJpaEntity> findByUserIdAndLectureId(Long userId, Long lectureId);
 
     long countByUserIdAndLectureIdInAndCompletedTrue(Long userId, Collection<Long> lectureIds);
@@ -30,6 +38,23 @@ public interface SpringDataLectureProgressRepository extends JpaRepository<Lectu
     List<UserCompletedLectureCount> countCompletedByUserIdsAndLectureIds(
             @Param("userIds") Collection<Long> userIds,
             @Param("lectureIds") Collection<Long> lectureIds
+    );
+
+    @Query("""
+            select progress.userId as userId,
+                   lecture.courseId as courseId,
+                   count(progress) as completedCount
+            from LectureProgressJpaEntity progress
+            join LectureJpaEntity lecture on lecture.lectureId = progress.lectureId
+            where progress.userId in :userIds
+              and lecture.courseId in :courseIds
+              and progress.completed = true
+              and lecture.deletedAt is null
+            group by progress.userId, lecture.courseId
+            """)
+    List<UserCourseCompletedLectureCount> countCompletedByUserIdsAndCourseIds(
+            @Param("userIds") Collection<Long> userIds,
+            @Param("courseIds") Collection<Long> courseIds
     );
 
     long countByLectureIdAndCompletedTrue(Long lectureId);

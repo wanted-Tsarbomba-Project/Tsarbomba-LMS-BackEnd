@@ -9,6 +9,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface SpringDataLectureProblemSetRepository extends JpaRepository<LectureProblemSetJpaEntity, Long> {
 
+    interface CourseProblemSetCount {
+        Long getCourseId();
+
+        long getProblemSetCount();
+    }
+
     @Query("""
             select cps
             from LectureProblemSetJpaEntity cps
@@ -62,6 +68,36 @@ public interface SpringDataLectureProblemSetRepository extends JpaRepository<Lec
             """)
     List<LectureProblemSetJpaEntity> findActiveByCourseIdAndRole(
             @Param("courseId") Long courseId,
+            @Param("role") LectureProblemSetRole role
+    );
+
+    @Query("""
+            select cps.courseId as courseId, count(cps) as problemSetCount
+            from LectureProblemSetJpaEntity cps
+            where cps.courseId in :courseIds
+              and cps.role = :role
+              and exists (
+                  select c.courseId
+                  from CourseJpaEntity c
+                  where c.courseId = cps.courseId
+                    and c.deletedAt is null
+              )
+              and (cps.lectureId is null or exists (
+                  select l.lectureId
+                  from LectureJpaEntity l
+                  where l.lectureId = cps.lectureId
+                    and l.deletedAt is null
+              ))
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = cps.problemSetId
+                    and ps.deletedAt is null
+              )
+            group by cps.courseId
+            """)
+    List<CourseProblemSetCount> countActiveByCourseIdsAndRole(
+            @Param("courseIds") java.util.Collection<Long> courseIds,
             @Param("role") LectureProblemSetRole role
     );
 

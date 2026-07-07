@@ -8,9 +8,8 @@ import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
-import com.wanted.codebombalms.enrollment.application.service.EnrollmentCommandService;
-import com.wanted.codebombalms.enrollment.application.service.EnrollmentQueryService;
 import com.wanted.codebombalms.enrollment.domain.exception.EnrollmentErrorCode;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
@@ -25,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,8 +128,12 @@ class EnrollmentServiceTest {
         given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
                 .willReturn(List.of(enrollment));
         given(courseCatalogPort.getPublicationStatus(1L)).willReturn(course);
-        given(enrollmentLearningProgressPort.findProgress(userId, 1L))
-                .willReturn(new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1));
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(userId, 1L);
+        given(enrollmentLearningProgressPort.findProgresses(List.of(progressKey)))
+                .willReturn(Map.of(
+                        progressKey,
+                        new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1)
+                ));
 
         List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
 
@@ -141,7 +145,7 @@ class EnrollmentServiceTest {
         assertEquals("COMPLETED", results.get(0).displayStatus());
         assertEquals(100, results.get(0).lectureProgressRate());
         verify(courseCatalogPort).getPublicationStatus(1L);
-        verify(enrollmentLearningProgressPort).findProgress(userId, 1L);
+        verify(enrollmentLearningProgressPort).findProgresses(List.of(progressKey));
     }
 
     @Test

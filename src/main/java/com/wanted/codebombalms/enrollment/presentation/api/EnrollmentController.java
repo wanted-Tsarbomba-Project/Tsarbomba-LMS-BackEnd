@@ -4,8 +4,10 @@ import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCo
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
+import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
 import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
@@ -19,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -78,18 +82,26 @@ public class EnrollmentController {
     public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
         log.info("[EnrollmentController] find all active enrollments");
 
+        List<Enrollment> enrollments = enrollmentQueryUseCase.findAllActiveEnrollments();
+        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
+                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
+                        .map(enrollment -> new EnrollmentLearningProgressKey(
+                                enrollment.getUserId(),
+                                enrollment.getCourseId()
+                        ))
+                        .toList());
+
         return ResponseEntity.ok(ApiResponse.success(
                 EnrollmentResponseCode.RETRIEVED,
                 EnrollmentResponseMessage.RETRIEVED,
-                enrollmentQueryUseCase.findAllActiveEnrollments()
-                        .stream()
+                enrollments.stream()
                         .map(enrollment -> MyCourseResponse.from(
                                 enrollment,
                                 courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
-                                enrollmentLearningProgressPort.findProgress(
+                                progresses.get(new EnrollmentLearningProgressKey(
                                         enrollment.getUserId(),
                                         enrollment.getCourseId()
-                                )
+                                ))
                         ))
                         .toList()
         ));

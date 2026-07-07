@@ -7,6 +7,7 @@ import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
@@ -32,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -163,8 +165,9 @@ class EnrollmentControllerTest {
         given(enrollmentQueryUseCase.findAllActiveEnrollments()).willReturn(List.of(enrollment));
         given(courseCatalogPort.getPublicationStatus(1L))
                 .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
-        given(enrollmentLearningProgressPort.findProgress(10L, 1L))
-                .willReturn(createCompletedProgress());
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(10L, 1L);
+        given(enrollmentLearningProgressPort.findProgresses(List.of(progressKey)))
+                .willReturn(Map.of(progressKey, createCompletedProgress()));
 
         mockMvc.perform(get("/api/v1/enrollments")
                         .with(authentication(operatorPrincipal(1L)))

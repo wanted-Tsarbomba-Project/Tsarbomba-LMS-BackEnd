@@ -12,6 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEntity, Long> {
 
+    interface CourseLectureCount {
+        Long getCourseId();
+
+        long getLectureCount();
+    }
+
     List<LectureJpaEntity> findByDeletedAtIsNull();
 
     Optional<LectureJpaEntity> findByLectureIdAndDeletedAtIsNull(Long lectureId);
@@ -19,6 +25,15 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
     List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(Long courseId);
 
     List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
+
+    @Query("""
+            select l.courseId as courseId, count(l) as lectureCount
+            from LectureJpaEntity l
+            where l.courseId in :courseIds
+              and l.deletedAt is null
+            group by l.courseId
+            """)
+    List<CourseLectureCount> countActiveByCourseIds(@Param("courseIds") java.util.Collection<Long> courseIds);
 
     @Query("""
             select l.lectureId

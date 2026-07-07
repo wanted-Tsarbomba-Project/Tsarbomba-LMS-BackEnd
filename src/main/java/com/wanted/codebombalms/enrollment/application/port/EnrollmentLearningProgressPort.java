@@ -1,8 +1,19 @@
 package com.wanted.codebombalms.enrollment.application.port;
 
+import java.util.Collection;
+import java.util.Map;
+
 public interface EnrollmentLearningProgressPort {
 
-    EnrollmentLearningProgress findProgress(Long userId, Long courseId);
+    Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> findProgresses(
+            Collection<EnrollmentLearningProgressKey> keys
+    );
+
+    record EnrollmentLearningProgressKey(
+            Long userId,
+            Long courseId
+    ) {
+    }
 
     record EnrollmentLearningProgress(
             boolean learningCompleted,

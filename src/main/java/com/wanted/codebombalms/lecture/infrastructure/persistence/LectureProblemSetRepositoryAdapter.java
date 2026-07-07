@@ -3,8 +3,11 @@ package com.wanted.codebombalms.lecture.infrastructure.persistence;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSet;
 import com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole;
 import com.wanted.codebombalms.lecture.domain.repository.LectureProblemSetRepository;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -42,6 +45,19 @@ public class LectureProblemSetRepositoryAdapter implements LectureProblemSetRepo
                 .stream()
                 .map(LectureProblemSetJpaEntity::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Map<Long, Long> countActiveByCourseIdsAndRole(Collection<Long> courseIds, LectureProblemSetRole role) {
+        if (courseIds.isEmpty()) {
+            return Map.of();
+        }
+        return springDataLectureProblemSetRepository.countActiveByCourseIdsAndRole(courseIds, role)
+                .stream()
+                .collect(Collectors.toMap(
+                        SpringDataLectureProblemSetRepository.CourseProblemSetCount::getCourseId,
+                        SpringDataLectureProblemSetRepository.CourseProblemSetCount::getProblemSetCount
+                ));
     }
 
     @Override
