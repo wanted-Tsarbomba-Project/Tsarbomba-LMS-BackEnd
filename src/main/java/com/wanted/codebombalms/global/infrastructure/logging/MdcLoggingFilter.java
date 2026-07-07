@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.global.infrastructure.logging;
 
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -20,9 +22,9 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
         long startAt = System.nanoTime();
@@ -31,7 +33,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             MDC.put("traceId", UUID.randomUUID().toString().substring(0, 8));
             MDC.put("requestURI", request.getRequestURI());
             MDC.put("method", request.getMethod());
-            MDC.put("clientIp", resolveClientIp(request));
+            MDC.put("clientIp", ClientIpResolver.resolve(request));
 
             log.info("event=request_started method={} uri={}",
                     request.getMethod(), request.getRequestURI());
@@ -52,7 +54,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
                     durationMs,
                     userId,
                     role,
-                    resolveClientIp(request));
+                    ClientIpResolver.resolve(request));
 
             MDC.clear();
         }
@@ -61,9 +63,5 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     private String resolveAttribute(HttpServletRequest request, String name) {
         Object value = request.getAttribute(name);
         return value == null ? ANONYMOUS : String.valueOf(value);
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        return request.getRemoteAddr();
     }
 }

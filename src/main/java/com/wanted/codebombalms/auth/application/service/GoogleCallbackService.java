@@ -20,6 +20,7 @@ import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventReco
 import com.wanted.codebombalms.auth.infrastructure.oauth.GoogleOAuthClient;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
@@ -89,7 +90,7 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
      * step-up(이메일 OTP)은 제외한다 (구글이 이미 인증을 보장).
      */
     private GoogleCallbackResult issueTokens(User user, HttpServletRequest request, String deviceFp) {
-        String ip = extractIpAddress(request);
+        String ip = ClientIpResolver.resolve(request);
         GeoLocation geo = geoIpResolver.resolve(ip);
 
         // 신뢰기기 1회 조회로 suspicious 판정 + upsert 모두 처리
@@ -160,10 +161,5 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
                     : (userAgent.contains("iPhone") || userAgent.contains("iPad")) ? "iOS"
                       : userAgent.contains("Linux") ? "Linux" : "Unknown";
         return browser + " · " + os;
-    }
-
-    /** 클라이언트 IP. XFF(위조 가능) 미신뢰, 실제 접속 IP 사용 (M-3) */
-    private String extractIpAddress(HttpServletRequest request) {
-        return request.getRemoteAddr();
     }
 }

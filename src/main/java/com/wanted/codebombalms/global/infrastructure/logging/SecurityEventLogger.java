@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.global.infrastructure.logging;
 
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class SecurityEventLogger {
                 uri,
                 resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_USER_ID_ATTRIBUTE),
                 resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_ROLE_ATTRIBUTE),
-                resolveClientIp(request));
+                ClientIpResolver.resolve(request));
     }
 
     private String resolveAccessDeniedType(String uri) {
@@ -35,9 +36,5 @@ public class SecurityEventLogger {
     private String resolveAttribute(HttpServletRequest request, String name) {
         Object value = request.getAttribute(name);
         return value == null ? ANONYMOUS : String.valueOf(value);
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        return request.getRemoteAddr();
     }
 }

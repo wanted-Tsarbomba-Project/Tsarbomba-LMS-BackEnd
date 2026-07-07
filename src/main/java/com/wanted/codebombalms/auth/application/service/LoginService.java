@@ -37,6 +37,8 @@ import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -69,7 +71,7 @@ public class LoginService implements LoginUseCase {
         }
 
         // 4. 기기 지문 + 지역(GeoIP)
-        String ip = extractIpAddress(request);
+        String ip = ClientIpResolver.resolve(request);
         GeoLocation geo = geoIpResolver.resolve(ip);
 
         // 5. 적응형 판정 — 신뢰 기기 1차 + 위치 보조
@@ -155,11 +157,6 @@ public class LoginService implements LoginUseCase {
             return "***";
         }
         return email.charAt(0) + "***" + email.substring(at);
-    }
-
-    /** 클라이언트 IP. BE 직결 노출 환경이라 XFF(위조 가능)는 신뢰하지 않고 실제 접속 IP 사용 (M-3) */
-    private String extractIpAddress(HttpServletRequest request) {
-        return request.getRemoteAddr();
     }
 
     private final LockTokenRepository lockTokenRepository;
