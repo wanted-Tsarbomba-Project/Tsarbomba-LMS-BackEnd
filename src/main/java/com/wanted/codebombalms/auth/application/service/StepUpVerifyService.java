@@ -114,11 +114,8 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
         return browser + " · " + os;
     }
 
+    /** 클라이언트 IP. XFF(위조 가능) 미신뢰, 실제 접속 IP 사용 (M-3) */
     private String extractIpAddress(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 }

@@ -157,12 +157,8 @@ public class LoginService implements LoginUseCase {
         return email.charAt(0) + "***" + email.substring(at);
     }
 
-    /** 프록시 환경(X-Forwarded-For) 고려한 클라이언트 IP 추출 */
+    /** 클라이언트 IP. BE 직결 노출 환경이라 XFF(위조 가능)는 신뢰하지 않고 실제 접속 IP 사용 (M-3) */
     private String extractIpAddress(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 
@@ -170,4 +166,7 @@ public class LoginService implements LoginUseCase {
 
     @Value("${app.lock-url:http://localhost:8080/api/v1/auth/lock}")
     private String lockUrlBase;
+
+
 }
+
