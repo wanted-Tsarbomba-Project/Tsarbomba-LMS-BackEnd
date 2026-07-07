@@ -23,7 +23,8 @@ public enum CourseErrorCode implements ErrorCode {
     COURSE_PROBLEM_LECTURE_NOT_FOUND("CRS-013", "선택한 강좌에 존재하지 않는 강의입니다."),
     COURSE_FINAL_PROBLEM_LECTURE_NOT_ALLOWED("CRS-014", "FINAL 문제 단계에는 강의를 지정할 수 없습니다."),
     COURSE_THUMBNAIL_INVALID_FILE("CRS-015", "올바른 강좌 썸네일 이미지 파일이 아닙니다."),
-    COURSE_THUMBNAIL_UPLOAD_FAILED("CRS-016", "강좌 썸네일 이미지 업로드에 실패했습니다.");
+    COURSE_THUMBNAIL_UPLOAD_FAILED("CRS-016", "강좌 썸네일 이미지 업로드에 실패했습니다."),
+    COURSE_THUMBNAIL_DELETE_FAILED("CRS-017", "강좌 썸네일 이미지 삭제에 실패했습니다.");
 
     private final String code;
     private final String message;

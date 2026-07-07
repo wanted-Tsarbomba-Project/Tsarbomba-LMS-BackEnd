@@ -8,5 +8,7 @@ public interface SpringDataLectureMaterialRepository extends JpaRepository<Lectu
 
     List<LectureMaterialJpaEntity> findByLectureIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long lectureId);
 
+    List<LectureMaterialJpaEntity> findByLectureIdInAndDeletedAtIsNull(List<Long> lectureIds);
+
     Optional<LectureMaterialJpaEntity> findByLectureMaterialIdAndDeletedAtIsNull(Long lectureMaterialId);
 }

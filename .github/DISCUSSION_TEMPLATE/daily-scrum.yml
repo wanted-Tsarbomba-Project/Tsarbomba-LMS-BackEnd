@@ -1,0 +1,101 @@
+title: "[데일리 스크럼] "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 📅 데일리 스크럼
+        각자 본인 항목에 `오늘 할 일 / 오늘 마무리한 일 / 추후 진행할 일` 을 작성해주세요.
+
+  - type: textarea
+    id: scrum-kim-donghoon
+    attributes:
+      label: 👤 김동훈 (PO)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-kim-donghyun
+    attributes:
+      label: 👤 김동현 (BE-PM)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-lee-ganguk
+    attributes:
+      label: 👤 이강욱 (BE-DevOps)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-kim-yongjun
+    attributes:
+      label: 👤 김용준 (DBA)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-bae-jeonghyeon
+    attributes:
+      label: 👤 배정현 (DBA)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-seo-minji
+    attributes:
+      label: 👤 서민지 (FE-PM)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: scrum-son-yunseo
+    attributes:
+      label: 👤 손윤서 (FE-DevOps)
+      value: |
+        - 오늘 할 일:
+        - 오늘 마무리한 일:
+        - 추후 진행할 일:
+    validations:
+      required: false
+
+  - type: textarea
+    id: notice
+    attributes:
+      label: 📢 공지 사항
+      placeholder: 팀 전체 공지 사항을 작성해주세요.
+    validations:
+      required: false
+
+  - type: textarea
+    id: remarks
+    attributes:
+      label: ⚠️ 특이 사항
+      placeholder: 블로커, 이슈 등 공유가 필요한 특이 사항을 작성해주세요.
+    validations:
+      required: false

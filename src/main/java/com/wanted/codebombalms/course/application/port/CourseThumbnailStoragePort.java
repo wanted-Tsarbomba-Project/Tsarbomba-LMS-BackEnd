@@ -9,6 +9,8 @@ public interface CourseThumbnailStoragePort {
             byte[] imageBytes
     );
 
+    void delete(String thumbnailUrl);
+
     record StoredCourseThumbnail(
             String originalFileName,
             String objectName,
