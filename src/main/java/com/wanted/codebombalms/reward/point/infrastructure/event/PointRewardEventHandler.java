@@ -31,6 +31,7 @@ public class PointRewardEventHandler {
             );
 
             rewardMetrics.recordScheduled();
+            rewardMetrics.recordSchedule(RecordRewardMetricsPort.ScheduleResult.SCHEDULED);
 
             log.info(
                     "event=reward_point_task_scheduled userId={} problemId={} submissionId={} point={}",
@@ -40,6 +41,8 @@ public class PointRewardEventHandler {
                     event.point()
             );
         } catch (DataIntegrityViolationException e) {
+            rewardMetrics.recordSchedule(RecordRewardMetricsPort.ScheduleResult.ALREADY_SCHEDULED);
+
             log.info(
                     "event=reward_point_task_schedule_skipped reason=already_scheduled userId={} problemId={} submissionId={}",
                     event.userId(),
@@ -48,6 +51,8 @@ public class PointRewardEventHandler {
             );
             return;
         } catch (Exception e) {
+            rewardMetrics.recordSchedule(RecordRewardMetricsPort.ScheduleResult.FAILED);
+
             log.error(
                     "event=reward_point_task_schedule_failed userId={} problemId={} submissionId={} exceptionType={}",
                     event.userId(),
@@ -57,6 +62,7 @@ public class PointRewardEventHandler {
                     e
             );
             return;
+
         }
 
         try {
