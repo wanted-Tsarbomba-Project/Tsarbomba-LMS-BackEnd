@@ -38,7 +38,7 @@ public class PointRewardTaskService
     private static final long MAX_RETRY_DELAY_MINUTES = 16L;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void schedule(
             Long userId,
             Long problemId,
