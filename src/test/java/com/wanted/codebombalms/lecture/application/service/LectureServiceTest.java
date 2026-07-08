@@ -8,11 +8,14 @@ import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
+import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
 import com.wanted.codebombalms.lecture.application.service.LectureCommandService;
 import com.wanted.codebombalms.lecture.application.service.LectureQueryService;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialRepository;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -50,6 +53,12 @@ class LectureServiceTest {
 
     @Mock
     private LectureAccessPolicy lectureAccessPolicy;
+
+    @Mock
+    private LectureMaterialRepository lectureMaterialRepository;
+
+    @Mock
+    private LectureMaterialStoragePort lectureMaterialStoragePort;
 
     @InjectMocks
     private LectureCommandService lectureCommandService;
@@ -419,6 +428,34 @@ class LectureServiceTest {
         assertEquals("Updated Java", result.getTitle());
         assertEquals(LectureStatus.INACTIVE, result.getStatus());
         verify(lectureRepository).save(lecture);
+    }
+
+    @Test
+    void deleteLecture_softDeletesMaterialsAndDeletesFiles() {
+        Long lectureId = 1L;
+        Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
+        LectureMaterial material = LectureMaterial.restore(
+                10L,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
+        given(lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(List.of(material));
+        given(lectureRepository.save(lecture)).willReturn(lecture);
+        given(lectureMaterialRepository.save(material)).willReturn(material);
+
+        lectureCommandService.deleteLecture(lectureId);
+
+        assertNotNull(material.getDeletedAt());
+        verify(lectureMaterialRepository).save(material);
+        verify(lectureMaterialStoragePort).delete("lecture_materials/stored-guide.pdf");
     }
 
     @Test

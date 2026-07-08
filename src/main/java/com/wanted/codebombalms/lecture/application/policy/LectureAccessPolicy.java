@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
+import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
@@ -22,6 +24,21 @@ public class LectureAccessPolicy {
         }
         if (userId == null || !lectureEnrollmentPort.isActiveStudentOfCourse(
                 lecture.getCourse().getCourseId(),
+                userId
+        )) {
+            throw new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED);
+        }
+    }
+
+    public void validateCourseContentAccess(Course course, Long userId, boolean operator) {
+        if (operator) {
+            return;
+        }
+        if (course.getStatus() == CourseStatus.ACTIVE) {
+            return;
+        }
+        if (userId == null || !lectureEnrollmentPort.isActiveStudentOfCourse(
+                course.getCourseId(),
                 userId
         )) {
             throw new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED);

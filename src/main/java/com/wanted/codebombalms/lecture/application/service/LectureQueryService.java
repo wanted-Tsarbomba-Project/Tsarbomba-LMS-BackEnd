@@ -39,6 +39,18 @@ public class LectureQueryService implements LectureQueryUseCase {
     }
 
     @Override
+    public List<Lecture> findLecturesByCourseIdForAccess(Long courseId, Long userId, boolean operator) {
+        log.info("[LectureQueryService] find lectures for access - courseId: {}, userId: {}", courseId, userId);
+
+        var course = courseCatalogPort.findCourse(courseId);
+        lectureAccessPolicy.validateCourseContentAccess(course, userId, operator);
+
+        return lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId)
+                .stream()
+                .toList();
+    }
+
+    @Override
     public Lecture findLectureById(Long lectureId) {
         log.info("[LectureQueryService] find lecture - lectureId: {}", lectureId);
 

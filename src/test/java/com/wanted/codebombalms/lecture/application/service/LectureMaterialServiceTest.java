@@ -13,6 +13,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
@@ -41,6 +42,9 @@ class LectureMaterialServiceTest {
 
     @Mock
     private LectureEnrollmentPort lectureEnrollmentPort;
+
+    @Mock
+    private LectureAccessPolicy lectureAccessPolicy;
 
     @InjectMocks
     private LectureMaterialService lectureMaterialService;
