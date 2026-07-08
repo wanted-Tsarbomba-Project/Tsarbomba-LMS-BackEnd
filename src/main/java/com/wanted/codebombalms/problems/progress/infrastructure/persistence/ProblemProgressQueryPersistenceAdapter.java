@@ -1,4 +1,5 @@
 package com.wanted.codebombalms.problems.progress.infrastructure.persistence;
+import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewQueryPort;
 import com.wanted.codebombalms.problems.progress.application.port.LoadProblemsForProgressPort;
 import com.wanted.codebombalms.problems.progress.application.port.LoadProgressProblemPort;
 import com.wanted.codebombalms.problems.progress.domain.model.ProblemProgressItem;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,6 +22,7 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
 
     private final LoadProblemsForProgressPort loadProblemsForProgressPort;
     private final SubmissionQueryPort submissionQueryPort;
+    private final ProblemExplanationViewQueryPort problemExplanationViewQueryPort;
 
     @Override
     public List<ProblemProgressItem> loadProgressProblems(
@@ -32,6 +35,8 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
         var problemIds = problems.stream()
                 .map(LoadProblemsForProgressPort.ProgressProblem::problemId)
                 .toList();
+        Set<Long> explanationViewedProblemIds =
+                problemExplanationViewQueryPort.findViewedProblemIds(userId, problemIds);
 
         Map<Long, LatestSubmission> latestSubmissionByProblemId =
                 submissionQueryPort.findLatestResults(userId, problemIds)
@@ -47,7 +52,8 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
                 .map(problem -> toProgressItem(
                         currentProblemNumber,
                         problem,
-                        latestSubmissionByProblemId.get(problem.problemId())
+                        latestSubmissionByProblemId.get(problem.problemId()),
+                        explanationViewedProblemIds
                 ))
                 .toList();
     }
@@ -71,7 +77,8 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
     private ProblemProgressItem toProgressItem(
             Integer currentProblemNumber,
             LoadProblemsForProgressPort.ProgressProblem problem,
-            LatestSubmission latestSubmission
+            LatestSubmission latestSubmission,
+            Set<Long> explanationViewedProblemIds
     ) {
         Boolean latestCorrect = latestSubmission == null
                 ? null
@@ -87,6 +94,7 @@ public class ProblemProgressQueryPersistenceAdapter implements LoadProgressProbl
                 problem.title(),
                 currentProblemNumber,
                 latestCorrect,
+                explanationViewedProblemIds.contains(problem.problemId()),
                 latestSubmissionId
         );
     }
