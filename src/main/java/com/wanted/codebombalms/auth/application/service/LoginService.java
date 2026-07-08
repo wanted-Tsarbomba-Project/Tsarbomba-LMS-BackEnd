@@ -37,6 +37,8 @@ import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -69,7 +71,7 @@ public class LoginService implements LoginUseCase {
         }
 
         // 4. 기기 지문 + 지역(GeoIP)
-        String ip = extractIpAddress(request);
+        String ip = ClientIpResolver.resolve(request);
         GeoLocation geo = geoIpResolver.resolve(ip);
 
         // 5. 적응형 판정 — 신뢰 기기 1차 + 위치 보조
@@ -157,17 +159,11 @@ public class LoginService implements LoginUseCase {
         return email.charAt(0) + "***" + email.substring(at);
     }
 
-    /** 프록시 환경(X-Forwarded-For) 고려한 클라이언트 IP 추출 */
-    private String extractIpAddress(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
-
     private final LockTokenRepository lockTokenRepository;
 
     @Value("${app.lock-url:http://localhost:8080/api/v1/auth/lock}")
     private String lockUrlBase;
+
+
 }
+
