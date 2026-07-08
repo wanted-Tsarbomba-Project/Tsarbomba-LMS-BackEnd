@@ -3,8 +3,8 @@ package com.wanted.codebombalms.recommendation.application.service;
 import com.wanted.codebombalms.recommendation.application.command.GeneratedUserProblemSetRecommendations;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationCommandPort;
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationGenerationClient;
+import com.wanted.codebombalms.recommendation.application.port.RecommendationMetricPort;
 import com.wanted.codebombalms.recommendation.application.usecase.GenerateProblemSetRecommendationsUseCase;
-import com.wanted.codebombalms.recommendation.infrastructure.metrics.RecommendationMetrics;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ public class ProblemRecommendationGenerationService implements GenerateProblemSe
 
     private final ProblemRecommendationGenerationClient generationClient;
     private final ProblemRecommendationCommandPort commandPort;
-    private final RecommendationMetrics recommendationMetrics;
+    private final RecommendationMetricPort recommendationMetrics;
 
     /** 사용자별 추천 최대 3개(후보 부족 시 1~2개 가능) 반환을 전제로 기존 추천 교체 저장을 수행합니다. */
     @Override
