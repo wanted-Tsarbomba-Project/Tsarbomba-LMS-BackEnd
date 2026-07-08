@@ -7,4 +7,6 @@ public interface ProgressManagementPort {
     Integer openNextProblem(Long userId, Long problemSetId);
 
     void completeProblemSet(Long userId, Long problemSetId);
+
+    void lockProgressForUpdate(Long userId, Long problemSetId);
 }

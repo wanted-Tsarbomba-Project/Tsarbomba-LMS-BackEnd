@@ -67,7 +67,7 @@ public class SubmissionTransactionService {
         ProblemForSubmission problem =
                 loadProblemForSubmissionPort.loadProblemForSubmission(problemId);
 
-        int previousAttemptCount = validateSubmissionState(problem, command);
+        int previousAttemptCount = validateSubmissionStateForUpdate(problem, command);
         int attemptNo = previousAttemptCount + 1;
         boolean isCorrect = gradingResult.correct();
 
@@ -190,6 +190,18 @@ public class SubmissionTransactionService {
         );
 
         return previousAttemptCount;
+    }
+
+    private int validateSubmissionStateForUpdate(
+            ProblemForSubmission problem,
+            SubmitCodeCommand command
+    ) {
+        problemProgressPort.lockProgressForUpdate(
+                command.userId(),
+                problem.problemSetId()
+        );
+
+        return validateSubmissionState(problem, command);
     }
 
     public record SubmissionPreparation(

@@ -30,4 +30,10 @@ public class ProgressCommandService {
         checkProgressProblemSetPort.checkProblemSetExists(problemSetId);
         progressManagementPort.completeProblemSet(userId, problemSetId);
     }
+
+    @Transactional
+    public void lockProgressForUpdate(Long userId, Long problemSetId) {
+        checkProgressProblemSetPort.checkProblemSetExists(problemSetId);
+        progressManagementPort.lockProgressForUpdate(userId, problemSetId);
+    }
 }

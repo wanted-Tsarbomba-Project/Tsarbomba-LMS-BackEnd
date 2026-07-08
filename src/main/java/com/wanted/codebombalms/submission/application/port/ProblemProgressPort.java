@@ -4,6 +4,8 @@ public interface ProblemProgressPort {
 
     void validateCurrentProblem(Long userId, Long problemSetId, Integer problemOrder);
 
+    void lockProgressForUpdate(Long userId, Long problemSetId);
+
     Integer openNextProblem(Long userId, Long problemSetId);
 
     void completeProblemSet(Long userId, Long problemSetId);

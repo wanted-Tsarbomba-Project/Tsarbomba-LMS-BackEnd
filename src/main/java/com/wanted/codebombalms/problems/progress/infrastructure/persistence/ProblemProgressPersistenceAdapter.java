@@ -128,5 +128,32 @@ public class ProblemProgressPersistenceAdapter implements
     private ProblemSetJpaEntity getProblemSetReference(Long problemSetId) {
         return entityManager.getReference(ProblemSetJpaEntity.class, problemSetId);
     }
+
+    @Override
+    public void lockProgressForUpdate(Long userId, Long problemSetId) {
+        findOrCreateProgressEntityForUpdate(userId, problemSetId);
+    }
+    private ProgressJpaEntity findOrCreateProgressEntityForUpdate(
+            Long userId,
+            Long problemSetId
+    ) {
+        return progressRepository
+                .findByUserIdAndProblemSetIdForUpdate(userId, problemSetId)
+                .orElseGet(() -> {
+                    ProblemSetJpaEntity problemSet =
+                            getProblemSetReference(problemSetId);
+
+                    createProgressSafely(userId, problemSet);
+
+                    return progressRepository
+                            .findByUserIdAndProblemSetIdForUpdate(
+                                    userId,
+                                    problemSetId
+                            )
+                            .orElseThrow(() -> new IllegalStateException(
+                                    "Problem progress row was not created."
+                            ));
+                });
+    }
 }
 
