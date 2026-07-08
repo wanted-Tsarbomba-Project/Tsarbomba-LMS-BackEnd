@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.auth.infrastructure.metrics;
 
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * 구분 못 한다. 비즈니스 outcome 차원({@code auth_login_total} / {@code auth_signup_total})을 채운다.
  */
 @Component
-public class AuthMetrics {
+public class AuthMetrics implements AuthMetricsPort {
 
     private final Timer loginHistoryQueryTimer;
 
@@ -62,26 +63,31 @@ public class AuthMetrics {
     }
 
     /** 정식 로그인 성공(신뢰기기 즉시 발급). */
+    @Override
     public void recordLoginSuccess() {
         loginSuccess.increment();
     }
 
     /** 추가 인증(step-up) 챌린지 발생 — 로그인 미완료. */
+    @Override
     public void recordLoginStepUp() {
         loginStepUp.increment();
     }
 
     /** 로그인 실패(자격 불일치/계정 잠금). */
+    @Override
     public void recordLoginFail() {
         loginFail.increment();
     }
 
     /** 회원가입 완료. */
+    @Override
     public void recordSignupSuccess() {
         signupSuccess.increment();
     }
 
     /** 회원가입 실패(검증/중복). */
+    @Override
     public void recordSignupFail() {
         signupFail.increment();
     }

@@ -1,15 +1,16 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.command.SignupCommand;
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
 import com.wanted.codebombalms.auth.application.usecase.SignupUseCase;
 import com.wanted.codebombalms.auth.domain.repository.EmailVerificationRepository;
-import com.wanted.codebombalms.auth.infrastructure.metrics.AuthMetrics;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,7 @@ public class SignupService implements SignupUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationRepository emailVerificationRepository;
-    private final AuthMetrics authMetrics;
+    private final AuthMetricsPort authMetrics;
 
     @Override
     public Long signup(SignupCommand command) {
@@ -69,6 +70,9 @@ public class SignupService implements SignupUseCase {
             return saved.getUserId();
         } catch (ValidationException | ConflictException e) {
             authMetrics.recordSignupFail();       // ← KPI: 검증/중복 실패
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            authMetrics.recordSignupFail();       // ← KPI: 동시 가입 경쟁으로 DB 유니크 위반
             throw e;
         }
     }

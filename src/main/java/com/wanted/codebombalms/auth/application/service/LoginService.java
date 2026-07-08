@@ -39,7 +39,7 @@ import java.util.UUID;
 
 import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 
-import com.wanted.codebombalms.auth.infrastructure.metrics.AuthMetrics;
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +58,7 @@ public class LoginService implements LoginUseCase {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthSecurityEventRecorder securityEventRecorder;
-    private final AuthMetrics authMetrics;
+    private final AuthMetricsPort authMetrics;
 
     @Override
     public LoginResult login(LoginCommand command, HttpServletRequest request, String deviceFp) {
