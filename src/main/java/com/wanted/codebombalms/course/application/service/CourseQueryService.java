@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.course.application.service;
 
+import com.wanted.codebombalms.course.application.port.CourseEnrollmentPort;
 import com.wanted.codebombalms.course.application.usecase.CourseQueryUseCase;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class CourseQueryService implements CourseQueryUseCase {
     private static final Logger log = LoggerFactory.getLogger(CourseQueryService.class);
 
     private final CourseRepository courseRepository;
+    private final CourseEnrollmentPort courseEnrollmentPort;
 
     @LogBusiness
     @LogPerformance
@@ -83,6 +86,15 @@ public class CourseQueryService implements CourseQueryUseCase {
     }
 
     @Override
+    public Course findCourseByIdForStudent(Long courseId, Long userId) {
+        log.info("[CourseQueryService] find student course - courseId: {}, userId: {}", courseId, userId);
+
+        return courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE)
+                .or(() -> findInactiveCourseForEnrolledStudent(courseId, userId))
+                .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+    }
+
+    @Override
     public Course findCourseByIdForOperator(Long courseId) {
         log.info("[CourseQueryService] find operator course - courseId: {}", courseId);
 
@@ -92,5 +104,15 @@ public class CourseQueryService implements CourseQueryUseCase {
         log.info("[CourseQueryService] found operator course - courseId: {}", courseId);
 
         return course;
+    }
+
+    private Optional<Course> findInactiveCourseForEnrolledStudent(Long courseId, Long userId) {
+        if (userId == null) {
+            return Optional.empty();
+        }
+
+        return courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
+                .filter(course -> course.getStatus() == CourseStatus.INACTIVE)
+                .filter(course -> courseEnrollmentPort.isActiveStudentOfCourse(courseId, userId));
     }
 }

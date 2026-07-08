@@ -90,6 +90,7 @@ public class CourseController {
     @GetMapping("/courses/{courseId}")
     public ResponseEntity<ApiResponse<?>> findCourseById(
             @PathVariable Long courseId,
+            @AuthenticationPrincipal Long userId,
             Authentication authentication
     ) {
         log.info("[CourseController] find course - courseId: {}", courseId);
@@ -99,7 +100,7 @@ public class CourseController {
                 CourseResponseMessage.RETRIEVED,
                 CourseDetailResponse.from(isOperator(authentication)
                         ? courseQueryUseCase.findCourseByIdForOperator(courseId)
-                        : courseQueryUseCase.findCourseById(courseId))
+                        : courseQueryUseCase.findCourseByIdForStudent(courseId, userId))
         ));
     }
 
