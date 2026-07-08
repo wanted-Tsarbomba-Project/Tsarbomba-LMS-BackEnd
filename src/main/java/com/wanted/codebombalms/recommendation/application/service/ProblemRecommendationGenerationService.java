@@ -17,13 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ProblemRecommendationGenerationService implements GenerateProblemSetRecommendationsUseCase {
 
-    private static final int EXPECTED_RECOMMENDATION_COUNT = 3;
+    private static final int MAX_RECOMMENDATION_COUNT = 3;
 
     private final ProblemRecommendationGenerationClient generationClient;
     private final ProblemRecommendationCommandPort commandPort;
     private final RecommendationMetrics recommendationMetrics;
 
-    /** 사용자별 추천 3개 반환을 전제로 기존 추천 교체 저장을 수행합니다. */
+    /** 사용자별 추천 최대 3개(후보 부족 시 1~2개 가능) 반환을 전제로 기존 추천 교체 저장을 수행합니다. */
     @Override
     @Transactional
     public int generate() {
@@ -47,15 +47,15 @@ public class ProblemRecommendationGenerationService implements GenerateProblemSe
         }
     }
 
-    /** 추천 대상 사용자는 Python 서버에서 항상 3개의 문제 세트를 반환해야 합니다. */
+    /** 추천 대상 사용자는 Python 서버에서 1개 이상 {@value #MAX_RECOMMENDATION_COUNT}개 이하의 문제 세트를 반환해야 합니다. */
     private void validateRecommendationCount(GeneratedUserProblemSetRecommendations recommendations) {
         int actualCount = recommendations.problemSets() == null ? 0 : recommendations.problemSets().size();
 
-        if (actualCount != EXPECTED_RECOMMENDATION_COUNT) {
+        if (actualCount < 1 || actualCount > MAX_RECOMMENDATION_COUNT) {
             recommendationMetrics.incrementGenerationFailed("invalid_response");
             log.warn("event=recommendation_generation_failed reason=invalid_response exceptionType=IllegalStateException");
             throw new IllegalStateException(
-                    "Python 추천 서버는 추천 대상 사용자별 문제 세트 3개를 반환해야 합니다. userId="
+                    "Python 추천 서버는 추천 대상 사용자별로 1~" + MAX_RECOMMENDATION_COUNT + "개의 문제 세트를 반환해야 합니다. userId="
                             + recommendations.userId()
                             + ", actualCount="
                             + actualCount
