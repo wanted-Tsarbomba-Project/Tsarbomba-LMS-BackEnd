@@ -2,6 +2,7 @@ package com.wanted.codebombalms.recommendation.application.service;
 
 import com.wanted.codebombalms.recommendation.application.command.RecommendationHideResult;
 import com.wanted.codebombalms.recommendation.application.port.RecommendationHidePort;
+import com.wanted.codebombalms.recommendation.application.port.RecommendationMetricPort;
 import com.wanted.codebombalms.recommendation.application.usecase.HideProblemSetRecommendationsTodayUseCase;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHide;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHideType;
@@ -22,6 +23,7 @@ public class RecommendationHideService implements HideProblemSetRecommendationsT
     private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
 
     private final RecommendationHidePort recommendationHidePort;
+    private final RecommendationMetricPort recommendationMetrics;
 
     /** Asia/Seoul 기준 오늘 23:59:59까지 숨김 만료 시간을 저장합니다. */
     @Override
@@ -32,6 +34,7 @@ public class RecommendationHideService implements HideProblemSetRecommendationsT
                 RecommendationHideType.PROBLEM_SET_RECOMMENDATION,
                 hiddenUntil
         );
+        recommendationMetrics.incrementHideToday();
 
         return new RecommendationHideResult(true, hide.hiddenUntil());
     }
