@@ -6,6 +6,7 @@ import com.wanted.codebombalms.course.application.command.UpdateCourseCommand;
 import com.wanted.codebombalms.course.application.policy.CourseAuthorPolicy;
 import com.wanted.codebombalms.course.application.policy.CourseCategoryPolicy;
 import com.wanted.codebombalms.course.application.policy.CoursePublishPolicy;
+import com.wanted.codebombalms.course.application.port.CourseEnrollmentPort;
 import com.wanted.codebombalms.course.application.port.CourseThumbnailStoragePort;
 import com.wanted.codebombalms.course.application.port.LectureManagementPort;
 import com.wanted.codebombalms.course.application.service.CourseCommandService;
@@ -56,6 +57,9 @@ class CourseServiceTest {
 
     @Mock
     private CourseThumbnailStoragePort courseThumbnailStoragePort;
+
+    @Mock
+    private CourseEnrollmentPort courseEnrollmentPort;
 
     @InjectMocks
     private CourseCommandService courseCommandService;
@@ -156,6 +160,94 @@ class CourseServiceTest {
         );
 
         assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void findCourseByIdForStudent_returnsActiveCourse() {
+        Long courseId = 1L;
+        Long userId = 10L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.ACTIVE);
+
+        given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
+                .willReturn(Optional.of(course));
+
+        Course result = courseQueryService.findCourseByIdForStudent(courseId, userId);
+
+        assertEquals(courseId, result.getCourseId());
+        assertEquals(CourseStatus.ACTIVE, result.getStatus());
+        verify(courseEnrollmentPort, never()).isActiveStudentOfCourse(any(), any());
+    }
+
+    @Test
+    void findCourseByIdForStudent_returnsInactiveCourse_whenStudentEnrolled() {
+        Long courseId = 1L;
+        Long userId = 10L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.INACTIVE);
+
+        given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
+                .willReturn(Optional.empty());
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        given(courseEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(true);
+
+        Course result = courseQueryService.findCourseByIdForStudent(courseId, userId);
+
+        assertEquals(courseId, result.getCourseId());
+        assertEquals(CourseStatus.INACTIVE, result.getStatus());
+    }
+
+    @Test
+    void findCourseByIdForStudent_throwsNotFound_whenInactiveCourseAndStudentNotEnrolled() {
+        Long courseId = 1L;
+        Long userId = 10L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.INACTIVE);
+
+        given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
+                .willReturn(Optional.empty());
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+        given(courseEnrollmentPort.isActiveStudentOfCourse(courseId, userId)).willReturn(false);
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> courseQueryService.findCourseByIdForStudent(courseId, userId)
+        );
+
+        assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void findCourseByIdForStudent_throwsNotFound_whenInactiveCourseAndAnonymousUser() {
+        Long courseId = 1L;
+
+        given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
+                .willReturn(Optional.empty());
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> courseQueryService.findCourseByIdForStudent(courseId, null)
+        );
+
+        assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
+        verify(courseRepository, never()).findByCourseIdAndDeletedAtIsNull(courseId);
+        verify(courseEnrollmentPort, never()).isActiveStudentOfCourse(any(), any());
+    }
+
+    @Test
+    void findCourseByIdForStudent_throwsNotFound_whenDraftCourseEvenIfStudentEnrolled() {
+        Long courseId = 1L;
+        Long userId = 10L;
+        Course course = createCourse(courseId, 10L, "Java", "description", "java.png", CourseStatus.DRAFT);
+
+        given(courseRepository.findByCourseIdAndStatusAndDeletedAtIsNull(courseId, CourseStatus.ACTIVE))
+                .willReturn(Optional.empty());
+        given(courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)).willReturn(Optional.of(course));
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> courseQueryService.findCourseByIdForStudent(courseId, userId)
+        );
+
+        assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
+        verify(courseEnrollmentPort, never()).isActiveStudentOfCourse(any(), any());
     }
 
     @Test

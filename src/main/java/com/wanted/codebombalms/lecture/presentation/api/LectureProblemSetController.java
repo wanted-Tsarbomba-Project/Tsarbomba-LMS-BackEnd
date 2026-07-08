@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -35,13 +37,21 @@ public class LectureProblemSetController {
 
     @GetMapping("/courses/{courseId}/lecture-problem-sets")
     @Operation(summary = "Find lecture problem sets by course")
-    public ResponseEntity<ApiResponse<?>> findProblemSetsByCourse(@PathVariable Long courseId) {
+    public ResponseEntity<ApiResponse<?>> findProblemSetsByCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
         log.info("[LectureProblemSetController] find course lecture problem sets - courseId: {}", courseId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                lectureProblemSetQueryUseCase.findProblemSetsByCourse(courseId)
+                lectureProblemSetQueryUseCase.findProblemSetsByCourseForAccess(
+                                courseId,
+                                userId,
+                                isOperator(authentication)
+                        )
                         .stream()
                         .map(LectureProblemSetResponse::from)
                         .toList()
@@ -50,13 +60,21 @@ public class LectureProblemSetController {
 
     @GetMapping("/lectures/{lectureId}/lecture-problem-sets")
     @Operation(summary = "Find lecture problem sets by lecture")
-    public ResponseEntity<ApiResponse<?>> findProblemSetsByLecture(@PathVariable Long lectureId) {
+    public ResponseEntity<ApiResponse<?>> findProblemSetsByLecture(
+            @PathVariable Long lectureId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
         log.info("[LectureProblemSetController] find lecture problem sets - lectureId: {}", lectureId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 CourseResponseCode.RETRIEVED,
                 CourseResponseMessage.RETRIEVED,
-                lectureProblemSetQueryUseCase.findProblemSetsByLecture(lectureId)
+                lectureProblemSetQueryUseCase.findProblemSetsByLectureForAccess(
+                                lectureId,
+                                userId,
+                                isOperator(authentication)
+                        )
                         .stream()
                         .map(LectureProblemSetResponse::from)
                         .toList()
@@ -80,5 +98,11 @@ public class LectureProblemSetController {
                         .map(LectureProblemSetResponse::from)
                         .toList()
         ));
+    }
+
+    private boolean isOperator(Authentication authentication) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_OPERATOR".equals(authority.getAuthority()));
     }
 }
