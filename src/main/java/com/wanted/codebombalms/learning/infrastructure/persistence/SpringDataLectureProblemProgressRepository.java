@@ -17,6 +17,14 @@ public interface SpringDataLectureProblemProgressRepository extends JpaRepositor
         long getCompletedCount();
     }
 
+    interface UserCourseCompletedProblemSetCount {
+        Long getUserId();
+
+        Long getCourseId();
+
+        long getCompletedCount();
+    }
+
     Optional<LectureProblemProgressJpaEntity> findByUserIdAndLectureProblemSetId(
             Long userId,
             Long lectureProblemSetId
@@ -50,6 +58,42 @@ public interface SpringDataLectureProblemProgressRepository extends JpaRepositor
     List<UserCompletedProblemSetCount> countCompletedByUserIdsAndLectureProblemSetIds(
             @Param("userIds") Collection<Long> userIds,
             @Param("lectureProblemSetIds") Collection<Long> lectureProblemSetIds
+    );
+
+    @Query("""
+            select progress.userId as userId,
+                   problemSet.courseId as courseId,
+                   count(progress) as completedCount
+            from LectureProblemProgressJpaEntity progress
+            join LectureProblemSetJpaEntity problemSet
+              on problemSet.lectureProblemSetId = progress.lectureProblemSetId
+            where progress.userId in :userIds
+              and problemSet.courseId in :courseIds
+              and problemSet.role = com.wanted.codebombalms.lecture.domain.model.LectureProblemSetRole.MAIN
+              and progress.completed = true
+              and exists (
+                  select c.courseId
+                  from CourseJpaEntity c
+                  where c.courseId = problemSet.courseId
+                    and c.deletedAt is null
+              )
+              and (problemSet.lectureId is null or exists (
+                  select lecture.lectureId
+                  from LectureJpaEntity lecture
+                  where lecture.lectureId = problemSet.lectureId
+                    and lecture.deletedAt is null
+              ))
+              and exists (
+                  select ps.problemSetId
+                  from ProblemSetJpaEntity ps
+                  where ps.problemSetId = problemSet.problemSetId
+                    and ps.deletedAt is null
+              )
+            group by progress.userId, problemSet.courseId
+            """)
+    List<UserCourseCompletedProblemSetCount> countCompletedMainByUserIdsAndCourseIds(
+            @Param("userIds") Collection<Long> userIds,
+            @Param("courseIds") Collection<Long> courseIds
     );
 
     long countByLectureProblemSetIdInAndCompletedTrue(Collection<Long> lectureProblemSetIds);

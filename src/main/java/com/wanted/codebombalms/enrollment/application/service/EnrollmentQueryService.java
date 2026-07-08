@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.enrollment.application.service;
 
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -23,16 +26,23 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseCatalogPort courseCatalogPort;
+    private final EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @Override
     public List<MyCourseResult> findMyCourses(Long userId) {
         log.info("[EnrollmentQueryService] find my courses - userId: {}", userId);
 
-        return enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE)
-                .stream()
+        List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
+        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
+                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
+                        .map(enrollment -> new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
+                        .toList());
+
+        return enrollments.stream()
                 .map(enrollment -> MyCourseResult.from(
                         enrollment,
-                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
+                        progresses.get(new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
                 ))
                 .toList();
     }

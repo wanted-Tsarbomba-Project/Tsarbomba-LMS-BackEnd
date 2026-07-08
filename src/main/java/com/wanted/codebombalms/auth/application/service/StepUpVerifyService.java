@@ -18,6 +18,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.TooManyReque
 import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
+import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -71,7 +72,7 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
 
         // 4. 신뢰 기기 등록 (옵션) — 이미 있으면 갱신, 없으면 신규 (유니크 (user_id, device_fp) 위반 방지)
         if (command.trustDevice()) {
-            GeoLocation geo = geoIpResolver.resolve(extractIpAddress(request));
+            GeoLocation geo = geoIpResolver.resolve(ClientIpResolver.resolve(request));
             TrustedDevice device = trustedDeviceRepository
                     .findByUserIdAndDeviceFp(user.getUserId(), challenge.deviceFp())
                     .map(existing -> {
@@ -112,13 +113,5 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
                     : (userAgent.contains("iPhone") || userAgent.contains("iPad")) ? "iOS"
                       : userAgent.contains("Linux") ? "Linux" : "Unknown";
         return browser + " · " + os;
-    }
-
-    private String extractIpAddress(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

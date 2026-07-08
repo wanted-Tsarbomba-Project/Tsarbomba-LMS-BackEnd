@@ -2,6 +2,7 @@ package com.wanted.codebombalms.learning.infrastructure.persistence;
 
 import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +54,22 @@ public class LectureProgressRepositoryAdapter implements LectureProgressReposito
                 .collect(Collectors.toMap(
                         SpringDataLectureProgressRepository.UserCompletedLectureCount::getUserId,
                         SpringDataLectureProgressRepository.UserCompletedLectureCount::getCompletedCount
+                ));
+    }
+
+    @Override
+    public Map<UserCourseKey, Long> countCompletedByUserIdsAndCourseIds(
+            Collection<Long> userIds,
+            Collection<Long> courseIds
+    ) {
+        if (userIds.isEmpty() || courseIds.isEmpty()) {
+            return Map.of();
+        }
+        return springDataLectureProgressRepository.countCompletedByUserIdsAndCourseIds(userIds, courseIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        count -> new UserCourseKey(count.getUserId(), count.getCourseId()),
+                        SpringDataLectureProgressRepository.UserCourseCompletedLectureCount::getCompletedCount
                 ));
     }
 
