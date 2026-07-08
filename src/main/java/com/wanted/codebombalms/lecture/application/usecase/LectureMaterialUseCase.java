@@ -10,6 +10,8 @@ public interface LectureMaterialUseCase {
 
     List<LectureMaterial> findMaterials(Long lectureId);
 
+    List<LectureMaterial> findMaterialsForAccess(Long lectureId, Long userId, boolean operator);
+
     String issueDownloadUrl(Long lectureMaterialId, Long userId, boolean operator);
 
     void deleteMaterial(Long lectureMaterialId);

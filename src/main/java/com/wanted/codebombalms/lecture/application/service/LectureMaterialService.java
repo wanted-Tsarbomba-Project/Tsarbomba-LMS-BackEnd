@@ -5,6 +5,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundExce
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
+import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
 import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ public class LectureMaterialService implements LectureMaterialUseCase {
     private final LectureRepository lectureRepository;
     private final LectureMaterialStoragePort lectureMaterialStoragePort;
     private final LectureEnrollmentPort lectureEnrollmentPort;
+    private final LectureAccessPolicy lectureAccessPolicy;
 
     @Override
     public LectureMaterial uploadMaterial(UploadLectureMaterialCommand command) {
@@ -65,6 +69,14 @@ public class LectureMaterialService implements LectureMaterialUseCase {
 
     @Override
     @Transactional(readOnly = true)
+    public List<LectureMaterial> findMaterialsForAccess(Long lectureId, Long userId, boolean operator) {
+        Lecture lecture = validateLecture(lectureId);
+        lectureAccessPolicy.validateCourseContentAccess(lecture.getCourse(), userId, operator);
+        return lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public String issueDownloadUrl(Long lectureMaterialId, Long userId, boolean operator) {
         LectureMaterial material = findMaterial(lectureMaterialId);
 
@@ -91,7 +103,7 @@ public class LectureMaterialService implements LectureMaterialUseCase {
         LectureMaterial material = findMaterial(lectureMaterialId);
         material.delete();
         lectureMaterialRepository.save(material);
-        lectureMaterialStoragePort.delete(material.getFilePath());
+        deleteMaterialFileAfterCommit(material.getFilePath());
     }
 
     private Lecture validateLecture(Long lectureId) {
@@ -111,5 +123,29 @@ public class LectureMaterialService implements LectureMaterialUseCase {
             originalException.addSuppressed(deleteException);
             log.warn("Failed to delete uploaded lecture material after DB save failure. filePath={}", filePath, deleteException);
         }
+    }
+
+    private void deleteMaterialFileAfterCommit(String filePath) {
+        runAfterCommit(() -> {
+            try {
+                lectureMaterialStoragePort.delete(filePath);
+            } catch (RuntimeException e) {
+                log.warn("Failed to delete lecture material file after material deletion. filePath={}", filePath, e);
+            }
+        });
+    }
+
+    private void runAfterCommit(Runnable task) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            task.run();
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                task.run();
+            }
+        });
     }
 }

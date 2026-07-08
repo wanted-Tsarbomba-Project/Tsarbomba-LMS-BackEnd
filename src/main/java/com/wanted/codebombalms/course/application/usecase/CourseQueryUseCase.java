@@ -14,5 +14,7 @@ public interface CourseQueryUseCase {
 
     Course findCourseById(Long courseId);
 
+    Course findCourseByIdForStudent(Long courseId, Long userId);
+
     Course findCourseByIdForOperator(Long courseId);
 }

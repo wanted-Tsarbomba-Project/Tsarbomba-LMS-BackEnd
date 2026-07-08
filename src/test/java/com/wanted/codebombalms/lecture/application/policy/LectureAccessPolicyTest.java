@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
 import com.wanted.codebombalms.course.domain.model.Course;
+import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
@@ -83,6 +84,79 @@ class LectureAccessPolicyTest {
     }
 
     @Test
+    void validateCourseContentAccess_allowsActiveCourseWithoutEnrollmentCheck() {
+        Course course = course(1L, CourseStatus.ACTIVE);
+
+        assertDoesNotThrow(
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, null, false)
+        );
+
+        verifyNoInteractions(lectureEnrollmentPort);
+    }
+
+    @Test
+    void validateCourseContentAccess_allowsInactiveCourse_whenStudentIsEnrolled() {
+        Long userId = 10L;
+        Course course = course(1L, CourseStatus.INACTIVE);
+        given(lectureEnrollmentPort.isActiveStudentOfCourse(1L, userId)).willReturn(true);
+
+        assertDoesNotThrow(
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, userId, false)
+        );
+    }
+
+    @Test
+    void validateCourseContentAccess_throwsForbiddenForInactiveCourse_whenStudentIsNotEnrolled() {
+        Long userId = 10L;
+        Course course = course(1L, CourseStatus.INACTIVE);
+        given(lectureEnrollmentPort.isActiveStudentOfCourse(1L, userId)).willReturn(false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, userId, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+    }
+
+    @Test
+    void validateCourseContentAccess_throwsForbiddenForDraftCourseWithoutEnrollmentCheck() {
+        Course course = course(1L, CourseStatus.DRAFT);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, 10L, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+        verifyNoInteractions(lectureEnrollmentPort);
+    }
+
+    @Test
+    void validateCourseContentAccess_throwsForbiddenForDeletedCourseWithoutEnrollmentCheck() {
+        Course course = course(1L, CourseStatus.DELETED);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, 10L, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+        verifyNoInteractions(lectureEnrollmentPort);
+    }
+
+    @Test
+    void validateCourseContentAccess_allowsOperatorForDraftCourse() {
+        Course course = course(1L, CourseStatus.DRAFT);
+
+        assertDoesNotThrow(
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, null, true)
+        );
+
+        verifyNoInteractions(lectureEnrollmentPort);
+    }
+
+    @Test
     void validatePreviousLecturesCompleted_allowsFirstLecture() {
         lectureAccessPolicy.validatePreviousLecturesCompleted(10L, List.of());
 
@@ -115,10 +189,16 @@ class LectureAccessPolicyTest {
     }
 
     private Lecture lecture(Long courseId) {
-        Course course = new Course();
-        course.setCourseId(courseId);
+        Course course = course(courseId, CourseStatus.ACTIVE);
         Lecture lecture = new Lecture();
         lecture.setCourse(course);
         return lecture;
+    }
+
+    private Course course(Long courseId, CourseStatus status) {
+        Course course = new Course();
+        course.setCourseId(courseId);
+        course.setStatus(status);
+        return course;
     }
 }
