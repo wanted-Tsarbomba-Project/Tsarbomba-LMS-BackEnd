@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.reward.point.infrastructure.metrics;
 
+import com.wanted.codebombalms.reward.point.application.port.RecordRewardMetricsPort.MissingRecoveryResult;
 import com.wanted.codebombalms.reward.point.application.port.RecordRewardMetricsPort.ProcessResult;
+import com.wanted.codebombalms.reward.point.application.port.RecordRewardMetricsPort.ScheduleResult;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +18,12 @@ class RewardMetricsTest {
         RewardMetrics metrics = new RewardMetrics(registry);
 
         metrics.recordScheduled();
+        for (ScheduleResult result : ScheduleResult.values()) {
+            metrics.recordSchedule(result);
+        }
+        for (MissingRecoveryResult result : MissingRecoveryResult.values()) {
+            metrics.recordMissingRecovery(result);
+        }
         for (ProcessResult result : ProcessResult.values()) {
             metrics.recordProcessed(result);
             metrics.recordProcess(
@@ -27,6 +35,18 @@ class RewardMetricsTest {
 
         assertThat(registry.get("reward_point_task_scheduled").counter().count())
                 .isEqualTo(1.0);
+        for (ScheduleResult result : ScheduleResult.values()) {
+            assertThat(registry.get("reward_point_task_schedule")
+                    .tag("result", result.tagValue())
+                    .counter()
+                    .count()).isEqualTo(1.0);
+        }
+        for (MissingRecoveryResult result : MissingRecoveryResult.values()) {
+            assertThat(registry.get("reward_point_missing_recovery")
+                    .tag("result", result.tagValue())
+                    .counter()
+                    .count()).isEqualTo(1.0);
+        }
         for (ProcessResult result : ProcessResult.values()) {
             assertThat(registry.get("reward_point_task_processed")
                     .tag("result", result.tagValue())

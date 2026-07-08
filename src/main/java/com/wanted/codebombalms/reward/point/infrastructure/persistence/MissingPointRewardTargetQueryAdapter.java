@@ -24,7 +24,8 @@ public class MissingPointRewardTargetQueryAdapter
                           and not exists (
                               select 1
                               from PointRewardTaskJpaEntity task
-                              where task.submissionId = s.submissionId
+                              where task.userId = s.userId
+                                and task.problemId = p.problemId
                           )
                           and not exists (
                               select 1

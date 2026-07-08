@@ -20,6 +20,7 @@ public class RewardMetrics implements RecordRewardMetricsPort {
     private final AtomicLong pendingTasks = new AtomicLong();
     private final Map<ProcessResult, Timer> processTimers;
     private final Map<ScheduleResult, Counter> scheduleCounters;
+    private final Map<MissingRecoveryResult, Counter> missingRecoveryCounters;
 
     public RewardMetrics(MeterRegistry registry) {
         this.scheduledCounter = Counter.builder("reward_point_task_scheduled")
@@ -32,6 +33,18 @@ public class RewardMetrics implements RecordRewardMetricsPort {
                     result,
                     Counter.builder("reward_point_task_schedule")
                             .description("Point reward task schedule outcomes")
+                            .tag("result", result.tagValue())
+                            .register(registry)
+            );
+        }
+
+        this.missingRecoveryCounters =
+                new EnumMap<>(MissingRecoveryResult.class);
+        for (MissingRecoveryResult result : MissingRecoveryResult.values()) {
+            missingRecoveryCounters.put(
+                    result,
+                    Counter.builder("reward_point_missing_recovery")
+                            .description("Missing point reward recovery outcomes")
                             .tag("result", result.tagValue())
                             .register(registry)
             );
@@ -91,5 +104,10 @@ public class RewardMetrics implements RecordRewardMetricsPort {
     @Override
     public void recordSchedule(ScheduleResult result) {
         scheduleCounters.get(result).increment();
+    }
+
+    @Override
+    public void recordMissingRecovery(MissingRecoveryResult result) {
+        missingRecoveryCounters.get(result).increment();
     }
 }

@@ -6,6 +6,8 @@ public interface RecordRewardMetricsPort {
 
     void recordSchedule(ScheduleResult result);
 
+    void recordMissingRecovery(MissingRecoveryResult result);
+
     void recordProcessed(ProcessResult result);
 
     void recordProcess(ProcessResult result, long elapsedNanos);
@@ -20,6 +22,22 @@ public interface RecordRewardMetricsPort {
         private final String tagValue;
 
         ScheduleResult(String tagValue) {
+            this.tagValue = tagValue;
+        }
+
+        public String tagValue() {
+            return tagValue;
+        }
+    }
+
+    enum MissingRecoveryResult {
+        SCHEDULED("scheduled"),
+        SKIPPED("skipped"),
+        FAILED("failed");
+
+        private final String tagValue;
+
+        MissingRecoveryResult(String tagValue) {
             this.tagValue = tagValue;
         }
 
