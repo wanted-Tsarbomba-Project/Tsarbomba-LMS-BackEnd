@@ -27,4 +27,9 @@ public class ProblemProgressAdapter implements ProblemProgressPort {
     public void completeProblemSet(Long userId, Long problemSetId) {
         progressCommandService.completeProblemSet(userId, problemSetId);
     }
+
+    @Override
+    public void lockProgressForUpdate(Long userId, Long problemSetId) {
+        progressCommandService.lockProgressForUpdate(userId, problemSetId);
+    }
 }
