@@ -459,6 +459,38 @@ class LectureServiceTest {
     }
 
     @Test
+    void deleteLecture_completesSoftDelete_whenMaterialFileDeleteFails() {
+        Long lectureId = 1L;
+        Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
+        LectureMaterial material = LectureMaterial.restore(
+                10L,
+                lectureId,
+                "guide.pdf",
+                "stored-guide.pdf",
+                "lecture_materials/stored-guide.pdf",
+                "application/pdf",
+                3L,
+                LocalDateTime.now(),
+                null
+        );
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(Optional.of(lecture));
+        given(lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId)).willReturn(List.of(material));
+        given(lectureRepository.save(lecture)).willReturn(lecture);
+        given(lectureMaterialRepository.save(material)).willReturn(material);
+        doThrow(new RuntimeException("gcs unavailable"))
+                .when(lectureMaterialStoragePort).delete("lecture_materials/stored-guide.pdf");
+
+        assertDoesNotThrow(() -> lectureCommandService.deleteLecture(lectureId));
+
+        assertEquals(LectureStatus.DELETED, lecture.getStatus());
+        assertNotNull(lecture.getDeletedAt());
+        assertNotNull(material.getDeletedAt());
+        verify(lectureMaterialRepository).save(material);
+        verify(lectureRepository).save(lecture);
+    }
+
+    @Test
     void updateLecture_throwsValidation_whenVideoUrlIsNotYoutube() {
         Long lectureId = 1L;
         Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);

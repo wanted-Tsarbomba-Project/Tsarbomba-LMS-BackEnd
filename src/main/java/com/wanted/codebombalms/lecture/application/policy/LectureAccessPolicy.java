@@ -37,6 +37,9 @@ public class LectureAccessPolicy {
         if (course.getStatus() == CourseStatus.ACTIVE) {
             return;
         }
+        if (course.getStatus() != CourseStatus.INACTIVE) {
+            throw new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED);
+        }
         if (userId == null || !lectureEnrollmentPort.isActiveStudentOfCourse(
                 course.getCourseId(),
                 userId

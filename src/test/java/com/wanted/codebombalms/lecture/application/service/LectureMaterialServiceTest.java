@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -19,6 +20,7 @@ import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialRepository;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -169,6 +171,44 @@ class LectureMaterialServiceTest {
 
         assertEquals(1, result.size());
         assertEquals(10L, result.get(0).getLectureMaterialId());
+    }
+
+    @Test
+    void findMaterialsForAccess_validatesCourseContentAccess() {
+        Long lectureId = 1L;
+        Long userId = 20L;
+        Lecture lecture = createLecture(lectureId, 100L);
+        LectureMaterial material = createMaterial(10L, lectureId);
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId))
+                .willReturn(Optional.of(lecture));
+        given(lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId))
+                .willReturn(List.of(material));
+
+        var result = lectureMaterialService.findMaterialsForAccess(lectureId, userId, false);
+
+        assertEquals(1, result.size());
+        verify(lectureAccessPolicy).validateCourseContentAccess(lecture.getCourse(), userId, false);
+    }
+
+    @Test
+    void findMaterialsForAccess_propagatesForbidden_whenAccessDenied() {
+        Long lectureId = 1L;
+        Long userId = 20L;
+        Lecture lecture = createLecture(lectureId, 100L);
+
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId))
+                .willReturn(Optional.of(lecture));
+        doThrow(new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED))
+                .when(lectureAccessPolicy).validateCourseContentAccess(lecture.getCourse(), userId, false);
+
+        ForbiddenException exception = assertThrows(
+                ForbiddenException.class,
+                () -> lectureMaterialService.findMaterialsForAccess(lectureId, userId, false)
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+        verify(lectureMaterialRepository, never()).findByLectureIdAndDeletedAtIsNull(lectureId);
     }
 
     @Test
