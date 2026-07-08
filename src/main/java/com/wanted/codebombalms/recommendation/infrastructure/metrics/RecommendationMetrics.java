@@ -20,6 +20,7 @@ public class RecommendationMetrics {
     private final Timer generationExternalTimer;
     private final Counter generationUserCounter;
     private final Counter exposedCounter;
+    private final Counter hideTodayCounter;
     private final DistributionSummary confidenceSummary;
     private final DistributionSummary liftSummary;
     private final DistributionSummary supportSummary;
@@ -61,6 +62,11 @@ public class RecommendationMetrics {
         // 추천 생성 대상 사용자 수 누적
         this.exposedCounter = Counter.builder("recommendation_problem_set_exposed_total")
                 .description("추천 목록에서 사용자에게 노출된 추천 카드 수")
+                .register(registry);
+
+        // 추천 영역 오늘 하루 숨김 처리 수 누적
+        this.hideTodayCounter = Counter.builder("recommendation_hide_today_total")
+                .description("추천 영역을 오늘 하루 숨김 처리한 횟수")
                 .register(registry);
 
         // 추천 생성 실패 수를 reason 별로 기록
@@ -120,6 +126,10 @@ public class RecommendationMetrics {
         if (exposedCount > 0) {
             exposedCounter.increment(exposedCount);
         }
+    }
+
+    public void incrementHideToday() {
+        hideTodayCounter.increment();
     }
 
     // 추천 score인 confidence/lift/support 분포 기록

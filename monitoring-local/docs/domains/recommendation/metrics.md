@@ -56,6 +56,7 @@ event=recommendation_generation_failed reason=<reason> exceptionType=<type>
 | Prometheus 노출명 | 종류 | 코드 등록명 | 의미 | 코드 위치 |
 |---|---|---|---|---|
 | `recommendation_problem_set_exposed_total` | Counter | `recommendation_problem_set_exposed_total` | 추천 목록에서 사용자에게 노출된 추천 카드 수 | [`ProblemRecommendationQueryService.getRecommendations`](../../../../src/main/java/com/wanted/codebombalms/recommendation/application/service/ProblemRecommendationQueryService.java) |
+| `recommendation_hide_today_total` | Counter | `recommendation_hide_today_total` | 사용자가 추천 영역을 오늘 하루 숨김 처리한 횟수 | [`RecommendationMetrics`](../../../../src/main/java/com/wanted/codebombalms/recommendation/infrastructure/metrics/RecommendationMetrics.java), [`RecommendationHideService.hideToday`](../../../../src/main/java/com/wanted/codebombalms/recommendation/application/service/RecommendationHideService.java) |
 | `recommendation_score_confidence_{count,sum,max}` | DistributionSummary | `recommendation_score_confidence` | 생성된 추천 confidence 분포 | [`ProblemRecommendationCommandAdapter.replaceActiveRecommendations`](../../../../src/main/java/com/wanted/codebombalms/recommendation/infrastructure/persistence/ProblemRecommendationCommandAdapter.java) |
 | `recommendation_score_lift_{count,sum,max}` | DistributionSummary | `recommendation_score_lift` | 생성된 추천 lift 분포 | [`ProblemRecommendationCommandAdapter.replaceActiveRecommendations`](../../../../src/main/java/com/wanted/codebombalms/recommendation/infrastructure/persistence/ProblemRecommendationCommandAdapter.java) |
 | `recommendation_score_support_{count,sum,max}` | DistributionSummary | `recommendation_score_support` | 생성된 추천 support 분포 | [`ProblemRecommendationCommandAdapter.replaceActiveRecommendations`](../../../../src/main/java/com/wanted/codebombalms/recommendation/infrastructure/persistence/ProblemRecommendationCommandAdapter.java) |
@@ -100,6 +101,12 @@ sum by (reason) (increase(recommendation_generation_failed_total[5m]))
 
 ```promql
 sum(increase(recommendation_problem_set_exposed_total[5m]))
+```
+
+### 오늘 하루 보지 않음 수
+
+```promql
+sum(increase(recommendation_hide_today_total[1d]))
 ```
 
 ### 배치 실패 로그
