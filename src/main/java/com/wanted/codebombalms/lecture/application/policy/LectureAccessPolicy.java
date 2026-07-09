@@ -1,8 +1,10 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -19,6 +21,7 @@ public class LectureAccessPolicy {
     private final LectureProgressPort lectureProgressPort;
 
     public void validateLearningContentAccess(Lecture lecture, Long userId, boolean operator) {
+        validateCourseContentAccess(lecture.getCourse(), userId, operator);
         if (operator) {
             return;
         }
@@ -31,6 +34,9 @@ public class LectureAccessPolicy {
     }
 
     public void validateCourseContentAccess(Course course, Long userId, boolean operator) {
+        if (course == null || course.getDeletedAt() != null || course.getStatus() == CourseStatus.DELETED) {
+            throw new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND);
+        }
         if (operator) {
             return;
         }
