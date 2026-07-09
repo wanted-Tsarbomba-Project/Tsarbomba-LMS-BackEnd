@@ -1,19 +1,24 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.domain.repository.AuthSessionRepository;
-import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class AuthSessionManager {
 
     private final AuthSessionRepository authSessionRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final long refreshExpirationMillis;
+
+    public AuthSessionManager(
+            AuthSessionRepository authSessionRepository,
+            @Value("${jwt.refresh-expiration}") long refreshExpirationMillis) {
+        this.authSessionRepository = authSessionRepository;
+        this.refreshExpirationMillis = refreshExpirationMillis;
+    }
 
     /**
      * 새 세션 오픈 — sid 발급 + Redis 저장(단일세션: 기존 세션 덮어씀).
@@ -21,8 +26,7 @@ public class AuthSessionManager {
      */
     public String open(Long userId) {
         String sid = UUID.randomUUID().toString();
-        authSessionRepository.save(userId, sid,
-                Duration.ofMillis(jwtTokenProvider.getRefreshExpiration()));
+        authSessionRepository.save(userId, sid, Duration.ofMillis(refreshExpirationMillis));
         return sid;
     }
 

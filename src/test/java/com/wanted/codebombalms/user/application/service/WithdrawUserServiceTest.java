@@ -77,6 +77,7 @@ class WithdrawUserServiceTest {
         verify(userRepository).save(captor.capture());
         assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
         verify(refreshTokenRepository).deleteByUserId(1L);
+        verify(authSessionManager).close(1L);
     }
 
     @Test
@@ -96,6 +97,7 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 
     @Test
@@ -113,6 +115,7 @@ class WithdrawUserServiceTest {
         verify(userRepository).save(captor.capture());
         assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
         verify(refreshTokenRepository).deleteByUserId(2L);
+        verify(authSessionManager).close(2L);
     }
 
     @Test
@@ -131,6 +134,7 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 
     @Test
@@ -148,5 +152,6 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 }

@@ -47,6 +47,7 @@ class ChangeStudentLockServiceTest {
         // then
         assertTrue(user.isLocked());
         verify(refreshTokenRepository).deleteByUserId(1L);
+        verify(authSessionManager).close(1L);
         verify(userRepository).save(user);
     }
 
@@ -63,6 +64,7 @@ class ChangeStudentLockServiceTest {
         // then
         assertFalse(user.isLocked());
         verify(refreshTokenRepository, never()).deleteByUserId(any());
+        verify(authSessionManager, never()).close(any());
         verify(userRepository).save(user);
     }
 
@@ -79,6 +81,7 @@ class ChangeStudentLockServiceTest {
         );
         assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         verify(refreshTokenRepository, never()).deleteByUserId(any());
+        verify(authSessionManager, never()).close(any());
         verify(userRepository, never()).save(any());
     }
 

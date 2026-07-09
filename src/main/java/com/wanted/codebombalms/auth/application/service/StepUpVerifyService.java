@@ -96,7 +96,6 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
         }
 
         // 5. 정식 토큰 발급 (단일 세션 강제)
-        // 5. 정식 토큰 발급 (단일 세션 강제)
         refreshTokenRepository.deleteByUserId(user.getUserId());
         String sid = authSessionManager.open(user.getUserId());
         String accessToken = jwtTokenProvider.generateAccessToken(
