@@ -15,8 +15,8 @@ public record ExplanationViewResponse(
     public static ExplanationViewResponse from(ViewProblemExplanationUseCase.ExplanationView view) {
         return new ExplanationViewResponse(
                 view.problemId(),
-                view.status(),
-                view.displayStatus(),
+                view.status().name(),
+                view.displayStatus().name(),
                 view.explanation(),
                 view.nextProblemId(),
                 view.problemSetCompleted(),

@@ -1,8 +1,8 @@
 package com.wanted.codebombalms.problems.explanation.application.service;
 
 import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewCommandPort;
-import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewQueryPort;
 import com.wanted.codebombalms.problems.explanation.application.usecase.ViewProblemExplanationUseCase;
+import com.wanted.codebombalms.problems.progress.enums.ProblemProgressStatus;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
 import com.wanted.codebombalms.submission.application.port.ProblemProgressPort;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class ProblemExplanationViewService implements ViewProblemExplanationUseCase{
+public class ProblemExplanationViewService implements ViewProblemExplanationUseCase {
 
     private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
     private final ProblemProgressPort problemProgressPort;
     private final ProblemExplanationViewCommandPort commandPort;
-    private final ProblemExplanationViewQueryPort queryPort;
 
     @Override
     @Transactional
@@ -30,13 +29,11 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
                 problem.problemOrder()
         );
 
-        if (!queryPort.existsViewed(userId, problem.problemId())) {
-            commandPort.saveViewed(
-                    userId,
-                    problem.problemId(),
-                    problem.problemSetId()
-            );
-        }
+        commandPort.saveViewed(
+                userId,
+                problem.problemId(),
+                problem.problemSetId()
+        );
 
         Long nextProblemId = loadProblemForSubmissionPort
                 .findNextProblemId(
@@ -62,8 +59,8 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
 
         return new ViewProblemExplanationUseCase.ExplanationView(
                 problem.problemId(),
-                "EXPLANATION_VIEWED",
-                "CORRECT",
+                ProblemProgressStatus.EXPLANATION_VIEWED,
+                ProblemProgressStatus.CORRECT,
                 problem.explanation(),
                 nextProblemId,
                 problemSetCompleted,

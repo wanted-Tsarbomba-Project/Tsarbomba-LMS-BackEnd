@@ -31,14 +31,6 @@ public class ProblemExplanationViewPersistenceAdapter
 
     @Override
     public void saveViewed(Long userId, Long problemId, Long problemSetId) {
-        if (repository.existsByUserIdAndProblemId(userId, problemId)) {
-            return;
-        }
-
-        repository.save(new ProblemExplanationViewJpaEntity(
-                userId,
-                problemId,
-                problemSetId
-        ));
+        repository.saveViewedIgnoreDuplicate(userId, problemId, problemSetId);
     }
 }
