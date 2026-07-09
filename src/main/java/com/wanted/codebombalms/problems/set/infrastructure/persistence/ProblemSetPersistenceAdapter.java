@@ -29,12 +29,27 @@ public class ProblemSetPersistenceAdapter implements
     private final SpringDataProblemSetRepository problemSetRepository;
 
     @Override
-    public ProblemSetSummaryPage loadActiveProblemSetsByCategory(Long categoryId, int page, int size) {
-        var problemSets = problemSetRepository.findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
-                categoryId,
-                ProblemSetStatus.ACTIVE,
-                PageRequest.of(page, size)
-        );
+    public ProblemSetSummaryPage loadActiveProblemSetsByCategory(
+            Long categoryId,
+            int page,
+            int size,
+            boolean popularSort
+    ) {
+        Page<ProblemSetJpaEntity> problemSets;
+
+        if (popularSort) {
+            problemSets = problemSetRepository.findByCategory_CategoryIdAndStatusOrderByStartedUserCountDescProblemSetIdDesc(
+                    categoryId,
+                    ProblemSetStatus.ACTIVE,
+                    PageRequest.of(page, size)
+            );
+        } else {
+            problemSets = problemSetRepository.findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
+                    categoryId,
+                    ProblemSetStatus.ACTIVE,
+                    PageRequest.of(page, size)
+            );
+        }
 
         return toSummaryPage(problemSets, page, size);
     }
@@ -67,11 +82,24 @@ public class ProblemSetPersistenceAdapter implements
     }
 
     @Override
-    public ProblemSetSummaryPage loadActiveProblemSets(int page, int size) {
-        var problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc(
-                ProblemSetStatus.ACTIVE,
-                PageRequest.of(page, size)
-        );
+    public ProblemSetSummaryPage loadActiveProblemSets(
+            int page,
+            int size,
+            boolean popularSort
+    ) {
+        Page<ProblemSetJpaEntity> problemSets;
+
+        if (popularSort) {
+            problemSets = problemSetRepository.findByStatusOrderByStartedUserCountDescProblemSetIdDesc(
+                    ProblemSetStatus.ACTIVE,
+                    PageRequest.of(page, size)
+            );
+        } else {
+            problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc(
+                    ProblemSetStatus.ACTIVE,
+                    PageRequest.of(page, size)
+            );
+        }
 
         return toSummaryPage(problemSets, page, size);
     }

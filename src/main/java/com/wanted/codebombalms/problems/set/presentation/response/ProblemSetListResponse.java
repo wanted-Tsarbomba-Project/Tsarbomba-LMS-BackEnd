@@ -24,6 +24,11 @@ public record ProblemSetListResponse(
         @Schema(description = "문제 세트 정답률", example = "75.5", nullable = true)
         Double accuracyRate,
 
+        @Schema(description = "문제세트를 완료한 사용자 수", example = "18")
+        Integer completedUserCount,
+
+        @Schema(description = "문제세트에 진입한 사용자 수", example = "42")
+        Integer startedUserCount,
         @Schema(description = "문제 세트 생성일", example = "2026-05-27T10:00:00")
         LocalDateTime createdAt
 ) {
@@ -35,6 +40,8 @@ public record ProblemSetListResponse(
                 problemSet.description(),
                 problemSet.difficulty(),
                 problemSet.accuracyRate(),
+                problemSet.completedUserCount(),
+                problemSet.startedUserCount(),
                 problemSet.createdAt()
         );
     }

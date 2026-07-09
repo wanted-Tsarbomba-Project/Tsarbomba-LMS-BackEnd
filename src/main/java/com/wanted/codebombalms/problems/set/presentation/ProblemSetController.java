@@ -143,9 +143,11 @@ public class ProblemSetController {
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @Parameter(description = "정렬 기준(default, popular)", example = "popular")
+            @RequestParam(defaultValue = "default") String sort
     ) {
-        var query = new GetProblemSetsQuery(categoryId, page, size);
+        var query = new GetProblemSetsQuery(categoryId, page, size,sort);
         var response = ProblemSetPageResponse.from(getProblemSetsUseCase.handle(query));
 
         return ResponseEntity.ok(ApiResponse.success(

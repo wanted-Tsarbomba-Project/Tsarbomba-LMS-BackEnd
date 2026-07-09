@@ -20,15 +20,22 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
     private final CheckProblemSetCategoryPort checkProblemSetCategoryPort;
     private final LoadProblemSetPort loadProblemSetPort;
 
+
     @Override
     @Transactional(readOnly = true)
     public ProblemSetPageView handle(GetProblemSetsQuery query) {
         validatePageRequest(query.page(), query.size());
 
+        boolean popularSort = validateAndCheckPopularSort(query);
+
         ProblemSetSummaryPage problemSets;
 
         if (query.categoryId() == null) {
-            problemSets = loadProblemSetPort.loadActiveProblemSets(query.page(), query.size());
+            problemSets = loadProblemSetPort.loadActiveProblemSets(
+                    query.page(),
+                    query.size(),
+                    popularSort
+            );
             return toPageView(problemSets);
         }
 
@@ -39,9 +46,22 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
         problemSets = loadProblemSetPort.loadActiveProblemSetsByCategory(
                 query.categoryId(),
                 query.page(),
-                query.size()
+                query.size(),
+                popularSort
         );
         return toPageView(problemSets);
+    }
+
+    private boolean validateAndCheckPopularSort(GetProblemSetsQuery query) {
+        if (query.isDefaultSort()) {
+            return false;
+        }
+
+        if (query.isPopularSort()) {
+            return true;
+        }
+
+        throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
     }
 
     private static final int MAX_PAGE_SIZE = 100;
@@ -99,6 +119,8 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
                 problemSet.getDescription(),
                 problemSet.getDifficulty(),
                 problemSet.getAccuracyRate(),
+                problemSet.getCompletedUserCount(),
+                problemSet.getStartedUserCount(),
                 problemSet.getCreatedAt()
         );
     }
