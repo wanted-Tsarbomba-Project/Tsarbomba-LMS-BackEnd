@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,5 +68,12 @@ class CourseCategorySecurityTest {
                 .andExpect(jsonPath("$.status").value(200))
                 .andExpect(jsonPath("$.data[0].courseCategoryId").value(1L))
                 .andExpect(jsonPath("$.data[0].name").value("Python"));
+    }
+
+    @Test
+    void writeMethodToCourseCategories_requiresAuthenticationBeforeLogin() throws Exception {
+        mockMvc.perform(post("/api/v1/course-categories")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 }
