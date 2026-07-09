@@ -1,7 +1,7 @@
 # ② Spring (SUT) + Redis(합류) + promtail 사이드카 — ③ Loki로 로그 전송
 services:
   spring:
-    image: ${ECR_REGISTRY}/team05-01-spring:latest
+    image: ${ECR_REGISTRY}/team05/backend:latest
     container_name: lms-spring
     restart: unless-stopped
     depends_on:
