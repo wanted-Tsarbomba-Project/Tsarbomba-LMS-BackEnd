@@ -2,7 +2,9 @@ package com.wanted.codebombalms.enrollment.application.service;
 
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
@@ -36,27 +38,32 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
         log.info("[EnrollmentQueryService] find my courses - userId: {}", userId);
 
         List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
-        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
-                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
-                        .map(enrollment -> new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
+        List<MyCourseEnrollment> visibleEnrollments = enrollments.stream()
+                .map(enrollment -> toVisibleEnrollment(userId, enrollment))
+                .flatMap(Optional::stream)
+                .toList();
+
+        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses =
+                enrollmentLearningProgressPort.findProgresses(visibleEnrollments.stream()
+                        .map(visibleEnrollment -> new EnrollmentLearningProgressKey(
+                                userId,
+                                visibleEnrollment.enrollment().getCourseId()
+                        ))
                         .toList());
 
-        return enrollments.stream()
-                .map(enrollment -> toMyCourseResult(userId, enrollment, progresses))
-                .flatMap(Optional::stream)
+        return visibleEnrollments.stream()
+                .map(visibleEnrollment -> toMyCourseResult(userId, visibleEnrollment, progresses))
                 .toList();
     }
 
-    private Optional<MyCourseResult> toMyCourseResult(
+    private Optional<MyCourseEnrollment> toVisibleEnrollment(
             Long userId,
-            Enrollment enrollment,
-            Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses
+            Enrollment enrollment
     ) {
         try {
-            return Optional.of(MyCourseResult.from(
+            return Optional.of(new MyCourseEnrollment(
                     enrollment,
-                    courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
-                    progresses.get(new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
+                    courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
             ));
         } catch (NotFoundException e) {
             if (e.getErrorCode() != CourseErrorCode.COURSE_NOT_FOUND) {
@@ -71,6 +78,27 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
             );
             return Optional.empty();
         }
+    }
+
+    private MyCourseResult toMyCourseResult(
+            Long userId,
+            MyCourseEnrollment visibleEnrollment,
+            Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses
+    ) {
+        Enrollment enrollment = visibleEnrollment.enrollment();
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(userId, enrollment.getCourseId());
+
+        return MyCourseResult.from(
+                enrollment,
+                visibleEnrollment.course(),
+                progresses.getOrDefault(progressKey, EnrollmentLearningProgress.of(0, 0, 0, 0))
+        );
+    }
+
+    private record MyCourseEnrollment(
+            Enrollment enrollment,
+            CoursePublicationStatus course
+    ) {
     }
 
     @Override
