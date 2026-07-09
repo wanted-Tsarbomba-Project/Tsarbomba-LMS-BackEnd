@@ -54,7 +54,7 @@ public class EnrollmentController {
                 ));
     }
 
-    @GetMapping("/users/me/enrollments")
+    @GetMapping({"/users/me/enrollments", "/users/me/enrollments/"})
     @Operation(summary = "내 수강 목록 조회")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<?>> findMyCourses(

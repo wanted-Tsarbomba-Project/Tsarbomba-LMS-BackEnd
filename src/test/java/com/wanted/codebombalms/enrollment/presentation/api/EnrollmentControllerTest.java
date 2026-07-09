@@ -159,6 +159,21 @@ class EnrollmentControllerTest {
     }
 
     @Test
+    void findMyCoursesByMe_acceptsTrailingSlash() throws Exception {
+        Long studentId = 10L;
+        Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(createMyCourseResult(enrollment)));
+
+        mockMvc.perform(get("/api/v1/users/me/enrollments/")
+                        .with(authentication(studentPrincipal(studentId)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED));
+    }
+
+    @Test
     void findAllEnrollments_returnsApiResponse() throws Exception {
         Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
 
