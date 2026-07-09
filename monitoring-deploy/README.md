@@ -5,7 +5,7 @@
 
 | | monitoring-local | **monitoring-deploy (여기)** |
 |---|---|---|
-| 대상 | 내 PC의 로컬 앱(loadtest 프로파일, 도커 MySQL) | **배포 ② Spring `43.200.241.157:8080`** (실 RDS) |
+| 대상 | 내 PC의 로컬 앱(loadtest 프로파일, 도커 MySQL) | **배포 ② Spring `15.164.120.81:8080`** (실 RDS) |
 | 관측 스택 | 로컬 prometheus/grafana/loki 직접 띄움 | **안 띄움** — 배포 ③ Grafana가 이미 BE 스크랩 |
 | 구성 | 풀스택 compose | **k6 단독** |
 
@@ -50,8 +50,8 @@
 
 ### 0. 사전
 - Docker Desktop 실행 중
-- 배포 BE 살아있는지: `curl http://43.200.241.157:8080/actuator/health` → `{"status":"UP"}`
-- 배포 ③ Grafana 열어두기: `http://13.124.63.188:3000` (Spring/JVM 대시보드)
+- 배포 BE 살아있는지: `curl http://15.164.120.81:8080/actuator/health` → `{"status":"UP"}`
+- 배포 ③ Grafana 열어두기: `http://43.202.171.209:3000` (Spring/JVM 대시보드)
 
 ### 1. Tier 0 — 바로 쏘기 (`monitoring-deploy/` 에서)
 ```bash
