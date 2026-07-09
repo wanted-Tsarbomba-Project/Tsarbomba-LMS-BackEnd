@@ -47,7 +47,8 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             MDC.put("userId", userId);
             MDC.put("role", role);
 
-            log.info("event=request_completed method={} uri={} status={} durationMs={} userId={} role={} clientIp={}",
+            log.info("event=request_completed traceId={} method={} uri={} status={} durationMs={} userId={} role={} clientIp={}",
+                    MDC.get("traceId"),
                     request.getMethod(),
                     request.getRequestURI(),
                     response.getStatus(),
