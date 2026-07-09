@@ -5,6 +5,7 @@ import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
 import com.wanted.codebombalms.problems.set.application.query.EnterProblemSetQuery;
 import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
+import com.wanted.codebombalms.problems.set.application.query.ProblemSetSort;
 import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase;
 import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetEnterResponse;
@@ -144,8 +145,8 @@ public class ProblemSetController {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size,
-            @Parameter(description = "정렬 기준(default, popular)", example = "popular")
-            @RequestParam(defaultValue = "default") String sort
+            @Parameter(description = "정렬 기준(DEFAULT, POPULAR)", example = "POPULAR")
+            @RequestParam(defaultValue = "DEFAULT") ProblemSetSort sort
     ) {
         var query = new GetProblemSetsQuery(categoryId, page, size,sort);
         var response = ProblemSetPageResponse.from(getProblemSetsUseCase.handle(query));

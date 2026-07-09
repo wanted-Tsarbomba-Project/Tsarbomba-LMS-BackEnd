@@ -26,7 +26,7 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
     public ProblemSetPageView handle(GetProblemSetsQuery query) {
         validatePageRequest(query.page(), query.size());
 
-        boolean popularSort = validateAndCheckPopularSort(query);
+        boolean popularSort = query.isPopularSort();
 
         ProblemSetSummaryPage problemSets;
 
@@ -51,19 +51,6 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
         );
         return toPageView(problemSets);
     }
-
-    private boolean validateAndCheckPopularSort(GetProblemSetsQuery query) {
-        if (query.isDefaultSort()) {
-            return false;
-        }
-
-        if (query.isPopularSort()) {
-            return true;
-        }
-
-        throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
-    }
-
     private static final int MAX_PAGE_SIZE = 100;
     private static final long MAX_PAGE_OFFSET = 100_000L;
 
