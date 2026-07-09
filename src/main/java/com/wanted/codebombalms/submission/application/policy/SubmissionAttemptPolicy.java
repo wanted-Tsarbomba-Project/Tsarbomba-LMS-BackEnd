@@ -41,4 +41,11 @@ public class SubmissionAttemptPolicy {
             );
         }
     }
+    public void validateNotExplanationViewed(boolean explanationViewed) {
+        if (explanationViewed) {
+            throw new ConflictException(
+                    SubmissionErrorCode.PROBLEM_EXPLANATION_ALREADY_VIEWED
+            );
+        }
+    }
 }

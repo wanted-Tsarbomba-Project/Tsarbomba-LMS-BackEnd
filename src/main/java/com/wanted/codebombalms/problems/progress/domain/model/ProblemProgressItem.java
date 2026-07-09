@@ -30,13 +30,19 @@ public class ProblemProgressItem {
             String title,
             Integer currentProblemNumber,
             Boolean latestCorrect,
+            boolean explanationViewed,
             Long latestSubmissionId
     ) {
         return new ProblemProgressItem(
                 problemId,
                 problemNumber,
                 title,
-                decideStatus(problemNumber, currentProblemNumber, latestCorrect),
+                decideStatus(
+                        problemNumber,
+                        currentProblemNumber,
+                        latestCorrect,
+                        explanationViewed
+                ),
                 latestSubmissionId
         );
     }
@@ -44,19 +50,26 @@ public class ProblemProgressItem {
     private static ProblemProgressStatus decideStatus(
             Integer problemNumber,
             Integer currentProblemNumber,
-            Boolean latestCorrect
+            Boolean latestCorrect,
+            boolean explanationViewed
     ) {
         if (problemNumber > currentProblemNumber) {
             return ProblemProgressStatus.LOCKED;
+        }
+
+        if (Boolean.TRUE.equals(latestCorrect)) {
+            return ProblemProgressStatus.CORRECT;
+        }
+
+        if (explanationViewed) {
+            return ProblemProgressStatus.EXPLANATION_VIEWED;
         }
 
         if (latestCorrect == null) {
             return ProblemProgressStatus.UNSOLVED;
         }
 
-        return Boolean.TRUE.equals(latestCorrect)
-                ? ProblemProgressStatus.CORRECT
-                : ProblemProgressStatus.WRONG;
+        return ProblemProgressStatus.WRONG;
     }
 
     public Long getProblemId() {
