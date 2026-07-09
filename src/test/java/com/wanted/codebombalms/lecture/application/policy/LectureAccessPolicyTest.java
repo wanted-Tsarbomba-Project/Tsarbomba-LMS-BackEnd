@@ -1,8 +1,10 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -84,6 +86,20 @@ class LectureAccessPolicyTest {
     }
 
     @Test
+    void validateLearningContentAccess_throwsNotFoundForDeletedCourseWithoutEnrollmentCheck() {
+        Lecture lecture = new Lecture();
+        lecture.setCourse(course(1L, CourseStatus.DELETED));
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> lectureAccessPolicy.validateLearningContentAccess(lecture, 10L, false)
+        );
+
+        assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
+        verifyNoInteractions(lectureEnrollmentPort);
+    }
+
+    @Test
     void validateCourseContentAccess_allowsActiveCourseWithoutEnrollmentCheck() {
         Course course = course(1L, CourseStatus.ACTIVE);
 
@@ -133,15 +149,15 @@ class LectureAccessPolicyTest {
     }
 
     @Test
-    void validateCourseContentAccess_throwsForbiddenForDeletedCourseWithoutEnrollmentCheck() {
+    void validateCourseContentAccess_throwsNotFoundForDeletedCourseWithoutEnrollmentCheck() {
         Course course = course(1L, CourseStatus.DELETED);
 
-        ForbiddenException exception = assertThrows(
-                ForbiddenException.class,
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
                 () -> lectureAccessPolicy.validateCourseContentAccess(course, 10L, false)
         );
 
-        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+        assertEquals(CourseErrorCode.COURSE_NOT_FOUND, exception.getErrorCode());
         verifyNoInteractions(lectureEnrollmentPort);
     }
 

@@ -3,11 +3,6 @@ package com.wanted.codebombalms.enrollment.presentation.api;
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
-import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
-import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
@@ -33,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,12 +55,6 @@ class EnrollmentControllerTest {
 
     @MockitoBean
     private EnrollmentQueryUseCase enrollmentQueryUseCase;
-
-    @MockitoBean
-    private CourseCatalogPort courseCatalogPort;
-
-    @MockitoBean
-    private EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
@@ -159,15 +147,26 @@ class EnrollmentControllerTest {
     }
 
     @Test
+    void findMyCoursesByMe_acceptsTrailingSlash() throws Exception {
+        Long studentId = 10L;
+        Enrollment enrollment = createEnrollment(1L, studentId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findMyCourses(studentId)).willReturn(List.of(createMyCourseResult(enrollment)));
+
+        mockMvc.perform(get("/api/v1/users/me/enrollments/")
+                        .with(authentication(studentPrincipal(studentId)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED));
+    }
+
+    @Test
     void findAllEnrollments_returnsApiResponse() throws Exception {
         Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentQueryUseCase.findAllActiveEnrollments()).willReturn(List.of(enrollment));
-        given(courseCatalogPort.getPublicationStatus(1L))
-                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
-        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(10L, 1L);
-        given(enrollmentLearningProgressPort.findProgresses(List.of(progressKey)))
-                .willReturn(Map.of(progressKey, createCompletedProgress()));
+        given(enrollmentQueryUseCase.findAllEnrollmentCourses())
+                .willReturn(List.of(createMyCourseResult(enrollment)));
 
         mockMvc.perform(get("/api/v1/enrollments")
                         .with(authentication(operatorPrincipal(1L)))
@@ -177,6 +176,21 @@ class EnrollmentControllerTest {
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.data[0].courseTitle").value("Java"))
                 .andExpect(jsonPath("$.data[0].displayStatus").value("COMPLETED"));
+    }
+
+    @Test
+    void findAllEnrollments_returnsFilteredResultsFromUseCase() throws Exception {
+        Enrollment activeEnrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findAllEnrollmentCourses())
+                .willReturn(List.of(createMyCourseResult(activeEnrollment)));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .with(authentication(operatorPrincipal(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].courseId").value(1L));
     }
 
     @Test
@@ -281,7 +295,4 @@ class EnrollmentControllerTest {
         );
     }
 
-    private EnrollmentLearningProgress createCompletedProgress() {
-        return new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1);
-    }
 }

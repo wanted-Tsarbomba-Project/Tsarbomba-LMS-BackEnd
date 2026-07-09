@@ -2,15 +2,12 @@ package com.wanted.codebombalms.enrollment.presentation.api;
 
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
-import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
-import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
 import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -34,8 +29,6 @@ public class EnrollmentController {
 
     private final EnrollmentCommandUseCase enrollmentCommandUseCase;
     private final EnrollmentQueryUseCase enrollmentQueryUseCase;
-    private final CourseCatalogPort courseCatalogPort;
-    private final EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @PostMapping("/courses/{courseId}/enrollments")
     @Operation(summary = "수강신청 생성")
@@ -65,6 +58,15 @@ public class EnrollmentController {
         return buildMyCoursesResponse(userId);
     }
 
+    @Hidden
+    @GetMapping("/users/me/enrollments/")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<ApiResponse<?>> findMyCoursesWithTrailingSlash(
+            @AuthenticationPrincipal Long userId
+    ) {
+        return buildMyCoursesResponse(userId);
+    }
+
     @GetMapping("/users/{userId}/enrollments")
     @Operation(summary = "학생 수강 목록 조회")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('STUDENT') and #userId == authentication.principal)")
@@ -82,27 +84,12 @@ public class EnrollmentController {
     public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
         log.info("[EnrollmentController] find all active enrollments");
 
-        List<Enrollment> enrollments = enrollmentQueryUseCase.findAllActiveEnrollments();
-        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
-                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
-                        .map(enrollment -> new EnrollmentLearningProgressKey(
-                                enrollment.getUserId(),
-                                enrollment.getCourseId()
-                        ))
-                        .toList());
-
         return ResponseEntity.ok(ApiResponse.success(
                 EnrollmentResponseCode.RETRIEVED,
                 EnrollmentResponseMessage.RETRIEVED,
-                enrollments.stream()
-                        .map(enrollment -> MyCourseResponse.from(
-                                enrollment,
-                                courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
-                                progresses.get(new EnrollmentLearningProgressKey(
-                                        enrollment.getUserId(),
-                                        enrollment.getCourseId()
-                                ))
-                        ))
+                enrollmentQueryUseCase.findAllEnrollmentCourses()
+                        .stream()
+                        .map(MyCourseResponse::from)
                         .toList()
         ));
     }

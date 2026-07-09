@@ -63,7 +63,7 @@ public class GcsLectureMaterialStorageAdapter implements LectureMaterialStorageP
         try {
             getStorage().create(blobInfo, content);
             return new StoredLectureMaterial(
-                    sanitizedFileName,
+                    originalFileName,
                     storedFileName,
                     objectName,
                     contentType,
