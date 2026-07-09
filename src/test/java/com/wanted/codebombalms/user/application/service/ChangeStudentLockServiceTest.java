@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
@@ -28,6 +29,7 @@ class ChangeStudentLockServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private ChangeStudentLockService changeStudentLockService;

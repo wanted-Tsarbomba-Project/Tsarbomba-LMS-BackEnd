@@ -61,6 +61,7 @@ class LoginServiceTest {
     @Mock private HttpServletRequest httpRequest;
     @Mock private AuthSecurityEventRecorder securityEventRecorder;
     @Mock private AuthMetricsPort authMetrics;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private LoginService loginService;
@@ -82,7 +83,8 @@ class LoginServiceTest {
         given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
         given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP))
                 .willReturn(Optional.of(TrustedDevice.register(1L, DEVICE_FP, "Chrome", null, null)));
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(authSessionManager.open(1L)).willReturn("SID");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "SID")).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
@@ -119,7 +121,7 @@ class LoginServiceTest {
         assertNull(result.accessToken());
         verify(emailSender).sendStepUpCode(eq("test@example.com"), anyString(), anyString());        verify(stepUpTokenRepository).save(anyString(), any());
         verify(loginHistoryRepository).save(any(LoginHistory.class));
-        verify(jwtTokenProvider, never()).generateAccessToken(anyLong(), anyString(), any());
+        verify(jwtTokenProvider, never()).generateAccessToken(anyLong(), anyString(), any(), any());
         verify(refreshTokenRepository, never()).save(any());
     }
 
@@ -185,7 +187,8 @@ class LoginServiceTest {
         given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
         given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP))
                 .willReturn(Optional.of(TrustedDevice.register(1L, DEVICE_FP, "Chrome", null, null)));
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("ACCESS_TOKEN");
+        given(authSessionManager.open(1L)).willReturn("SID");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "SID")).willReturn("ACCESS_TOKEN");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("REFRESH_TOKEN");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 

@@ -25,6 +25,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +42,7 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
     private final GeoIpResolver geoIpResolver;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthSecurityEventRecorder securityEventRecorder;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public LoginResult verify(StepUpVerifyCommand command, HttpServletRequest request) {
@@ -70,6 +73,9 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
         User user = userRepository.findByUserId(challenge.userId())
                 .orElseThrow(() -> new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL));
 
+        if (user.isLocked()) {
+            throw new ForbiddenException(UserErrorCode.USER_ACCOUNT_LOCKED);
+        }
         // 4. 신뢰 기기 등록 (옵션) — 이미 있으면 갱신, 없으면 신규 (유니크 (user_id, device_fp) 위반 방지)
         if (command.trustDevice()) {
             GeoLocation geo = geoIpResolver.resolve(ClientIpResolver.resolve(request));
@@ -90,8 +96,11 @@ public class StepUpVerifyService implements StepUpVerifyUseCase {
         }
 
         // 5. 정식 토큰 발급 (단일 세션 강제)
+        // 5. 정식 토큰 발급 (단일 세션 강제)
         refreshTokenRepository.deleteByUserId(user.getUserId());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(), user.getRole());
+        String sid = authSessionManager.open(user.getUserId());
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getUserId(), user.getNickname(), user.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
         refreshTokenRepository.save(
                 RefreshToken.issue(user.getUserId(), refreshToken, jwtTokenProvider.getRefreshExpiration()));

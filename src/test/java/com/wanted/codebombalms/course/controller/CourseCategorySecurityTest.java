@@ -5,6 +5,7 @@ import com.wanted.codebombalms.course.application.usecase.CourseCategoryQueryUse
 import com.wanted.codebombalms.course.domain.model.CourseCategory;
 import com.wanted.codebombalms.course.domain.model.CourseCategoryStatus;
 import com.wanted.codebombalms.course.presentation.api.CourseCategoryController;
+import com.wanted.codebombalms.auth.domain.repository.AuthSessionRepository;
 import com.wanted.codebombalms.global.infrastructure.config.security.CustomAccessDeniedHandler;
 import com.wanted.codebombalms.global.infrastructure.config.security.CustomAuthenticationEntryPoint;
 import com.wanted.codebombalms.global.infrastructure.config.security.SecurityConfig;
@@ -43,6 +44,9 @@ class CourseCategorySecurityTest {
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private AuthSessionRepository authSessionRepository;
 
     @MockitoBean
     private CustomAccessDeniedHandler accessDeniedHandler;

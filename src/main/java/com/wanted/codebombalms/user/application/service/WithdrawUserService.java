@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
@@ -26,6 +27,7 @@ public class WithdrawUserService implements WithdrawUserUseCase {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void withdraw(Long userId, String rawPassword, String confirmText) {
@@ -52,8 +54,9 @@ public class WithdrawUserService implements WithdrawUserUseCase {
         user.softDelete();
         userRepository.save(user);
 
-        // 4. Refresh Token 전체 삭제 (강제 로그아웃)
+        // 4. Refresh Token 전체 삭제 + AT 세션 무효화 (강제 로그아웃)
         refreshTokenRepository.deleteByUserId(userId);
+        authSessionManager.close(userId);
 
         // 5. 감사 추적 로깅
         log.info("회원 탈퇴 처리 완료 - userId={}, social={}, deletedAt={}",
