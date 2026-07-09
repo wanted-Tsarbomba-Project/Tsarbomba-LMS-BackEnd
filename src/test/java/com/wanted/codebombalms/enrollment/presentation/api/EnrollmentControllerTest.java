@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.enrollment.presentation.api;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
@@ -13,6 +14,7 @@ import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandU
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -192,6 +194,31 @@ class EnrollmentControllerTest {
                 .andExpect(jsonPath("$.code").value(EnrollmentResponseCode.RETRIEVED))
                 .andExpect(jsonPath("$.data[0].courseTitle").value("Java"))
                 .andExpect(jsonPath("$.data[0].displayStatus").value("COMPLETED"));
+    }
+
+    @Test
+    void findAllEnrollments_skipsDeletedCourseEnrollments() throws Exception {
+        Enrollment activeEnrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment deletedCourseEnrollment = createEnrollment(2L, 11L, 2L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentQueryUseCase.findAllActiveEnrollments())
+                .willReturn(List.of(activeEnrollment, deletedCourseEnrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
+        given(courseCatalogPort.getPublicationStatus(2L))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(10L, 1L);
+        given(enrollmentLearningProgressPort.findProgresses(List.of(
+                progressKey,
+                new EnrollmentLearningProgressKey(11L, 2L)
+        ))).willReturn(Map.of(progressKey, createCompletedProgress()));
+
+        mockMvc.perform(get("/api/v1/enrollments")
+                        .with(authentication(operatorPrincipal(1L)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].courseId").value(1L));
     }
 
     @Test

@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -175,6 +176,23 @@ class EnrollmentServiceTest {
         verify(courseCatalogPort).getPublicationStatus(1L);
         verify(courseCatalogPort).getPublicationStatus(2L);
         verify(enrollmentLearningProgressPort).findProgresses(List.of(activeProgressKey));
+    }
+
+    @Test
+    void findMyCourses_returnsEmptyList_whenAllEnrollmentsPointToDeletedCourses() {
+        Long userId = 10L;
+        Enrollment deletedCourseEnrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(deletedCourseEnrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
+
+        assertTrue(results.isEmpty());
+        verify(courseCatalogPort).getPublicationStatus(1L);
+        verify(enrollmentLearningProgressPort, never()).findProgresses(any());
     }
 
     @Test

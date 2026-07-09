@@ -43,6 +43,10 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
                 .flatMap(Optional::stream)
                 .toList();
 
+        if (visibleEnrollments.isEmpty()) {
+            return List.of();
+        }
+
         Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses =
                 enrollmentLearningProgressPort.findProgresses(visibleEnrollments.stream()
                         .map(visibleEnrollment -> new EnrollmentLearningProgressKey(

@@ -13,15 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class CourseAdapter implements CourseCatalogPort {
 
     private final CourseRepository courseRepository;
 
     @Override
+    @Transactional(readOnly = true, noRollbackFor = NotFoundException.class)
     public CoursePublicationStatus getPublicationStatus(Long courseId) {
         Course course = courseRepository.findByCourseIdAndDeletedAtIsNull(courseId)
                 .orElseThrow(() -> new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+        if (course.getStatus() == CourseStatus.DELETED) {
+            throw new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND);
+        }
 
         return new CoursePublicationStatus(
                 course.getCourseId(),
