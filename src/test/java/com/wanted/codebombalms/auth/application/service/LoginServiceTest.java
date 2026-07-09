@@ -22,6 +22,7 @@ import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
 import com.wanted.codebombalms.auth.infrastructure.metrics.AuthSecurityEventRecorder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,7 @@ class LoginServiceTest {
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private HttpServletRequest httpRequest;
     @Mock private AuthSecurityEventRecorder securityEventRecorder;
+    @Mock private AuthMetricsPort authMetrics;
 
     @InjectMocks
     private LoginService loginService;

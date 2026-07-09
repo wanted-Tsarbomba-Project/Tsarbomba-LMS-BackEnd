@@ -12,33 +12,33 @@ on:
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
-# 동시 배포 방지 (연속 push/중복 dispatch 시 race condition 차단)
+# 동시 배포 방지
 concurrency:
   group: deploy-spring-${{ github.ref }}
   cancel-in-progress: false
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPO: codebomb-spring
-  S3_PREFIX: s3://codebomb-deploy/spring/
-  EC2_NAME_TAG: codebomb-spring
+  ECR_REPO: team05/backend
+  S3_PREFIX: s3://team05-01-deploy-0708-635249349258-ap-northeast-2-an/spring/
+  EC2_NAME_TAG: team05-01-backend
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write             # OIDC 토큰 발급(키리스 핵심)
-      contents: read              # 체크아웃 읽기만
+      contents: read
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
         with:
-          persist-credentials: false   # 이후 스텝에 토큰 잔존 방지
+          persist-credentials: false
 
-      - name: AWS 자격증명 (OIDC, codebomb-github-actions)
+      - name: AWS 자격증명 (OIDC, team05-github-actions)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::143924590342:role/codebomb-github-actions
+          role-to-assume: arn:aws:iam::635249349258:role/team05-github-actions
           aws-region: ${{ env.AWS_REGION }}
 
       - name: ECR 로그인
@@ -46,7 +46,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: 이미지 빌드 & ECR 푸시
-        # Dockerfile 멀티스테이지가 gradle bootJar 수행 → 러너에서 빌드 중복 안 함
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
           TAG: ${{ github.sha }}
@@ -56,11 +55,59 @@ jobs:
           docker push "$REGISTRY/$ECR_REPO:$TAG"
           docker push "$REGISTRY/$ECR_REPO:latest"
 
-      - name: 배포파일 S3 업로드
-        # scp 대체. .env/secrets는 S3에 없으므로(--delete 미사용) EC2 기존 파일 유지
-        run: aws s3 sync deploy/ "$S3_PREFIX"
+      - name: .env 조립 (GitHub Secrets/Variables → 파일, 값은 로그 마스킹)
+        # 시크릿을 SSM 명령 텍스트에 넣지 않기 위해 러너에서 파일로 만들어 S3로만 전달
+        env:
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+          SPRING_PROFILES_ACTIVE: deploy
+          GOOGLE_APPLICATION_CREDENTIALS: /app/secrets/gcp-storage-key.json
+          DDL_AUTO: ${{ vars.DDL_AUTO }}
+          DB_URL: ${{ vars.DB_URL }}
+          DB_USERNAME: ${{ vars.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          LOKI_HOST: ${{ vars.LOKI_HOST }}
+          CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+          FASTAPI_URL: ${{ vars.FASTAPI_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MAIL_USERNAME: ${{ vars.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT_URI: ${{ vars.GOOGLE_REDIRECT_URI }}
+          OAUTH_ADDITIONAL_INFO_URI: ${{ vars.OAUTH_ADDITIONAL_INFO_URI }}
+          OAUTH_SUCCESS_URI: ${{ vars.OAUTH_SUCCESS_URI }}
+          COOKIE_SECURE: ${{ vars.COOKIE_SECURE }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_STORAGE_BUCKET: ${{ vars.GCP_STORAGE_BUCKET }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          : > deploy.env
+          # 빈 값은 건너뜀 → application.yml 기본값 유지 (빈값 override 방지)
+          for k in ECR_REGISTRY SPRING_PROFILES_ACTIVE GOOGLE_APPLICATION_CREDENTIALS DDL_AUTO \
+                   DB_URL DB_USERNAME DB_PASSWORD REDIS_HOST REDIS_PORT REDIS_PASSWORD LOKI_HOST \
+                   CORS_ALLOWED_ORIGINS FASTAPI_URL JWT_SECRET MAIL_USERNAME MAIL_PASSWORD \
+                   GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REDIRECT_URI \
+                   OAUTH_ADDITIONAL_INFO_URI OAUTH_SUCCESS_URI COOKIE_SECURE \
+                   GCP_PROJECT_ID GCP_STORAGE_BUCKET; do
+            v="${!k}"
+            [ -n "$v" ] && printf '%s=%s\n' "$k" "$v" >> deploy.env
+          done
+          mkdir -p keyout
+          printf '%s' "$GCP_SA_KEY" > keyout/gcp-storage-key.json
 
-      - name: ② EC2에서 받아 기동 (SSM send-command)
+      - name: 배포자산 + .env + GCP키 S3 업로드 (SSE)
+        run: |
+          set -euo pipefail
+          aws s3 sync deploy/ "$S3_PREFIX" --exclude '.env.example'
+          aws s3 cp deploy.env "${S3_PREFIX}.env" --sse AES256
+          aws s3 cp keyout/gcp-storage-key.json "${S3_PREFIX}secrets/gcp-storage-key.json" --sse AES256
+
+      - name: ② EC2에서 받아 기동 (SSM send-command — 시크릿 없음)
         env:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
         run: |
@@ -71,16 +118,16 @@ jobs:
           echo "대상 인스턴스: $INSTANCE_ID"
           if [ -z "$INSTANCE_ID" ]; then echo "running 인스턴스 없음"; exit 1; fi
 
-          # EC2에서 실행할 명령 (S3 동기화 → ECR 로그인 → compose pull/up → 헬스체크)
+          # EC2 명령: S3에서 .env·키·compose 받기 → ECR 로그인 → compose pull/up → 헬스체크
+          # (ECR 레지스트리 URL은 비밀 아님 → 명령에 넣어도 무방. 실제 시크릿은 S3의 .env에만)
           cat > params.json <<EOF
           {"commands":[
             "set -e",
             "export ECR_REGISTRY=$REGISTRY",
+            "mkdir -p /opt/spring/secrets",
             "aws s3 sync $S3_PREFIX /opt/spring",
             "cd /opt/spring",
-            "cp /opt/spring/.env /opt/spring/.env.bak 2>/dev/null || true",
-            "aws ssm get-parameters-by-path --path /codebomb/deploy/ --recursive --with-decryption --region $AWS_REGION --query 'Parameters[].[Name,Value]' --output text | sed 's|^/codebomb/deploy/||; s|[[:blank:]]|=|' > /opt/spring/.env",
-            "echo ECR_REGISTRY=$REGISTRY >> /opt/spring/.env",
+            "chmod 600 .env secrets/gcp-storage-key.json 2>/dev/null || true",
             "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY",
             "docker compose pull",
             "docker compose up -d",
@@ -99,7 +146,6 @@ jobs:
             --query "Command.CommandId" --output text)
           echo "CommandId: $CMD_ID"
 
-          # 명령 종료까지 대기(성공/실패 확정될 때까지)
           aws ssm wait command-executed --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" || true
 
           echo "===== EC2 표준 출력 ====="
@@ -114,3 +160,9 @@ jobs:
               --query "StandardErrorContent" --output text
             exit 1
           fi
+
+      - name: S3 시크릿 정리 (at-rest 제거)
+        if: always()
+        run: |
+          aws s3 rm "${S3_PREFIX}.env" || true
+          aws s3 rm "${S3_PREFIX}secrets/gcp-storage-key.json" || true

@@ -12,7 +12,8 @@ public enum SubmissionErrorCode implements ErrorCode {
     PROBLEM_NOT_RETRIABLE("SUB-003", "재시도할 수 없는 문제입니다."),
     ATTEMPT_LIMIT_EXCEEDED("SUB-004", "제출 가능한 횟수를 초과했습니다."),
     SUBMISSION_NOT_FOUND("SUB-005", "제출 기록을 찾을 수 없습니다."),
-    PROBLEM_ALREADY_SOLVED("SUB-006", "이미 정답 처리된 문제입니다.");
+    PROBLEM_ALREADY_SOLVED("SUB-006", "이미 정답 처리된 문제입니다."),
+    PROBLEM_EXPLANATION_ALREADY_VIEWED("SUB-007", "이미 해설을 조회한 문제는 제출할 수 없습니다.");
     private final String code;
     private final String message;
 }

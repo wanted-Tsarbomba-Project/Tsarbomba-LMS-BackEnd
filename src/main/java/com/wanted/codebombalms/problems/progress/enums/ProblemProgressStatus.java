@@ -4,5 +4,6 @@ public enum ProblemProgressStatus {
     LOCKED,
     UNSOLVED,
     CORRECT,
-    WRONG
+    WRONG,
+    EXPLANATION_VIEWED
 }

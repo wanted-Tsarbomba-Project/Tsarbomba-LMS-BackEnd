@@ -11,7 +11,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 5,
+  "version": 7,
   "refresh": "10s",
   "time": {
     "from": "now-30m",
@@ -63,7 +63,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -103,7 +103,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -126,7 +126,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -166,7 +166,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_access_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_access_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_access_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_access_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -189,7 +189,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -229,7 +229,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_problem_set_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_problem_set_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_problem_set_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_problem_set_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -252,7 +252,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -292,7 +292,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_progress_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_progress_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_progress_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_progress_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -315,7 +315,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -355,7 +355,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_progress_items_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_progress_items_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_progress_items_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_progress_items_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -378,7 +378,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0",
+          "noValue": "No data",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -418,7 +418,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "(rate(problem_set_entry_problem_details_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_problem_details_duration_seconds_count[$__rate_interval]), 0.0001)) or vector(0)",
+          "expr": "sum(rate(problem_set_entry_problem_details_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_problem_details_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": ""
         }
       ]
@@ -426,7 +426,7 @@
     {
       "type": "timeseries",
       "title": "문제세트 진입 단계별 평균",
-      "description": "",
+      "description": "ProblemSetEntryService의 durationMs, accessMs, problemSetMs, progressMs, progressItemsMs, problemDetailsMs 단계별 평균입니다. progressMs/progressItemsMs/problemDetailsMs가 높으면 진행도 조회, 진행도 항목 매핑, 문제 상세 조회 구간을 먼저 확인합니다.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -441,7 +441,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "noValue": "0"
+          "noValue": "No data"
         },
         "overrides": []
       },
@@ -452,7 +452,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "전체"
         },
         {
@@ -461,7 +461,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_access_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_access_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_access_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_access_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "접근 검증"
         },
         {
@@ -470,7 +470,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_problem_set_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_problem_set_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_problem_set_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_problem_set_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "문제세트 조회"
         },
         {
@@ -479,7 +479,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_progress_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_progress_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_progress_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_progress_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "진행도 조회"
         },
         {
@@ -488,7 +488,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_progress_items_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_progress_items_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_progress_items_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_progress_items_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "진행도 항목"
         },
         {
@@ -497,7 +497,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(problem_set_entry_problem_details_duration_seconds_sum[$__rate_interval]) / clamp_min(rate(problem_set_entry_problem_details_duration_seconds_count[$__rate_interval]), 0.0001)",
+          "expr": "sum(rate(problem_set_entry_problem_details_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(problem_set_entry_problem_details_duration_seconds_count[$__rate_interval])), 0.0001)",
           "legendFormat": "문제 상세"
         }
       ]
@@ -568,7 +568,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=problem_set_entry_failed\" [5m]))",
+          "expr": "sum(count_over_time({job=\"spring\"} |= \"event=problem_set_entry_failed\" [5m]))",
           "queryType": "range"
         }
       ]
@@ -627,7 +627,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=code_execution_runner_failed\" [5m]))",
+          "expr": "sum(count_over_time({job=\"spring\"} |= \"event=code_execution_runner_failed\" [5m]))",
           "queryType": "range"
         }
       ]
@@ -686,7 +686,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=code_execution_runner_completed\" |= \"reason=empty_response\" [5m]))",
+          "expr": "sum(count_over_time({job=\"spring\"} |= \"event=code_execution_runner_completed\" |= \"reason=empty_response\" [5m]))",
           "queryType": "range"
         }
       ]
@@ -732,7 +732,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"lms\"} |= \"event=problem_set_entered\" [5m]))",
+          "expr": "sum(count_over_time({job=\"spring\"} |= \"event=problem_set_entered\" [5m]))",
           "queryType": "range"
         }
       ]
@@ -765,7 +765,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"lms\"} |~ \"event=problem_set_(entered|entry_failed)\"",
+          "expr": "{job=\"spring\"} |~ \"event=problem_set_(entered|entry_failed)\"",
           "queryType": "range"
         }
       ]
@@ -798,7 +798,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"lms\"} |~ \"event=code_execution_runner_(completed|failed)\"",
+          "expr": "{job=\"spring\"} |~ \"event=code_execution_runner_(completed|failed)\"",
           "queryType": "range"
         }
       ]

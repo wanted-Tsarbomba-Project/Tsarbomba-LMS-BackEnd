@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.auth.application.service;
 
 import com.wanted.codebombalms.auth.application.command.SignupCommand;
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
 import com.wanted.codebombalms.auth.domain.repository.EmailVerificationRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -29,6 +30,7 @@ class SignupServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EmailVerificationRepository emailVerificationRepository;
+    @Mock private AuthMetricsPort authMetrics;
 
     @InjectMocks
     private SignupService signupService;

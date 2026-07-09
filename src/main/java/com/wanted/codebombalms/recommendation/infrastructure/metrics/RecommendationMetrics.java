@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.recommendation.infrastructure.metrics;
 
+import com.wanted.codebombalms.recommendation.application.port.RecommendationMetricPort;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /** Recommendation 도메인 커스텀 메트릭을 기록합니다. */
 @Component
-public class RecommendationMetrics {
+public class RecommendationMetrics implements RecommendationMetricPort {
 
     private final MeterRegistry registry;
     private final Timer problemSetListTimer;
@@ -20,6 +21,7 @@ public class RecommendationMetrics {
     private final Timer generationExternalTimer;
     private final Counter generationUserCounter;
     private final Counter exposedCounter;
+    private final Counter hideTodayCounter;
     private final DistributionSummary confidenceSummary;
     private final DistributionSummary liftSummary;
     private final DistributionSummary supportSummary;
@@ -63,6 +65,11 @@ public class RecommendationMetrics {
                 .description("추천 목록에서 사용자에게 노출된 추천 카드 수")
                 .register(registry);
 
+        // 추천 영역 오늘 하루 숨김 처리 수 누적
+        this.hideTodayCounter = Counter.builder("recommendation_hide_today_total")
+                .description("추천 영역을 오늘 하루 숨김 처리한 횟수")
+                .register(registry);
+
         // 추천 생성 실패 수를 reason 별로 기록
         this.confidenceSummary = DistributionSummary.builder("recommendation_score_confidence")
                 .description("생성된 추천 confidence 분포")
@@ -77,6 +84,7 @@ public class RecommendationMetrics {
                 .register(registry);
     }
 
+    @Override
     public void recordProblemSetList(long elapsedNanos) {
         problemSetListTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
@@ -89,6 +97,7 @@ public class RecommendationMetrics {
         problemSetListQueryTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 
+    @Override
     public void recordGenerationBatch(long elapsedNanos) {
         generationBatchTimer.record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
@@ -102,12 +111,14 @@ public class RecommendationMetrics {
                 .record(elapsedNanos, TimeUnit.NANOSECONDS);
     }
 
+    @Override
     public void incrementGenerationUsers(int userCount) {
         if (userCount > 0) {
             generationUserCounter.increment(userCount);
         }
     }
 
+    @Override
     public void incrementGenerationFailed(String reason) {
         Counter.builder("recommendation_generation_failed_total")
                 .description("추천 생성 실패 수")
@@ -116,10 +127,16 @@ public class RecommendationMetrics {
                 .increment();
     }
 
+    @Override
     public void incrementExposed(int exposedCount) {
         if (exposedCount > 0) {
             exposedCounter.increment(exposedCount);
         }
+    }
+
+    @Override
+    public void incrementHideToday() {
+        hideTodayCounter.increment();
     }
 
     // 추천 score인 confidence/lift/support 분포 기록
