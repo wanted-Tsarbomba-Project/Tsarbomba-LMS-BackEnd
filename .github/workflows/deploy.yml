@@ -19,8 +19,8 @@ concurrency:
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPO: team05-01-spring
-  S3_PREFIX: s3://team05-01-deploy-0708/spring/
+  ECR_REPO: team05/backend
+  S3_PREFIX: s3://team05-01-deploy-0708-635249349258-ap-northeast-2-an/spring/
   EC2_NAME_TAG: team05-01-backend
 
 jobs:
