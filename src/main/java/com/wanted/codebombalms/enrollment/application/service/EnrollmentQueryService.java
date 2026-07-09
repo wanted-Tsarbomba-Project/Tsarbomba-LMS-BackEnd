@@ -38,8 +38,19 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
         log.info("[EnrollmentQueryService] find my courses - userId: {}", userId);
 
         List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
+        return toMyCourseResults(enrollments);
+    }
+
+    @Override
+    public List<MyCourseResult> findAllEnrollmentCourses() {
+        log.info("[EnrollmentQueryService] find all enrollment courses");
+
+        return toMyCourseResults(enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE));
+    }
+
+    private List<MyCourseResult> toMyCourseResults(List<Enrollment> enrollments) {
         List<MyCourseEnrollment> visibleEnrollments = enrollments.stream()
-                .map(enrollment -> toVisibleEnrollment(userId, enrollment))
+                .map(this::toVisibleEnrollment)
                 .flatMap(Optional::stream)
                 .toList();
 
@@ -50,20 +61,17 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
         Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses =
                 enrollmentLearningProgressPort.findProgresses(visibleEnrollments.stream()
                         .map(visibleEnrollment -> new EnrollmentLearningProgressKey(
-                                userId,
+                                visibleEnrollment.enrollment().getUserId(),
                                 visibleEnrollment.enrollment().getCourseId()
                         ))
                         .toList());
 
         return visibleEnrollments.stream()
-                .map(visibleEnrollment -> toMyCourseResult(userId, visibleEnrollment, progresses))
+                .map(visibleEnrollment -> toMyCourseResult(visibleEnrollment, progresses))
                 .toList();
     }
 
-    private Optional<MyCourseEnrollment> toVisibleEnrollment(
-            Long userId,
-            Enrollment enrollment
-    ) {
+    private Optional<MyCourseEnrollment> toVisibleEnrollment(Enrollment enrollment) {
         try {
             return Optional.of(new MyCourseEnrollment(
                     enrollment,
@@ -76,7 +84,7 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
 
             log.info(
                     "[EnrollmentQueryService] skip deleted course enrollment - userId: {}, enrollmentId: {}, courseId: {}",
-                    userId,
+                    enrollment.getUserId(),
                     enrollment.getEnrollmentId(),
                     enrollment.getCourseId()
             );
@@ -85,12 +93,14 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
     }
 
     private MyCourseResult toMyCourseResult(
-            Long userId,
             MyCourseEnrollment visibleEnrollment,
             Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses
     ) {
         Enrollment enrollment = visibleEnrollment.enrollment();
-        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(userId, enrollment.getCourseId());
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(
+                enrollment.getUserId(),
+                enrollment.getCourseId()
+        );
 
         return MyCourseResult.from(
                 enrollment,

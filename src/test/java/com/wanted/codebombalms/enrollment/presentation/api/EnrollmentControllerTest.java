@@ -1,20 +1,13 @@
 package com.wanted.codebombalms.enrollment.presentation.api;
 
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
-import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
-import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
-import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,7 +28,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -63,12 +55,6 @@ class EnrollmentControllerTest {
 
     @MockitoBean
     private EnrollmentQueryUseCase enrollmentQueryUseCase;
-
-    @MockitoBean
-    private CourseCatalogPort courseCatalogPort;
-
-    @MockitoBean
-    private EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @MockitoBean
     private AdminPermissionCheckService adminPermissionCheckService;
@@ -179,12 +165,8 @@ class EnrollmentControllerTest {
     void findAllEnrollments_returnsApiResponse() throws Exception {
         Enrollment enrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentQueryUseCase.findAllActiveEnrollments()).willReturn(List.of(enrollment));
-        given(courseCatalogPort.getPublicationStatus(1L))
-                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
-        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(10L, 1L);
-        given(enrollmentLearningProgressPort.findProgresses(List.of(progressKey)))
-                .willReturn(Map.of(progressKey, createCompletedProgress()));
+        given(enrollmentQueryUseCase.findAllEnrollmentCourses())
+                .willReturn(List.of(createMyCourseResult(enrollment)));
 
         mockMvc.perform(get("/api/v1/enrollments")
                         .with(authentication(operatorPrincipal(1L)))
@@ -197,21 +179,11 @@ class EnrollmentControllerTest {
     }
 
     @Test
-    void findAllEnrollments_skipsDeletedCourseEnrollments() throws Exception {
+    void findAllEnrollments_returnsFilteredResultsFromUseCase() throws Exception {
         Enrollment activeEnrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
-        Enrollment deletedCourseEnrollment = createEnrollment(2L, 11L, 2L, EnrollmentStatus.ACTIVE);
 
-        given(enrollmentQueryUseCase.findAllActiveEnrollments())
-                .willReturn(List.of(activeEnrollment, deletedCourseEnrollment));
-        given(courseCatalogPort.getPublicationStatus(1L))
-                .willReturn(new CoursePublicationStatus(1L, 1L, "Java", "description", "java.png", true));
-        given(courseCatalogPort.getPublicationStatus(2L))
-                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
-        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(10L, 1L);
-        given(enrollmentLearningProgressPort.findProgresses(List.of(
-                progressKey,
-                new EnrollmentLearningProgressKey(11L, 2L)
-        ))).willReturn(Map.of(progressKey, createCompletedProgress()));
+        given(enrollmentQueryUseCase.findAllEnrollmentCourses())
+                .willReturn(List.of(createMyCourseResult(activeEnrollment)));
 
         mockMvc.perform(get("/api/v1/enrollments")
                         .with(authentication(operatorPrincipal(1L)))
@@ -323,7 +295,4 @@ class EnrollmentControllerTest {
         );
     }
 
-    private EnrollmentLearningProgress createCompletedProgress() {
-        return new EnrollmentLearningProgress(true, "COMPLETED", 100, 2, 2, 1, 1);
-    }
 }

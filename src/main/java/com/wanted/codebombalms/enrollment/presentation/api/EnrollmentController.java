@@ -1,18 +1,11 @@
 package com.wanted.codebombalms.enrollment.presentation.api;
 
-import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.enrollment.application.command.CancelEnrollmentCommand;
 import com.wanted.codebombalms.enrollment.application.command.EnrollCourseCommand;
-import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
-import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentCommandUseCase;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
-import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.presentation.api.response.EnrollCourseResponse;
 import com.wanted.codebombalms.enrollment.presentation.api.response.MyCourseResponse;
-import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,9 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -39,8 +29,6 @@ public class EnrollmentController {
 
     private final EnrollmentCommandUseCase enrollmentCommandUseCase;
     private final EnrollmentQueryUseCase enrollmentQueryUseCase;
-    private final CourseCatalogPort courseCatalogPort;
-    private final EnrollmentLearningProgressPort enrollmentLearningProgressPort;
 
     @PostMapping("/courses/{courseId}/enrollments")
     @Operation(summary = "수강신청 생성")
@@ -96,21 +84,12 @@ public class EnrollmentController {
     public ResponseEntity<ApiResponse<?>> findAllEnrollments() {
         log.info("[EnrollmentController] find all active enrollments");
 
-        List<Enrollment> enrollments = enrollmentQueryUseCase.findAllActiveEnrollments();
-        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
-                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
-                        .map(enrollment -> new EnrollmentLearningProgressKey(
-                                enrollment.getUserId(),
-                                enrollment.getCourseId()
-                        ))
-                        .toList());
-
         return ResponseEntity.ok(ApiResponse.success(
                 EnrollmentResponseCode.RETRIEVED,
                 EnrollmentResponseMessage.RETRIEVED,
-                enrollments.stream()
-                        .map(enrollment -> toMyCourseResponse(enrollment, progresses))
-                        .flatMap(Optional::stream)
+                enrollmentQueryUseCase.findAllEnrollmentCourses()
+                        .stream()
+                        .map(MyCourseResponse::from)
                         .toList()
         ));
     }
@@ -153,34 +132,5 @@ public class EnrollmentController {
                         .map(MyCourseResponse::from)
                         .toList()
         ));
-    }
-
-    private Optional<MyCourseResponse> toMyCourseResponse(
-            Enrollment enrollment,
-            Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses
-    ) {
-        try {
-            EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(
-                    enrollment.getUserId(),
-                    enrollment.getCourseId()
-            );
-            return Optional.of(MyCourseResponse.from(
-                    enrollment,
-                    courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
-                    progresses.getOrDefault(progressKey, EnrollmentLearningProgress.of(0, 0, 0, 0))
-            ));
-        } catch (NotFoundException e) {
-            if (e.getErrorCode() != CourseErrorCode.COURSE_NOT_FOUND) {
-                throw e;
-            }
-
-            log.info(
-                    "[EnrollmentController] skip deleted course enrollment - userId: {}, enrollmentId: {}, courseId: {}",
-                    enrollment.getUserId(),
-                    enrollment.getEnrollmentId(),
-                    enrollment.getCourseId()
-            );
-            return Optional.empty();
-        }
     }
 }
