@@ -8,6 +8,8 @@ public interface LectureQueryUseCase {
 
     List<Lecture> findLecturesByCourseId(Long courseId);
 
+    List<Lecture> findLecturesByCourseIdForAccess(Long courseId, Long userId, boolean operator);
+
     Lecture findLectureById(Long lectureId);
 
     Lecture findLectureByIdForLearning(Long lectureId, Long userId, boolean operator);

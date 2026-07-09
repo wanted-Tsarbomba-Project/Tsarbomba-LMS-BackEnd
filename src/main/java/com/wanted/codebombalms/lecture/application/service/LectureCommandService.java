@@ -8,8 +8,11 @@ import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.domain.model.Lecture;
+import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
+import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialRepository;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
+import com.wanted.codebombalms.lecture.application.port.LectureMaterialStoragePort;
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
@@ -18,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -35,6 +40,8 @@ public class LectureCommandService implements LectureCommandUseCase {
     private final LectureRepository lectureRepository;
     private final CourseCatalogPort courseCatalogPort;
     private final LectureCreationPolicy lectureCreationPolicy;
+    private final LectureMaterialRepository lectureMaterialRepository;
+    private final LectureMaterialStoragePort lectureMaterialStoragePort;
 
     @Override
     public Lecture createLecture(CreateLectureCommand command) {
@@ -96,8 +103,39 @@ public class LectureCommandService implements LectureCommandUseCase {
         Lecture lecture = lectureRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
                 .orElseThrow(() -> new NotFoundException(LectureErrorCode.LECTURE_NOT_FOUND));
 
+        lectureMaterialRepository.findByLectureIdAndDeletedAtIsNull(lectureId)
+                .forEach(this::deleteMaterial);
         lecture.delete();
         lectureRepository.save(lecture);
+    }
+
+    private void deleteMaterial(LectureMaterial material) {
+        String filePath = material.getFilePath();
+        material.delete();
+        lectureMaterialRepository.save(material);
+        runAfterCommit(() -> deleteMaterialFileQuietly(filePath));
+    }
+
+    private void deleteMaterialFileQuietly(String filePath) {
+        try {
+            lectureMaterialStoragePort.delete(filePath);
+        } catch (RuntimeException e) {
+            log.warn("Failed to delete lecture material file after lecture deletion. filePath={}", filePath, e);
+        }
+    }
+
+    private void runAfterCommit(Runnable task) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            task.run();
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                task.run();
+            }
+        });
     }
 
     private void validateLectureOrder(Long courseId, Long lectureId, Integer lectureOrder) {

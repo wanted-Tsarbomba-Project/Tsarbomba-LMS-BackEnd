@@ -10,6 +10,7 @@
 - 최신 제출과 코드 제출 목록을 조회한다.
 - 문제별 제출 지표를 조회한다.
 - 정답 처리 시 문제 해결과 문제 세트 완료 이벤트를 발행한다.
+- 제출 결과 저장 직전에 문제세트 진행도 row를 잠가 동시 정답 제출로 인한 중복 저장과 중복 진행도 증가를 방지한다.
 
 ## 패키지 구조
 
@@ -49,11 +50,31 @@ submission
 | 서비스 | 책임 |
 | --- | --- |
 | `SubmissionService` | 문제 제출 명령 처리 |
+| `SubmissionTransactionService` | 제출 저장, 테스트 결과 저장, 진행도 갱신, 문제 해결 이벤트 발행 |
 | `SubmissionQueryService` | 제출 조회 |
 | `CodeGradingService` | 코드 제출 테스트 케이스 채점 |
 | `CodeSubmissionResultQueryService` | 코드 제출 결과 상세 조회 |
 | `CodeSubmissionListQueryService` | 코드 제출 목록 조회 |
 | `ProblemSubmissionMetricQueryService` | 문제별 제출 지표 조회 |
+
+## 제출 완료 처리 동시성 정책
+
+코드 실행과 채점은 외부 Runner 호출 시간이 길 수 있으므로 이 구간에서는 DB 락을 잡지 않는다.  
+대신 채점 결과를 DB에 저장하기 직전 `problem_progress(user_id, problem_set_id)` row를 `PESSIMISTIC_WRITE`로 잠근 뒤 기존 제출 가능 검증을 다시 수행한다.
+
+```text
+제출 요청
+→ prepare 검증
+→ Runner 채점
+→ complete 진입
+→ problem_progress row lock
+→ 이미 푼 문제/현재 문제/시도 횟수 재검증
+→ submission 저장
+→ test result 저장
+→ 정답이면 진행도 갱신 및 ProblemSolvedEvent 발행
+```
+
+이 정책으로 같은 사용자가 같은 문제를 거의 동시에 정답 제출해도 제출 완료 처리는 한 번씩 순서대로 진행된다.
 
 ## API 목록
 
@@ -67,8 +88,8 @@ submission
 
 | 대상 도메인 | 연동 내용 |
 | --- | --- |
-| `problems` | 제출 대상 문제와 테스트 케이스 조회 |
+| `problems` | 제출 대상 문제와 테스트 케이스 조회, 문제세트 진행도 검증과 row lock |
 | `learning` | 문제 진행률 갱신 |
-| `reward` | 문제 해결 이벤트를 통한 포인트 지급 |
+| `reward` | 문제 해결 이벤트를 통한 포인트 지급. Reward 실패는 Submission 저장을 롤백하지 않음 |
 | `ranking` | 포인트 변화가 랭킹에 반영 |
 

@@ -48,13 +48,17 @@ public class LectureController {
 
     @GetMapping("/courses/{courseId}/lectures")
     @Operation(summary = "강좌별 강의 목록 조회")
-    public ResponseEntity<ApiResponse<?>> findLecturesByCourseId(@PathVariable Long courseId) {
+    public ResponseEntity<ApiResponse<?>> findLecturesByCourseId(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
         log.info("[LectureController] find lectures - courseId: {}", courseId);
 
         return ResponseEntity.ok(ApiResponse.success(
                 LectureResponseCode.RETRIEVED,
                 LectureResponseMessage.RETRIEVED,
-                lectureQueryUseCase.findLecturesByCourseId(courseId)
+                lectureQueryUseCase.findLecturesByCourseIdForAccess(courseId, userId, isOperator(authentication))
                         .stream()
                         .map(LectureResponse::from)
                         .toList()
@@ -194,11 +198,15 @@ public class LectureController {
 
     @GetMapping("/lectures/{lectureId}/materials")
     @Operation(summary = "강의자료 목록 조회")
-    public ResponseEntity<ApiResponse<?>> findMaterials(@PathVariable Long lectureId) {
+    public ResponseEntity<ApiResponse<?>> findMaterials(
+            @PathVariable Long lectureId,
+            @AuthenticationPrincipal Long userId,
+            Authentication authentication
+    ) {
         return ResponseEntity.ok(ApiResponse.success(
                 LectureResponseCode.RETRIEVED,
                 LectureResponseMessage.RETRIEVED,
-                lectureMaterialUseCase.findMaterials(lectureId)
+                lectureMaterialUseCase.findMaterialsForAccess(lectureId, userId, isOperator(authentication))
                         .stream()
                         .map(LectureMaterialResponse::from)
                         .toList()

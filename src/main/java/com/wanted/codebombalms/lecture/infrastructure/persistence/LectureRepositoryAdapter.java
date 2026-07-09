@@ -7,6 +7,7 @@ import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -65,6 +66,19 @@ public class LectureRepositoryAdapter implements LectureRepository {
                 .stream()
                 .map(entity -> entity.toDomain(course))
                 .toList();
+    }
+
+    @Override
+    public Map<Long, Long> countActiveByCourseIds(Collection<Long> courseIds) {
+        if (courseIds.isEmpty()) {
+            return Map.of();
+        }
+        return springDataLectureRepository.countActiveByCourseIds(courseIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        SpringDataLectureRepository.CourseLectureCount::getCourseId,
+                        SpringDataLectureRepository.CourseLectureCount::getLectureCount
+                ));
     }
 
     @Override

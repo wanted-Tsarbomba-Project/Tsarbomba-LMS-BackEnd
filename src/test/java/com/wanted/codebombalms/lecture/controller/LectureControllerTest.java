@@ -74,7 +74,7 @@ class LectureControllerTest {
     @Test
     void findLecturesByCourseId_returnsApiResponse() throws Exception {
         Long courseId = 1L;
-        given(lectureQueryUseCase.findLecturesByCourseId(courseId)).willReturn(List.of(
+        given(lectureQueryUseCase.findLecturesByCourseIdForAccess(eq(courseId), isNull(), eq(false))).willReturn(List.of(
                 createLecture(1L, createCourse(courseId), "Java 1")
         ));
 
@@ -296,7 +296,7 @@ class LectureControllerTest {
     @Test
     void findMaterials_returnsApiResponse() throws Exception {
         Long lectureId = 1L;
-        given(lectureMaterialUseCase.findMaterials(lectureId))
+        given(lectureMaterialUseCase.findMaterialsForAccess(eq(lectureId), isNull(), eq(false)))
                 .willReturn(List.of(createMaterial(10L, lectureId)));
 
         mockMvc.perform(get("/api/v1/lectures/{lectureId}/materials", lectureId))

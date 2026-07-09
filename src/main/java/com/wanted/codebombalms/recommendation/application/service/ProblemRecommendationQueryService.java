@@ -2,10 +2,10 @@ package com.wanted.codebombalms.recommendation.application.service;
 
 import com.wanted.codebombalms.recommendation.application.port.ProblemRecommendationQueryPort;
 import com.wanted.codebombalms.recommendation.application.port.RecommendationHidePort;
+import com.wanted.codebombalms.recommendation.application.port.RecommendationMetricPort;
 import com.wanted.codebombalms.recommendation.application.query.ProblemSetRecommendationResult;
 import com.wanted.codebombalms.recommendation.application.usecase.GetMyProblemSetRecommendationsUseCase;
 import com.wanted.codebombalms.recommendation.domain.model.RecommendationHideType;
-import com.wanted.codebombalms.recommendation.infrastructure.metrics.RecommendationMetrics;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -27,7 +27,7 @@ public class ProblemRecommendationQueryService implements GetMyProblemSetRecomme
 
     private final ProblemRecommendationQueryPort problemRecommendationQueryPort;
     private final RecommendationHidePort recommendationHidePort;
-    private final RecommendationMetrics recommendationMetrics;
+    private final RecommendationMetricPort recommendationMetrics;
 
     /** 숨김 상태를 먼저 확인한 뒤 활성 추천 목록을 최대 3개까지 조회합니다. */
     @Override

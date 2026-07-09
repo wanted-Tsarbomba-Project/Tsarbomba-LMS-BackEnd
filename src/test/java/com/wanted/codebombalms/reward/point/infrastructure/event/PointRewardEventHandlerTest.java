@@ -9,7 +9,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,36 +32,44 @@ class PointRewardEventHandlerTest {
     private PointRewardEventHandler handler;
 
     @Test
-    void recordsScheduledMetricAfterCommittedEvent() {
-        ProblemSolvedEvent event = new ProblemSolvedEvent(
-                10L,
-                20L,
-                30L,
-                100
-        );
+    void schedulesAndProcessesRewardTaskAfterCommit() {
+        ProblemSolvedEvent event = new ProblemSolvedEvent(10L, 20L, 30L, 100);
 
-        handler.process(event);
+        handler.scheduleAndProcess(event);
 
+        verify(schedulePointRewardTaskUseCase).schedule(10L, 20L, 30L, 100);
         verify(rewardMetrics).recordScheduled();
+        verify(rewardMetrics).recordSchedule(RecordRewardMetricsPort.ScheduleResult.SCHEDULED);
         verify(processPointRewardTaskUseCase).process(30L);
     }
 
     @Test
-    void schedulesPersistentTaskBeforeCommit() {
-        ProblemSolvedEvent event = new ProblemSolvedEvent(
-                10L,
-                20L,
-                30L,
-                100
-        );
+    void skipsProcessingWhenRewardTaskAlreadyScheduled() {
+        ProblemSolvedEvent event = new ProblemSolvedEvent(10L, 20L, 30L, 100);
 
-        handler.schedule(event);
+        doThrow(new DataIntegrityViolationException("duplicate"))
+                .when(schedulePointRewardTaskUseCase)
+                .schedule(10L, 20L, 30L, 100);
 
-        verify(schedulePointRewardTaskUseCase).schedule(
-                10L,
-                20L,
-                30L,
-                100
-        );
+        handler.scheduleAndProcess(event);
+
+        verify(rewardMetrics).recordSchedule(RecordRewardMetricsPort.ScheduleResult.ALREADY_SCHEDULED);
+        verify(rewardMetrics, never()).recordScheduled();
+        verify(processPointRewardTaskUseCase, never()).process(anyLong());
+    }
+
+    @Test
+    void recordsFailedMetricWhenRewardTaskScheduleFails() {
+        ProblemSolvedEvent event = new ProblemSolvedEvent(10L, 20L, 30L, 100);
+
+        doThrow(new RuntimeException("schedule failed"))
+                .when(schedulePointRewardTaskUseCase)
+                .schedule(10L, 20L, 30L, 100);
+
+        handler.scheduleAndProcess(event);
+
+        verify(rewardMetrics).recordSchedule(RecordRewardMetricsPort.ScheduleResult.FAILED);
+        verify(rewardMetrics, never()).recordScheduled();
+        verify(processPointRewardTaskUseCase, never()).process(anyLong());
     }
 }

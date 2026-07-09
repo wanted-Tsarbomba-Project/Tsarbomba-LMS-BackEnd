@@ -95,7 +95,8 @@ class CourseControllerTest {
     @Test
     void findCourseById_returnsApiResponse() throws Exception {
         Long courseId = 1L;
-        given(courseQueryUseCase.findCourseById(courseId)).willReturn(createDetailResult(courseId, "Java"));
+        given(courseQueryUseCase.findCourseByIdForStudent(courseId, null))
+                .willReturn(createDetailResult(courseId, "Java"));
 
         mockMvc.perform(get("/api/v1/courses/{courseId}", courseId).contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

@@ -1,9 +1,11 @@
-# ② Spring (SUT) + promtail 사이드카 — ③ Loki로 로그 전송
+# ② Spring (SUT) + Redis(합류) + promtail 사이드카 — ③ Loki로 로그 전송
 services:
   spring:
-    image: ${ECR_REGISTRY}/codebomb-spring:latest
+    image: ${ECR_REGISTRY}/team05-01-spring:latest
     container_name: lms-spring
     restart: unless-stopped
+    depends_on:
+      - redis
     env_file: .env                 # DB/Redis/JWT/OAuth/GCP 등 런타임 비밀값
     environment:
       # Default path for GoogleCredentials.getApplicationDefault() inside the container.
@@ -13,6 +15,19 @@ services:
     volumes:
       # GCP 스토리지 키 (EC2 /opt/spring/secrets/gcp-storage-key.json 배치)
       - ./secrets:/app/secrets:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    # Redis를 ③ 모니터링 박스 → ② backend 박스로 이전(리팩토링). REDIS_HOST=redis(서비스명)
+    image: redis:7-alpine
+    container_name: lms-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    # 포트 미노출 — compose 네트워크로 spring만 접근(SG 불필요)
     logging:
       driver: json-file
       options:

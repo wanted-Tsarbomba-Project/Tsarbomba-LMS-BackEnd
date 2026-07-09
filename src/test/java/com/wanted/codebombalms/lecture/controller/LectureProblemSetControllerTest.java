@@ -77,7 +77,7 @@ class LectureProblemSetControllerTest {
 
     @Test
     void findProblemSetsByCourseReturnsApiResponse() throws Exception {
-        given(lectureProblemSetQueryUseCase.findProblemSetsByCourse(101L)).willReturn(List.of(
+        given(lectureProblemSetQueryUseCase.findProblemSetsByCourseForAccess(101L, null, false)).willReturn(List.of(
                 LectureProblemSet.restore(6001L, 101L, 1001L, 2002L, LectureProblemSetRole.MAIN, 1),
                 LectureProblemSet.restore(6002L, 101L, null, 2003L, LectureProblemSetRole.FINAL, 1)
         ));
@@ -93,7 +93,7 @@ class LectureProblemSetControllerTest {
 
     @Test
     void findProblemSetsByLectureReturnsApiResponse() throws Exception {
-        given(lectureProblemSetQueryUseCase.findProblemSetsByLecture(101L)).willReturn(List.of(
+        given(lectureProblemSetQueryUseCase.findProblemSetsByLectureForAccess(101L, null, false)).willReturn(List.of(
                 LectureProblemSet.restore(6001L, 101L, 101L, 2002L, LectureProblemSetRole.MAIN, 1)
         ));
 

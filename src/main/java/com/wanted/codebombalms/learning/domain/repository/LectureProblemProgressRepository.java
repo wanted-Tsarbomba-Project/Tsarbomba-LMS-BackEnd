@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.learning.domain.repository;
 
 import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
+import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository.UserCourseKey;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +27,11 @@ public interface LectureProblemProgressRepository {
     Map<Long, Long> countCompletedByUserIdsAndLectureProblemSetIds(
             List<Long> userIds,
             List<Long> lectureProblemSetIds
+    );
+
+    Map<UserCourseKey, Long> countCompletedMainByUserIdsAndCourseIds(
+            Collection<Long> userIds,
+            Collection<Long> courseIds
     );
 
     long countCompletedByLectureProblemSetIds(List<Long> lectureProblemSetIds);
