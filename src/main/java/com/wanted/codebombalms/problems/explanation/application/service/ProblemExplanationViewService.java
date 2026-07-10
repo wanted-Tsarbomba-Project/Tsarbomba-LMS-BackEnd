@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.problems.explanation.application.service;
 
+import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationSolvedQueryPort;
 import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewCommandPort;
+import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewQueryPort;
 import com.wanted.codebombalms.problems.explanation.application.usecase.ViewProblemExplanationUseCase;
 import com.wanted.codebombalms.problems.progress.enums.ProblemProgressStatus;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
@@ -17,11 +19,27 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
     private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
     private final ProblemProgressPort problemProgressPort;
     private final ProblemExplanationViewCommandPort commandPort;
+    private final ProblemExplanationViewQueryPort queryPort;
+    private final ProblemExplanationSolvedQueryPort solvedQueryPort;
 
     @Override
     @Transactional
     public ViewProblemExplanationUseCase.ExplanationView viewExplanation(Long userId, Long problemId) {
         var problem = loadProblemForSubmissionPort.loadProblemForSubmission(problemId);
+
+        if (solvedQueryPort.existsCorrectSubmission(userId, problem.problemId())) {
+            return readOnlyExplanation(
+                    problem,
+                    ProblemProgressStatus.CORRECT
+            );
+        }
+
+        if (queryPort.existsViewed(userId, problem.problemId())) {
+            return readOnlyExplanation(
+                    problem,
+                    ProblemProgressStatus.EXPLANATION_VIEWED
+            );
+        }
 
         problemProgressPort.validateCurrentProblem(
                 userId,
@@ -64,6 +82,22 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
                 problem.explanation(),
                 nextProblemId,
                 problemSetCompleted,
+                0,
+                false
+        );
+    }
+
+    private ViewProblemExplanationUseCase.ExplanationView readOnlyExplanation(
+            LoadProblemForSubmissionPort.ProblemForSubmission problem,
+            ProblemProgressStatus status
+    ) {
+        return new ViewProblemExplanationUseCase.ExplanationView(
+                problem.problemId(),
+                status,
+                ProblemProgressStatus.CORRECT,
+                problem.explanation(),
+                null,
+                false,
                 0,
                 false
         );
