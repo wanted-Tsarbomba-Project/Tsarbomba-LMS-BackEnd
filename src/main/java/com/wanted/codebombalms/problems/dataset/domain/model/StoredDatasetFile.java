@@ -10,13 +10,15 @@ public class StoredDatasetFile {
     private final String fileUrl;
     private final String filePath;
     private final Long fileSize;
+    private final String metadata;
 
     private StoredDatasetFile(
             String originalFileName,
             String storedFileName,
             String fileUrl,
             String filePath,
-            Long fileSize
+            Long fileSize,
+            String metadata
     ) {
         if (originalFileName == null || originalFileName.isBlank()) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
@@ -36,6 +38,7 @@ public class StoredDatasetFile {
         this.fileUrl = fileUrl;
         this.filePath = filePath;
         this.fileSize = fileSize;
+        this.metadata = metadata;
     }
 
     public static StoredDatasetFile create(
@@ -43,14 +46,16 @@ public class StoredDatasetFile {
             String storedFileName,
             String fileUrl,
             String filePath,
-            Long fileSize
+            Long fileSize,
+            String metadata
     ) {
         return new StoredDatasetFile(
                 originalFileName,
                 storedFileName,
                 fileUrl,
                 filePath,
-                fileSize
+                fileSize,
+                metadata
         );
     }
 
@@ -72,5 +77,9 @@ public class StoredDatasetFile {
 
     public Long getFileSize() {
         return fileSize;
+    }
+
+    public String getMetadata() {
+        return metadata;
     }
 }

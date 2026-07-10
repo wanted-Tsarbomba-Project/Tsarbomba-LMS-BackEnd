@@ -28,9 +28,11 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         long startAt = System.nanoTime();
+        // traceId 는 로컬 변수로 잡아둔다 — doFilter 내부 필터가 MDC.clear() 해도 완료 로그에 안전.
+        String traceId = UUID.randomUUID().toString().substring(0, 8);
 
         try {
-            MDC.put("traceId", UUID.randomUUID().toString().substring(0, 8));
+            MDC.put("traceId", traceId);
             MDC.put("requestURI", request.getRequestURI());
             MDC.put("method", request.getMethod());
             MDC.put("clientIp", ClientIpResolver.resolve(request));
@@ -40,14 +42,14 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } finally {
-            // MDC.clear() 전에 남겨야 완료 로그에도 traceId 가 붙는다.
             long durationMs = (System.nanoTime() - startAt) / 1_000_000;
             String userId = resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_USER_ID_ATTRIBUTE);
             String role = resolveAttribute(request, JwtAuthenticationFilter.AUTHENTICATED_ROLE_ATTRIBUTE);
             MDC.put("userId", userId);
             MDC.put("role", role);
 
-            log.info("event=request_completed method={} uri={} status={} durationMs={} userId={} role={} clientIp={}",
+            log.info("event=request_completed traceId={} method={} uri={} status={} durationMs={} userId={} role={} clientIp={}",
+                    traceId,
                     request.getMethod(),
                     request.getRequestURI(),
                     response.getStatus(),

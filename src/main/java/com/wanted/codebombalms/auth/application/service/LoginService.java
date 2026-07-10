@@ -59,6 +59,7 @@ public class LoginService implements LoginUseCase {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthSecurityEventRecorder securityEventRecorder;
     private final AuthMetricsPort authMetrics;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public LoginResult login(LoginCommand command, HttpServletRequest request, String deviceFp) {
@@ -144,7 +145,9 @@ public class LoginService implements LoginUseCase {
 
     private LoginResult issueTokens(User user) {
         refreshTokenRepository.deleteByUserId(user.getUserId());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(), user.getRole());
+        String sid = authSessionManager.open(user.getUserId());
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getUserId(), user.getNickname(), user.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
         refreshTokenRepository.save(
                 RefreshToken.issue(user.getUserId(), refreshToken, jwtTokenProvider.getRefreshExpiration()));

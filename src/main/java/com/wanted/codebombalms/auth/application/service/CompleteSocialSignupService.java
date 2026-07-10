@@ -27,6 +27,7 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public TokenPair complete(String tempToken, String nickname, String phone) {
@@ -54,8 +55,9 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
         tempTokenRepository.findAndDelete(tempToken);
 
         // 6. 토큰 발급 (가입 직후 바로 로그인)
+        String sid = authSessionManager.open(saved.getUserId());
         String accessToken = jwtTokenProvider.generateAccessToken(
-                saved.getUserId(), saved.getNickname(), saved.getRole());
+                saved.getUserId(), saved.getNickname(), saved.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(saved.getUserId());
 
         refreshTokenRepository.save(

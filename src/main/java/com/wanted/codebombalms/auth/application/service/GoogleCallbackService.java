@@ -32,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -47,6 +50,7 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
     private final LoginHistoryRepository loginHistoryRepository;
     private final TrustedDeviceRepository trustedDeviceRepository;
     private final AuthSecurityEventRecorder securityEventRecorder;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public GoogleCallbackResult handleCallback(String code, String state, HttpServletRequest request, String deviceFp) {
@@ -90,6 +94,11 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
      * step-up(이메일 OTP)은 제외한다 (구글이 이미 인증을 보장).
      */
     private GoogleCallbackResult issueTokens(User user, HttpServletRequest request, String deviceFp) {
+        // P0-3: 잠긴 소셜 계정 로그인 차단 (LOCAL 로그인과 동일 가드)
+        if (user.isLocked()) {
+            throw new ForbiddenException(UserErrorCode.USER_ACCOUNT_LOCKED);
+        }
+
         String ip = ClientIpResolver.resolve(request);
         GeoLocation geo = geoIpResolver.resolve(ip);
 
@@ -129,8 +138,9 @@ public class GoogleCallbackService implements GoogleCallbackUseCase {
 
         // 단일 세션 강제 후 AT/RT 발급
         refreshTokenRepository.deleteByUserId(user.getUserId());
+        String sid = authSessionManager.open(user.getUserId());
         String token = jwtTokenProvider.generateAccessToken(
-                user.getUserId(), user.getNickname(), user.getRole());
+                user.getUserId(), user.getNickname(), user.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
         refreshTokenRepository.save(
                 RefreshToken.issue(user.getUserId(), refreshToken, jwtTokenProvider.getRefreshExpiration())
