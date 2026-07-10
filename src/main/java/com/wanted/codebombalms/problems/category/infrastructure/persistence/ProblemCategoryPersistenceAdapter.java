@@ -1,10 +1,13 @@
 package com.wanted.codebombalms.problems.category.infrastructure.persistence;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.category.application.port.LoadProblemCategoryPort;
+import com.wanted.codebombalms.problems.category.application.port.ManageProblemCategoryPort;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import com.wanted.codebombalms.problems.set.application.port.CheckProblemSetCategoryPort;
-import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetCategoryPort;
+import com.wanted.codebombalms.problems.set.application.port.FindActiveProblemSetCategoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +18,8 @@ import java.util.List;
 public class ProblemCategoryPersistenceAdapter implements
         LoadProblemCategoryPort,
         CheckProblemSetCategoryPort,
-        FindOrCreateProblemSetCategoryPort {
+        FindActiveProblemSetCategoryPort,
+        ManageProblemCategoryPort {
 
     private final SpringDataProblemCategoryRepository springDataProblemCategoryRepository;
 
@@ -35,16 +39,64 @@ public class ProblemCategoryPersistenceAdapter implements
         );
     }
     @Override
-    public Long findOrCreateActiveCategoryId(String categoryName) {
+    public Long findActiveCategoryId(String categoryName) {
         ProblemCategory category = ProblemCategory.create(categoryName);
 
         return springDataProblemCategoryRepository.findByCategoryNameAndStatus(
                         category.getCategoryName(),
                         category.getStatus()
                 )
-                .orElseGet(() -> springDataProblemCategoryRepository.save(
-                        ProblemCategoryMapper.toEntity(category)
-                ))
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND))
                 .getCategoryId();
+    }
+
+    @Override
+    public List<ProblemCategory> loadAllCategories() {
+        return springDataProblemCategoryRepository.findAllByOrderByCategoryIdAsc()
+                .stream()
+                .map(ProblemCategoryMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public boolean existsByCategoryName(String categoryName) {
+        return springDataProblemCategoryRepository.existsByCategoryName(categoryName);
+    }
+
+    @Override
+    public boolean existsByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId) {
+        return springDataProblemCategoryRepository.existsByCategoryNameAndCategoryIdNot(
+                categoryName,
+                categoryId
+        );
+    }
+
+    @Override
+    public ProblemCategory create(String categoryName) {
+        ProblemCategory category = ProblemCategory.create(categoryName);
+        ProblemCategoryJpaEntity savedCategory =
+                springDataProblemCategoryRepository.save(ProblemCategoryMapper.toEntity(category));
+
+        return ProblemCategoryMapper.toDomain(savedCategory);
+    }
+
+    @Override
+    public ProblemCategory updateName(Long categoryId, String categoryName) {
+        ProblemCategoryJpaEntity category = springDataProblemCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND));
+
+        category.updateName(categoryName);
+
+        return ProblemCategoryMapper.toDomain(category);
+    }
+
+    @Override
+    public ProblemCategory deactivate(Long categoryId) {
+        ProblemCategoryJpaEntity category = springDataProblemCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND));
+
+        category.deactivate();
+
+        return ProblemCategoryMapper.toDomain(category);
     }
 }
