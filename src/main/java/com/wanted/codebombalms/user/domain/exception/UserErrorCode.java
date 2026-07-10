@@ -31,7 +31,10 @@ public enum UserErrorCode implements ErrorCode {
 
     TRUSTED_DEVICE_NOT_FOUND("USR-012", "신뢰 기기를 찾을 수 없습니다."),
 
-    USER_WITHDRAW_CONFIRM_MISMATCH("USR-013", "탈퇴 확인 문구가 일치하지 않습니다.");
+    USER_WITHDRAW_CONFIRM_MISMATCH("USR-013", "탈퇴 확인 문구가 일치하지 않습니다."),
+
+    // 약관 동의
+    USER_TERMS_NOT_AGREED("USR-014", "필수 약관에 동의해야 합니다.");
 
     private final String code;
     private final String message;
