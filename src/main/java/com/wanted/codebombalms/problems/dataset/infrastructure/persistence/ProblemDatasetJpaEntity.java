@@ -53,7 +53,8 @@ public class ProblemDatasetJpaEntity {
             String storedFileName,
             String fileUrl,
             String filePath,
-            Long fileSize
+            Long fileSize,
+            String metadata
     ) {
         ProblemDatasetJpaEntity dataset = new ProblemDatasetJpaEntity();
         dataset.originalFileName = originalFileName;
@@ -61,6 +62,7 @@ public class ProblemDatasetJpaEntity {
         dataset.fileUrl = fileUrl;
         dataset.filePath = filePath;
         dataset.fileSize = fileSize;
+        dataset.metadata = metadata;
         dataset.status = "ACTIVE";
         dataset.createdAt = LocalDateTime.now();
         dataset.updatedAt = dataset.createdAt;

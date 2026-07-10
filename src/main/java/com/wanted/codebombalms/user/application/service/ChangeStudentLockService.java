@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.user.application.usecase.ChangeStudentLockUseCase;
@@ -17,6 +18,7 @@ public class ChangeStudentLockService implements ChangeStudentLockUseCase {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void changeLock(Long userId, boolean locked) {
@@ -26,6 +28,7 @@ public class ChangeStudentLockService implements ChangeStudentLockUseCase {
         if (locked) {
             user.lock();
             refreshTokenRepository.deleteByUserId(userId);
+            authSessionManager.close(userId);
         } else {
             user.unlock();
         }

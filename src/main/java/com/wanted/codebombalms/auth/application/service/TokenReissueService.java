@@ -24,6 +24,7 @@ public class TokenReissueService implements TokenReissueUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public TokenPair reissue(String refreshToken) {
@@ -49,8 +50,10 @@ public class TokenReissueService implements TokenReissueUseCase {
             throw new ForbiddenException(UserErrorCode.USER_ACCOUNT_LOCKED);
         }
 
-        // 5. 새 토큰 발급
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(),user.getRole());
+        // 5. 새 토큰 발급 (sid 회전 — 이전 AT 무효화)
+        String sid = authSessionManager.open(user.getUserId());
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
+                user.getUserId(), user.getNickname(), user.getRole(), sid);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
 
         // 6. RTR — 기존 RT 삭제 + 새 RT 저장 (1회용)

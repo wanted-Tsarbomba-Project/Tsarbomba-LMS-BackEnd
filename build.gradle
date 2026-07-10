@@ -66,6 +66,9 @@ dependencies {
     //구글 클라우드
     implementation 'com.google.cloud:google-cloud-storage:2.68.0'
 
+    //CSV 파싱 (데이터셋 metadata 추출 #544)
+    implementation 'org.apache.commons:commons-csv:1.11.0'
+
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //mail

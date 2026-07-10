@@ -7,6 +7,7 @@ import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageClientFac
 import com.wanted.codebombalms.global.infrastructure.storage.GcpStorageProperties;
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
+import com.wanted.codebombalms.problems.dataset.application.service.DatasetMetadataExtractor;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
@@ -25,13 +26,16 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
 
     private final GcpStorageProperties properties;
     private final GcpStorageClientFactory storageClientFactory;
+    private final DatasetMetadataExtractor metadataExtractor;
 
     public GcsDatasetFileStorage(
             GcpStorageProperties properties,
-            GcpStorageClientFactory storageClientFactory
+            GcpStorageClientFactory storageClientFactory,
+            DatasetMetadataExtractor metadataExtractor
     ) {
         this.properties = properties;
         this.storageClientFactory = storageClientFactory;
+        this.metadataExtractor = metadataExtractor;
     }
 
     @Override
@@ -48,12 +52,15 @@ public class GcsDatasetFileStorage implements StoreDatasetFilePort {
 
         createStorage().create(blobInfo, command.content());
 
+        String metadata = metadataExtractor.extract(command.content());
+
         return StoredDatasetFile.create(
                 originalFileName,
                 storedFileName,
                 buildFileUrl(objectName),
                 objectName,
-                command.fileSize()
+                command.fileSize(),
+                metadata
         );
     }
 
