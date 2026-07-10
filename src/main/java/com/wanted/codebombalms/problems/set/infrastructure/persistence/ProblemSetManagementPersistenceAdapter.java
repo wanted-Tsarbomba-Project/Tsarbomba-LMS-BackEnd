@@ -3,7 +3,7 @@ package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.category.infrastructure.persistence.ProblemCategoryJpaEntity;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
-import com.wanted.codebombalms.problems.set.application.port.FindOrCreateProblemSetCategoryPort;
+import com.wanted.codebombalms.problems.set.application.port.FindActiveProblemSetCategoryPort;
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetHintsPort;
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetProblemsPort;
 import com.wanted.codebombalms.problems.set.application.port.ManageProblemSetTestCasesPort;
@@ -30,7 +30,7 @@ import java.util.Set;
 public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagementRepository {
 
     private final SpringDataProblemSetRepository problemSetRepository;
-    private final FindOrCreateProblemSetCategoryPort findOrCreateProblemSetCategoryPort;
+    private final FindActiveProblemSetCategoryPort findActiveProblemSetCategoryPort;
     private final ManageProblemSetProblemsPort manageProblemSetProblemsPort;
     private final ManageProblemSetHintsPort manageProblemSetHintsPort;
     private final ManageProblemSetTestCasesPort manageProblemSetTestCasesPort;
@@ -39,7 +39,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
     @Override
     public ProblemSetRegistrationResult createProblemSet(ProblemSetRegistration registration, Long createdBy) {
         ProblemCategoryJpaEntity category = getCategoryReference(
-                findOrCreateProblemSetCategoryPort.findOrCreateActiveCategoryId(registration.categoryName())
+                findActiveProblemSetCategoryPort.findActiveCategoryId(registration.categoryName())
         );
 
         ProblemSetJpaEntity problemSet = new ProblemSetJpaEntity(
@@ -90,7 +90,7 @@ public class ProblemSetManagementPersistenceAdapter implements ProblemSetManagem
         ProblemSetJpaEntity problemSet = problemSetRepository.findById(modification.problemSetId())
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.PROBLEM_SET_NOT_FOUND));
         ProblemCategoryJpaEntity category = getCategoryReference(
-                findOrCreateProblemSetCategoryPort.findOrCreateActiveCategoryId(modification.categoryName())
+                findActiveProblemSetCategoryPort.findActiveCategoryId(modification.categoryName())
         );
 
         problemSet.update(

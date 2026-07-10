@@ -45,4 +45,12 @@ public class ProblemCategoryJpaEntity {
     public ProblemCategoryStatus getStatus() {
         return status;
     }
+
+    public void updateName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public void deactivate() {
+        this.status = ProblemCategoryStatus.INACTIVE;
+    }
 }

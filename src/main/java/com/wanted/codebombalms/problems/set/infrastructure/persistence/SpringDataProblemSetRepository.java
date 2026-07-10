@@ -20,6 +20,11 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             ProblemSetStatus status
     );
 
+    boolean existsByCategory_CategoryIdAndStatus(
+            Long categoryId,
+            ProblemSetStatus status
+    );
+
     Page<ProblemSetJpaEntity> findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
             Long categoryId,
             ProblemSetStatus status,

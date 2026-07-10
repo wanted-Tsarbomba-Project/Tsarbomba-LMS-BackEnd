@@ -32,6 +32,7 @@ public enum ProblemErrorCode implements ErrorCode {
     CATEGORY_NOT_FOUND("PRB-CAT-001", "문제 분야를 찾을 수 없습니다."),
     INVALID_CATEGORY("PRB-CAT-002", "잘못된 문제 분야입니다."),
     PROBLEM_CATEGORY_REQUIRED("PRB-CAT-003", "카테고리는 필수입니다."),
+    CATEGORY_ALREADY_EXISTS("PRB-CAT-004", "이미 존재하는 문제 카테고리입니다."),
 
     // 힌트 (PRB-HNT)
     HINT_NOT_FOUND("PRB-HNT-001", "존재하지 않는 힌트입니다."),
