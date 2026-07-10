@@ -21,10 +21,14 @@ public interface SpringDataProblemCategoryRepository extends JpaRepository<Probl
 
     List<ProblemCategoryJpaEntity> findAllByOrderByCategoryIdAsc();
 
-    boolean existsByCategoryName(String categoryName);
-
-    boolean existsByCategoryNameAndCategoryIdNot(
+    boolean existsByCategoryNameAndStatus(
             String categoryName,
+            ProblemCategoryStatus status
+    );
+
+    boolean existsByCategoryNameAndStatusAndCategoryIdNot(
+            String categoryName,
+            ProblemCategoryStatus status,
             Long categoryId
     );
 

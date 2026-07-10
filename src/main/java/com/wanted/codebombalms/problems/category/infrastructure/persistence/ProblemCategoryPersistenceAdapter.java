@@ -40,11 +40,11 @@ public class ProblemCategoryPersistenceAdapter implements
     }
     @Override
     public Long findActiveCategoryId(String categoryName) {
-        ProblemCategory category = ProblemCategory.create(categoryName);
+        String normalizedCategoryName = categoryName == null ? "" : categoryName.trim();
 
         return springDataProblemCategoryRepository.findByCategoryNameAndStatus(
-                        category.getCategoryName(),
-                        category.getStatus()
+                        normalizedCategoryName,
+                        ProblemCategoryStatus.ACTIVE
                 )
                 .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND))
                 .getCategoryId();
@@ -59,14 +59,18 @@ public class ProblemCategoryPersistenceAdapter implements
     }
 
     @Override
-    public boolean existsByCategoryName(String categoryName) {
-        return springDataProblemCategoryRepository.existsByCategoryName(categoryName);
+    public boolean existsActiveByCategoryName(String categoryName) {
+        return springDataProblemCategoryRepository.existsByCategoryNameAndStatus(
+                categoryName,
+                ProblemCategoryStatus.ACTIVE
+        );
     }
 
     @Override
-    public boolean existsByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId) {
-        return springDataProblemCategoryRepository.existsByCategoryNameAndCategoryIdNot(
+    public boolean existsActiveByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId) {
+        return springDataProblemCategoryRepository.existsByCategoryNameAndStatusAndCategoryIdNot(
                 categoryName,
+                ProblemCategoryStatus.ACTIVE,
                 categoryId
         );
     }

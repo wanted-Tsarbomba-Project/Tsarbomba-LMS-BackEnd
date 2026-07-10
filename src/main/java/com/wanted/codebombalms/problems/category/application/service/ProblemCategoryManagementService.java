@@ -2,6 +2,7 @@ package com.wanted.codebombalms.problems.category.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.problems.category.application.port.CheckProblemCategoryUsagePort;
 import com.wanted.codebombalms.problems.category.application.port.ManageProblemCategoryPort;
 import com.wanted.codebombalms.problems.category.application.usecase.ManageProblemCategoriesUseCase;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategory;
@@ -18,6 +19,7 @@ import java.util.List;
 public class ProblemCategoryManagementService implements ManageProblemCategoriesUseCase {
 
     private final ManageProblemCategoryPort manageProblemCategoryPort;
+    private final CheckProblemCategoryUsagePort checkProblemCategoryUsagePort;
 
     @Override
     public List<ProblemCategoryAdminView> findCategories() {
@@ -32,7 +34,7 @@ public class ProblemCategoryManagementService implements ManageProblemCategories
     public ProblemCategoryAdminView create(String categoryName) {
         String normalizedCategoryName = normalizeCategoryName(categoryName);
 
-        if (manageProblemCategoryPort.existsByCategoryName(normalizedCategoryName)) {
+        if (manageProblemCategoryPort.existsActiveByCategoryName(normalizedCategoryName)) {
             throw new ConflictException(ProblemErrorCode.CATEGORY_ALREADY_EXISTS);
         }
 
@@ -44,7 +46,7 @@ public class ProblemCategoryManagementService implements ManageProblemCategories
     public ProblemCategoryAdminView updateName(Long categoryId, String categoryName) {
         String normalizedCategoryName = normalizeCategoryName(categoryName);
 
-        if (manageProblemCategoryPort.existsByCategoryNameAndCategoryIdNot(
+        if (manageProblemCategoryPort.existsActiveByCategoryNameAndCategoryIdNot(
                 normalizedCategoryName,
                 categoryId
         )) {
@@ -57,6 +59,10 @@ public class ProblemCategoryManagementService implements ManageProblemCategories
     @Override
     @Transactional
     public ProblemCategoryAdminView deactivate(Long categoryId) {
+        if (checkProblemCategoryUsagePort.existsActiveProblemSet(categoryId)) {
+            throw new ConflictException(ProblemErrorCode.INVALID_CATEGORY);
+        }
+
         return toView(manageProblemCategoryPort.deactivate(categoryId));
     }
 

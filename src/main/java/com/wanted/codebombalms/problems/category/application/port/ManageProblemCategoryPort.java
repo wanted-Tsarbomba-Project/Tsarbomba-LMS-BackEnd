@@ -8,9 +8,9 @@ public interface ManageProblemCategoryPort {
 
     List<ProblemCategory> loadAllCategories();
 
-    boolean existsByCategoryName(String categoryName);
+    boolean existsActiveByCategoryName(String categoryName);
 
-    boolean existsByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId);
+    boolean existsActiveByCategoryNameAndCategoryIdNot(String categoryName, Long categoryId);
 
     ProblemCategory create(String categoryName);
 
