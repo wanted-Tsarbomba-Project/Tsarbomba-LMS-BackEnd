@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
@@ -35,6 +36,7 @@ class WithdrawUserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private WithdrawUserService withdrawUserService;
@@ -75,6 +77,7 @@ class WithdrawUserServiceTest {
         verify(userRepository).save(captor.capture());
         assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
         verify(refreshTokenRepository).deleteByUserId(1L);
+        verify(authSessionManager).close(1L);
     }
 
     @Test
@@ -94,6 +97,7 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 
     @Test
@@ -111,6 +115,7 @@ class WithdrawUserServiceTest {
         verify(userRepository).save(captor.capture());
         assertTrue(captor.getValue().isDeleted(), "deleted_at 이 채워져야 한다");
         verify(refreshTokenRepository).deleteByUserId(2L);
+        verify(authSessionManager).close(2L);
     }
 
     @Test
@@ -129,6 +134,7 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 
     @Test
@@ -146,5 +152,6 @@ class WithdrawUserServiceTest {
 
         verify(userRepository, never()).save(any());
         verify(refreshTokenRepository, never()).deleteByUserId(anyLong());
+        verify(authSessionManager, never()).close(anyLong());
     }
 }

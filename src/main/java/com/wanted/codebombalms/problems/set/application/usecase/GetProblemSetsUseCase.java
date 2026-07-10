@@ -26,6 +26,8 @@ public interface GetProblemSetsUseCase {
             String description,
             String difficulty,
             Double accuracyRate,
+            Integer completedUserCount,
+            Integer startedUserCount,
             LocalDateTime createdAt
     ) {
     }

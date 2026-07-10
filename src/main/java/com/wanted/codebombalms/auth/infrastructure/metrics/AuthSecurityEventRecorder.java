@@ -48,7 +48,8 @@ public class AuthSecurityEventRecorder implements SecurityEventReporter {
     /** 흐름 기반 이벤트(의심 로그인 등) 직접 기록. ip/uri 는 MDC(MdcLoggingFilter)에서 가져온다. */
     public void record(AuthSecurityEvent event, Long userId) {
         registry.counter(METRIC, "category", event.getCategory(), "type", event.getType()).increment();
-        log.warn("event=security_event category={} type={} userId={} clientIp={} uri={}",
+        log.warn("event=security_event traceId={} category={} type={} userId={} clientIp={} uri={}",
+                mdc("traceId"),
                 event.getCategory(), event.getType(),
                 userId == null ? "-" : userId, mdc("clientIp"), mdc("requestURI"));
     }

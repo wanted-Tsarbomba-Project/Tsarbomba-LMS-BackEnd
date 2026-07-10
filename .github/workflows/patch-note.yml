@@ -1,0 +1,170 @@
+name: Post Patch Note to Discord
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: patch-note-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  find-pr:
+    runs-on: ubuntu-latest
+    outputs:
+      should_post: ${{ steps.pr.outputs.should_post }}
+      pr_title: ${{ steps.pr.outputs.pr_title }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find merged PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          PR_JSON=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/$REPO/commits/$SHA/pulls")
+          
+          PR=$(echo "$PR_JSON" | jq -c 'map(select(.base.ref == "main" and .head.ref == "develop")) | .[0] // null')
+
+          if [ "$PR" = "null" ]; then
+            echo "should_post=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          TITLE=$(echo "$PR" | jq -r '.title')
+          NUMBER=$(echo "$PR" | jq -r '.number')
+          BODY=$(echo "$PR" | jq -r '.body // ""')
+
+          echo "should_post=true" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "pr_title=$TITLE" >> "$GITHUB_OUTPUT"
+          printf "%s" "$BODY" > pr_body.txt
+
+      - name: Upload PR body
+        if: steps.pr.outputs.should_post == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr_body
+          path: pr_body.txt
+
+  generate-summary:
+    needs: find-pr
+    if: needs.find-pr.outputs.should_post == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download PR body
+        uses: actions/download-artifact@v4
+        with:
+          name: pr_body
+
+      - name: Ask Claude for a friendly summary
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_TITLE: ${{ needs.find-pr.outputs.pr_title }}
+        run: |
+          set -euo pipefail
+
+          PR_BODY=$(cat pr_body.txt)
+
+          REQUEST=$(jq -n \
+            --arg title "$PR_TITLE" \
+            --arg body "$PR_BODY" \
+            '{
+              model: "claude-sonnet-5",
+              max_tokens: 1500,
+              messages: [
+                {
+                  role: "user",
+                  content: ("다음 PR 변경사항을 비개발자도 이해할 수 있게 요약해줘.\n- 개발 용어 최소화\n- 아래 두 섹션으로 구분해서 작성:\n  ✨ 개선사항\n  🐛 버그 해결\n- 해당 내용이 없는 섹션은 통째로 생략\n- 각 섹션 안에는 \"* \"로 시작하는 bullet 2~4개\n- 이모지를 적극적으로 활용해서 눈에 잘 띄게 작성\n- 섹션 제목/bullet 외의 인사말, 마무리 문구 등은 절대 포함하지 말 것\n\n제목: " + $title + "\n본문:\n" + $body)
+                }
+              ]
+            }')
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$REQUEST")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY_JSON=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Claude API 호출 실패 (HTTP $HTTP_CODE)"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
+          BULLETS=$(echo "$BODY_JSON" | jq -r '[.content[] | select(.type == "text") | .text] | join("")')
+
+          if [ -z "$BULLETS" ]; then
+            echo "Claude 응답에서 요약 텍스트를 못 찾음"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
+          STOP_REASON=$(echo "$BODY_JSON" | jq -r '.stop_reason')
+          if [ "$STOP_REASON" = "max_tokens" ]; then
+            echo "Claude 응답이 max_tokens로 잘림 (요약 미완성) — 게시 중단"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
+          # 제목은 AI에게 맡기지 않고 고정 포맷으로 조립 (KST 기준 날짜)
+          DATE=$(TZ='Asia/Seoul' date +'%Y-%m-%d')
+          TITLE="백엔드팀 패치노트🦖 | $DATE"   # 프론트 레포는 "프론트팀 패치노트🎨 | $DATE"
+
+          printf '%s\n\n%s' "$TITLE" "$BULLETS" \
+            | python3 -c "import sys; print(sys.stdin.read()[:1900])" > summary.txt
+
+          cat summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch_note_summary
+          path: summary.txt
+
+  post-to-discord:
+    needs: [ find-pr, generate-summary ]
+    if: needs.find-pr.outputs.should_post == 'true'
+    runs-on: ubuntu-latest
+    environment: patch-note-approval
+    steps:
+      - name: Download summary
+        uses: actions/download-artifact@v4
+        with:
+          name: patch_note_summary
+
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+
+          SUMMARY=$(cat summary.txt)
+          PAYLOAD=$(jq -n --arg content "$SUMMARY" '{content: $content}')
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          # Discord 게시 실패도 명확히 실패 처리 (수정 1과 동일한 이유)
+          if [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Discord 게시 실패 (HTTP $HTTP_CODE)"
+            exit 1
+          fi

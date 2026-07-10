@@ -18,4 +18,18 @@ public interface SpringDataProblemCategoryRepository extends JpaRepository<Probl
             String categoryName,
             ProblemCategoryStatus status
     );
+
+    List<ProblemCategoryJpaEntity> findAllByOrderByCategoryIdAsc();
+
+    boolean existsByCategoryNameAndStatus(
+            String categoryName,
+            ProblemCategoryStatus status
+    );
+
+    boolean existsByCategoryNameAndStatusAndCategoryIdNot(
+            String categoryName,
+            ProblemCategoryStatus status,
+            Long categoryId
+    );
+
 }

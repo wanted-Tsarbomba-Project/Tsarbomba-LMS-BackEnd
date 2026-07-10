@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.presentation.api;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.user.application.query.UpdateMyInfoResult;
@@ -28,6 +29,7 @@ public class UpdateMyInfoController {
     private final UpdateMyInfoUseCase updateMyInfoUseCase;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieFactory authCookieFactory;
+    private final AuthSessionManager authSessionManager;
 
     @Operation(
             summary = "개인정보 수정",
@@ -48,8 +50,9 @@ public class UpdateMyInfoController {
 
         // 2. 닉네임 변경 시에만 accessToken 재발급 (JWT nickname claim 최신화)
         if (result.nicknameChanged()) {
+            String sid = authSessionManager.currentSid(userId);
             String newAccessToken = jwtTokenProvider.generateAccessToken(
-                    userId, result.nickname(), result.role()
+                    userId, result.nickname(), result.role(), sid
             );
             response.addCookie(authCookieFactory.create(
                     "accessToken",

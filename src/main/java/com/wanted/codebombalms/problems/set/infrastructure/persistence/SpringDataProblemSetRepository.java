@@ -20,6 +20,11 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             ProblemSetStatus status
     );
 
+    boolean existsByCategory_CategoryIdAndStatus(
+            Long categoryId,
+            ProblemSetStatus status
+    );
+
     Page<ProblemSetJpaEntity> findByCategory_CategoryIdAndStatusOrderByProblemSetIdAsc(
             Long categoryId,
             ProblemSetStatus status,
@@ -31,6 +36,17 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
     );
 
     Page<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(
+            ProblemSetStatus status,
+            Pageable pageable
+    );
+
+    Page<ProblemSetJpaEntity> findByStatusOrderByStartedUserCountDescProblemSetIdDesc(
+            ProblemSetStatus status,
+            Pageable pageable
+    );
+
+    Page<ProblemSetJpaEntity> findByCategory_CategoryIdAndStatusOrderByStartedUserCountDescProblemSetIdDesc(
+            Long categoryId,
             ProblemSetStatus status,
             Pageable pageable
     );

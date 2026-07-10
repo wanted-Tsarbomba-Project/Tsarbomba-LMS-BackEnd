@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
@@ -28,6 +29,7 @@ class ChangeStudentLockServiceTest {
 
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private ChangeStudentLockService changeStudentLockService;
@@ -45,6 +47,7 @@ class ChangeStudentLockServiceTest {
         // then
         assertTrue(user.isLocked());
         verify(refreshTokenRepository).deleteByUserId(1L);
+        verify(authSessionManager).close(1L);
         verify(userRepository).save(user);
     }
 
@@ -61,6 +64,7 @@ class ChangeStudentLockServiceTest {
         // then
         assertFalse(user.isLocked());
         verify(refreshTokenRepository, never()).deleteByUserId(any());
+        verify(authSessionManager, never()).close(any());
         verify(userRepository).save(user);
     }
 
@@ -77,6 +81,7 @@ class ChangeStudentLockServiceTest {
         );
         assertEquals(UserErrorCode.USER_NOT_FOUND, ex.getErrorCode());
         verify(refreshTokenRepository, never()).deleteByUserId(any());
+        verify(authSessionManager, never()).close(any());
         verify(userRepository, never()).save(any());
     }
 

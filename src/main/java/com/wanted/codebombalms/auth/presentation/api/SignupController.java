@@ -23,10 +23,11 @@ public class SignupController {
 
     @Operation(
             summary = "회원가입",
-            description = "이메일/비밀번호로 신규 회원가입. 사전에 이메일 인증 완료 필수."
+            description = "이메일/비밀번호로 신규 회원가입. 사전에 이메일 인증 완료 필수. "
+                    + "이용약관·개인정보 수집·이용 동의(둘 다 필수) 포함."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "회원가입 성공")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "USR-009 이메일 미인증 / USR-006 비밀번호 확인 불일치 / 형식 오류")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "USR-009 이메일 미인증 / USR-006 비밀번호 확인 불일치 / USR-014 필수 약관 미동의 / 형식 오류")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "USR-002 이메일 중복 / USR-003 닉네임 중복")
 
     @PostMapping("/signup")

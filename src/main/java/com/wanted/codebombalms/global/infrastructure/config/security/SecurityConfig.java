@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.config.security;
 
+import com.wanted.codebombalms.auth.domain.repository.AuthSessionRepository;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import jakarta.servlet.DispatcherType;
@@ -28,6 +29,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSessionRepository authSessionRepository;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
@@ -65,15 +67,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/users/find-email").permitAll()
                         // 강의/코스 브라우징
-                        .requestMatchers("/api/v1/courses/**").permitAll()
-                        .requestMatchers("/api/v1/lectures/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/courses/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/course-categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/lectures/**").permitAll()
                         // 운영/관리자 전용 (권한 경계 확정 전까지 둘 다 허용)
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR", "MASTER")
                         // 그 외 모두 인증 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        new JwtAuthenticationFilter(jwtTokenProvider, authSessionRepository),
                         UsernamePasswordAuthenticationFilter.class
                 ).exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)

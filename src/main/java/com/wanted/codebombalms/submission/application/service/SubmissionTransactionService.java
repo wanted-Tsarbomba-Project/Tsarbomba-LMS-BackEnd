@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.submission.application.service;
 
 import com.wanted.codebombalms.problems.dataset.application.port.LoadActiveDatasetFilePathPort;
+import com.wanted.codebombalms.problems.explanation.application.port.ProblemExplanationViewQueryPort;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.application.policy.SubmissionAttemptPolicy;
 import com.wanted.codebombalms.submission.application.port.LoadProblemForSubmissionPort;
@@ -32,6 +33,7 @@ public class SubmissionTransactionService {
     private final ProblemSolvedEventPort problemSolvedEventPort;
     private final LoadActiveDatasetFilePathPort loadActiveDatasetFilePathPort;
     private final SubmissionAttemptPolicy submissionAttemptPolicy;
+    private final ProblemExplanationViewQueryPort problemExplanationViewQueryPort;
 
     @Transactional(readOnly = true)
     public SubmissionPreparation prepare(
@@ -168,6 +170,14 @@ public class SubmissionTransactionService {
                         command.userId(),
                         problem.problemId()
                 );
+
+        boolean explanationViewed =
+                problemExplanationViewQueryPort.existsViewed(
+                        command.userId(),
+                        problem.problemId()
+                );
+
+        submissionAttemptPolicy.validateNotExplanationViewed(explanationViewed);
 
         submissionAttemptPolicy.validateNotAlreadySolved(alreadySolved);
 

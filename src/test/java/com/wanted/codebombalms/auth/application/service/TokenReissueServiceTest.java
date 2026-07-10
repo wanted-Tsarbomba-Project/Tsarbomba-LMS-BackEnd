@@ -36,6 +36,7 @@ class TokenReissueServiceTest {
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private UserRepository userRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private TokenReissueService tokenReissueService;
@@ -56,7 +57,8 @@ class TokenReissueServiceTest {
 
         given(refreshTokenRepository.findByToken(OLD_TOKEN)).willReturn(Optional.of(stored));
         given(userRepository.findByUserId(1L)).willReturn(Optional.of(user));
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("NEW_ACCESS");
+        given(authSessionManager.open(1L)).willReturn("SID");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "SID")).willReturn("NEW_ACCESS");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("NEW_REFRESH");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 

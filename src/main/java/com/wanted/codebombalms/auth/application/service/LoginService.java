@@ -39,6 +39,8 @@ import java.util.UUID;
 
 import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
 
+import com.wanted.codebombalms.auth.application.port.AuthMetricsPort;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -56,18 +58,26 @@ public class LoginService implements LoginUseCase {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthSecurityEventRecorder securityEventRecorder;
+    private final AuthMetricsPort authMetrics;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public LoginResult login(LoginCommand command, HttpServletRequest request, String deviceFp) {
 
         // 1~3. 인증 (이메일 / 비밀번호 / 계정 잠금)
-        User user = userRepository.findByEmail(command.email())
-                .orElseThrow(() -> new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL));
-        if (!passwordEncoder.matches(command.rawpassword(), user.getPassword())) {
-            throw new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL);
-        }
-        if (user.isLocked()) {
-            throw new ForbiddenException(UserErrorCode.USER_ACCOUNT_LOCKED);
+        User user;
+        try {
+            user = userRepository.findByEmail(command.email())
+                    .orElseThrow(() -> new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL));
+            if (!passwordEncoder.matches(command.rawpassword(), user.getPassword())) {
+                throw new UnauthorizedException(AuthErrorCode.AUTH_LOGIN_FAIL);
+            }
+            if (user.isLocked()) {
+                throw new ForbiddenException(UserErrorCode.USER_ACCOUNT_LOCKED);
+            }
+        } catch (UnauthorizedException | ForbiddenException e) {
+            authMetrics.recordLoginFail();
+            throw e;
         }
 
         // 4. 기기 지문 + 지역(GeoIP)
@@ -108,6 +118,7 @@ public class LoginService implements LoginUseCase {
     }
 
     private LoginResult issueStepUp(User user, String deviceFp, GeoLocation geo) {
+        authMetrics.recordLoginStepUp();   // ← KPI: 이 로그인은 추가 인증으로 분기
         String stepUpToken = UUID.randomUUID().toString();
         String code = generateCode();
 
@@ -134,10 +145,13 @@ public class LoginService implements LoginUseCase {
 
     private LoginResult issueTokens(User user) {
         refreshTokenRepository.deleteByUserId(user.getUserId());
-        String accessToken = jwtTokenProvider.generateAccessToken(user.getUserId(), user.getNickname(), user.getRole());
+        String sid = authSessionManager.open(user.getUserId());
+        String accessToken = jwtTokenProvider.generateAccessToken(
+                user.getUserId(), user.getNickname(), user.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUserId());
         refreshTokenRepository.save(
                 RefreshToken.issue(user.getUserId(), refreshToken, jwtTokenProvider.getRefreshExpiration()));
+        authMetrics.recordLoginSuccess();   // ← KPI: 정식 로그인 성공
         return LoginResult.success(accessToken, refreshToken, user.getNickname(), user.getRole());
     }
 

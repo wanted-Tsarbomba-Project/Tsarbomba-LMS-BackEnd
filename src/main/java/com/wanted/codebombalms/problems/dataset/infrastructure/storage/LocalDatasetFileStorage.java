@@ -2,7 +2,9 @@ package com.wanted.codebombalms.problems.dataset.infrastructure.storage;
 
 import com.wanted.codebombalms.problems.dataset.application.command.UploadProblemDatasetCommand;
 import com.wanted.codebombalms.problems.dataset.application.port.StoreDatasetFilePort;
+import com.wanted.codebombalms.problems.dataset.application.service.DatasetMetadataExtractor;
 import com.wanted.codebombalms.problems.dataset.domain.model.StoredDatasetFile;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +15,12 @@ import java.util.UUID;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class LocalDatasetFileStorage implements StoreDatasetFilePort {
 
     private static final String UPLOAD_DIR = "uploads/datasets";
+
+    private final DatasetMetadataExtractor metadataExtractor;
 
     @Override
     public StoredDatasetFile store(UploadProblemDatasetCommand command) throws IOException {
@@ -31,12 +36,15 @@ public class LocalDatasetFileStorage implements StoreDatasetFilePort {
         String fileUrl = "/" + UPLOAD_DIR + "/" + storedFileName;
         String filePath = UPLOAD_DIR + "/" + storedFileName;
 
+        String metadata = metadataExtractor.extract(command.content());
+
         return StoredDatasetFile.create(
                 originalFileName,
                 storedFileName,
                 fileUrl,
                 filePath,
-                command.fileSize()
+                command.fileSize(),
+                metadata
         );
     }
 

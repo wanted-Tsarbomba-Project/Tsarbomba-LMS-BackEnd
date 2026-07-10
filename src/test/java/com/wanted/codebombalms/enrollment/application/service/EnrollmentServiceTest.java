@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -146,6 +147,122 @@ class EnrollmentServiceTest {
         assertEquals(100, results.get(0).lectureProgressRate());
         verify(courseCatalogPort).getPublicationStatus(1L);
         verify(enrollmentLearningProgressPort).findProgresses(List.of(progressKey));
+    }
+
+    @Test
+    void findMyCourses_skipsDeletedCourseEnrollments() {
+        Long userId = 10L;
+        Enrollment activeCourseEnrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment deletedCourseEnrollment = createEnrollment(2L, userId, 2L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(activeCourseEnrollment, deletedCourseEnrollment));
+        given(courseCatalogPort.getPublicationStatus(1L)).willReturn(createCourseStatus(1L));
+        given(courseCatalogPort.getPublicationStatus(2L))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        EnrollmentLearningProgressKey activeProgressKey = new EnrollmentLearningProgressKey(userId, 1L);
+        given(enrollmentLearningProgressPort.findProgresses(List.of(activeProgressKey)))
+                .willReturn(Map.of(
+                        activeProgressKey,
+                        new EnrollmentLearningProgress(false, "IN_PROGRESS", 50, 1, 2, 0, 1)
+                ));
+
+        List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
+
+        assertEquals(1, results.size());
+        assertEquals(1L, results.get(0).courseId());
+        assertEquals("Java", results.get(0).courseTitle());
+        verify(courseCatalogPort).getPublicationStatus(1L);
+        verify(courseCatalogPort).getPublicationStatus(2L);
+        verify(enrollmentLearningProgressPort).findProgresses(List.of(activeProgressKey));
+    }
+
+    @Test
+    void findMyCourses_returnsEmptyList_whenAllEnrollmentsPointToDeletedCourses() {
+        Long userId = 10L;
+        Enrollment deletedCourseEnrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(deletedCourseEnrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
+
+        assertTrue(results.isEmpty());
+        verify(courseCatalogPort).getPublicationStatus(1L);
+        verify(enrollmentLearningProgressPort, never()).findProgresses(any());
+    }
+
+    @Test
+    void findMyCourses_rethrowsNotFound_whenErrorCodeIsNotCourseNotFound() {
+        Long userId = 10L;
+        Enrollment enrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L))
+                .willThrow(new NotFoundException(EnrollmentErrorCode.ENROLLMENT_NOT_FOUND));
+
+        NotFoundException exception = assertThrows(
+                NotFoundException.class,
+                () -> enrollmentQueryService.findMyCourses(userId)
+        );
+
+        assertEquals(EnrollmentErrorCode.ENROLLMENT_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    void findMyCourses_returnsDefaultProgress_whenProgressIsMissing() {
+        Long userId = 10L;
+        Enrollment enrollment = createEnrollment(1L, userId, 1L, EnrollmentStatus.ACTIVE);
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(userId, 1L);
+
+        given(enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(enrollment));
+        given(courseCatalogPort.getPublicationStatus(1L)).willReturn(createCourseStatus(1L));
+        given(enrollmentLearningProgressPort.findProgresses(List.of(progressKey))).willReturn(Map.of());
+
+        List<MyCourseResult> results = enrollmentQueryService.findMyCourses(userId);
+
+        assertEquals(1, results.size());
+        assertFalse(results.get(0).learningCompleted());
+        assertEquals("IN_PROGRESS", results.get(0).displayStatus());
+        assertEquals(0, results.get(0).lectureProgressRate());
+        assertEquals(0, results.get(0).completedLectureCount());
+        assertEquals(0, results.get(0).totalLectureCount());
+        assertEquals(0, results.get(0).completedProblemCount());
+        assertEquals(0, results.get(0).totalProblemCount());
+    }
+
+    @Test
+    void findAllEnrollmentCourses_skipsDeletedCourseEnrollments() {
+        Enrollment activeCourseEnrollment = createEnrollment(1L, 10L, 1L, EnrollmentStatus.ACTIVE);
+        Enrollment deletedCourseEnrollment = createEnrollment(2L, 11L, 2L, EnrollmentStatus.ACTIVE);
+
+        given(enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE))
+                .willReturn(List.of(activeCourseEnrollment, deletedCourseEnrollment));
+        given(courseCatalogPort.getPublicationStatus(1L)).willReturn(createCourseStatus(1L));
+        given(courseCatalogPort.getPublicationStatus(2L))
+                .willThrow(new NotFoundException(CourseErrorCode.COURSE_NOT_FOUND));
+
+        EnrollmentLearningProgressKey activeProgressKey = new EnrollmentLearningProgressKey(10L, 1L);
+        given(enrollmentLearningProgressPort.findProgresses(List.of(activeProgressKey)))
+                .willReturn(Map.of(
+                        activeProgressKey,
+                        new EnrollmentLearningProgress(false, "IN_PROGRESS", 50, 1, 2, 0, 1)
+                ));
+
+        List<MyCourseResult> results = enrollmentQueryService.findAllEnrollmentCourses();
+
+        assertEquals(1, results.size());
+        assertEquals(10L, results.get(0).studentId());
+        assertEquals(1L, results.get(0).courseId());
+        assertEquals("Java", results.get(0).courseTitle());
+        verify(courseCatalogPort).getPublicationStatus(1L);
+        verify(courseCatalogPort).getPublicationStatus(2L);
+        verify(enrollmentLearningProgressPort).findProgresses(List.of(activeProgressKey));
     }
 
     @Test

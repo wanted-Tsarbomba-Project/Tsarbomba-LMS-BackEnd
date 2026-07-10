@@ -1,13 +1,17 @@
 package com.wanted.codebombalms.enrollment.application.service;
 
+import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.enrollment.application.port.CourseCatalogPort;
+import com.wanted.codebombalms.enrollment.application.port.CoursePublicationStatus;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort;
+import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgress;
 import com.wanted.codebombalms.enrollment.application.port.EnrollmentLearningProgressPort.EnrollmentLearningProgressKey;
 import com.wanted.codebombalms.enrollment.application.query.MyCourseResult;
 import com.wanted.codebombalms.enrollment.application.usecase.EnrollmentQueryUseCase;
 import com.wanted.codebombalms.enrollment.domain.model.Enrollment;
 import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,18 +38,81 @@ public class EnrollmentQueryService implements EnrollmentQueryUseCase {
         log.info("[EnrollmentQueryService] find my courses - userId: {}", userId);
 
         List<Enrollment> enrollments = enrollmentRepository.findByUserIdAndStatus(userId, EnrollmentStatus.ACTIVE);
-        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgressPort.EnrollmentLearningProgress> progresses =
-                enrollmentLearningProgressPort.findProgresses(enrollments.stream()
-                        .map(enrollment -> new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
+        return toMyCourseResults(enrollments);
+    }
+
+    @Override
+    public List<MyCourseResult> findAllEnrollmentCourses() {
+        log.info("[EnrollmentQueryService] find all enrollment courses");
+
+        return toMyCourseResults(enrollmentRepository.findByStatus(EnrollmentStatus.ACTIVE));
+    }
+
+    private List<MyCourseResult> toMyCourseResults(List<Enrollment> enrollments) {
+        List<MyCourseEnrollment> visibleEnrollments = enrollments.stream()
+                .map(this::toVisibleEnrollment)
+                .flatMap(Optional::stream)
+                .toList();
+
+        if (visibleEnrollments.isEmpty()) {
+            return List.of();
+        }
+
+        Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses =
+                enrollmentLearningProgressPort.findProgresses(visibleEnrollments.stream()
+                        .map(visibleEnrollment -> new EnrollmentLearningProgressKey(
+                                visibleEnrollment.enrollment().getUserId(),
+                                visibleEnrollment.enrollment().getCourseId()
+                        ))
                         .toList());
 
-        return enrollments.stream()
-                .map(enrollment -> MyCourseResult.from(
-                        enrollment,
-                        courseCatalogPort.getPublicationStatus(enrollment.getCourseId()),
-                        progresses.get(new EnrollmentLearningProgressKey(userId, enrollment.getCourseId()))
-                ))
+        return visibleEnrollments.stream()
+                .map(visibleEnrollment -> toMyCourseResult(visibleEnrollment, progresses))
                 .toList();
+    }
+
+    private Optional<MyCourseEnrollment> toVisibleEnrollment(Enrollment enrollment) {
+        try {
+            return Optional.of(new MyCourseEnrollment(
+                    enrollment,
+                    courseCatalogPort.getPublicationStatus(enrollment.getCourseId())
+            ));
+        } catch (NotFoundException e) {
+            if (e.getErrorCode() != CourseErrorCode.COURSE_NOT_FOUND) {
+                throw e;
+            }
+
+            log.info(
+                    "[EnrollmentQueryService] skip deleted course enrollment - userId: {}, enrollmentId: {}, courseId: {}",
+                    enrollment.getUserId(),
+                    enrollment.getEnrollmentId(),
+                    enrollment.getCourseId()
+            );
+            return Optional.empty();
+        }
+    }
+
+    private MyCourseResult toMyCourseResult(
+            MyCourseEnrollment visibleEnrollment,
+            Map<EnrollmentLearningProgressKey, EnrollmentLearningProgress> progresses
+    ) {
+        Enrollment enrollment = visibleEnrollment.enrollment();
+        EnrollmentLearningProgressKey progressKey = new EnrollmentLearningProgressKey(
+                enrollment.getUserId(),
+                enrollment.getCourseId()
+        );
+
+        return MyCourseResult.from(
+                enrollment,
+                visibleEnrollment.course(),
+                progresses.getOrDefault(progressKey, EnrollmentLearningProgress.of(0, 0, 0, 0))
+        );
+    }
+
+    private record MyCourseEnrollment(
+            Enrollment enrollment,
+            CoursePublicationStatus course
+    ) {
     }
 
     @Override

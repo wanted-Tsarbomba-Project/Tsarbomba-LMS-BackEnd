@@ -37,16 +37,23 @@ public class JwtTokenProvider {
         this.refreshExpiration = refreshExpiration;
     }
 
-    public String generateAccessToken(Long userId, String nickname, UserRole role) {
+    /** sid(세션ID) 포함 AT 발급 — 단일세션 + 실시간 잠금 검증용. */
+    public String generateAccessToken(Long userId, String nickname, UserRole role, String sid) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("typ", TYPE_ACCESS)
                 .claim("nickname", nickname)
                 .claim("role", role.name())
+                .claim("sid", sid)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessExpiration))
                 .signWith(key)
                 .compact();
+    }
+
+    /** AT claims 에서 sid 추출 — 필터가 Redis 세션과 대조. */
+    public String getSid(Claims claims) {
+        return claims.get("sid", String.class);
     }
 
     public String generateRefreshToken(Long userId) {
