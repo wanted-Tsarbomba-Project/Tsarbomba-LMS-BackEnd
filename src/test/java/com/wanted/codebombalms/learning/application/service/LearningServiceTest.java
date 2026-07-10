@@ -21,6 +21,7 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,9 @@ class LearningServiceTest {
 
     @Mock
     private LearningProgressMetricsPort learningMetrics;
+
+    @Mock
+    private ServiceEventRecorder serviceEventRecorder;
 
     @InjectMocks
     private LectureProgressService lectureProgressService;

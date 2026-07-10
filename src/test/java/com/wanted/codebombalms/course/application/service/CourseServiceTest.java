@@ -17,6 +17,7 @@ import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,9 @@ class CourseServiceTest {
 
     @Mock
     private CourseEnrollmentPort courseEnrollmentPort;
+
+    @Mock
+    private ServiceEventRecorder serviceEventRecorder;
 
     @InjectMocks
     private CourseCommandService courseCommandService;

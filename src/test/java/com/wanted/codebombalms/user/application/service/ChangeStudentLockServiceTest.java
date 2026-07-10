@@ -8,6 +8,7 @@ import com.wanted.codebombalms.user.domain.model.AuthProvider;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,7 @@ class ChangeStudentLockServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private AuthSessionManager authSessionManager;
+    @Mock private ServiceEventRecorder serviceEventRecorder;
 
     @InjectMocks
     private ChangeStudentLockService changeStudentLockService;
