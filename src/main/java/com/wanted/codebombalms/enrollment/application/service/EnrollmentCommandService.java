@@ -45,10 +45,7 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
         CoursePublicationStatus course = courseCatalogPort.getPublicationStatus(command.courseId());
         enrollmentEligibilityPolicy.validate(command.userId(), course);
 
-        serviceEventRecorder.record(ServiceEventEnvelope.business(
-                ServiceEventType.ENROLL_CREATED, command.userId(), course.courseId()));
-
-        return enrollmentRepository.findByCourseIdAndUserIdAndStatus(
+        Enrollment savedEnrollment = enrollmentRepository.findByCourseIdAndUserIdAndStatus(
                         course.courseId(),
                         command.userId(),
                         EnrollmentStatus.CANCELED
@@ -61,6 +58,11 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
                         command.userId(),
                         course.courseId()
                 )));
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.ENROLL_CREATED, command.userId(), course.courseId()));
+
+        return savedEnrollment;
     }
 
     @Override
