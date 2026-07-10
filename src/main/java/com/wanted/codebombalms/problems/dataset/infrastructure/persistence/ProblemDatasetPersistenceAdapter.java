@@ -32,7 +32,8 @@ public class ProblemDatasetPersistenceAdapter implements
                 storedFile.getStoredFileName(),
                 storedFile.getFileUrl(),
                 storedFile.getFilePath(),
-                storedFile.getFileSize()
+                storedFile.getFileSize(),
+                storedFile.getMetadata()
         );
 
         ProblemDatasetJpaEntity savedDataset = problemDatasetRepository.save(dataset);
@@ -67,7 +68,8 @@ public class ProblemDatasetPersistenceAdapter implements
                 storedFile.getStoredFileName(),
                 storedFile.getFileUrl(),
                 storedFile.getFilePath(),
-                storedFile.getFileSize()
+                storedFile.getFileSize(),
+                storedFile.getMetadata()
         );
 
         dataset.connectProblemSet(problemSet);

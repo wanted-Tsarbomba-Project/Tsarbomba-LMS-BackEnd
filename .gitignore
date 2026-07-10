@@ -47,6 +47,9 @@ application-*.yaml
 .env*
 /secrets/
 /src/main/resources/gcs/
+# GCP 서비스 계정 키(로컬 배치) — 절대 커밋 금지
+gcp-storage-key.json
+*-storage-key.json
 
 ### Logs ###
 *.log
