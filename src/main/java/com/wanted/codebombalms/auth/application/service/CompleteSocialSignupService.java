@@ -33,6 +33,7 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
     private final UserAgreementRepository userAgreementRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public TokenPair complete(String tempToken, String nickname, String phone,
@@ -71,9 +72,10 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
         // 7. 가입 성공 후 TEMP_TOKEN 소비 (단일 사용 — 이 시점에 삭제)
         tempTokenRepository.findAndDelete(tempToken);
 
-        // 8. 토큰 발급 (가입 직후 바로 로그인)
+        // 8. 토큰 발급 (가입 직후 바로 로그인) — P0 세션 하드닝: sid 발급 후 AT 에 바인딩
+        String sid = authSessionManager.open(saved.getUserId());
         String accessToken = jwtTokenProvider.generateAccessToken(
-                saved.getUserId(), saved.getNickname(), saved.getRole());
+                saved.getUserId(), saved.getNickname(), saved.getRole(), sid);
         String refreshToken = jwtTokenProvider.generateRefreshToken(saved.getUserId());
 
         refreshTokenRepository.save(

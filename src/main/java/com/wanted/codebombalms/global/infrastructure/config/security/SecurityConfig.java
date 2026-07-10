@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.global.infrastructure.config.security;
 
+import com.wanted.codebombalms.auth.domain.repository.AuthSessionRepository;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import jakarta.servlet.DispatcherType;
@@ -28,6 +29,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthSessionRepository authSessionRepository;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
 
@@ -74,7 +76,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider),
+                        new JwtAuthenticationFilter(jwtTokenProvider, authSessionRepository),
                         UsernamePasswordAuthenticationFilter.class
                 ).exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)

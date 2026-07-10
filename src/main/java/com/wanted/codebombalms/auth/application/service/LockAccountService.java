@@ -19,6 +19,7 @@ public class LockAccountService implements LockAccountUseCase {
     private final LockTokenRepository lockTokenRepository;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void lock(String token) {
@@ -35,7 +36,8 @@ public class LockAccountService implements LockAccountUseCase {
         user.lock();
         userRepository.save(user);
 
-        // 3. 강제 로그아웃 (RT 전체 삭제)
+        // 3. 강제 로그아웃 (RT 전체 삭제 + AT 세션 무효화 → 발급된 전 AT 즉시 만료)
         refreshTokenRepository.deleteByUserId(userId);
+        authSessionManager.close(userId);
     }
 }

@@ -85,6 +85,7 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
                     .stream()
                     .map(problem -> toDetailItemView(
                             problem,
+                            problemSet,
                             progressItemMap.get(problem.getProblemId()),
                             startCode
                     ))
@@ -157,11 +158,15 @@ public class ProblemSetEntryService implements EnterProblemSetUseCase {
 
     private ProblemDetailItemView toDetailItemView(
             ProblemDetail problem,
+            ProblemSetEntry problemSet,
             ProblemProgressItem progressItem,
             String startCode
     ) {
         return new ProblemDetailItemView(
                 problem.getProblemId(),
+                problemSet.getProblemSetId(),
+                problemSet.getTitle(),
+                problemSet.getDescription(),
                 problem.getProblemNumber(),
                 problem.getTitle(),
                 problem.getContent(),

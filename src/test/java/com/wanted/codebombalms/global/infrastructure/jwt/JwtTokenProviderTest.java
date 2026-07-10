@@ -23,7 +23,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("정상 access token은 검증을 통과하고 typ/role claim을 담는다.")
     void access_token_정상() {
-        String token = provider.generateAccessToken(1L, "길동이", UserRole.STUDENT);
+        String token = provider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "sid-1");
 
         assertDoesNotThrow(() -> provider.validateAccessToken(token));
 
@@ -57,7 +57,7 @@ class JwtTokenProviderTest {
     @Test
     @DisplayName("access token을 refresh로 검증하면 AUTH_REFRESH_TOKEN_INVALID로 차단한다. (역방향 오용 방지)")
     void access를_refresh로_쓰면_차단() {
-        String accessToken = provider.generateAccessToken(1L, "길동이", UserRole.STUDENT);
+        String accessToken = provider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "sid-1");
 
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,
@@ -71,7 +71,7 @@ class JwtTokenProviderTest {
     void 만료된_access_token() {
         JwtTokenProvider expiredProvider =
                 new JwtTokenProvider(SECRET, -1000L, REFRESH_EXP); // 발급 즉시 만료
-        String expired = expiredProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT);
+        String expired = expiredProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "sid-1");
 
         UnauthorizedException ex = assertThrows(
                 UnauthorizedException.class,

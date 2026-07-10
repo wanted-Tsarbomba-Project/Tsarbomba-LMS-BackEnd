@@ -31,6 +31,12 @@ public record ProblemDetailResponse(
                 allowableValues = {"LOCKED", "UNSOLVED", "CORRECT", "WRONG"}
         )
         String status,
+        @Schema(description = "문제가 속한 문제세트 ID", example = "3001")
+        Long problemSetId,
+        @Schema(description = "문제가 속한 문제세트 제목", example = "pandas 기초 분석 문제 세트")
+        String problemSetTitle,
+        @Schema(description = "문제가 속한 문제세트 설명", example = "CSV 데이터를 사용한 코드 실행 문제 세트입니다.")
+        String problemSetDescription,
 
         @Schema(description = "가장 최근 제출 ID", example = "3021", nullable = true)
         Long latestSubmissionId
@@ -45,6 +51,9 @@ public record ProblemDetailResponse(
                 problem.point(),
                 problem.startCode(),
                 problem.status(),
+                problem.problemSetId(),
+                problem.problemSetTitle(),
+                problem.problemSetDescription(),
                 problem.latestSubmissionId()
         );
     }
