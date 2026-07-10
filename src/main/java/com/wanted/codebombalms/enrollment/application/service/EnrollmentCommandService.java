@@ -17,6 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -28,6 +33,8 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
     private final CourseCatalogPort courseCatalogPort;
     private final EnrollmentEligibilityPolicy enrollmentEligibilityPolicy;
 
+    private final ServiceEventRecorder serviceEventRecorder;
+
     @Override
     public Enrollment createEnrollment(EnrollCourseCommand command) {
         log.info("[EnrollmentCommandService] create enrollment - courseId: {}, userId: {}",
@@ -37,6 +44,9 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
 
         CoursePublicationStatus course = courseCatalogPort.getPublicationStatus(command.courseId());
         enrollmentEligibilityPolicy.validate(command.userId(), course);
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.ENROLL_CREATED, command.userId(), course.courseId()));
 
         return enrollmentRepository.findByCourseIdAndUserIdAndStatus(
                         course.courseId(),
@@ -66,5 +76,8 @@ public class EnrollmentCommandService implements EnrollmentCommandUseCase {
 
         enrollment.cancel();
         enrollmentRepository.save(enrollment);
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.ENROLL_CANCELLED, command.userId(), enrollment.getCourseId()));
     }
 }
