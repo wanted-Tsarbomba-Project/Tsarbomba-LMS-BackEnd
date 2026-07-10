@@ -8,6 +8,8 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ConflictExce
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.model.UserAgreement;
+import com.wanted.codebombalms.user.domain.repository.UserAgreementRepository;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +25,7 @@ public class SignupService implements SignupUseCase {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationRepository emailVerificationRepository;
+    private final UserAgreementRepository userAgreementRepository;
     private final AuthMetricsPort authMetrics;
 
     @Override
@@ -38,20 +41,25 @@ public class SignupService implements SignupUseCase {
                 throw new ValidationException(UserErrorCode.USER_PASSWORD_CONFIRM_MISMATCH);
             }
 
-            // 3. 이메일 중복 체크
+            // 3. 필수 약관 동의 확인 (이용약관 + 개인정보 수집·이용)
+            if (!command.termsOfServiceAgreed() || !command.privacyPolicyAgreed()) {
+                throw new ValidationException(UserErrorCode.USER_TERMS_NOT_AGREED);
+            }
+
+            // 4. 이메일 중복 체크
             if (userRepository.existsByEmail(command.email())) {
                 throw new ConflictException(UserErrorCode.USER_EMAIL_DUPLICATED);
             }
 
-            // 4. 닉네임 중복 체크
+            // 5. 닉네임 중복 체크
             if (userRepository.existsByNickname(command.nickname())) {
                 throw new ConflictException(UserErrorCode.USER_NICKNAME_DUPLICATED);
             }
 
-            // 5. 비밀번호 인코딩
+            // 6. 비밀번호 인코딩
             String encodedPassword = passwordEncoder.encode(command.rawpassword());
 
-            // 6. 도메인 객체 생성
+            // 7. 도메인 객체 생성
             User user = User.createLocalUser(
                     command.email(),
                     encodedPassword,
@@ -60,10 +68,13 @@ public class SignupService implements SignupUseCase {
                     command.phone()
             );
 
-            // 7. 저장
+            // 8. 저장
             User saved = userRepository.save(user);
 
-            // 8. 회원가입 완료 — 인증 플래그 정리
+            // 9. 약관 동의 이력 저장 (필수 2종 — 버전은 서버가 스탬프)
+            userAgreementRepository.saveAll(UserAgreement.requiredAgreements(saved.getUserId()));
+
+            // 10. 회원가입 완료 — 인증 플래그 정리
             emailVerificationRepository.clearVerified(command.email());
 
             authMetrics.recordSignupSuccess();   // ← KPI: 회원가입 완료

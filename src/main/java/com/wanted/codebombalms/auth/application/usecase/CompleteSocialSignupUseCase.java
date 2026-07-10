@@ -4,5 +4,6 @@ import com.wanted.codebombalms.auth.application.dto.TokenPair;
 
 public interface CompleteSocialSignupUseCase {
 
-    TokenPair complete(String tempToken, String nickname, String phone);
+    TokenPair complete(String tempToken, String nickname, String phone,
+                       boolean termsOfServiceAgreed, boolean privacyPolicyAgreed);
 }

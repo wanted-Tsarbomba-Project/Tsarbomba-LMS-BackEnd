@@ -6,7 +6,9 @@ public record SignupCommand(
         String passwordConfirm,
         String name,
         String nickname,
-        String phone
+        String phone,
+        boolean termsOfServiceAgreed,
+        boolean privacyPolicyAgreed
 ) {
 
 }
