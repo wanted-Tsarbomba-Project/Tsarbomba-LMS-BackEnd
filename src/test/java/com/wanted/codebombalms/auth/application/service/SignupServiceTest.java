@@ -7,6 +7,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ConflictExce
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.User;
+import com.wanted.codebombalms.user.domain.repository.UserAgreementRepository;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,6 +31,7 @@ class SignupServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private EmailVerificationRepository emailVerificationRepository;
+    @Mock private UserAgreementRepository userAgreementRepository;
     @Mock private AuthMetricsPort authMetrics;
 
     @InjectMocks
@@ -45,7 +47,9 @@ class SignupServiceTest {
                 "Test1234!",
                 "홍길동",
                 "길동이",
-                "010-1234-5678"
+                "010-1234-5678",
+                true,   // 이용약관 동의
+                true    // 개인정보 수집·이용 동의
         );
     }
 
@@ -73,6 +77,7 @@ class SignupServiceTest {
         // then
         assertEquals(1L, userId);
         verify(userRepository).save(any(User.class));
+        verify(userAgreementRepository).saveAll(argThat(list -> list.size() == 2));
         verify(emailVerificationRepository).clearVerified("test@example.com");
     }
 
@@ -101,7 +106,9 @@ class SignupServiceTest {
                 "DifferentPassword5!",     // 일치하지 않음
                 "홍길동",
                 "길동이",
-                "010-1234-5678"
+                "010-1234-5678",
+                true,
+                true
         );
         given(emailVerificationRepository.isVerified("test@example.com")).willReturn(true);
 
@@ -111,6 +118,31 @@ class SignupServiceTest {
                 () -> signupService.signup(mismatch)
         );
         assertEquals(UserErrorCode.USER_PASSWORD_CONFIRM_MISMATCH, ex.getErrorCode());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("필수 약관에 동의하지 않으면 ValidationException(USER_TERMS_NOT_AGREED)을 던진다.")
+    void 약관_미동의_예외() {
+        // given
+        SignupCommand notAgreed = new SignupCommand(
+                "test@example.com",
+                "Test1234!",
+                "Test1234!",
+                "홍길동",
+                "길동이",
+                "010-1234-5678",
+                false,   // 이용약관 미동의
+                true
+        );
+        given(emailVerificationRepository.isVerified("test@example.com")).willReturn(true);
+
+        // when & then
+        ValidationException ex = assertThrows(
+                ValidationException.class,
+                () -> signupService.signup(notAgreed)
+        );
+        assertEquals(UserErrorCode.USER_TERMS_NOT_AGREED, ex.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
     }
 

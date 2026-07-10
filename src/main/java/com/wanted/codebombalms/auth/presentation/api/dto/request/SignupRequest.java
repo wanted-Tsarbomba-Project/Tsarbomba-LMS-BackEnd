@@ -1,16 +1,19 @@
 package com.wanted.codebombalms.auth.presentation.api.dto.request;
 
 import com.wanted.codebombalms.auth.application.command.SignupCommand;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record SignupRequest(
 
+        @Schema(description = "이메일", example = "user@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "이메일 형식이 올바르지 않습니다.")
         String email,
 
+        @Schema(description = "비밀번호 (8자 이상, 영문+숫자+특수문자)", example = "Passw0rd!", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "비밀번호는 필수입니다.")
         @Pattern(
                 regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+={}\\[\\]:;\"'<>,.?/~`\\\\|-]).{8,}$",
@@ -18,24 +21,37 @@ public record SignupRequest(
         )
         String password,
 
+        @Schema(description = "비밀번호 확인", example = "Passw0rd!", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
         String passwordConfirm,
 
+        @Schema(description = "실명", example = "홍길동", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "이름은 필수입니다.")
         String name,
 
+        @Schema(description = "닉네임", example = "gildong", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "닉네임은 필수입니다.")
         String nickname,
 
+        @Schema(description = "전화번호", example = "010-1234-5678", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank(message = "전화번호는 필수입니다.")
         @Pattern(
                 regexp = "^01[0-9]-\\d{3,4}-\\d{4}$",
                 message = "전화번호 형식이 올바르지 않습니다. (예: 010-1234-5678)"
         )
-        String phone
+        String phone,
+
+        @Schema(description = "이용약관 동의 (필수, 반드시 true)", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+        boolean termsOfServiceAgreed,
+
+        @Schema(description = "개인정보 수집·이용 동의 (필수, 반드시 true)", example = "true", requiredMode = Schema.RequiredMode.REQUIRED)
+        boolean privacyPolicyAgreed
 ) {
 
     public SignupCommand toCommand() {
-        return new SignupCommand(email, password, passwordConfirm, name, nickname, phone);
+        return new SignupCommand(
+                email, password, passwordConfirm, name, nickname, phone,
+                termsOfServiceAgreed, privacyPolicyAgreed
+        );
     }
 }

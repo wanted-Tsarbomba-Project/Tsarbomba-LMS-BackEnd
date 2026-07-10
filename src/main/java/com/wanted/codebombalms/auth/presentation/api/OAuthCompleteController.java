@@ -32,8 +32,12 @@ public class OAuthCompleteController {
 
     @Operation(
             summary = "소셜 추가 정보 제출",
-            description = "TEMP_TOKEN 검증 후 닉네임/전화번호로 가입 완료. 토큰 쿠키 발급 + TEMP_TOKEN 제거."
+            description = "TEMP_TOKEN 검증 후 닉네임/전화번호 + 약관 동의(둘 다 필수)로 가입 완료. "
+                       + "토큰 쿠키 발급 + TEMP_TOKEN 제거."
     )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "소셜 가입 완료")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "USR-003 닉네임 중복 / USR-005 전화번호 형식 / USR-014 필수 약관 미동의")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "AUT-006 유효하지 않은 임시 토큰")
     @PostMapping("/complete")
     public ResponseEntity<ApiResponse<Void>> complete(
             @CookieValue(name = "tempToken", required = false) String tempToken,
@@ -46,7 +50,8 @@ public class OAuthCompleteController {
         }
 
         TokenPair tokens = completeSocialSignupUseCase.complete(
-                tempToken, request.nickname(), request.phone());
+                tempToken, request.nickname(), request.phone(),
+                request.termsOfServiceAgreed(), request.privacyPolicyAgreed());
 
         // AT/RT 쿠키 발급 + TEMP_TOKEN 제거
         response.addCookie(authCookieFactory.create(
