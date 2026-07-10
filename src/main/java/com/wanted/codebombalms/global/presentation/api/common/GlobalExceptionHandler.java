@@ -148,6 +148,7 @@ public class GlobalExceptionHandler {
                 return;
             }
 
+
             Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
             String route = request.getMethod() + " " + (pattern == null ? "unmatched" : pattern.toString());
             if (!guard.tryAcquire("5xx:" + route)) {
