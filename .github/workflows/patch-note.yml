@@ -38,7 +38,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             "/repos/$REPO/commits/$SHA/pulls")
           
-          PR=$(echo "$PR_JSON" | jq -c 'map(select(.base.ref == "main" and .head.ref == "develop)) | .[0] // null')
+          PR=$(echo "$PR_JSON" | jq -c 'map(select(.base.ref == "main" and .head.ref == "develop")) | .[0] // null')
 
           if [ "$PR" = "null" ]; then
             echo "should_post=false" >> "$GITHUB_OUTPUT"
