@@ -57,6 +57,7 @@ class GoogleCallbackServiceTest {
     @Mock private TrustedDeviceRepository trustedDeviceRepository;
     @Mock private HttpServletRequest request;
     @Mock private AuthSecurityEventRecorder securityEventRecorder;
+    @Mock private AuthSessionManager authSessionManager;
 
     @InjectMocks
     private GoogleCallbackService service;
@@ -78,7 +79,8 @@ class GoogleCallbackServiceTest {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
         given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
         given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP)).willReturn(Optional.empty());
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("AT");
+        given(authSessionManager.open(1L)).willReturn("SID");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "SID")).willReturn("AT");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("RT");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
@@ -118,7 +120,8 @@ class GoogleCallbackServiceTest {
         given(userRepository.findByEmail(EMAIL)).willReturn(Optional.of(user));
         given(geoIpResolver.resolve(any())).willReturn(GeoLocation.unknown());
         given(trustedDeviceRepository.findByUserIdAndDeviceFp(1L, DEVICE_FP)).willReturn(Optional.of(existing));
-        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT)).willReturn("AT");
+        given(authSessionManager.open(1L)).willReturn("SID");
+        given(jwtTokenProvider.generateAccessToken(1L, "길동이", UserRole.STUDENT, "SID")).willReturn("AT");
         given(jwtTokenProvider.generateRefreshToken(1L)).willReturn("RT");
         given(jwtTokenProvider.getRefreshExpiration()).willReturn(1209600000L);
 
