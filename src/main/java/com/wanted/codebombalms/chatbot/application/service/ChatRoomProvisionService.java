@@ -8,6 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 import java.util.Optional;
 
 /**
@@ -20,6 +24,8 @@ public class ChatRoomProvisionService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final ChatContextPort chatContextPort;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Transactional
     public ChatRoom getOrCreate(SendFirstMessageCommand command) {
@@ -39,7 +45,10 @@ public class ChatRoomProvisionService {
     private ChatRoom createRoom(Long userId, Long problemSetId, Long problemId, String userMessage) {
         String title = resolveTitle(problemSetId, problemId, userMessage);
         ChatRoom newRoom = ChatRoom.create(userId, problemSetId, problemId, title);
-        return chatRoomRepository.save(newRoom);
+        ChatRoom savedRoom = chatRoomRepository.save(newRoom);
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.ROOM_CREATED, userId, savedRoom.getId()));
+        return savedRoom;
     }
 
     private String resolveTitle(Long problemSetId, Long problemId, String userMessage) {
