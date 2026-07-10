@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +21,8 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
     private final LoadProblemForSubmissionPort loadProblemForSubmissionPort;
     private final ProblemProgressPort problemProgressPort;
     private final ProblemExplanationViewCommandPort commandPort;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Override
     @Transactional
@@ -34,6 +40,10 @@ public class ProblemExplanationViewService implements ViewProblemExplanationUseC
                 problem.problemId(),
                 problem.problemSetId()
         );
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.EXPLANATION_VIEWED, userId, problem.problemId(),
+                "problemSetId=" + problem.problemSetId()));
 
         Long nextProblemId = loadProblemForSubmissionPort
                 .findNextProblemId(
