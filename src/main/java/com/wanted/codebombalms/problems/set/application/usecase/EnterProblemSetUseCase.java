@@ -23,6 +23,9 @@ public interface EnterProblemSetUseCase {
 
     record ProblemDetailItemView(
             Long problemId,
+            Long problemSetId,
+            String problemSetTitle,
+            String problemSetDescription,
             Integer problemNumber,
             String title,
             String content,
