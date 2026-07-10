@@ -80,15 +80,47 @@ jobs:
 
           PR_BODY=$(cat pr_body.txt)
 
-          PROMPT=$(jq -n --arg title "$PR_TITLE" --arg body "$PR_BODY" \
-            '"다음 PR을 비개발자도 이해할 수 있게 패치노트로 요약해줘.\n- 개발 용어 최소화\n- 한줄 요약 + 상세 bullet 2~4개\n- 이모지 적절히 사용\n\n제목: \($title)\n본문:\n\($body)"')
+          # 요청 JSON을 jq 하나로 통째로 생성 (수정 3)
+          REQUEST=$(jq -n \
+            --arg title "$PR_TITLE" \
+            --arg body "$PR_BODY" \
+            '{
+              model: "claude-sonnet-5",
+              max_tokens: 512,
+              messages: [
+                {
+                  role: "user",
+                  content: ("다음 PR을 비개발자도 이해할 수 있게 패치노트로 요약해줘.\n- 개발 용어 최소화\n- 한줄 요약 + 상세 bullet 2~4개\n- 이모지 적절히 사용\n\n제목: " + $title + "\n본문:\n" + $body)
+                }
+              ]
+            }')
 
-          curl -s https://api.anthropic.com/v1/messages \
+          RESPONSE=$(curl -s -w "\n%{http_code}" https://api.anthropic.com/v1/messages \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
-            -d "{\"model\": \"claude-sonnet-5\", \"max_tokens\": 512, \"messages\": [{\"role\": \"user\", \"content\": $PROMPT}]}" \
-            | jq -r '.content[0].text' > summary.txt
+            -d "$REQUEST")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY_JSON=$(echo "$RESPONSE" | sed '$d')
+
+          # API 호출 실패 시 명확히 실패 처리 (수정 1)
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Claude API 호출 실패 (HTTP $HTTP_CODE)"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
+          SUMMARY=$(echo "$BODY_JSON" | jq -r '.content[0].text // empty')
+
+          if [ -z "$SUMMARY" ]; then
+            echo "Claude 응답에서 요약 텍스트를 못 찾음"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
+          # Discord 2000자 제한 대응 (수정 2)
+          echo "$SUMMARY" | cut -c1-1900 > summary.txt
 
           cat summary.txt >> "$GITHUB_STEP_SUMMARY"
 
@@ -99,10 +131,10 @@ jobs:
           path: summary.txt
 
   post-to-discord:
-    needs: [find-pr, generate-summary]
+    needs: [ find-pr, generate-summary ]
     if: needs.find-pr.outputs.should_post == 'true'
     runs-on: ubuntu-latest
-    environment: patch-note-approval   # 4단계에서 만든 Environment 이름 (승인 게이트 필요 없으면 이 줄 삭제)
+    environment: patch-note-approval
     steps:
       - name: Download summary
         uses: actions/download-artifact@v4
@@ -114,6 +146,16 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           set -euo pipefail
+
           SUMMARY=$(cat summary.txt)
           PAYLOAD=$(jq -n --arg content "$SUMMARY" '{content: $content}')
-          curl -s -X POST "$DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$PAYLOAD"
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$DISCORD_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          # Discord 게시 실패도 명확히 실패 처리 (수정 1과 동일한 이유)
+          if [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Discord 게시 실패 (HTTP $HTTP_CODE)"
+            exit 1
+          fi
