@@ -43,8 +43,8 @@ public class GlobalExceptionHandler {
 
     private final Environment env;
     private final ObjectProvider<SecurityEventReporter> securityEventReporter;
-    private final ServiceEventWriter serviceEventWriter;
-    private final HttpAnomalyGuard anomalyGuard;
+    private final ObjectProvider<ServiceEventWriter> serviceEventWriter;
+    private final ObjectProvider<HttpAnomalyGuard> anomalyGuard;
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiErrorResponse> handleDomainException(
@@ -134,6 +134,7 @@ public class GlobalExceptionHandler {
     /**
      * 5xx 상세 기록 (#606). 예외 클래스명을 detail 로 남기고, 중복 방지 마커를 세워
      * MdcLoggingFilter 의 상태코드 기반 기록이 같은 요청을 다시 적재하지 않게 한다.
+     * ObjectProvider 주입 — @WebMvcTest 슬라이스 컨텍스트에는 빈이 없어도 부팅되게 한다.
      * 기록 실패는 전부 삼킨다 — 에러 응답 자체를 절대 깨지 않는다.
      */
     private void recordServerError(
@@ -141,14 +142,20 @@ public class GlobalExceptionHandler {
         try {
             request.setAttribute(MdcLoggingFilter.ANOMALY_RECORDED_ATTRIBUTE, Boolean.TRUE);
 
+            ServiceEventWriter writer = serviceEventWriter.getIfAvailable();
+            HttpAnomalyGuard guard = anomalyGuard.getIfAvailable();
+            if (writer == null || guard == null) {
+                return;
+            }
+
             Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
             String route = request.getMethod() + " " + (pattern == null ? "unmatched" : pattern.toString());
-            if (!anomalyGuard.tryAcquire("5xx:" + route)) {
+            if (!guard.tryAcquire("5xx:" + route)) {
                 return;
             }
 
             Long userId = parseUserId(request.getAttribute(JwtAuthenticationFilter.AUTHENTICATED_USER_ID_ATTRIBUTE));
-            serviceEventWriter.write(ServiceEventEnvelope.httpAnomaly(
+            writer.write(ServiceEventEnvelope.httpAnomaly(
                     type, route, status, null,
                     ClientIpResolver.resolve(request), userId, MDC.get("traceId"),
                     "exception=" + cause.getClass().getSimpleName()));
