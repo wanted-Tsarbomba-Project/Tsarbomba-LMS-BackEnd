@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.user.domain.model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class UserAgreement {
 
@@ -30,6 +31,14 @@ public class UserAgreement {
         a.agreed       = true;
         a.agreedAt     = LocalDateTime.now();
         return a;
+    }
+
+    // ===== 필수 약관(이용약관 + 개인정보 수집·이용) 동의 일괄 생성 — "무엇이 필수인가"를 여기 한 곳에서 정의 =====
+    public static List<UserAgreement> requiredAgreements(Long userId) {
+        return List.of(
+                agree(userId, TermsType.SERVICE),
+                agree(userId, TermsType.PRIVACY)
+        );
     }
 
     // ===== 영속성 복원 — Adapter 전용 =====

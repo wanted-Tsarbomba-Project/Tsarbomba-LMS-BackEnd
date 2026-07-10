@@ -12,7 +12,6 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ValidationEx
 import com.wanted.codebombalms.global.infrastructure.jwt.JwtTokenProvider;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
 import com.wanted.codebombalms.user.domain.model.AuthProvider;
-import com.wanted.codebombalms.user.domain.model.TermsType;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserAgreement;
 import com.wanted.codebombalms.user.domain.repository.UserAgreementRepository;
@@ -20,8 +19,6 @@ import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -62,11 +59,8 @@ public class CompleteSocialSignupService implements CompleteSocialSignupUseCase 
                 User.createSocialUser(data.email(), data.name(), nickname, phone, AuthProvider.GOOGLE)
         );
 
-        // 6. 약관 동의 이력 저장 (SERVICE·PRIVACY 2건 — 버전은 서버가 스탬프)
-        userAgreementRepository.saveAll(List.of(
-                UserAgreement.agree(saved.getUserId(), TermsType.SERVICE),
-                UserAgreement.agree(saved.getUserId(), TermsType.PRIVACY)
-        ));
+        // 6. 약관 동의 이력 저장 (필수 2종 — 버전은 서버가 스탬프)
+        userAgreementRepository.saveAll(UserAgreement.requiredAgreements(saved.getUserId()));
 
         // 7. 가입 성공 후 TEMP_TOKEN 소비 (단일 사용 — 이 시점에 삭제)
         tempTokenRepository.findAndDelete(tempToken);

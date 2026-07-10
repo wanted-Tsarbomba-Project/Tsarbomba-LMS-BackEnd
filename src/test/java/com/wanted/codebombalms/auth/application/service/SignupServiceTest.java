@@ -6,6 +6,7 @@ import com.wanted.codebombalms.auth.domain.repository.EmailVerificationRepositor
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
+import com.wanted.codebombalms.user.domain.model.TermsType;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.repository.UserAgreementRepository;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
@@ -13,6 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -77,7 +80,11 @@ class SignupServiceTest {
         // then
         assertEquals(1L, userId);
         verify(userRepository).save(any(User.class));
-        verify(userAgreementRepository).saveAll(argThat(list -> list.size() == 2));
+        verify(userAgreementRepository).saveAll(argThat(list ->
+                list.size() == 2
+                && list.stream().anyMatch(a -> a.getTermsType() == TermsType.SERVICE)
+                && list.stream().anyMatch(a -> a.getTermsType() == TermsType.PRIVACY)
+        ));
         verify(emailVerificationRepository).clearVerified("test@example.com");
     }
 
@@ -121,9 +128,14 @@ class SignupServiceTest {
         verify(userRepository, never()).save(any(User.class));
     }
 
-    @Test
-    @DisplayName("필수 약관에 동의하지 않으면 ValidationException(USER_TERMS_NOT_AGREED)을 던진다.")
-    void 약관_미동의_예외() {
+    @ParameterizedTest(name = "이용약관={0}, 개인정보={1} → USR-014")
+    @CsvSource({
+            "false, true",   // 이용약관만 미동의
+            "true,  false",  // 개인정보만 미동의
+            "false, false"   // 둘 다 미동의
+    })
+    @DisplayName("필수 약관에 하나라도 동의하지 않으면 ValidationException(USER_TERMS_NOT_AGREED)을 던진다.")
+    void 약관_미동의_예외(boolean termsOfServiceAgreed, boolean privacyPolicyAgreed) {
         // given
         SignupCommand notAgreed = new SignupCommand(
                 "test@example.com",
@@ -132,8 +144,8 @@ class SignupServiceTest {
                 "홍길동",
                 "길동이",
                 "010-1234-5678",
-                false,   // 이용약관 미동의
-                true
+                termsOfServiceAgreed,
+                privacyPolicyAgreed
         );
         given(emailVerificationRepository.isVerified("test@example.com")).willReturn(true);
 
@@ -144,6 +156,7 @@ class SignupServiceTest {
         );
         assertEquals(UserErrorCode.USER_TERMS_NOT_AGREED, ex.getErrorCode());
         verify(userRepository, never()).save(any(User.class));
+        verify(userAgreementRepository, never()).saveAll(any());
     }
 
     @Test

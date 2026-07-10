@@ -7,7 +7,6 @@ import com.wanted.codebombalms.auth.domain.repository.EmailVerificationRepositor
 import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.user.domain.exception.UserErrorCode;
-import com.wanted.codebombalms.user.domain.model.TermsType;
 import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserAgreement;
 import com.wanted.codebombalms.user.domain.repository.UserAgreementRepository;
@@ -17,8 +16,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -74,11 +71,8 @@ public class SignupService implements SignupUseCase {
             // 8. 저장
             User saved = userRepository.save(user);
 
-            // 9. 약관 동의 이력 저장 (SERVICE·PRIVACY 2건 — 버전은 서버가 스탬프)
-            userAgreementRepository.saveAll(List.of(
-                    UserAgreement.agree(saved.getUserId(), TermsType.SERVICE),
-                    UserAgreement.agree(saved.getUserId(), TermsType.PRIVACY)
-            ));
+            // 9. 약관 동의 이력 저장 (필수 2종 — 버전은 서버가 스탬프)
+            userAgreementRepository.saveAll(UserAgreement.requiredAgreements(saved.getUserId()));
 
             // 10. 회원가입 완료 — 인증 플래그 정리
             emailVerificationRepository.clearVerified(command.email());
