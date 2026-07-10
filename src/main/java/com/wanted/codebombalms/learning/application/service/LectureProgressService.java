@@ -15,6 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 @Service
 @RequiredArgsConstructor
 public class LectureProgressService implements LectureProgressCommandUseCase, LectureProgressQueryUseCase {
@@ -22,6 +26,8 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
     private final LectureProgressRepository lectureProgressRepository;
     private final LearningLecturePort learningLecturePort;
     private final LearningEnrollmentPort learningEnrollmentPort;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Override
     @Transactional
@@ -49,6 +55,8 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
                 .orElseGet(() -> LectureProgress.create(userId, lectureId));
 
         progress.complete();
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.LESSON_COMPLETED, userId, lectureId));
         return lectureProgressRepository.save(progress);
     }
 
