@@ -79,6 +79,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
 
+    // 관리자 AI 브리핑 — Claude API (#609)
+    implementation 'com.anthropic:anthropic-java:2.34.0'
+    implementation 'com.google.genai:google-genai:1.57.0'
+
 
     // 적응형 인증 - GeoIP (MaxMind GeoLite2 로컬 DB)
     implementation 'com.maxmind.geoip2:geoip2:4.2.0'

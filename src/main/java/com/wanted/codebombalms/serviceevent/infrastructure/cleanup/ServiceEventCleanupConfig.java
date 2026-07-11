@@ -3,6 +3,7 @@ package com.wanted.codebombalms.serviceevent.infrastructure.cleanup;
 import com.wanted.codebombalms.global.application.cleanup.DefaultHardDeleteTarget;
 import com.wanted.codebombalms.global.application.cleanup.port.HardDeleteTarget;
 import com.wanted.codebombalms.serviceevent.application.port.ServiceEventStore;
+import com.wanted.codebombalms.serviceevent.infrastructure.persistence.SpringDataOpsBriefingRepository;
 import java.time.LocalDateTime;
 import java.time.Period;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,16 @@ public class ServiceEventCleanupConfig {
 
     private static final int CHUNK_SIZE = 1000;
     private static final int MAX_CHUNKS_PER_RUN = 200; // 1회 실행 상한 20만 행 — 03시 잡 폭주 방지
+
+    /** ops_briefing 도 이벤트 파생물 — 2개월 동반 파기 (#609). 하루 3행 수준이라 단발 DELETE 로 충분 */
+    @Bean
+    public HardDeleteTarget opsBriefingHardDeleteTarget(SpringDataOpsBriefingRepository repository) {
+        return new DefaultHardDeleteTarget(
+                "ops-briefing",
+                Period.ofMonths(2),
+                repository::deleteByGeneratedAtBefore
+        );
+    }
 
     @Bean
     public HardDeleteTarget serviceEventHardDeleteTarget(ServiceEventStore store) {

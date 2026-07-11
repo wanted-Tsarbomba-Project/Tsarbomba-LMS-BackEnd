@@ -82,6 +82,13 @@ app:
     secure: ${COOKIE_SECURE:false}
 
 # CORS 허용 오리진(콤마 구분). 기본 로컬 FE, 배포는 .env override
+# 관리자 AI 브리핑 (#609) — provider 교체 시 model 도 함께 변경, 키는 절대 커밋 금지
+# provider: gemini(기본, 학교 지원 키) | anthropic
+briefing:
+  provider: ${BRIEFING_PROVIDER:gemini}
+  model: ${BRIEFING_MODEL:gemini-2.5-flash}
+  api-key: ${BRIEFING_API_KEY:}
+
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3001}
 
