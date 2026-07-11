@@ -13,10 +13,12 @@ import com.wanted.codebombalms.problems.set.application.policy.DatasetStartCodeP
 import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.application.usecase.RegisterProblemSetWithDatasetUseCase;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ProblemSetWithDatasetRegistrationService implements RegisterProblemSetWithDatasetUseCase {
 
@@ -70,7 +72,16 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
                 storeDatasetFilePort.delete(storedFile.getFilePath());
             }
 
-            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
+            log.error(
+                    "event=problem_set_dataset_upload_failed originalFilename={} contentType={} fileSize={} exceptionType={}",
+                    datasetCommand.originalFileName(),
+                    datasetCommand.contentType(),
+                    datasetCommand.fileSize(),
+                    e.getClass().getSimpleName(),
+                    e
+            );
+
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED, e);
         }
     }
 
@@ -95,7 +106,7 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
                 && !contentType.equals("text/csv")
                 && !contentType.equals("application/vnd.ms-excel")) {
             throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE);
-        }
+       }
     }
 
 

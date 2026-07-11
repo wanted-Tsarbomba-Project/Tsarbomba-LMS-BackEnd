@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +56,7 @@ import java.util.List;
 @Tag(name = "문제 관리", description = "운영자가 문제 세트와 소문제를 등록, 수정, 삭제하는 API")
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class ProblemManageController {
 
     private final GetProblemSetForUpdateUseCase getProblemSetForUpdateUseCase;
@@ -302,6 +304,14 @@ public class ProblemManageController {
             @Parameter(description = "문제 세트에 연결할 CSV 데이터셋 파일", required = true)
             @RequestPart("datasetFile") MultipartFile datasetFile
     ) {
+        log.info(
+                "event=dataset_file_received originalFilename={} contentType={} size={} empty={}",
+                datasetFile.getOriginalFilename(),
+                datasetFile.getContentType(),
+                datasetFile.getSize(),
+                datasetFile.isEmpty()
+        );
+
         var result = registerProblemSetWithDatasetUseCase.handle(
                 toCommand(createdBy, request),
                 toDatasetCommand(datasetFile)
