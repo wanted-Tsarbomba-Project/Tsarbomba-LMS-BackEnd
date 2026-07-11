@@ -68,21 +68,21 @@ public class ProblemSetWithDatasetRegistrationService implements RegisterProblem
 
             throw e;
         } catch (Exception e) {
-        if (storedFile != null) {
-            storeDatasetFilePort.delete(storedFile.getFilePath());
+            if (storedFile != null) {
+                storeDatasetFilePort.delete(storedFile.getFilePath());
+            }
+
+            log.error(
+                    "event=problem_set_dataset_upload_failed originalFilename={} contentType={} fileSize={} exceptionType={}",
+                    datasetCommand.originalFileName(),
+                    datasetCommand.contentType(),
+                    datasetCommand.fileSize(),
+                    e.getClass().getSimpleName(),
+                    e
+            );
+
+            throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED, e);
         }
-
-        log.error(
-                "event=problem_set_dataset_upload_failed originalFilename={} contentType={} fileSize={} exceptionType={}",
-                datasetCommand.originalFileName(),
-                datasetCommand.contentType(),
-                datasetCommand.fileSize(),
-                e.getClass().getSimpleName(),
-                e
-        );
-
-        throw new ValidationException(ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED);
-    }
     }
 
     private void validateDatasetFile(UploadProblemDatasetCommand command) {

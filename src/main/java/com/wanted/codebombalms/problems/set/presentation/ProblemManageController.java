@@ -304,6 +304,14 @@ public class ProblemManageController {
             @Parameter(description = "문제 세트에 연결할 CSV 데이터셋 파일", required = true)
             @RequestPart("datasetFile") MultipartFile datasetFile
     ) {
+        log.info(
+                "event=dataset_file_received originalFilename={} contentType={} size={} empty={}",
+                datasetFile.getOriginalFilename(),
+                datasetFile.getContentType(),
+                datasetFile.getSize(),
+                datasetFile.isEmpty()
+        );
+
         var result = registerProblemSetWithDatasetUseCase.handle(
                 toCommand(createdBy, request),
                 toDatasetCommand(datasetFile)
@@ -321,13 +329,7 @@ public class ProblemManageController {
                 result.datasetFileName(),
                 result.startCode()
         );
-        log.info(
-                "event=dataset_file_received originalFilename={} contentType={} size={} empty={}",
-                datasetFile.getOriginalFilename(),
-                datasetFile.getContentType(),
-                datasetFile.getSize(),
-                datasetFile.isEmpty()
-        );
+
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(
                         ApiResponseCode.CREATED,
