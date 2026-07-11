@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +56,7 @@ import java.util.List;
 @Tag(name = "문제 관리", description = "운영자가 문제 세트와 소문제를 등록, 수정, 삭제하는 API")
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class ProblemManageController {
 
     private final GetProblemSetForUpdateUseCase getProblemSetForUpdateUseCase;
@@ -319,7 +321,13 @@ public class ProblemManageController {
                 result.datasetFileName(),
                 result.startCode()
         );
-
+        log.info(
+                "event=dataset_file_received originalFilename={} contentType={} size={} empty={}",
+                datasetFile.getOriginalFilename(),
+                datasetFile.getContentType(),
+                datasetFile.getSize(),
+                datasetFile.isEmpty()
+        );
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(
                         ApiResponseCode.CREATED,
