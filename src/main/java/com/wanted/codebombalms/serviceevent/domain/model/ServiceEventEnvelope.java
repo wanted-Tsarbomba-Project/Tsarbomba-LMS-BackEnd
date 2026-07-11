@@ -28,6 +28,9 @@ public record ServiceEventEnvelope(
         if (type == null) {
             throw new IllegalArgumentException("ServiceEventType must not be null");
         }
+        if (occurredAt == null) {
+            occurredAt = LocalDateTime.now(); // 직접 생성 시 누락 보정 — created_at NOT NULL 제약 보호
+        }
         uri = truncate(uri, MAX_URI);
         detail = truncate(detail, MAX_DETAIL);
         traceId = truncate(traceId, MAX_TRACE_ID);
