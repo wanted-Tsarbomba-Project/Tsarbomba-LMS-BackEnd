@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wanted.codebombalms.admin.permission.application.service.AdminPermissionCheckService;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureOrdersCommand;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
@@ -17,6 +18,7 @@ import com.wanted.codebombalms.lecture.domain.model.Lecture;
 import com.wanted.codebombalms.lecture.domain.model.LectureMaterial;
 import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureCreateRequest;
+import com.wanted.codebombalms.lecture.presentation.api.request.LectureOrderUpdateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateRequest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.junit.jupiter.api.DisplayName;
@@ -152,6 +154,40 @@ class LectureControllerTest {
                 .andExpect(jsonPath("$.code").value(LectureResponseCode.UPDATED))
                 .andExpect(jsonPath("$.message").value(LectureResponseMessage.UPDATED))
                 .andExpect(jsonPath("$.data.title").value("Updated Java"));
+    }
+
+    @Test
+    void updateLectureOrders_returnsApiResponse() throws Exception {
+        Long courseId = 1L;
+        LectureOrderUpdateRequest request = new LectureOrderUpdateRequest(List.of(
+                new LectureOrderUpdateRequest.LectureOrderItem(1L, 2),
+                new LectureOrderUpdateRequest.LectureOrderItem(2L, 1)
+        ));
+
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lectures/order", courseId)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.code").value(LectureResponseCode.UPDATED))
+                .andExpect(jsonPath("$.message").value(LectureResponseMessage.UPDATED));
+
+        verify(lectureCommandUseCase).updateLectureOrders(any(UpdateLectureOrdersCommand.class));
+    }
+
+    @Test
+    void updateLectureOrders_returnsBadRequest_whenLecturesAreEmpty() throws Exception {
+        Long courseId = 1L;
+        LectureOrderUpdateRequest request = new LectureOrderUpdateRequest(List.of());
+
+        mockMvc.perform(put("/api/v1/courses/{courseId}/lectures/order", courseId)
+                        .with(authentication(operatorUser(10L)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(lectureCommandUseCase, never()).updateLectureOrders(any(UpdateLectureOrdersCommand.class));
     }
 
     @Test

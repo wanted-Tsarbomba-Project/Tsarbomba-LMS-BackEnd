@@ -5,6 +5,7 @@ import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureOrdersCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
@@ -18,6 +19,7 @@ import com.wanted.codebombalms.lecture.domain.model.LectureStatus;
 import com.wanted.codebombalms.lecture.domain.repository.LectureMaterialRepository;
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ConflictException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -83,6 +86,7 @@ class LectureServiceTest {
         assertEquals(courseId, result.getCourse().getCourseId());
         assertEquals("Java 1", result.getTitle());
         verify(lectureCreationPolicy).validate(course);
+        verify(lectureRepository).clearDeletedLectureOrders(courseId, List.of(1));
     }
 
     @Test
@@ -431,6 +435,76 @@ class LectureServiceTest {
     }
 
     @Test
+    void updateLectureOrders_updatesEveryLecture() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+        Lecture first = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
+        Lecture second = createLecture(2L, course, "Java 2", LectureStatus.ACTIVE, 2);
+        given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
+                .willReturn(List.of(first, second));
+
+        lectureCommandService.updateLectureOrders(new UpdateLectureOrdersCommand(
+                courseId,
+                List.of(
+                        new UpdateLectureOrdersCommand.LectureOrderItem(1L, 2),
+                        new UpdateLectureOrdersCommand.LectureOrderItem(2L, 1)
+                )
+        ));
+
+        assertEquals(2, first.getLectureOrder());
+        assertEquals(1, second.getLectureOrder());
+        verify(lectureRepository, times(2)).save(first);
+        verify(lectureRepository, times(2)).save(second);
+        verify(lectureRepository).flush();
+        verify(lectureRepository).clearDeletedLectureOrders(courseId, List.of(2, 1));
+    }
+
+    @Test
+    void updateLectureOrders_throwsConflict_whenOrderIsDuplicated() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+        Lecture first = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
+        Lecture second = createLecture(2L, course, "Java 2", LectureStatus.ACTIVE, 2);
+        given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
+                .willReturn(List.of(first, second));
+
+        ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> lectureCommandService.updateLectureOrders(new UpdateLectureOrdersCommand(
+                        courseId,
+                        List.of(
+                                new UpdateLectureOrdersCommand.LectureOrderItem(1L, 1),
+                                new UpdateLectureOrdersCommand.LectureOrderItem(2L, 1)
+                        )
+                ))
+        );
+
+        assertEquals(LectureErrorCode.LECTURE_ORDER_DUPLICATED, exception.getErrorCode());
+        verify(lectureRepository, never()).save(any(Lecture.class));
+    }
+
+    @Test
+    void updateLectureOrders_throwsValidation_whenLectureSetIsIncomplete() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+        Lecture first = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
+        Lecture second = createLecture(2L, course, "Java 2", LectureStatus.ACTIVE, 2);
+        given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
+                .willReturn(List.of(first, second));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.updateLectureOrders(new UpdateLectureOrdersCommand(
+                        courseId,
+                        List.of(new UpdateLectureOrdersCommand.LectureOrderItem(1L, 1))
+                ))
+        );
+
+        assertEquals(LectureErrorCode.INVALID_LECTURE_ORDER_REQUEST, exception.getErrorCode());
+        verify(lectureRepository, never()).save(any(Lecture.class));
+    }
+
+    @Test
     void deleteLecture_softDeletesMaterialsAndDeletesFiles() {
         Long lectureId = 1L;
         Lecture lecture = createLecture(lectureId, createCourse(1L, 10L, "Java"), "Java 1", LectureStatus.ACTIVE, 1);
@@ -485,6 +559,7 @@ class LectureServiceTest {
 
         assertEquals(LectureStatus.DELETED, lecture.getStatus());
         assertNotNull(lecture.getDeletedAt());
+        assertNull(lecture.getLectureOrder());
         assertNotNull(material.getDeletedAt());
         verify(lectureMaterialRepository).save(material);
         verify(lectureRepository).save(lecture);
@@ -569,6 +644,7 @@ class LectureServiceTest {
 
         assertEquals(LectureStatus.DELETED, lecture.getStatus());
         assertNotNull(lecture.getDeletedAt());
+        assertNull(lecture.getLectureOrder());
         verify(lectureRepository).save(lecture);
     }
 

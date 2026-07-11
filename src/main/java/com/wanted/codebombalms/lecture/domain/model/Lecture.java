@@ -119,5 +119,10 @@ public class Lecture {
     public void delete() {
         this.status = LectureStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
+        this.lectureOrder = null;
+    }
+
+    public void updateOrder(Integer lectureOrder) {
+        this.lectureOrder = lectureOrder;
     }
 }
