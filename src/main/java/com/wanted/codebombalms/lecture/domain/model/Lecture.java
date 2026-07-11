@@ -23,6 +23,7 @@ public class Lecture {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+    @Setter(AccessLevel.NONE)
     private Integer lectureOrder;
 
     public static Lecture create(
@@ -42,7 +43,7 @@ public class Lecture {
         lecture.setVideoUrl(videoUrl);
         lecture.setThumbnailUrl(thumbnailUrl);
         lecture.setProblemCategoryId(problemCategoryId);
-        lecture.setLectureOrder(lectureOrder);
+        lecture.updateOrder(lectureOrder);
         lecture.setStatus(status == null ? LectureStatus.ACTIVE : status);
 
         return lecture;

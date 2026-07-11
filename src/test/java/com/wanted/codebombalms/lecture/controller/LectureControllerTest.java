@@ -381,7 +381,7 @@ class LectureControllerTest {
         lecture.setVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         lecture.setThumbnailUrl("java-1.png");
         lecture.setStatus(LectureStatus.ACTIVE);
-        lecture.setLectureOrder(1);
+        lecture.updateOrder(1);
         lecture.setCreatedAt(LocalDateTime.now());
         lecture.setUpdatedAt(LocalDateTime.now());
         return lecture;

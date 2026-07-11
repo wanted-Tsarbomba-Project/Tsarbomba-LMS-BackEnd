@@ -120,17 +120,7 @@ public class LectureCommandService implements LectureCommandUseCase {
                         UpdateLectureOrdersCommand.LectureOrderItem::lectureOrder
                 ));
 
-        for (int index = 0; index < currentLectures.size(); index++) {
-            Lecture lecture = currentLectures.get(index);
-            lecture.updateOrder(-(index + 1));
-            lectureRepository.save(lecture);
-        }
-        lectureRepository.flush();
-
-        currentLectures.forEach(lecture -> {
-            lecture.updateOrder(requestedOrders.get(lecture.getLectureId()));
-            lectureRepository.save(lecture);
-        });
+        lectureRepository.updateLectureOrders(currentLectures, requestedOrders);
     }
 
     @Override

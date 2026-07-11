@@ -38,7 +38,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -451,11 +450,10 @@ class LectureServiceTest {
                 )
         ));
 
-        assertEquals(2, first.getLectureOrder());
-        assertEquals(1, second.getLectureOrder());
-        verify(lectureRepository, times(2)).save(first);
-        verify(lectureRepository, times(2)).save(second);
-        verify(lectureRepository).flush();
+        verify(lectureRepository).updateLectureOrders(
+                List.of(first, second),
+                java.util.Map.of(1L, 2, 2L, 1)
+        );
         verify(lectureRepository).clearDeletedLectureOrders(courseId, List.of(2, 1));
     }
 
@@ -502,6 +500,30 @@ class LectureServiceTest {
 
         assertEquals(LectureErrorCode.INVALID_LECTURE_ORDER_REQUEST, exception.getErrorCode());
         verify(lectureRepository, never()).save(any(Lecture.class));
+    }
+
+    @Test
+    void updateLectureOrders_throwsValidation_whenLectureIdIsDuplicated() {
+        Long courseId = 1L;
+        Course course = createCourse(courseId, 10L, "Java");
+        Lecture first = createLecture(1L, course, "Java 1", LectureStatus.ACTIVE, 1);
+        Lecture second = createLecture(2L, course, "Java 2", LectureStatus.ACTIVE, 2);
+        given(lectureRepository.findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(courseId))
+                .willReturn(List.of(first, second));
+
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> lectureCommandService.updateLectureOrders(new UpdateLectureOrdersCommand(
+                        courseId,
+                        List.of(
+                                new UpdateLectureOrdersCommand.LectureOrderItem(1L, 1),
+                                new UpdateLectureOrdersCommand.LectureOrderItem(1L, 2)
+                        )
+                ))
+        );
+
+        assertEquals(LectureErrorCode.INVALID_LECTURE_ORDER_REQUEST, exception.getErrorCode());
+        verify(lectureRepository, never()).updateLectureOrders(any(), any());
     }
 
     @Test
@@ -668,7 +690,7 @@ class LectureServiceTest {
         lecture.setVideoUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
         lecture.setThumbnailUrl("lecture.png");
         lecture.setStatus(status);
-        lecture.setLectureOrder(lectureOrder);
+        lecture.updateOrder(lectureOrder);
         lecture.setCreatedAt(LocalDateTime.now());
         lecture.setUpdatedAt(LocalDateTime.now());
         return lecture;
