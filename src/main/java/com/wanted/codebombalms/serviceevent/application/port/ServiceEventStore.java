@@ -8,6 +8,6 @@ public interface ServiceEventStore {
 
     void save(ServiceEventEnvelope envelope);
 
-    /** threshold 이전 이벤트를 청크 단위로 삭제 후 건수 반환 — 호출측이 0이 될 때까지 반복 호출 */
+    /** threshold 이전 이벤트를 청크 단위로 삭제 후 건수 반환 — 호출측은 청크 크기 미만 반환 또는 실행 상한까지 반복 */
     int deleteChunkCreatedBefore(LocalDateTime threshold);
 }

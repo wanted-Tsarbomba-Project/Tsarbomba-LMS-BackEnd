@@ -88,11 +88,11 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     /** 예외 신호만 조건부 적재 — 정상 요청(2xx·3xx·일반 4xx) 제외, 예외는 응답에 미전파 (best-effort) */
     private void recordAnomalyIfNeeded(
             HttpServletRequest request, HttpServletResponse response,
-            long durationMs, String userIdAttribute, String traceId) {
+            long durationMs, String resolvedUserId, String traceId) {
         try {
             int status = response.getStatus();
             String route = HttpRequestAnomalySupport.normalizedRoute(request);
-            Long userId = HttpRequestAnomalySupport.parseUserId(userIdAttribute);
+            Long userId = HttpRequestAnomalySupport.parseUserId(resolvedUserId);
             String clientIp = ClientIpResolver.resolve(request);
 
             if (durationMs >= slowThresholdMs && anomalyGuard.tryAcquire("slow:" + route)) {
