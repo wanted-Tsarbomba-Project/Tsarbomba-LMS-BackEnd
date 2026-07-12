@@ -2,19 +2,12 @@ package com.wanted.codebombalms.global.presentation.api.common;
 
 import com.wanted.codebombalms.global.domain.common.error.DomainException;
 import com.wanted.codebombalms.global.domain.common.error.exception.*;
-import com.wanted.codebombalms.global.infrastructure.jwt.JwtAuthenticationFilter;
-import com.wanted.codebombalms.global.infrastructure.logging.MdcLoggingFilter;
+import com.wanted.codebombalms.global.infrastructure.metrics.HttpAnomalyReporter;
 import com.wanted.codebombalms.global.infrastructure.metrics.SecurityEventReporter;
-import com.wanted.codebombalms.global.infrastructure.web.ClientIpResolver;
-import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
-import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
-import com.wanted.codebombalms.serviceevent.infrastructure.persistence.ServiceEventWriter;
-import com.wanted.codebombalms.serviceevent.infrastructure.web.HttpAnomalyGuard;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +25,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
-import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Arrays;
 
@@ -43,8 +35,7 @@ public class GlobalExceptionHandler {
 
     private final Environment env;
     private final ObjectProvider<SecurityEventReporter> securityEventReporter;
-    private final ObjectProvider<ServiceEventWriter> serviceEventWriter;
-    private final ObjectProvider<HttpAnomalyGuard> anomalyGuard;
+    private final ObjectProvider<HttpAnomalyReporter> httpAnomalyReporter;
 
     @ExceptionHandler(DomainException.class)
     public ResponseEntity<ApiErrorResponse> handleDomainException(
@@ -58,7 +49,7 @@ public class GlobalExceptionHandler {
         }
         // 외부 서비스 예외(502)는 원인 클래스명까지 상세 기록 — 필터의 상태코드 기록보다 정보가 많다 (#606)
         if (e instanceof ExternalServiceException) {
-            recordServerError(request, ServiceEventType.HTTP_502_EXTERNAL, e.getHttpStatus(), e);
+            reportServerErrorQuietly(request, e.getHttpStatus(), e);
         }
         return ResponseEntity.status(e.getHttpStatus())
                 .body(ApiErrorResponse.of(e.getHttpStatus(), e.getErrorCode(), request.getRequestURI()));
@@ -100,8 +91,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleException(
             Exception e, HttpServletRequest request) {
         log.error("[500] 예상치 못한 예외 - path: {}", request.getRequestURI(), e);
-        // unhandled 500 — 예외 클래스명을 detail 로 남긴다. 필터는 원인 정보를 알 수 없다 (#606)
-        recordServerError(request, ServiceEventType.HTTP_5XX, 500, e);
+        // unhandled 500 — 예외 클래스명 상세는 HttpAnomalyReporter 구현이 기록한다 (#606)
+        reportServerErrorQuietly(request, 500, e);
         String message = isDev() ? e.getMessage() : "서버 오류가 발생했습니다.";
         return ResponseEntity.status(500)
                 .body(ApiErrorResponse.of(500, "INTERNAL_ERROR", message, request.getRequestURI()));
@@ -131,47 +122,12 @@ public class GlobalExceptionHandler {
         }
     }
 
-    /**
-     * 5xx 상세 기록 (#606). 예외 클래스명을 detail 로 남기고, 중복 방지 마커를 세워
-     * MdcLoggingFilter 의 상태코드 기반 기록이 같은 요청을 다시 적재하지 않게 한다.
-     * ObjectProvider 주입 — @WebMvcTest 슬라이스 컨텍스트에는 빈이 없어도 부팅되게 한다.
-     * 기록 실패는 전부 삼킨다 — 에러 응답 자체를 절대 깨지 않는다.
-     */
-    private void recordServerError(
-            HttpServletRequest request, ServiceEventType type, int status, Exception cause) {
+    /** 5xx 상세 기록 위임 — SecurityEventReporter 와 동일한 ifAvailable+삼킴 패턴 (#607 리뷰 반영) */
+    private void reportServerErrorQuietly(HttpServletRequest request, int httpStatus, Exception cause) {
         try {
-            request.setAttribute(MdcLoggingFilter.ANOMALY_RECORDED_ATTRIBUTE, Boolean.TRUE);
-
-            ServiceEventWriter writer = serviceEventWriter.getIfAvailable();
-            HttpAnomalyGuard guard = anomalyGuard.getIfAvailable();
-            if (writer == null || guard == null) {
-                return;
-            }
-
-            Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-            String route = request.getMethod() + " " + (pattern == null ? "unmatched" : pattern.toString());
-            if (!guard.tryAcquire("5xx:" + route)) {
-                return;
-            }
-
-            Long userId = parseUserId(request.getAttribute(JwtAuthenticationFilter.AUTHENTICATED_USER_ID_ATTRIBUTE));
-            writer.write(ServiceEventEnvelope.httpAnomaly(
-                    type, route, status, null,
-                    ClientIpResolver.resolve(request), userId, MDC.get("traceId"),
-                    "exception=" + cause.getClass().getSimpleName()));
+            httpAnomalyReporter.ifAvailable(r -> r.reportServerError(request, httpStatus, cause));
         } catch (Exception ignored) {
             log.warn("event=server_error_record_failed reason={}", ignored.toString());
-        }
-    }
-
-    private Long parseUserId(Object attribute) {
-        if (attribute == null) {
-            return null;
-        }
-        try {
-            return Long.parseLong(String.valueOf(attribute));
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 }

@@ -3,6 +3,7 @@ package com.wanted.codebombalms.lecture.application.service;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureOrdersCommand;
 import com.wanted.codebombalms.lecture.application.policy.LectureCreationPolicy;
 import com.wanted.codebombalms.lecture.application.port.CourseCatalogPort;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
@@ -28,6 +29,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +54,7 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         Course course = courseCatalogPort.findCourse(command.courseId());
         lectureCreationPolicy.validate(course);
+        clearDeletedLectureOrders(command.courseId(), java.util.Collections.singletonList(command.lectureOrder()));
         validateLectureOrder(command.courseId(), null, command.lectureOrder());
         validateYoutubeVideoUrl(command.videoUrl());
 
@@ -94,6 +100,27 @@ public class LectureCommandService implements LectureCommandUseCase {
         );
 
         return lectureRepository.save(lecture);
+    }
+
+    @Override
+    public void updateLectureOrders(UpdateLectureOrdersCommand command) {
+        log.info("[LectureCommandService] update lecture orders - courseId: {}, lectureCount: {}",
+                command.courseId(), command.lectures().size());
+
+        List<Lecture> currentLectures = lectureRepository
+                .findByCourseIdAndDeletedAtIsNullOrderByLectureOrderAsc(command.courseId());
+        validateLectureOrderRequest(currentLectures, command.lectures());
+        clearDeletedLectureOrders(command.courseId(), command.lectures().stream()
+                .map(UpdateLectureOrdersCommand.LectureOrderItem::lectureOrder)
+                .toList());
+
+        Map<Long, Integer> requestedOrders = command.lectures().stream()
+                .collect(Collectors.toMap(
+                        UpdateLectureOrdersCommand.LectureOrderItem::lectureId,
+                        UpdateLectureOrdersCommand.LectureOrderItem::lectureOrder
+                ));
+
+        lectureRepository.updateLectureOrders(currentLectures, requestedOrders);
     }
 
     @Override
@@ -150,6 +177,42 @@ public class LectureCommandService implements LectureCommandUseCase {
 
         if (duplicated) {
             throw new ConflictException(LectureErrorCode.LECTURE_ORDER_DUPLICATED);
+        }
+    }
+
+    private void clearDeletedLectureOrders(Long courseId, List<Integer> lectureOrders) {
+        List<Integer> nonNullOrders = lectureOrders.stream()
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        if (!nonNullOrders.isEmpty()) {
+            lectureRepository.clearDeletedLectureOrders(courseId, nonNullOrders);
+        }
+    }
+
+    private void validateLectureOrderRequest(
+            List<Lecture> currentLectures,
+            List<UpdateLectureOrdersCommand.LectureOrderItem> requestedLectures
+    ) {
+        Set<Long> requestedLectureIds = requestedLectures.stream()
+                .map(UpdateLectureOrdersCommand.LectureOrderItem::lectureId)
+                .collect(Collectors.toSet());
+        Set<Integer> requestedOrders = requestedLectures.stream()
+                .map(UpdateLectureOrdersCommand.LectureOrderItem::lectureOrder)
+                .collect(Collectors.toSet());
+        Set<Long> currentLectureIds = currentLectures.stream()
+                .map(Lecture::getLectureId)
+                .collect(Collectors.toSet());
+
+        boolean duplicatedLectureId = requestedLectureIds.size() != requestedLectures.size();
+        boolean duplicatedOrder = requestedOrders.size() != requestedLectures.size();
+        boolean incompleteCourseLectureSet = !requestedLectureIds.equals(currentLectureIds);
+
+        if (duplicatedOrder) {
+            throw new ConflictException(LectureErrorCode.LECTURE_ORDER_DUPLICATED);
+        }
+        if (duplicatedLectureId || incompleteCourseLectureSet) {
+            throw new ValidationException(LectureErrorCode.INVALID_LECTURE_ORDER_REQUEST);
         }
     }
 

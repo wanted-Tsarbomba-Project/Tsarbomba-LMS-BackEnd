@@ -85,7 +85,7 @@ jobs:
             --arg body "$PR_BODY" \
             '{
               model: "claude-sonnet-5",
-              max_tokens: 512,
+              max_tokens: 1500,
               messages: [
                 {
                   role: "user",
@@ -109,7 +109,7 @@ jobs:
             exit 1
           fi
 
-          BULLETS=$(echo "$BODY_JSON" | jq -r '.content[0].text // empty')
+          BULLETS=$(echo "$BODY_JSON" | jq -r '[.content[] | select(.type == "text") | .text] | join("")')
 
           if [ -z "$BULLETS" ]; then
             echo "Claude 응답에서 요약 텍스트를 못 찾음"
@@ -117,9 +117,16 @@ jobs:
             exit 1
           fi
 
+          STOP_REASON=$(echo "$BODY_JSON" | jq -r '.stop_reason')
+          if [ "$STOP_REASON" = "max_tokens" ]; then
+            echo "Claude 응답이 max_tokens로 잘림 (요약 미완성) — 게시 중단"
+            echo "$BODY_JSON"
+            exit 1
+          fi
+
           # 제목은 AI에게 맡기지 않고 고정 포맷으로 조립 (KST 기준 날짜)
           DATE=$(TZ='Asia/Seoul' date +'%Y-%m-%d')
-          TITLE="백엔드팀 패치노트🦖 | $DATE"
+          TITLE="백엔드팀 패치노트🦖 | $DATE"   # 프론트 레포는 "프론트팀 패치노트🎨 | $DATE"
 
           printf '%s\n\n%s' "$TITLE" "$BULLETS" \
             | python3 -c "import sys; print(sys.stdin.read()[:1900])" > summary.txt

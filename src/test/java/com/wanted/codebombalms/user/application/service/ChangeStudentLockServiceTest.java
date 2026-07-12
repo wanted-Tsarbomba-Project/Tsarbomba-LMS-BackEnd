@@ -9,6 +9,7 @@ import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +52,7 @@ class ChangeStudentLockServiceTest {
         verify(refreshTokenRepository).deleteByUserId(1L);
         verify(authSessionManager).close(1L);
         verify(userRepository).save(user);
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -68,6 +70,7 @@ class ChangeStudentLockServiceTest {
         verify(refreshTokenRepository, never()).deleteByUserId(any());
         verify(authSessionManager, never()).close(any());
         verify(userRepository).save(user);
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
