@@ -9,6 +9,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface SpringDataServiceEventRepository extends JpaRepository<ServiceEventJpaEntity, Long> {
 
+    /** 보안 카테고리 목록 — ServiceEventCategory.isSecurity() 와 동기 유지 (native @Query 는 컴파일타임 상수만 허용) */
+    String SECURITY_CATEGORIES = "'authn_attack','takeover','oauth','token','signup'";
+
     /**
      * 보존기간 초과분 청크 삭제. 단발 대량 DELETE 금지(롱 락·undo 폭증)락
      * LIMIT 1000 고정 청크로 지운다 — 기존 UserHardDeleteAdapter의 MAX_BATCH 관례.
@@ -51,7 +54,8 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             FROM service_event
             WHERE created_at >= :start AND created_at < :end
               AND ip_address IS NOT NULL
-              AND category IN ('authn_attack','takeover','oauth','token','signup')
+              AND category IN (""" + SECURITY_CATEGORIES + """
+            )
             GROUP BY ip_address
             ORDER BY cnt DESC
             LIMIT 10
@@ -63,7 +67,8 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             FROM service_event
             WHERE created_at >= :start AND created_at < :end
               AND ip_address = :ip
-              AND category IN ('authn_attack','takeover','oauth','token','signup')
+              AND category IN (""" + SECURITY_CATEGORIES + """
+            )
             GROUP BY event_type
             ORDER BY COUNT(*) DESC
             LIMIT 1
@@ -77,7 +82,8 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             WHERE created_at >= :start AND created_at < :end
               AND ip_address = :ip
               AND user_id IS NOT NULL
-              AND category IN ('authn_attack','takeover','oauth','token','signup')
+              AND category IN (""" + SECURITY_CATEGORIES + """
+            )
             LIMIT 5
             """, nativeQuery = true)
     List<Long> findTargetUserIdsByIp(
@@ -108,6 +114,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             FROM service_event
             WHERE created_at >= :start AND created_at < :end
               AND event_type = 'concurrent_sample'
+              AND target_id IS NOT NULL
             ORDER BY target_id DESC, created_at DESC
             LIMIT 1
             """, nativeQuery = true)

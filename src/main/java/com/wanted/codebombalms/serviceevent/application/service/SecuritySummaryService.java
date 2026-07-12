@@ -15,15 +15,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 보안 요약 집계 조립 (#608).
  * 증감률(deltaPct)은 직전 동일 길이 구간과 비교한다 — today 는 "어제 같은 시각까지"와 비교(공정 비교).
  * 2m 은 비교 구간이 보존기간(2개월) 밖이라 delta 를 제공하지 않는다(null).
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SecuritySummaryService {
 
     private static final Set<String> SECURITY_CATEGORY_CODES = Arrays.stream(ServiceEventCategory.values())
@@ -68,7 +72,7 @@ public class SecuritySummaryService {
         Double enrollmentsDelta = null;
         if (period.comparable()) {
             LocalDateTime prevStart = period.previousStart(start, end);
-            LocalDateTime prevEnd = start;
+            LocalDateTime prevEnd = period.previousEnd(start, end);
             List<SecuritySummaryQueryPort.CategoryCount> prevCategoryCounts =
                     summaryQuery.countByCategory(prevStart, prevEnd);
             Map<String, Long> prevTypeCounts = toTypeCountMap(summaryQuery.countByType(prevStart, prevEnd));
@@ -152,11 +156,21 @@ public class SecuritySummaryService {
         return riskIps.stream()
                 .map(ip -> new SecuritySummaryResult.RiskIp(
                         ip.ip(),
-                        geoIpResolver.resolve(ip.ip()).country(),
+                        resolveCountrySafely(ip.ip()),
                         ip.count(),
                         ip.mainType(),
                         ip.targetUserIds()))
                 .toList();
+    }
+
+    /** GeoIP 해상 실패(null/예외)가 요약 전체를 죽이지 않도록 IP 단위로 격리한다 */
+    private String resolveCountrySafely(String ip) {
+        try {
+            return geoIpResolver.resolve(ip).country();
+        } catch (Exception e) {
+            log.warn("event=geoip_resolve_failed ip={} reason={}", ip, e.toString());
+            return "Unknown";
+        }
     }
 
     private List<SecuritySummaryResult.Hourly> toHourly(List<SecuritySummaryQueryPort.HourlyCount> hourly) {
@@ -177,16 +191,19 @@ public class SecuritySummaryService {
         TODAY("today") {
             @Override LocalDateTime start(LocalDateTime end) { return end.toLocalDate().atStartOfDay(); }
             @Override LocalDateTime previousStart(LocalDateTime start, LocalDateTime end) { return start.minusDays(1); }
+            @Override LocalDateTime previousEnd(LocalDateTime start, LocalDateTime end) { return end.minusDays(1); } // 어제 "같은 시각"까지 — 부분일 공정 비교
             @Override boolean comparable() { return true; }
         },
         WEEK("week") {
             @Override LocalDateTime start(LocalDateTime end) { return end.minusDays(7); }
             @Override LocalDateTime previousStart(LocalDateTime start, LocalDateTime end) { return start.minusDays(7); }
+            @Override LocalDateTime previousEnd(LocalDateTime start, LocalDateTime end) { return start; }
             @Override boolean comparable() { return true; }
         },
         TWO_MONTHS("2m") {
             @Override LocalDateTime start(LocalDateTime end) { return end.minusMonths(2); }
             @Override LocalDateTime previousStart(LocalDateTime start, LocalDateTime end) { return start; }
+            @Override LocalDateTime previousEnd(LocalDateTime start, LocalDateTime end) { return start; }
             @Override boolean comparable() { return false; } // 비교 구간이 보존기간 밖
         };
 
@@ -199,6 +216,8 @@ public class SecuritySummaryService {
         abstract LocalDateTime start(LocalDateTime end);
 
         abstract LocalDateTime previousStart(LocalDateTime start, LocalDateTime end);
+
+        abstract LocalDateTime previousEnd(LocalDateTime start, LocalDateTime end);
 
         abstract boolean comparable();
 
