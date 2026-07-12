@@ -54,10 +54,14 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
                 .findByUserIdAndLectureId(userId, lectureId)
                 .orElseGet(() -> LectureProgress.create(userId, lectureId));
 
+        boolean firstCompletion = !progress.isCompleted();
         progress.complete();
-        serviceEventRecorder.record(ServiceEventEnvelope.business(
-                ServiceEventType.LESSON_COMPLETED, userId, lectureId));
-        return lectureProgressRepository.save(progress);
+        LectureProgress saved = lectureProgressRepository.save(progress);
+        if (firstCompletion) { // 이미 완료된 강의 재호출 시 중복 적재 방지 (KPI 왜곡 방지)
+            serviceEventRecorder.record(ServiceEventEnvelope.business(
+                    ServiceEventType.LESSON_COMPLETED, userId, lectureId));
+        }
+        return saved;
     }
 
     @Override
