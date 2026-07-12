@@ -58,7 +58,7 @@ public class GeminiBriefingAdapter implements BriefingLlmPort {
 
     public GeminiBriefingAdapter(
             @Value("${briefing.api-key:}") String apiKey,
-            @Value("${briefing.model:gemini-2.5-flash}") String model,
+            @Value("${briefing.model:gemini-3.5-flash}") String model,
             ObjectMapper objectMapper) {
         this.model = model;
         this.objectMapper = objectMapper;

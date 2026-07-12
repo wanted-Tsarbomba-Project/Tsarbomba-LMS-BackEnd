@@ -86,7 +86,7 @@ app:
 # provider: gemini(기본) | anthropic
 briefing:
   provider: ${BRIEFING_PROVIDER:gemini}
-  model: ${BRIEFING_MODEL:gemini-2.5-flash}
+  model: ${BRIEFING_MODEL:gemini-3.5-flash}
   api-key: ${BRIEFING_API_KEY:}
 
 cors:
