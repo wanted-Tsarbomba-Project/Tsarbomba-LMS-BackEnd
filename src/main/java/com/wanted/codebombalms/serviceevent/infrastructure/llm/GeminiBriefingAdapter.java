@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.HttpOptions;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.serviceevent.application.port.BriefingLlmPort;
 import com.wanted.codebombalms.serviceevent.domain.exception.ServiceEventErrorCode;
@@ -15,12 +16,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * Gemini API 브리핑 어댑터 (#609) — 기본 프로바이더 (학교 지원 API 키).
- *
- * <p>Gemini JSON 모드(responseMimeType=application/json) + 프롬프트 내 스키마 명세로
- * BriefingContent 형태를 유도하고, Jackson 파싱 + 필수 필드 검증으로 확정한다.
- * 파싱·검증 실패는 생성 실패(FAILED 기록)로 처리 — 조회 경로는 절대 오염되지 않는다.
- * 키 미설정 시 부팅은 정상, 생성 요청만 실패한다.
+ * Gemini API 브리핑 어댑터 — 기본 프로바이더.
+ * JSON 모드 + 프롬프트 스키마로 BriefingContent 유도, 파싱·검증 실패는 생성 실패(FAILED) 처리.
+ * 키 미설정 시 부팅 정상·생성만 실패.
  */
 @Slf4j
 @Component
@@ -28,6 +26,9 @@ import org.springframework.stereotype.Component;
 public class GeminiBriefingAdapter implements BriefingLlmPort {
 
     private static final DateTimeFormatter PERIOD_FORMAT = DateTimeFormatter.ofPattern("MM-dd HH:mm");
+
+    /** timeout — 공급자 지연 시 스레드 점유 방지 */
+    private static final int TIMEOUT_MS = 120_000;
 
     private static final String SYSTEM_PROMPT = """
             당신은 온라인 코딩 교육 플랫폼 '코드봄바'의 보안·운영 브리핑 작성자다.
@@ -64,7 +65,10 @@ public class GeminiBriefingAdapter implements BriefingLlmPort {
         this.objectMapper = objectMapper;
         this.client = (apiKey == null || apiKey.isBlank())
                 ? null
-                : Client.builder().apiKey(apiKey).build();
+                : Client.builder()
+                        .apiKey(apiKey)
+                        .httpOptions(HttpOptions.builder().timeout(TIMEOUT_MS).build())
+                        .build();
         if (this.client == null) {
             log.warn("event=briefing_llm_disabled provider=gemini reason=api_key_not_set — 브리핑 생성 요청은 실패 처리됩니다");
         }
@@ -118,7 +122,7 @@ public class GeminiBriefingAdapter implements BriefingLlmPort {
                 source.aggregatesText());
     }
 
-    /** JSON 모드는 스키마를 100% 강제하지 않으므로 필수 필드를 여기서 확정한다 */
+    /** JSON 모드는 스키마 비강제 — 필수 필드 수동 검증 */
     private void validate(BriefingContent content) {
         if (content == null
                 || content.headline() == null || content.headline().isBlank()

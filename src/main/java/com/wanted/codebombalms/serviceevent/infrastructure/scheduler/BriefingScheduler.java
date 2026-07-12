@@ -6,9 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * AI 브리핑 스케줄 생성 (#609) — 하루 3회.
- * 09:05 는 기존 09:00 잡(OperationRuleScheduler)과 5분 비껴 건다.
- * 실패는 BriefingService 가 FAILED 행으로 기록하므로 여기선 트리거만 담당.
+ * AI 브리핑 정기 생성 트리거 — 하루 3회. 실패는 BriefingService 가 FAILED 행으로 기록.
  */
 @Component
 @RequiredArgsConstructor

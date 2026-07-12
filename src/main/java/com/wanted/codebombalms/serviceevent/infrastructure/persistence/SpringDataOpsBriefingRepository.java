@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface SpringDataOpsBriefingRepository extends JpaRepository<OpsBriefingJpaEntity, Long> {
 
@@ -13,7 +14,8 @@ public interface SpringDataOpsBriefingRepository extends JpaRepository<OpsBriefi
 
     Optional<OpsBriefingJpaEntity> findTopByOrderByGeneratedAtDesc();
 
-    /** 보존 2개월 파기 — 하루 3행(스케줄) + 수동 소량이라 청크 루프 불필요 */
+    /** 보존 2개월 초과분 삭제 — HardDelete 실행 경로 트랜잭션 부재, 여기서 @Transactional 필수 */
+    @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             DELETE FROM ops_briefing

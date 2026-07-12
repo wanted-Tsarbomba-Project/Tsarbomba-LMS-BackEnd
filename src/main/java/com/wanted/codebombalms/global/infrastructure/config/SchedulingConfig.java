@@ -47,10 +47,8 @@ public class SchedulingConfig {
 
 
     /**
-     * 서비스 이벤트 적재 전용 풀 (#605).
-     * 기존 풀 재사용 금지 — 추천풀(core=max=1, Abort)은 즉시 거절되고,
-     * 메일풀(CallerRuns)은 포화 시 요청 스레드로 역류해 응답 지연을 전파한다.
-     * 이벤트는 best-effort: 포화 시 드랍하고 카운터만 올린다 (응답 보호 최우선).
+     * 서비스 이벤트 적재 전용 풀 — 포화 시 드랍 + 카운터 기록 (best-effort, 응답 보호).
+     * 기존 풀(추천·메일) 재사용 금지 — 즉시 거절 또는 요청 스레드 역류로 응답 지연 전파.
      */
     @Bean
     public ThreadPoolTaskExecutor serviceEventTaskExecutor(MeterRegistry meterRegistry) {

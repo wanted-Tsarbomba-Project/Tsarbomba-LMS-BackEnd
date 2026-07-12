@@ -10,11 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * HTTP 예외 신호(갈래 C)의 분당 적재 상한 가드 (#606).
- *
- * <p>목적: 봇 스캔·장애 폭주 시 service_event INSERT 폭발 방지.
- * 키는 반드시 정규화된 라우트 템플릿 기반이어야 한다(raw URI 금지 — 스캐너가
- * 무한 경로를 만들면 키 카디널리티가 폭발한다). 캐시 자체도 maximumSize 로 바운드.
+ * HTTP 예외 신호의 분당 적재 상한 가드 — 키는 정규화 라우트 필수(카디널리티 폭발 방지).
  */
 @Component
 public class HttpAnomalyGuard {
@@ -31,7 +27,7 @@ public class HttpAnomalyGuard {
             MeterRegistry meterRegistry,
             @Value("${service-event.anomaly.route-limit-per-minute:10}") int routeLimitPerMinute,
             @Value("${service-event.anomaly.anon-401-limit-per-minute:60}") int anonymous401LimitPerMinute) {
-        if (routeLimitPerMinute <= 0 || anonymous401LimitPerMinute <= 0) { // 0 이하면 모든 신호가 억제된다 — 기동 시 차단
+        if (routeLimitPerMinute <= 0 || anonymous401LimitPerMinute <= 0) { // 0 이하면 모든 신호 억제 — 기동 시 차단
             throw new IllegalStateException(
                     "service-event.anomaly 분당 상한은 양수여야 합니다: route=%d, anon401=%d"
                             .formatted(routeLimitPerMinute, anonymous401LimitPerMinute));
@@ -52,7 +48,7 @@ public class HttpAnomalyGuard {
         return tryAcquire(key, routeLimitPerMinute);
     }
 
-    /** 미인증 401 은 라우트 무관 전역 하드 캡 — 스캔 트래픽은 경로가 산탄이라 라우트 키가 무의미 */
+    /** 미인증 401 — 라우트 무관 전역 하드 캡 */
     public boolean tryAcquireAnonymous401() {
         return tryAcquire(ANONYMOUS_401_KEY, anonymous401LimitPerMinute);
     }

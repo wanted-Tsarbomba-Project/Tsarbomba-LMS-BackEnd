@@ -14,10 +14,8 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 /**
- * 5xx 상세 기록 구현 (#606, #607 리뷰로 GlobalExceptionHandler 에서 이관).
- * 예외 클래스명을 detail 로 남기고, 중복 방지 마커를 세워 MdcLoggingFilter 의
- * 상태코드 기반 기록이 같은 요청을 다시 적재하지 않게 한다.
- * 기록 실패는 전부 삼킨다 — 에러 응답을 절대 깨지 않는다 (best-effort).
+ * 5xx 상세 기록 구현 — 예외 클래스명을 detail 로 적재, 중복 방지 마커로 MdcLoggingFilter 재적재 차단.
+ * 기록 실패는 전부 흡수 — 에러 응답 비파괴 (best-effort).
  */
 @Slf4j
 @Component

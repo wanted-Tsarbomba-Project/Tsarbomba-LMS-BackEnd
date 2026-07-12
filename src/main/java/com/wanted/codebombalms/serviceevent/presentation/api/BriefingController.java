@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 관리자 AI 브리핑 API (#609). 권한 설계는 SecuritySummaryController 와 동일 —
- * ADMIN·MASTER 전용(@PreAuthorize), 인터셉터 세밀권한 미적용(관리자 공통 랜딩).
+ * 관리자 AI 브리핑 API — ADMIN·MASTER 전용. 권한 설계는 SecuritySummaryController 와 동일.
  */
 @RestController
 @RequestMapping("/api/v1/admin/security/briefing")

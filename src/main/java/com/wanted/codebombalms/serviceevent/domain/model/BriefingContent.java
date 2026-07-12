@@ -4,9 +4,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import java.util.List;
 
 /**
- * AI 브리핑 본문 (#609).
- * Claude 구조화 출력(outputConfig) 스키마이자 ops_briefing.content_json 직렬화 형태,
- * 그리고 GET /admin/security/briefing 응답의 content 필드다 — 세 곳이 이 record 하나로 정합.
+ * AI 브리핑 본문.
+ * LLM 구조화 출력 스키마·ops_briefing.content_json·브리핑 응답 content 필드가 이 record 하나로 정합.
  */
 public record BriefingContent(
         @JsonPropertyDescription("전체 상황을 한 문장으로 요약한 헤드라인 (가장 중요한 변화 중심)")

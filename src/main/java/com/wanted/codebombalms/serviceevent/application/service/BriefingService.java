@@ -23,13 +23,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
- * AI 브리핑 생성·조회 (#609).
- *
- * <p>생성 = 최근 24시간 집계 → 마스킹 → LLM → ops_briefing 저장.
- * 실패 시 FAILED 행을 남기고 직전 SUCCESS 본이 계속 서비스된다 (stale=true).
- * 조회 = 저장본만 반환, LLM 호출 없음 (즉시 응답).
+ * AI 브리핑 생성·조회 서비스.
+ * 생성 = 최근 24시간 집계 → 마스킹 → LLM → ops_briefing 저장, 실패 시 FAILED 행 기록 후 직전 SUCCESS 본 유지(stale).
+ * 조회 = 저장본만 반환 (LLM 호출 없음).
  */
 @Slf4j
 @Service
@@ -50,7 +49,7 @@ public class BriefingService {
 
     private final AtomicReference<LocalDateTime> lastManualGeneration = new AtomicReference<>();
 
-    /** 스케줄러 진입점 — 실패해도 예외를 밖으로 던지지 않는다 (FAILED 기록으로 충분) */
+    /** 스케줄러 진입점 — 실패 시 예외 미전파 (FAILED 기록으로 충분) */
     public void generateScheduled() {
         try {
             generateAndStore();
@@ -66,15 +65,25 @@ public class BriefingService {
         if (last != null && Duration.between(last, now).compareTo(REGENERATE_COOLDOWN) < 0) {
             throw new TooManyRequestsException(ServiceEventErrorCode.BRIEFING_REGENERATE_COOLDOWN);
         }
-        lastManualGeneration.set(now);
+        // CAS 로 슬롯 선점 — 동시 요청은 한 건만 통과 (쿨다운 인메모리 — 단일 인스턴스 전제)
+        if (!lastManualGeneration.compareAndSet(last, now)) {
+            throw new TooManyRequestsException(ServiceEventErrorCode.BRIEFING_REGENERATE_COOLDOWN);
+        }
 
         generateAndStore();
-        return getLatest().orElseThrow(
+        // 내부 호출은 프록시 미경유(self-invocation) — 비어노테이션 메서드 직접 사용
+        return readLatest().orElseThrow(
                 () -> new ExternalServiceException(ServiceEventErrorCode.BRIEFING_GENERATION_FAILED));
     }
 
     /** 최신 저장본 조회 — 생성 이력이 전혀 없으면 empty (FE: "브리핑 준비 중") */
+    @Transactional(readOnly = true)
     public Optional<BriefingResult> getLatest() {
+        return readLatest();
+    }
+
+    /** 최신 저장본 조회 본문 — getLatest 의 트랜잭션 안에서 실행 */
+    private Optional<BriefingResult> readLatest() {
         Optional<OpsBriefingJpaEntity> latestSuccess =
                 briefingRepository.findTopByStatusOrderByGeneratedAtDesc(OpsBriefingJpaEntity.STATUS_SUCCESS);
         if (latestSuccess.isEmpty()) {
@@ -113,10 +122,7 @@ public class BriefingService {
         }
     }
 
-    /**
-     * LLM 입력용 집계 텍스트 (설계서 §8-2 PII 정책).
-     * 집계 수치·마스킹 IP 라벨만 포함 — user_id 는 "표적 계정 N개"로 개수만.
-     */
+    /** LLM 입력용 집계 텍스트 — PII 미반출 (집계 수치·마스킹 IP 라벨만, user_id 는 개수만) */
     private String buildAggregatesText(LocalDateTime start, LocalDateTime end) {
         LocalDateTime prevStart = start.minus(BRIEFING_WINDOW);
 
@@ -151,8 +157,11 @@ public class BriefingService {
             text.append("- 없음\n");
         }
         for (var ip : riskIps) {
-            text.append("- %s: %d건, 주요타입 %s, 표적 계정 %d개%n".formatted(
-                    maskIp(ip.ip()), ip.count(), ip.mainType(), ip.targetUserIds().size()));
+            // 표적 계정 목록은 LIMIT 5 샘플 — 5개면 실제로는 그 이상 가능
+            int targetCount = ip.targetUserIds().size();
+            String targetLabel = targetCount >= 5 ? "5개 이상" : targetCount + "개";
+            text.append("- %s: %d건, 주요타입 %s, 표적 계정 %s%n".formatted(
+                    maskIp(ip.ip()), ip.count(), ip.mainType(), targetLabel));
         }
 
         text.append("\n[HTTP 예외 신호]\n");
@@ -181,7 +190,7 @@ public class BriefingService {
         return text.toString();
     }
 
-    /** IPv4 는 마지막 옥텟, IPv6 는 두 번째 그룹 이후를 마스킹 — 원본 IP 미반출 (설계서 §8-2) */
+    /** IPv4 는 마지막 옥텟, IPv6 는 두 번째 그룹 이후를 마스킹 — 원본 IP 미반출 */
     static String maskIp(String ip) {
         if (ip == null || ip.isBlank()) {
             return "unknown";
@@ -217,7 +226,7 @@ public class BriefingService {
             return objectMapper.readValue(json, BriefingContent.class);
         } catch (Exception e) {
             log.warn("event=briefing_content_deserialize_failed", e);
-            return null; // 조회는 죽이지 않는다 — FE 는 content null 이면 재생성 유도
+            return null; // 역직렬화 실패에도 조회 유지 — content null 이면 FE 가 재생성 유도
         }
     }
 }

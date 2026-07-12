@@ -12,10 +12,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
     /** 보안 카테고리 목록 — ServiceEventCategory.isSecurity() 와 동기 유지 (native @Query 는 컴파일타임 상수만 허용) */
     String SECURITY_CATEGORIES = "'authn_attack','takeover','oauth','token','signup'";
 
-    /**
-     * 보존기간 초과분 청크 삭제. 단발 대량 DELETE 금지(롱 락·undo 폭증)락
-     * LIMIT 1000 고정 청크로 지운다 — 기존 UserHardDeleteAdapter의 MAX_BATCH 관례.
-     */
+    /** 보존기간 초과분 1000행 단위 삭제 — 사용처: ServiceEventCleanupConfig(03시 잡) */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             DELETE FROM service_event
@@ -24,7 +21,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             """, nativeQuery = true)
     int deleteChunkByCreatedAtBefore(@Param("threshold") LocalDateTime threshold);
 
-    // ===== 이하 summary 집계 (#608) — 전부 읽기 전용, LIMIT 은 고정 상수(드라이버 호환 관례) =====
+    // ===== 이하 summary 집계 — 전부 읽기 전용, LIMIT 은 고정 상수(드라이버 호환) =====
 
     interface CategoryCountRow { String getCategory(); long getCnt(); }
     interface TypeCountRow { String getEventType(); long getCnt(); }

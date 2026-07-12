@@ -4,10 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * summary 집계 조회 포트 (#608). 서비스는 이 포트만 알고, 구현(native 쿼리)은 infra 에 둔다.
- * QueryDSL 도입(D트랙) 시 어댑터만 교체하면 된다.
- */
+/** 보안 요약(summary) 집계 조회 포트. */
 public interface SecuritySummaryQueryPort {
 
     record CategoryCount(String category, long count) {}

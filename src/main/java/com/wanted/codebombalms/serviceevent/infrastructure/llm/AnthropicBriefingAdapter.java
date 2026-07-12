@@ -9,6 +9,7 @@ import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServ
 import com.wanted.codebombalms.serviceevent.application.port.BriefingLlmPort;
 import com.wanted.codebombalms.serviceevent.domain.exception.ServiceEventErrorCode;
 import com.wanted.codebombalms.serviceevent.domain.model.BriefingContent;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,13 +17,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * Claude API 브리핑 어댑터 (#609).
- *
- * <p>구조화 출력(outputConfig)으로 응답이 BriefingContent 스키마를 강제받는다 — 파싱 실패 원천 차단.
- * 모델은 ${BRIEFING_MODEL}(기본 claude-opus-4-8), 키는 ${ANTHROPIC_API_KEY} — 키 미설정 시
- * 부팅은 정상, 생성 요청만 실패(FAILED 기록)한다.
- * 보안 이벤트 요약은 안전 분류기가 드물게 거절(stop_reason=refusal)할 수 있어
- * 프롬프트를 "방어 관점 운영 보고서"로 프레이밍하고 refusal 은 생성 실패로 처리한다.
+ * Claude API 브리핑 어댑터.
+ * 구조화 출력(outputConfig)으로 BriefingContent 스키마 강제, refusal 응답은 생성 실패 처리.
+ * 키 미설정 시 부팅 정상·생성만 실패.
  */
 @Slf4j
 @Component
@@ -51,7 +48,10 @@ public class AnthropicBriefingAdapter implements BriefingLlmPort {
         this.model = model;
         this.client = (apiKey == null || apiKey.isBlank())
                 ? null
-                : AnthropicOkHttpClient.builder().apiKey(apiKey).build();
+                : AnthropicOkHttpClient.builder()
+                        .apiKey(apiKey)
+                        .timeout(Duration.ofMillis(120_000)) // timeout — 공급자 지연 시 스레드 점유 방지
+                        .build();
         if (this.client == null) {
             log.warn("event=briefing_llm_disabled reason=api_key_not_set — 브리핑 생성 요청은 실패 처리됩니다");
         }
