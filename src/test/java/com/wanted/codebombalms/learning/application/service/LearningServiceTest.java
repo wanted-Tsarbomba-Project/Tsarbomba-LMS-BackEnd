@@ -429,7 +429,8 @@ class LearningServiceTest {
         assertTrue(result.isCompleted());
         assertEquals(completedAt, result.getCompletedAt());
         verify(lectureProgressRepository).save(any(LectureProgress.class));
-        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
+        // 이미 완료된 강의 재완료는 이벤트를 다시 적재하지 않는다 (KPI 중복 방지)
+        verify(serviceEventRecorder, never()).record(any(ServiceEventEnvelope.class));
     }
 
     @Test

@@ -31,6 +31,11 @@ public class HttpAnomalyGuard {
             MeterRegistry meterRegistry,
             @Value("${service-event.anomaly.route-limit-per-minute:10}") int routeLimitPerMinute,
             @Value("${service-event.anomaly.anon-401-limit-per-minute:60}") int anonymous401LimitPerMinute) {
+        if (routeLimitPerMinute <= 0 || anonymous401LimitPerMinute <= 0) { // 0 이하면 모든 신호가 억제된다 — 기동 시 차단
+            throw new IllegalStateException(
+                    "service-event.anomaly 분당 상한은 양수여야 합니다: route=%d, anon401=%d"
+                            .formatted(routeLimitPerMinute, anonymous401LimitPerMinute));
+        }
         this.minuteCounters = Caffeine.newBuilder()
                 .maximumSize(MAX_TRACKED_KEYS)
                 .expireAfterWrite(Duration.ofMinutes(1))
