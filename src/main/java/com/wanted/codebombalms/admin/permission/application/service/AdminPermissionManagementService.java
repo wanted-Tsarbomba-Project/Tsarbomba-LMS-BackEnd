@@ -21,6 +21,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 import java.util.List;
 
 // master 전용 admin 계정 목록 조회와 권한 부여/회수 정책을 처리한다.
@@ -33,6 +37,8 @@ public class AdminPermissionManagementService implements GetAdminAccountsUseCase
     private final UserRepository userRepository;
     private final AdminPermissionRepository adminPermissionRepository;
     private final AdminAccountQueryRepository adminAccountQueryRepository;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     // 검색어와 페이지 조건을 검증한 뒤 admin 계정 목록을 조회한다.
     @Override
@@ -62,6 +68,12 @@ public class AdminPermissionManagementService implements GetAdminAccountsUseCase
                     command.permissionType()
             );
         }
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.PERMISSION_TOGGLED, command.adminUserId(), null,
+                "type=" + command.permissionType()
+                        + " granted=" + command.granted()
+                        + " by=" + command.grantedBy()));
 
         AdminPermissionStates permissionStates = getPermissionStates(command.adminUserId());
 

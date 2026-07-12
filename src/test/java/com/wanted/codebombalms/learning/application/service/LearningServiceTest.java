@@ -21,6 +21,8 @@ import com.wanted.codebombalms.learning.domain.model.LectureProgress;
 import com.wanted.codebombalms.learning.domain.model.StudentLearningProgress;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProgressRepository;
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +86,9 @@ class LearningServiceTest {
 
     @Mock
     private LearningProgressMetricsPort learningMetrics;
+
+    @Mock
+    private ServiceEventRecorder serviceEventRecorder;
 
     @InjectMocks
     private LectureProgressService lectureProgressService;
@@ -391,6 +396,7 @@ class LearningServiceTest {
         assertTrue(result.isCompleted());
         assertNotNull(result.getCompletedAt());
         verify(lectureProgressRepository).save(any(LectureProgress.class));
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -423,6 +429,7 @@ class LearningServiceTest {
         assertTrue(result.isCompleted());
         assertEquals(completedAt, result.getCompletedAt());
         verify(lectureProgressRepository).save(any(LectureProgress.class));
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
 import com.wanted.codebombalms.serviceevent.infrastructure.persistence.ServiceEventWriter;
 import com.wanted.codebombalms.serviceevent.infrastructure.web.HttpAnomalyGuard;
+import com.wanted.codebombalms.serviceevent.infrastructure.web.HttpRequestAnomalySupport;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.lang.NonNull;
 
 import java.io.IOException;
@@ -97,8 +97,8 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             long durationMs, String userIdAttribute, String traceId) {
         try {
             int status = response.getStatus();
-            String route = normalizedRoute(request);
-            Long userId = parseUserId(userIdAttribute);
+            String route = HttpRequestAnomalySupport.normalizedRoute(request);
+            Long userId = HttpRequestAnomalySupport.parseUserId(userIdAttribute);
             String clientIp = ClientIpResolver.resolve(request);
 
             if (durationMs >= slowThresholdMs && anomalyGuard.tryAcquire("slow:" + route)) {
@@ -132,26 +132,6 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.warn("event=http_anomaly_record_failed reason={}", e.toString());
-        }
-    }
-
-    /**
-     * 정규화된 라우트 키 — raw URI 금지(경로변수·스캔 경로로 카디널리티 폭발).
-     * DispatcherServlet 도달 전 차단된 요청(401 등)은 패턴이 없어 "unmatched".
-     */
-    private String normalizedRoute(HttpServletRequest request) {
-        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        return request.getMethod() + " " + (pattern == null ? "unmatched" : pattern.toString());
-    }
-
-    private Long parseUserId(String attribute) {
-        if (attribute == null || ANONYMOUS.equals(attribute)) {
-            return null;
-        }
-        try {
-            return Long.parseLong(attribute);
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 
