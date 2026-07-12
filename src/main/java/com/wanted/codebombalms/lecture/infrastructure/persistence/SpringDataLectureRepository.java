@@ -26,6 +26,19 @@ public interface SpringDataLectureRepository extends JpaRepository<LectureJpaEnt
 
     List<LectureJpaEntity> findByCourseIdAndDeletedAtIsNull(Long courseId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update LectureJpaEntity l
+            set l.lectureOrder = null
+            where l.courseId = :courseId
+              and l.deletedAt is not null
+              and l.lectureOrder in :lectureOrders
+            """)
+    int clearDeletedLectureOrders(
+            @Param("courseId") Long courseId,
+            @Param("lectureOrders") java.util.Collection<Integer> lectureOrders
+    );
+
     @Query("""
             select l.courseId as courseId, count(l) as lectureCount
             from LectureJpaEntity l

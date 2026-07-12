@@ -36,6 +36,29 @@ public class LectureRepositoryAdapter implements LectureRepository {
     }
 
     @Override
+    public int clearDeletedLectureOrders(Long courseId, Collection<Integer> lectureOrders) {
+        if (lectureOrders.isEmpty()) {
+            return 0;
+        }
+        return springDataLectureRepository.clearDeletedLectureOrders(courseId, lectureOrders);
+    }
+
+    @Override
+    public void updateLectureOrders(List<Lecture> lectures, Map<Long, Integer> requestedOrders) {
+        for (int index = 0; index < lectures.size(); index++) {
+            Lecture lecture = lectures.get(index);
+            lecture.updateOrder(-(index + 1));
+            save(lecture);
+        }
+        springDataLectureRepository.flush();
+
+        lectures.forEach(lecture -> {
+            lecture.updateOrder(requestedOrders.get(lecture.getLectureId()));
+            save(lecture);
+        });
+    }
+
+    @Override
     public List<Lecture> findByDeletedAtIsNull() {
         List<LectureJpaEntity> entities = springDataLectureRepository.findByDeletedAtIsNull();
         if (entities.isEmpty()) {

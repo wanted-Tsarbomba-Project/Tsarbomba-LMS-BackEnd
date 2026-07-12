@@ -16,6 +16,7 @@ import com.wanted.codebombalms.enrollment.domain.model.EnrollmentStatus;
 import com.wanted.codebombalms.enrollment.domain.repository.EnrollmentRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,6 +83,7 @@ class EnrollmentServiceTest {
         assertEquals(EnrollmentStatus.ACTIVE, result.getStatus());
         verify(enrollmentEligibilityPolicy).validate(userId, course);
         verify(enrollmentRepository).save(any(Enrollment.class));
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -108,6 +110,7 @@ class EnrollmentServiceTest {
         assertNotNull(result.getEnrolledAt());
         verify(enrollmentEligibilityPolicy).validate(userId, course);
         verify(enrollmentRepository).save(canceledEnrollment);
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -300,6 +303,7 @@ class EnrollmentServiceTest {
         assertEquals(EnrollmentStatus.CANCELED, enrollment.getStatus());
         assertNotNull(enrollment.getCanceledAt());
         verify(enrollmentRepository).save(enrollment);
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test

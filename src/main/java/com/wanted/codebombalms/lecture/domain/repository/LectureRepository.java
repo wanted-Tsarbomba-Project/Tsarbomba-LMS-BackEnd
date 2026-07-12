@@ -11,6 +11,10 @@ public interface LectureRepository {
 
     Lecture save(Lecture lecture);
 
+    int clearDeletedLectureOrders(Long courseId, Collection<Integer> lectureOrders);
+
+    void updateLectureOrders(List<Lecture> lectures, Map<Long, Integer> requestedOrders);
+
     List<Lecture> findByDeletedAtIsNull();
 
     Optional<Lecture> findByLectureIdAndDeletedAtIsNull(Long lectureId);

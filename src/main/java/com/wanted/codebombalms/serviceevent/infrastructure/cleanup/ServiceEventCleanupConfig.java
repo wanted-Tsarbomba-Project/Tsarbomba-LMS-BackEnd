@@ -44,7 +44,14 @@ public class ServiceEventCleanupConfig {
     private int deleteUntilExhausted(ServiceEventStore store, LocalDateTime threshold) {
         int total = 0;
         for (int chunk = 0; chunk < MAX_CHUNKS_PER_RUN; chunk++) {
-            int deleted = store.deleteChunkCreatedBefore(threshold);
+            int deleted;
+            try {
+                deleted = store.deleteChunkCreatedBefore(threshold);
+            } catch (Exception e) {
+                log.error("event=service_event_cleanup_failed totalDeleted={} — 남은 청크는 다음 실행(03시)에서 재시도",
+                        total, e);
+                return total; // 부분 성과는 보존, 예외는 전파하지 않음 — 다른 HardDeleteTarget 파기 보호
+            }
             total += deleted;
             if (deleted < CHUNK_SIZE) {
                 return total;
