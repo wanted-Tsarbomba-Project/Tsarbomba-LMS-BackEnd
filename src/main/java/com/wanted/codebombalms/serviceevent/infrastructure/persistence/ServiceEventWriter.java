@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * service_event 비동기 적재기 — 갈래 B/C의 직호출 대상이자 갈래 A 리스너의 최종 목적지.
- * 원칙: 적재 실패가 호출측 응답/트랜잭션에 절대 영향을 주지 않는다 (best-effort).
+ * service_event 비동기 적재기 — 적재 실패가 호출측 응답/트랜잭션에 영향 없음(best-effort).
+ * 별도 스레드(@Async) 실행 — 예외 삼킴, 호출부 전파 없음.
  */
 @Slf4j
 @Component

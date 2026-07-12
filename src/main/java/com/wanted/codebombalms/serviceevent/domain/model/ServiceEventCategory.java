@@ -2,11 +2,11 @@ package com.wanted.codebombalms.serviceevent.domain.model;
 
 /**
  * 서비스 이벤트 대분류.
- * DB(service_event.category)에는 code(소문자)로 저장된다.
+ * DB(service_event.category)에는 code(소문자)로 저장.
  */
 public enum ServiceEventCategory {
 
-    // 보안 (기존 AuthSecurityEvent 카테고리 승계)
+    // 보안
     AUTHN_ATTACK("authn_attack"),
     TAKEOVER("takeover"),
     OAUTH("oauth"),

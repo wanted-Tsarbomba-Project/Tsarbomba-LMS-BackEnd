@@ -41,13 +41,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleDomainException(
             DomainException e, HttpServletRequest request) {
         log.warn("[{}] {} - path: {}", e.getHttpStatus(), e.getMessage(), request.getRequestURI());
-        // 보안 이벤트 기록 실패가 원래 에러 응답을 깨지 않도록 삼킨다.
+        // 보안 이벤트 기록 실패는 삼킴 — 원래 에러 응답 보호
         try {
             securityEventReporter.ifAvailable(r -> r.reportByErrorCode(e.getErrorCode().getCode()));
         } catch (Exception ignored) {
             log.warn("보안 이벤트 기록 실패 (무시): {}", ignored.getMessage());
         }
-        // 외부 서비스 예외(502)는 원인 클래스명까지 상세 기록 — 필터의 상태코드 기록보다 정보가 많다 (#606)
+        // 외부 서비스 예외(502)는 원인 클래스명 포함 상세 기록
         if (e instanceof ExternalServiceException) {
             reportServerErrorQuietly(request, e.getHttpStatus(), e);
         }
@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleException(
             Exception e, HttpServletRequest request) {
         log.error("[500] 예상치 못한 예외 - path: {}", request.getRequestURI(), e);
-        // unhandled 500 — 예외 클래스명 상세는 HttpAnomalyReporter 구현이 기록한다 (#606)
+        // unhandled 500 — 예외 클래스명 상세 기록은 HttpAnomalyReporter 구현 담당
         reportServerErrorQuietly(request, 500, e);
         String message = isDev() ? e.getMessage() : "서버 오류가 발생했습니다.";
         return ResponseEntity.status(500)
@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
         }
     }
 
-    /** 5xx 상세 기록 위임 — SecurityEventReporter 와 동일한 ifAvailable+삼킴 패턴 (#607 리뷰 반영) */
+    /** 5xx 상세 기록 위임 — ifAvailable(빈 부재 시 무시) + 예외 삼킴 */
     private void reportServerErrorQuietly(HttpServletRequest request, int httpStatus, Exception cause) {
         try {
             httpAnomalyReporter.ifAvailable(r -> r.reportServerError(request, httpStatus, cause));

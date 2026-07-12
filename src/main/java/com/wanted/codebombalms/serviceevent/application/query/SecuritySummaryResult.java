@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * GET /api/v1/admin/security/summary 응답 data 형태 (#608).
- * 필드 구조는 API.md M3 섹션·FE 전달 문서와 1:1 — 변경 시 두 문서 동시 갱신.
+ * GET /api/v1/admin/security/summary 응답 data 형태.
+ * 필드 구조는 API.md·FE 전달 문서와 1:1 — 변경 시 문서 동시 갱신.
  */
 public record SecuritySummaryResult(
         String period,

@@ -14,13 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 관리자 보안 요약 콘솔 API (#608).
- *
- * <p>권한 설계: SecurityConfig 의 /api/v1/admin/** 는 OPERATOR 도 통과시키지만
- * 보안 데이터(IP·표적 계정)는 ADMIN·MASTER 전용 → @PreAuthorize 로 좁힌다.
- * AdminPermissionInterceptor 세밀권한(USER_MANAGEMENT 등)은 걸지 않는다 — 관리자
- * 공통 랜딩 화면이라 무권한 admin 도 조회는 가능해야 하고, 액션(계정 잠금)은
- * 기존 lock API 의 USER_MANAGEMENT 룰이 그대로 지킨다 (의도된 결정, #608).
+ * 관리자 보안 요약 콘솔 API — ADMIN·MASTER 전용.
+ * 메서드 권한 필수 — SecurityConfig 는 /api/v1/admin/** 에 OPERATOR 도 통과.
+ * 인터셉터 세밀권한 미적용 — 관리자 공통 랜딩, 액션 권한은 기존 lock API 담당.
  */
 @RestController
 @RequestMapping("/api/v1/admin/security")

@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ServiceEventErrorCode implements ErrorCode {
 
-    // 브리핑 (P5 예약: SEC-001 쿨다운, SEC-002 생성 실패)
+    // 브리핑
     BRIEFING_REGENERATE_COOLDOWN("SEC-001", "브리핑 재생성은 분당 1회만 가능합니다."),
     BRIEFING_GENERATION_FAILED("SEC-002", "AI 브리핑 생성에 실패했습니다."),
 

@@ -42,7 +42,8 @@ public class ChangeStudentLockService implements ChangeStudentLockUseCase {
         userRepository.save(user);
 
         serviceEventRecorder.record(ServiceEventEnvelope.business(
-                ServiceEventType.ACCOUNT_LOCKED, userId, null,
+                locked ? ServiceEventType.ACCOUNT_LOCKED : ServiceEventType.ACCOUNT_UNLOCKED,
+                userId, null,
                 "locked=" + locked));
     }
 }

@@ -57,7 +57,7 @@ public class LectureProgressService implements LectureProgressCommandUseCase, Le
         boolean firstCompletion = !progress.isCompleted();
         progress.complete();
         LectureProgress saved = lectureProgressRepository.save(progress);
-        if (firstCompletion) { // 이미 완료된 강의 재호출 시 중복 적재 방지 (KPI 왜곡 방지)
+        if (firstCompletion) { // 재완료 시 이벤트 중복 적재 방지
             serviceEventRecorder.record(ServiceEventEnvelope.business(
                     ServiceEventType.LESSON_COMPLETED, userId, lectureId));
         }

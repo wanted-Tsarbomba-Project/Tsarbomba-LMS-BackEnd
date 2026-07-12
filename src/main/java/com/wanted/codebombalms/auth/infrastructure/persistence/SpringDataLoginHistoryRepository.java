@@ -26,7 +26,7 @@ public interface SpringDataLoginHistoryRepository extends JpaRepository<LoginHis
         LocalDateTime getLatestLoginAt();
     }
 
-    /** 기간 내 로그인 고유 회원 수 — 보안 요약 KPI 용 읽기 전용 (#608) */
+    /** 기간 내 로그인 고유 회원 수 조회 — 보안 요약 KPI 용 읽기 전용 */
     @Query("""
             select count(distinct lh.userId)
             from LoginHistoryJpaEntity lh

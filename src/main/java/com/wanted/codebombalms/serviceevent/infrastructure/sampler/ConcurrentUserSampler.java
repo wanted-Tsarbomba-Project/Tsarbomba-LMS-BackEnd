@@ -12,14 +12,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * 최대 동시접속자 샘플러
- *
- * <p>P0 단일세션 Redis 키(auth:session:{userId})는 로그인 시 생기고
- * 로그아웃·잠금·만료 시 사라진다 — 즉 키 개수 = 현재 접속 중인 회원 수.
- * 5분마다 개수를 스냅샷해 ops_metric/concurrent_sample 로 적재하면
- * 기간 내 MAX(target_id) 가 최대 동시접속자가 된다 (±5분 오차).
- *
- * <p>반드시 SCAN 사용 — KEYS 는 운영 Redis 를 블로킹한다.
+ * 최대 동시접속자 샘플러 — 세션 키(auth:session:*) 개수를 주기 스냅샷해 ops_metric 으로 적재.
+ * SCAN 사용 — KEYS 금지(운영 Redis 블로킹).
  */
 @Slf4j
 @Component

@@ -63,9 +63,4 @@ public class SecuritySummaryQueryAdapter implements SecuritySummaryQueryPort {
                 ? Optional.empty()
                 : Optional.of(new ConcurrentPeak(row.getPeak(), row.getOccurredAt()));
     }
-
-    @Override
-    public long countDistinctActiveUsers(LocalDateTime start, LocalDateTime end) {
-        return repository.countDistinctActiveUsers(start, end);
-    }
 }

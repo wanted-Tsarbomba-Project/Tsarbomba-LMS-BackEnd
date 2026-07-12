@@ -16,7 +16,7 @@ public class LoggingConfig {
             ServiceEventWriter serviceEventWriter,
             HttpAnomalyGuard httpAnomalyGuard,
             @Value("${service-event.anomaly.slow-threshold-ms:3000}") long slowThresholdMs) {
-        if (slowThresholdMs <= 0) { // 0 이하면 모든 요청이 slow_request 로 분류돼 지표가 왜곡된다 — 기동 시 차단
+        if (slowThresholdMs <= 0) { // 0 이하 설정 — 전 요청 slow 분류로 지표 왜곡, 기동 차단
             throw new IllegalStateException(
                     "service-event.anomaly.slow-threshold-ms 는 양수여야 합니다: " + slowThresholdMs);
         }

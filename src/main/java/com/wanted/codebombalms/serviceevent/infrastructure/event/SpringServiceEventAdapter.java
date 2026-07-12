@@ -7,8 +7,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 /**
- * 발행 어댑터 — envelope 를 Spring ApplicationEvent 로 발행
- * 기존 SpringProblemSolvedEventAdapter 등과 동일한 패턴.
+ * 발행 어댑터 — envelope 를 Spring ApplicationEvent 로 발행.
  */
 @Component
 @RequiredArgsConstructor

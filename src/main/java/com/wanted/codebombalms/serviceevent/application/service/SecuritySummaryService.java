@@ -20,9 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 보안 요약 집계 조립 (#608).
- * 증감률(deltaPct)은 직전 동일 길이 구간과 비교한다 — today 는 "어제 같은 시각까지"와 비교(공정 비교).
- * 2m 은 비교 구간이 보존기간(2개월) 밖이라 delta 를 제공하지 않는다(null).
+ * 보안 요약 집계 조립 서비스.
+ * 증감률(deltaPct)은 직전 동일 길이 구간과 비교 — today 는 어제 같은 시각까지, 2m 은 보존기간 밖이라 null.
  */
 @Slf4j
 @Service
@@ -95,7 +94,7 @@ public class SecuritySummaryService {
                 securityEvents,
                 securityDelta,
                 http5xxCount,
-                null, // 오류율 분모(전체 요청 수)는 미수집 원칙상 없음 — 그라파나 영역, v1 은 null
+                null, // 오류율 분모(전체 요청 수) 미수집 — v1 은 null
                 enrollments,
                 enrollmentsDelta
         );
@@ -116,7 +115,7 @@ public class SecuritySummaryService {
                 SecuritySummaryQueryPort.TypeCount::count));
     }
 
-    /** ops_metric(동시접속 샘플)은 관측용 행이라 "이벤트 수"에서 제외한다 */
+    /** ops_metric(동시접속 샘플)은 관측용 행 — 이벤트 수에서 제외 */
     private long sumTotal(List<SecuritySummaryQueryPort.CategoryCount> counts) {
         return counts.stream()
                 .filter(c -> !OPS_METRIC_CODE.equals(c.category()))
@@ -163,7 +162,7 @@ public class SecuritySummaryService {
                 .toList();
     }
 
-    /** GeoIP 해상 실패(null/예외)가 요약 전체를 죽이지 않도록 IP 단위로 격리한다 */
+    /** GeoIP 조회 실패(null/예외)를 IP 단위로 격리 — 요약 전체 실패 방지 */
     private String resolveCountrySafely(String ip) {
         try {
             return geoIpResolver.resolve(ip).country();
@@ -179,7 +178,7 @@ public class SecuritySummaryService {
                 .toList();
     }
 
-    /** 증감률(%). 비교값이 0이면 null (무한대 방지 — FE 는 "—" 표기) */
+    /** 증감률(%) — 비교값 0이면 null (무한대 방지) */
     private Double deltaPct(long current, long previous) {
         if (previous == 0) {
             return null;
