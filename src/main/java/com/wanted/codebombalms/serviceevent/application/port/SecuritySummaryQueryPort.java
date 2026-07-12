@@ -26,6 +26,4 @@ public interface SecuritySummaryQueryPort {
     List<HourlyCount> hourlyDistribution(LocalDateTime start, LocalDateTime end);
 
     Optional<ConcurrentPeak> findConcurrentPeak(LocalDateTime start, LocalDateTime end);
-
-    long countDistinctActiveUsers(LocalDateTime start, LocalDateTime end);
 }

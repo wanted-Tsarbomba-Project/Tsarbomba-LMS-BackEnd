@@ -116,12 +116,4 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             LIMIT 1
             """, nativeQuery = true)
     ConcurrentPeakRow findConcurrentPeak(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-
-    @Query(value = """
-            SELECT COUNT(DISTINCT user_id)
-            FROM service_event
-            WHERE created_at >= :start AND created_at < :end
-              AND user_id IS NOT NULL
-            """, nativeQuery = true)
-    long countDistinctActiveUsers(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 }
