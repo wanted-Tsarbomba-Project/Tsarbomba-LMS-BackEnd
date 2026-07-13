@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -18,6 +19,12 @@ public class ChatMessageRepositoryAdapter implements ChatMessageRepository {
     public ChatMessage save(ChatMessage chatMessage) {
         ChatMessageJpaEntity saved = springDataRepository.save(ChatMessageMapper.toEntity(chatMessage));
         return ChatMessageMapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<ChatMessage> findById(Long messageId) {
+        return springDataRepository.findById(messageId)
+                .map(ChatMessageMapper::toDomain);
     }
 
     @Override
