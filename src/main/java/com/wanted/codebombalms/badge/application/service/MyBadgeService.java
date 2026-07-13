@@ -20,6 +20,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +42,8 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
     private final LoadUserTotalPointPort loadUserTotalPointPort;
     private final LoadMyBadgesPort loadMyBadgesPort;
     private final BadgeMetrics badgeMetrics;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Override
     @Transactional(readOnly = true)
@@ -159,6 +165,10 @@ public class MyBadgeService implements MyBadgeUseCase , SyncUserBadgesUseCase {
         );
         long saveNanos = System.nanoTime() - saveStartNanos;
         badgeMetrics.recordSave(saveNanos);
+
+        savedUserBadges.forEach(userBadge -> serviceEventRecorder.record(
+                ServiceEventEnvelope.business(
+                        ServiceEventType.BADGE_ACQUIRED, userId, userBadge.getBadgeId())));
 
         Map<Long, UserBadge> savedByBadgeId = savedUserBadges.stream()
                 .collect(Collectors.toMap(

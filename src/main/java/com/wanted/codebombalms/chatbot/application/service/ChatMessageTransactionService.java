@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 import java.time.Instant;
 
 /**
@@ -25,6 +29,8 @@ public class ChatMessageTransactionService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ChatContextBuilder chatContextBuilder;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     /** 스트림 전 동기 구간: 방 검증 + USER 메시지 저장 + 컨텍스트 조립(타 BC 포트 호출 포함). */
     @Transactional
@@ -53,5 +59,9 @@ public class ChatMessageTransactionService {
         ChatRoom chatRoom = chatRoomRepository.getById(roomId);
         chatRoom.updateTimestamp(Instant.now());
         chatRoomRepository.save(chatRoom);
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.AI_ANSWERED, chatRoom.getUserId(), roomId,
+                "totalTokens=" + usage.totalTokens()));
     }
 }

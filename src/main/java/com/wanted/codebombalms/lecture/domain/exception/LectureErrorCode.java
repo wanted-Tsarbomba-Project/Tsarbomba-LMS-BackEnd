@@ -20,7 +20,8 @@ public enum LectureErrorCode implements ErrorCode {
     LECTURE_MATERIAL_DELETE_FAILED("LCT-010", "Lecture material delete failed."),
     LECTURE_ACCESS_DENIED("LCT-011", "Only enrolled students can access lecture content."),
     PREVIOUS_LECTURE_NOT_COMPLETED("LCT-012", "Previous lectures must be completed before accessing this lecture."),
-    FINAL_PROBLEM_SET_NOT_AVAILABLE("LCT-013", "Final problem set recommendations are available after completing the last lecture.");
+    FINAL_PROBLEM_SET_NOT_AVAILABLE("LCT-013", "Final problem set recommendations are available after completing the last lecture."),
+    INVALID_LECTURE_ORDER_REQUEST("LCT-014", "Lecture order request must include every active lecture exactly once.");
 
     private final String code;
     private final String message;

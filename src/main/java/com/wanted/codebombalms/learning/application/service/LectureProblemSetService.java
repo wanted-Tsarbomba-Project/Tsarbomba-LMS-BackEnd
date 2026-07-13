@@ -27,6 +27,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 @Service
 @RequiredArgsConstructor
 public class LectureProblemSetService implements LectureProblemSetQueryUseCase, LectureProblemSubmissionUseCase {
@@ -38,6 +42,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
     private final LectureProblemSubmissionRepository lectureProblemSubmissionRepository;
     private final LearningAccessPolicy learningAccessPolicy;
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Override
     @Transactional
@@ -203,6 +208,12 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                     nextProblemNumber,
                     completed
             );
+            if (completed) {
+                serviceEventRecorder.record(ServiceEventEnvelope.business(
+                        ServiceEventType.PROBLEM_SET_COMPLETED, command.userId(),
+                        lectureProblemSet.problemSetId(),
+                        "source=lecture lectureProblemSetId=" + lectureProblemSetId));
+            }
         }
 
         Integer remainingAttemptCount = calculateRemainingAttempts(problem.attemptLimit(), attemptNo);

@@ -3,8 +3,8 @@ package com.wanted.codebombalms.serviceevent.domain.model;
 import static com.wanted.codebombalms.serviceevent.domain.model.ServiceEventCategory.*;
 
 /**
- * 서비스 이벤트 세부 타입. 각 타입은 카테고리에 소속된다.
- * DB(service_event.event_type)에는 code(소문자)로 저장된다.
+ * 서비스 이벤트 세부 타입 — 각 타입은 카테고리에 소속.
+ * DB(service_event.event_type)에는 code(소문자)로 저장.
  */
 public enum ServiceEventType {
 
@@ -62,6 +62,7 @@ public enum ServiceEventType {
     // admin_audit
     PERMISSION_TOGGLED(ADMIN_AUDIT, "permission_toggled"),
     ACCOUNT_LOCKED(ADMIN_AUDIT, "account_locked"),
+    ACCOUNT_UNLOCKED(ADMIN_AUDIT, "account_unlocked"),
     ALERT_RESOLVED(ADMIN_AUDIT, "alert_resolved"),
 
     // http_anomaly

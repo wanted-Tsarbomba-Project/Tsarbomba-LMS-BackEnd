@@ -16,6 +16,10 @@ public class LoggingConfig {
             ServiceEventWriter serviceEventWriter,
             HttpAnomalyGuard httpAnomalyGuard,
             @Value("${service-event.anomaly.slow-threshold-ms:3000}") long slowThresholdMs) {
+        if (slowThresholdMs <= 0) { // 0 이하 설정 — 전 요청 slow 분류로 지표 왜곡, 기동 차단
+            throw new IllegalStateException(
+                    "service-event.anomaly.slow-threshold-ms 는 양수여야 합니다: " + slowThresholdMs);
+        }
         FilterRegistrationBean<MdcLoggingFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new MdcLoggingFilter(serviceEventWriter, httpAnomalyGuard, slowThresholdMs));
         registrationBean.addUrlPatterns("/*");

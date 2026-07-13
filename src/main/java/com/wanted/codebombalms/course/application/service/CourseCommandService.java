@@ -25,6 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -38,6 +42,8 @@ public class CourseCommandService implements CourseCommandUseCase {
     private final CoursePublishPolicy coursePublishPolicy;
     private final LectureManagementPort lectureManagementPort;
     private final CourseThumbnailStoragePort courseThumbnailStoragePort;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @LogBusiness
     @LogPerformance
@@ -58,6 +64,9 @@ public class CourseCommandService implements CourseCommandUseCase {
 
         Course savedCourse = courseRepository.save(course);
         log.info("[CourseCommandService] created course - courseId: {}", savedCourse.getCourseId());
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.COURSE_CREATED, command.instructorId(), savedCourse.getCourseId()));
 
         return savedCourse;
     }
@@ -104,6 +113,9 @@ public class CourseCommandService implements CourseCommandUseCase {
         Course savedCourse = courseRepository.save(course);
         log.info("[CourseCommandService] published course - courseId: {}", command.courseId());
 
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.COURSE_PUBLISHED, course.getInstructorId(), command.courseId()));
+
         return savedCourse;
     }
 
@@ -117,6 +129,10 @@ public class CourseCommandService implements CourseCommandUseCase {
         lectureManagementPort.deleteLecturesByCourseId(courseId);
         course.delete();
         courseRepository.save(course);
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                ServiceEventType.COURSE_DELETED, course.getInstructorId(), courseId));
+
         deleteThumbnailAfterCommit(course.getThumbnailUrl());
 
         log.info("[CourseCommandService] deleted course - courseId: {}", courseId);
