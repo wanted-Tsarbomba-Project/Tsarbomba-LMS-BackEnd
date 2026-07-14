@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-/** 매일 새벽 Python 추천 서버를 호출해 문제 세트 추천 결과를 갱신합니다. */
+/** 매일 오전/오후 Python 추천 서버를 호출해 문제 세트 추천 결과를 갱신합니다. */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -18,9 +18,9 @@ public class ProblemRecommendationScheduler {
     private final GenerateProblemSetRecommendationsUseCase generateUseCase;
     private final RecommendationBatchLockExecutor lockExecutor;
 
-    /** 매일 새벽 5시(Asia/Seoul)에 비동기로 추천 생성 배치를 실행합니다. */
+    /** 매일 오전 6시와 오후 6시(Asia/Seoul)에 비동기로 추천 생성 배치를 실행합니다. */
     @Async("recommendationTaskExecutor")
-    @Scheduled(cron = "0 0 5 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 6,18 * * *", zone = "Asia/Seoul")
     public void generateDailyProblemSetRecommendations() {
         try {
             var generatedUserCount = lockExecutor.executeIfLockAcquired(LOCK_NAME, generateUseCase::generate);
