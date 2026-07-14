@@ -12,6 +12,8 @@ public interface ManageProblemCategoriesUseCase {
 
     ProblemCategoryAdminView deactivate(Long categoryId);
 
+    ProblemCategoryAdminView activate(Long categoryId);
+
     record ProblemCategoryAdminView(
             Long categoryId,
             String categoryName,

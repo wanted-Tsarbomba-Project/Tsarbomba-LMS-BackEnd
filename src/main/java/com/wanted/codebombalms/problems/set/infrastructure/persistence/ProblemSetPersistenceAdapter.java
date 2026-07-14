@@ -1,5 +1,8 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.set.application.query.ProblemSetCompletionStatus;
+import com.wanted.codebombalms.problems.set.application.query.ProblemSetSort;
+import com.wanted.codebombalms.problems.set.application.query.ProblemSetSortDirection;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetBrief;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
@@ -13,6 +16,7 @@ import com.wanted.codebombalms.problems.set.application.port.LoadProblemSetPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -83,25 +87,40 @@ public class ProblemSetPersistenceAdapter implements
 
     @Override
     public ProblemSetSummaryPage loadActiveProblemSets(
+            Long userId,
+            Long categoryId,
+            String difficulty,
+            ProblemSetCompletionStatus completionStatus,
             int page,
             int size,
-            boolean popularSort
+            ProblemSetSort sort,
+            ProblemSetSortDirection direction
     ) {
-        Page<ProblemSetJpaEntity> problemSets;
+        PageRequest pageRequest = createPageRequest(page, size, sort, direction);
 
-        if (popularSort) {
-            problemSets = problemSetRepository.findByStatusOrderByStartedUserCountDescProblemSetIdDesc(
-                    ProblemSetStatus.ACTIVE,
-                    PageRequest.of(page, size)
-            );
-        } else {
-            problemSets = problemSetRepository.findByStatusOrderByProblemSetIdAsc(
-                    ProblemSetStatus.ACTIVE,
-                    PageRequest.of(page, size)
-            );
-        }
+        Page<ProblemSetJpaEntity> problemSets =
+                problemSetRepository.findActiveProblemSetsWithFilters(
+                        ProblemSetStatus.ACTIVE,
+                        categoryId,
+                        normalizeDifficulty(difficulty),
+                        userId,
+                        normalizeCompletionStatus(completionStatus),
+                        pageRequest
+                );
 
         return toSummaryPage(problemSets, page, size);
+    }
+
+    private String normalizeCompletionStatus(ProblemSetCompletionStatus completionStatus) {
+        return completionStatus == null ? null : completionStatus.name();
+    }
+
+    private String normalizeDifficulty(String difficulty) {
+        if (difficulty == null || difficulty.isBlank()) {
+            return null;
+        }
+
+        return difficulty.trim().toUpperCase();
     }
 
     private ProblemSetSummaryPage toSummaryPage(
@@ -134,4 +153,21 @@ public class ProblemSetPersistenceAdapter implements
                 .map(ProblemSetMapper::toBrief);
     }
 
+    private PageRequest createPageRequest(
+            int page,
+            int size,
+            ProblemSetSort sort,
+            ProblemSetSortDirection direction
+    ) {
+        Sort.Direction sortDirection = direction == ProblemSetSortDirection.DESC
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Sort springSort = sort != null && sort.isPopular()
+                ? Sort.by(sortDirection, "startedUserCount")
+                .and(Sort.by(sortDirection, "problemSetId"))
+                : Sort.by(sortDirection, "problemSetId");
+
+        return PageRequest.of(page, size, springSort);
+    }
 }

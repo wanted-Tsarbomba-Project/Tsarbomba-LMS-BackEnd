@@ -103,4 +103,21 @@ public class ProblemCategoryPersistenceAdapter implements
 
         return ProblemCategoryMapper.toDomain(category);
     }
+
+    @Override
+    public ProblemCategory loadCategory(Long categoryId) {
+        return springDataProblemCategoryRepository.findById(categoryId)
+                .map(ProblemCategoryMapper::toDomain)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND));
+    }
+
+    @Override
+    public ProblemCategory activate(Long categoryId) {
+        ProblemCategoryJpaEntity category = springDataProblemCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND));
+
+        category.activate();
+
+        return ProblemCategoryMapper.toDomain(category);
+    }
 }

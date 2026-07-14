@@ -3,9 +3,7 @@ package com.wanted.codebombalms.problems.set.presentation;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
-import com.wanted.codebombalms.problems.set.application.query.EnterProblemSetQuery;
-import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
-import com.wanted.codebombalms.problems.set.application.query.ProblemSetSort;
+import com.wanted.codebombalms.problems.set.application.query.*;
 import com.wanted.codebombalms.problems.set.application.usecase.EnterProblemSetUseCase;
 import com.wanted.codebombalms.problems.set.application.usecase.GetProblemSetsUseCase;
 import com.wanted.codebombalms.problems.set.presentation.response.ProblemSetEnterResponse;
@@ -141,14 +139,34 @@ public class ProblemSetController {
     public ResponseEntity<ApiResponse<ProblemSetPageResponse>> findProblemSets(
             @Parameter(description = "조회할 문제 카테고리 ID", example = "3001")
             @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "문제세트 난이도 필터(EASY, MEDIUM, HARD)", example = "EASY")
+            @RequestParam(required = false) String difficulty,
+            @Parameter(
+                    description = "로그인 사용자 기준 풀이 상태 필터(NOT_STARTED, IN_PROGRESS, COMPLETED). 이 값을 사용하려면 인증 정보가 필요합니다.",
+                    example = "IN_PROGRESS"
+            )
+            @RequestParam(required = false) ProblemSetCompletionStatus completionStatus,
             @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "20")
+            @Parameter(description = "페이지 크기. 최대 100", example = "20")
             @RequestParam(defaultValue = "20") int size,
             @Parameter(description = "정렬 기준(DEFAULT, POPULAR)", example = "POPULAR")
-            @RequestParam(defaultValue = "DEFAULT") ProblemSetSort sort
+            @RequestParam(defaultValue = "DEFAULT") ProblemSetSort sort,
+            @Parameter(description = "정렬 방향(ASC, DESC)", example = "DESC")
+            @RequestParam(defaultValue = "ASC") ProblemSetSortDirection direction,
+            @AuthenticationPrincipal Long userId
     ) {
-        var query = new GetProblemSetsQuery(categoryId, page, size,sort);
+        var query = new GetProblemSetsQuery(
+                userId,
+                categoryId,
+                difficulty,
+                completionStatus,
+                page,
+                size,
+                sort,
+                direction
+        );
+
         var response = ProblemSetPageResponse.from(getProblemSetsUseCase.handle(query));
 
         return ResponseEntity.ok(ApiResponse.success(

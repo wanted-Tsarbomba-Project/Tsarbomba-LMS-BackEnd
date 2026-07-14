@@ -74,6 +74,21 @@ public class ProblemCategoryManagementService implements ManageProblemCategories
         return categoryName.trim();
     }
 
+    @Override
+    @Transactional
+    public ProblemCategoryAdminView activate(Long categoryId) {
+        ProblemCategory category = manageProblemCategoryPort.loadCategory(categoryId);
+
+        if (manageProblemCategoryPort.existsActiveByCategoryNameAndCategoryIdNot(
+                category.getCategoryName(),
+                categoryId
+        )) {
+            throw new ConflictException(ProblemErrorCode.CATEGORY_ALREADY_EXISTS);
+        }
+
+        return toView(manageProblemCategoryPort.activate(categoryId));
+    }
+
     private ProblemCategoryAdminView toView(ProblemCategory category) {
         return new ProblemCategoryAdminView(
                 category.getCategoryId(),
