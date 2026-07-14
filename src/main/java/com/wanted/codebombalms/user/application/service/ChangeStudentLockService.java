@@ -11,6 +11,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -19,6 +23,8 @@ public class ChangeStudentLockService implements ChangeStudentLockUseCase {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthSessionManager authSessionManager;
+
+    private final ServiceEventRecorder serviceEventRecorder;
 
     @Override
     public void changeLock(Long userId, boolean locked) {
@@ -34,5 +40,10 @@ public class ChangeStudentLockService implements ChangeStudentLockUseCase {
         }
 
         userRepository.save(user);
+
+        serviceEventRecorder.record(ServiceEventEnvelope.business(
+                locked ? ServiceEventType.ACCOUNT_LOCKED : ServiceEventType.ACCOUNT_UNLOCKED,
+                userId, null,
+                "locked=" + locked));
     }
 }

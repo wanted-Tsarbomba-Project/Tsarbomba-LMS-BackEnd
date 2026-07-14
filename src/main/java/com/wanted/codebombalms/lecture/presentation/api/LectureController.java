@@ -2,6 +2,7 @@ package com.wanted.codebombalms.lecture.presentation.api;
 
 import com.wanted.codebombalms.lecture.application.command.CreateLectureCommand;
 import com.wanted.codebombalms.lecture.application.command.UpdateLectureCommand;
+import com.wanted.codebombalms.lecture.application.command.UpdateLectureOrdersCommand;
 import com.wanted.codebombalms.lecture.application.command.UploadLectureMaterialCommand;
 import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase;
 import com.wanted.codebombalms.lecture.application.usecase.LectureCommandUseCase;
@@ -9,6 +10,7 @@ import com.wanted.codebombalms.lecture.application.usecase.LectureMaterialUseCas
 import com.wanted.codebombalms.lecture.application.usecase.LectureQueryUseCase;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureCreateRequest;
+import com.wanted.codebombalms.lecture.presentation.api.request.LectureOrderUpdateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.request.LectureUpdateRequest;
 import com.wanted.codebombalms.lecture.presentation.api.response.FinalProblemSetCandidateResponse;
 import com.wanted.codebombalms.lecture.presentation.api.response.LectureDetailResponse;
@@ -134,6 +136,33 @@ public class LectureController {
                                 request.status()
                         )))
                 ));
+    }
+
+    @PutMapping("/courses/{courseId}/lectures/order")
+    @Operation(summary = "강의 순서 일괄 변경")
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<ApiResponse<?>> updateLectureOrders(
+            @PathVariable Long courseId,
+            @Valid @RequestBody LectureOrderUpdateRequest request
+    ) {
+        log.info("[LectureController] update lecture orders - courseId: {}, lectureCount: {}",
+                courseId, request.lectures().size());
+
+        lectureCommandUseCase.updateLectureOrders(new UpdateLectureOrdersCommand(
+                courseId,
+                request.lectures().stream()
+                        .map(item -> new UpdateLectureOrdersCommand.LectureOrderItem(
+                                item.lectureId(),
+                                item.lectureOrder()
+                        ))
+                        .toList()
+        ));
+
+        return ResponseEntity.ok(ApiResponse.success(
+                LectureResponseCode.UPDATED,
+                LectureResponseMessage.UPDATED,
+                null
+        ));
     }
 
     @PutMapping("/lectures/{lectureId}")
