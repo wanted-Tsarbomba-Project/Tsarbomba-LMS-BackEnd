@@ -32,16 +32,7 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
             throw new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND);
         }
 
-        ProblemSetSummaryPage problemSets = loadProblemSetPort.loadActiveProblemSets(
-                query.userId(),
-                query.categoryId(),
-                query.difficulty(),
-                query.completionStatus(),
-                query.page(),
-                query.size(),
-                query.sort(),
-                query.resolvedDirection()
-        );
+        ProblemSetSummaryPage problemSets = loadProblemSetPort.loadActiveProblemSets(query);
 
         return toPageView(problemSets);
     }

@@ -36,6 +36,7 @@ public class ProblemSetController {
                     + "응답에는 문제 세트 ID, 제목, 설명, 난이도, 정답률, 생성일이 포함됩니다. "
                     + "카테고리별 문제 목록 화면에서 사용합니다."
     )
+    
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "200",
@@ -84,7 +85,7 @@ public class ProblemSetController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "PRB-CAT-002 - 잘못된 문제 분야 또는 PRB-INP-001 - 잘못된 페이징 요청",
+                    description = "PRB-CAT-002 - 잘못된 문제 분야 또는 PRB-INP-001 - 잘못된 요청",
                     content = @Content(
                             mediaType = "application/json",
                             examples = {
@@ -105,6 +106,18 @@ public class ProblemSetController {
                                             value = """
                                                     {
                                                       "timestamp": "2026-05-27T12:00:00",
+                                                      "status": 400,
+                                                      "code": "PRB-INP-001",
+                                                      "message": "문제 입력값이 올바르지 않습니다.",
+                                                      "path": "/api/v1/problem-sets"
+                                                    }
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "인증 없이 풀이 상태 필터 사용",
+                                            value = """
+                                                    {
+                                                      "timestamp": "2026-07-14T12:00:00",
                                                       "status": 400,
                                                       "code": "PRB-INP-001",
                                                       "message": "문제 입력값이 올바르지 않습니다.",
@@ -140,7 +153,7 @@ public class ProblemSetController {
             @Parameter(description = "조회할 문제 카테고리 ID", example = "3001")
             @RequestParam(required = false) Long categoryId,
             @Parameter(description = "문제세트 난이도 필터(EASY, MEDIUM, HARD)", example = "EASY")
-            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) ProblemSetDifficulty difficulty,
             @Parameter(
                     description = "로그인 사용자 기준 풀이 상태 필터(NOT_STARTED, IN_PROGRESS, COMPLETED). 이 값을 사용하려면 인증 정보가 필요합니다.",
                     example = "IN_PROGRESS"

@@ -3,7 +3,7 @@ package com.wanted.codebombalms.problems.set.application.query;
 public record GetProblemSetsQuery(
         Long userId,
         Long categoryId,
-        String difficulty,
+        ProblemSetDifficulty difficulty,
         ProblemSetCompletionStatus completionStatus,
         int page,
         int size,
@@ -21,5 +21,8 @@ public record GetProblemSetsQuery(
 
     public ProblemSetSortDirection resolvedDirection() {
         return direction == null ? ProblemSetSortDirection.ASC : direction;
+    }
+    public String difficultyName() {
+        return difficulty == null ? null : difficulty.name();
     }
 }

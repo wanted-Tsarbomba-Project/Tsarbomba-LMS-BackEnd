@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.application.port;
 
+import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetCompletionStatus;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetSort;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetSortDirection;
@@ -16,16 +17,7 @@ public interface LoadProblemSetPort {
             boolean popularSort
     );
 
-    ProblemSetSummaryPage loadActiveProblemSets(
-            Long userId,
-            Long categoryId,
-            String difficulty,
-            ProblemSetCompletionStatus completionStatus,
-            int page,
-            int size,
-            ProblemSetSort sort,
-            ProblemSetSortDirection direction
-    );
+    ProblemSetSummaryPage loadActiveProblemSets(GetProblemSetsQuery query);
 
     // 챗봇 adapter용 단건 조회
     Optional<ProblemSetBrief> loadById(Long problemSetId);

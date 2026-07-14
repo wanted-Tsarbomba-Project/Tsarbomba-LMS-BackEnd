@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.problems.set.infrastructure.persistence;
 
+import com.wanted.codebombalms.problems.set.application.query.GetProblemSetsQuery;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetCompletionStatus;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetSort;
 import com.wanted.codebombalms.problems.set.application.query.ProblemSetSortDirection;
@@ -86,29 +87,25 @@ public class ProblemSetPersistenceAdapter implements
     }
 
     @Override
-    public ProblemSetSummaryPage loadActiveProblemSets(
-            Long userId,
-            Long categoryId,
-            String difficulty,
-            ProblemSetCompletionStatus completionStatus,
-            int page,
-            int size,
-            ProblemSetSort sort,
-            ProblemSetSortDirection direction
-    ) {
-        PageRequest pageRequest = createPageRequest(page, size, sort, direction);
+    public ProblemSetSummaryPage loadActiveProblemSets(GetProblemSetsQuery query) {
+        PageRequest pageRequest = createPageRequest(
+                query.page(),
+                query.size(),
+                query.sort(),
+                query.resolvedDirection()
+        );
 
         Page<ProblemSetJpaEntity> problemSets =
                 problemSetRepository.findActiveProblemSetsWithFilters(
                         ProblemSetStatus.ACTIVE,
-                        categoryId,
-                        normalizeDifficulty(difficulty),
-                        userId,
-                        normalizeCompletionStatus(completionStatus),
+                        query.categoryId(),
+                        normalizeDifficulty(query.difficultyName()),
+                        query.userId(),
+                        normalizeCompletionStatus(query.completionStatus()),
                         pageRequest
                 );
 
-        return toSummaryPage(problemSets, page, size);
+        return toSummaryPage(problemSets, query.page(), query.size());
     }
 
     private String normalizeCompletionStatus(ProblemSetCompletionStatus completionStatus) {
