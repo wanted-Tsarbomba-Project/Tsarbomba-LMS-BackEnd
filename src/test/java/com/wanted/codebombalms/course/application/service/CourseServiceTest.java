@@ -17,6 +17,8 @@ import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.course.domain.repository.CourseRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.serviceevent.application.port.ServiceEventRecorder;
+import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,6 +63,9 @@ class CourseServiceTest {
     @Mock
     private CourseEnrollmentPort courseEnrollmentPort;
 
+    @Mock
+    private ServiceEventRecorder serviceEventRecorder;
+
     @InjectMocks
     private CourseCommandService courseCommandService;
 
@@ -83,6 +88,7 @@ class CourseServiceTest {
         verify(courseAuthorPolicy).validateOperator(command.instructorId());
         verify(courseCategoryPolicy).validateActiveCategory(command.courseCategoryId());
         verify(courseRepository).save(any(Course.class));
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -338,6 +344,7 @@ class CourseServiceTest {
         inOrder.verify(lectureManagementPort).deleteLecturesByCourseId(courseId);
         inOrder.verify(courseRepository).save(course);
         inOrder.verify(courseThumbnailStoragePort).delete("java.png");
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -375,6 +382,7 @@ class CourseServiceTest {
         assertNotNull(course.getDeletedAt());
         verify(courseRepository).save(course);
         verify(courseThumbnailStoragePort).delete("java.png");
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     @Test
@@ -390,6 +398,7 @@ class CourseServiceTest {
         assertEquals(CourseStatus.ACTIVE, result.getStatus());
         verify(coursePublishPolicy).validate(course);
         verify(courseRepository).save(course);
+        verify(serviceEventRecorder).record(any(ServiceEventEnvelope.class));
     }
 
     private Course createCourse(

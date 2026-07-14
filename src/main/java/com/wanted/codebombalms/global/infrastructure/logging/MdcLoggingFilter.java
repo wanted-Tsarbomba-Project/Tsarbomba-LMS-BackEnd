@@ -6,6 +6,7 @@ import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventEnvelope;
 import com.wanted.codebombalms.serviceevent.domain.model.ServiceEventType;
 import com.wanted.codebombalms.serviceevent.infrastructure.persistence.ServiceEventWriter;
 import com.wanted.codebombalms.serviceevent.infrastructure.web.HttpAnomalyGuard;
+import com.wanted.codebombalms.serviceevent.infrastructure.web.HttpRequestAnomalySupport;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.lang.NonNull;
 
 import java.io.IOException;
@@ -25,10 +25,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(MdcLoggingFilter.class);
     private static final String ANONYMOUS = "anonymous";
 
-    /**
-     * GlobalExceptionHandler 가 이미 상세(예외 클래스명 포함)를 기록한 요청에 세팅하는 마커.
-     * 필터의 상태코드 기반 기록과 중복 적재를 막는다 (#606).
-     */
+    /** GlobalExceptionHandler 상세 기록 완료 마커 — 필터의 상태코드 기반 기록과 중복 방지 */
     public static final String ANOMALY_RECORDED_ATTRIBUTE = "serviceEvent.anomalyRecorded";
 
     private final ServiceEventWriter serviceEventWriter;
@@ -52,7 +49,7 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         long startAt = System.nanoTime();
-        // traceId 는 로컬 변수로 잡아둔다 — doFilter 내부 필터가 MDC.clear() 해도 완료 로그에 안전.
+        // traceId 로컬 변수 캡처 — 내부 필터의 MDC.clear() 에도 완료 로그 안전
         String traceId = UUID.randomUUID().toString().substring(0, 8);
 
         try {
@@ -88,17 +85,14 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
         }
     }
 
-    /**
-     * 예외 신호만 조건부 적재 (#606). 정상 요청(2xx·3xx·일반 4xx)은 절대 적재하지 않는다.
-     * 어떤 예외도 응답에 영향을 주지 않는다 (best-effort).
-     */
+    /** 예외 신호만 조건부 적재 — 정상 요청(2xx·3xx·일반 4xx) 제외, 예외는 응답에 미전파 (best-effort) */
     private void recordAnomalyIfNeeded(
             HttpServletRequest request, HttpServletResponse response,
-            long durationMs, String userIdAttribute, String traceId) {
+            long durationMs, String resolvedUserId, String traceId) {
         try {
             int status = response.getStatus();
-            String route = normalizedRoute(request);
-            Long userId = parseUserId(userIdAttribute);
+            String route = HttpRequestAnomalySupport.normalizedRoute(request);
+            Long userId = HttpRequestAnomalySupport.parseUserId(resolvedUserId);
             String clientIp = ClientIpResolver.resolve(request);
 
             if (durationMs >= slowThresholdMs && anomalyGuard.tryAcquire("slow:" + route)) {
@@ -132,26 +126,6 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.warn("event=http_anomaly_record_failed reason={}", e.toString());
-        }
-    }
-
-    /**
-     * 정규화된 라우트 키 — raw URI 금지(경로변수·스캔 경로로 카디널리티 폭발).
-     * DispatcherServlet 도달 전 차단된 요청(401 등)은 패턴이 없어 "unmatched".
-     */
-    private String normalizedRoute(HttpServletRequest request) {
-        Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
-        return request.getMethod() + " " + (pattern == null ? "unmatched" : pattern.toString());
-    }
-
-    private Long parseUserId(String attribute) {
-        if (attribute == null || ANONYMOUS.equals(attribute)) {
-            return null;
-        }
-        try {
-            return Long.parseLong(attribute);
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 

@@ -15,20 +15,17 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 /**
- * 비정상 행위를 Prometheus(집계) + Loki(상세) + DB(service_event, 조회·액션) 삼중 기록한다.
- *
- * <p>메트릭은 저카디널리티 집계용 {@code auth_security_event_total{category,type}} 하나로 통일.
- * ip/userId 같은 고카디널리티 정보는 메트릭 라벨이 아니라 로그 본문(logfmt)과 DB 행에만 담는다.
- * DB 적재는 best-effort — 실패해도 본 흐름에 영향 없다 (#606).
+ * 비정상 행위를 Prometheus(집계) + Loki(상세) + DB(service_event) 삼중 기록.
+ * 고카디널리티 값(ip·userId)은 메트릭 라벨 금지 — 로그 본문·DB 행에만 기록 (DB 는 best-effort).
  */
 @Slf4j
 @Component
 public class AuthSecurityEventRecorder implements SecurityEventReporter {
 
-    // 등록명엔 _total 을 붙이지 않는다. Counter 라서 Prometheus 가 auth_security_event_total 로 변환한다.
+    // 등록명에 _total 미부여 — Counter 는 Prometheus 가 auth_security_event_total 로 자동 변환
     private static final String METRIC = "auth_security_event";
 
-    // ErrorCode(AUT-*) → 이벤트. 흐름성/모호 코드(AUT-009 등)는 서비스에서 직접 기록한다.
+    // ErrorCode(AUT-*) → 이벤트 매핑. 흐름성·모호 코드(AUT-009 등)는 서비스에서 직접 기록
     private static final Map<String, AuthSecurityEvent> BY_CODE = Map.ofEntries(
             Map.entry("AUT-001", LOGIN_FAIL),
             Map.entry("AUT-014", EMAIL_SEND_BLOCKED),
@@ -58,7 +55,7 @@ public class AuthSecurityEventRecorder implements SecurityEventReporter {
         this.serviceEventWriter = serviceEventWriter;
     }
 
-    /** 흐름 기반 이벤트(의심 로그인 등) 직접 기록. ip/uri 는 MDC(MdcLoggingFilter)에서 가져온다. */
+    /** 흐름 기반 이벤트(의심 로그인 등) 직접 기록. ip/uri 는 MDC(MdcLoggingFilter) 값 사용. */
     public void record(AuthSecurityEvent event, Long userId) {
         registry.counter(METRIC, "category", event.getCategory(), "type", event.getType()).increment();
         log.warn("event=security_event traceId={} category={} type={} userId={} clientIp={} uri={}",
@@ -78,9 +75,8 @@ public class AuthSecurityEventRecorder implements SecurityEventReporter {
     }
 
     /**
-     * DB 세 번째 줄기 (#606). 반드시 요청 스레드에서 MDC 값을 캡처해 봉투에 고정한다
-     * — writer 의 @Async 스레드에는 MDC 가 전파되지 않는다.
-     * publishEvent(AFTER_COMMIT) 금지: 로그인 실패 흐름은 트랜잭션 롤백 중이라 유실된다.
+     * DB(service_event) 적재. 요청 스레드에서 MDC 값 캡처 필수 — @Async 스레드 미전파.
+     * publishEvent(AFTER_COMMIT) 금지 — 로그인 실패(롤백) 흐름에서 유실.
      */
     private void recordToServiceEvent(AuthSecurityEvent event, Long userId) {
         try {
