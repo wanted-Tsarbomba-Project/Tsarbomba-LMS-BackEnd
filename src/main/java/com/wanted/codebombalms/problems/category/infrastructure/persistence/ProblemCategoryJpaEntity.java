@@ -3,6 +3,8 @@ package com.wanted.codebombalms.problems.category.infrastructure.persistence;
 import com.wanted.codebombalms.problems.category.domain.model.ProblemCategoryStatus;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "problem_category")
 
@@ -20,6 +22,9 @@ public class ProblemCategoryJpaEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProblemCategoryStatus status;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     protected ProblemCategoryJpaEntity() {
     }
@@ -52,5 +57,11 @@ public class ProblemCategoryJpaEntity {
 
     public void deactivate() {
         this.status = ProblemCategoryStatus.INACTIVE;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public void activate() {
+        this.status = ProblemCategoryStatus.ACTIVE;
+        this.deletedAt = null;
     }
 }

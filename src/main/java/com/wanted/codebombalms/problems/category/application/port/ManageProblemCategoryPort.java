@@ -17,4 +17,8 @@ public interface ManageProblemCategoryPort {
     ProblemCategory updateName(Long categoryId, String categoryName);
 
     ProblemCategory deactivate(Long categoryId);
+
+    ProblemCategory loadCategory(Long categoryId);
+
+    ProblemCategory activate(Long categoryId);
 }
