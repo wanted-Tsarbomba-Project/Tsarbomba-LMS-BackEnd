@@ -7,6 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import com.wanted.codebombalms.user.domain.repository.UserPage;
+import org.springframework.data.domain.Page;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +89,25 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public long countByRole(UserRole role) {
-        return springDataUserRepository.countByRole(role);
+    public UserPage findAllByRoleAndKeyword(UserRole role, String keyword, int page, int size) {
+        Page<UserJpaEntity> result = springDataUserRepository.findActiveByRoleAndNameKeyword(
+                role,
+                normalizeKeyword(keyword),
+                PageRequest.of(page, size)
+        );
+
+        List<User> content = result.getContent().stream()
+                .map(UserJpaEntity::toDomain)
+                .toList();
+
+        return new UserPage(content, result.getTotalElements());
+    }
+
+    // 빈 검색어는 null로 바꿔 JPQL 조건에서 전체 조회로 처리되게 한다.
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+        return keyword.trim();
     }
 }
