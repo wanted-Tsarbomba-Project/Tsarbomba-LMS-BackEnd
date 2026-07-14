@@ -3,8 +3,8 @@ package com.wanted.codebombalms.user.application.service;
 import com.wanted.codebombalms.user.application.query.StudentPageResult;
 import com.wanted.codebombalms.user.application.query.StudentSummary;
 import com.wanted.codebombalms.user.application.usecase.GetStudentsUseCase;
-import com.wanted.codebombalms.user.domain.model.User;
 import com.wanted.codebombalms.user.domain.model.UserRole;
+import com.wanted.codebombalms.user.domain.repository.UserPage;
 import com.wanted.codebombalms.user.domain.repository.UserRepository;
 import com.wanted.codebombalms.user.infrastructure.metrics.UserMetrics;
 import lombok.RequiredArgsConstructor;
@@ -24,28 +24,25 @@ public class GetStudentsService implements GetStudentsUseCase {
     private final UserMetrics userMetrics;
 
     @Override
-    public StudentPageResult getStudents(int page, int size) {
+    public StudentPageResult getStudents(int page, int size, String keyword) {
         long startedAt = System.nanoTime();
 
-        // 1. 학생 목록 조회 (가입 최신순) — 인덱스 부재 시 풀스캔 + filesort 발생 구간
-        List<User> users = userRepository.findAllByRole(UserRole.STUDENT, page, size);
-
-        // 2. 전체 학생 수
-        long totalElements = userRepository.countByRole(UserRole.STUDENT);
+        // 1. 학생 목록 + 전체 건수 조회 (가입 최신순, keyword 있으면 이름 중간 매칭)
+        UserPage userPage = userRepository.findAllByRoleAndKeyword(UserRole.STUDENT, keyword, page, size);
 
         long elapsedNanos = System.nanoTime() - startedAt;
         userMetrics.recordStudentListQuery(elapsedNanos);
-        log.info("event=user_student_list_queried page={} size={} resultCount={} durationMs={}",
-                page, size, users.size(), elapsedNanos / 1_000_000);
+        log.info("event=user_student_list_queried page={} size={} hasKeyword={} resultCount={} durationMs={}",
+                page, size, keyword != null && !keyword.isBlank(), userPage.content().size(), elapsedNanos / 1_000_000);
 
-        // 3. 전체 페이지 수 (size = 0 방어)
-        int totalPages = size <= 0 ? 0 : (int) Math.ceil((double) totalElements / size);
+        // 2. 전체 페이지 수 (size = 0 방어)
+        int totalPages = size <= 0 ? 0 : (int) Math.ceil((double) userPage.totalElements() / size);
 
-        // 4. 변환
-        List<StudentSummary> content = users.stream()
+        // 3. 변환
+        List<StudentSummary> content = userPage.content().stream()
                 .map(StudentSummary::from)
                 .toList();
 
-        return new StudentPageResult(content, totalElements, totalPages);
+        return new StudentPageResult(content, userPage.totalElements(), totalPages);
     }
 }
