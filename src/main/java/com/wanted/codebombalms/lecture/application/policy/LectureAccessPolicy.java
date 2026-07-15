@@ -1,10 +1,12 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -25,7 +27,10 @@ public class LectureAccessPolicy {
         if (operator) {
             return;
         }
-        if (userId == null || !lectureEnrollmentPort.isActiveStudentOfCourse(
+        if (userId == null) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REQUIRED);
+        }
+        if (!lectureEnrollmentPort.isActiveStudentOfCourse(
                 lecture.getCourse().getCourseId(),
                 userId
         )) {
@@ -46,7 +51,10 @@ public class LectureAccessPolicy {
         if (course.getStatus() != CourseStatus.INACTIVE) {
             throw new ForbiddenException(LectureErrorCode.LECTURE_ACCESS_DENIED);
         }
-        if (userId == null || !lectureEnrollmentPort.isActiveStudentOfCourse(
+        if (userId == null) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REQUIRED);
+        }
+        if (!lectureEnrollmentPort.isActiveStudentOfCourse(
                 course.getCourseId(),
                 userId
         )) {
