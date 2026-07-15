@@ -21,6 +21,9 @@ class LectureProblemProgressRepositoryAdapterTest {
     @Mock
     private SpringDataLectureProblemProgressRepository springDataLectureProblemProgressRepository;
 
+    @Mock
+    private LectureProblemProgressConflictResolver lectureProblemProgressConflictResolver;
+
     @InjectMocks
     private LectureProblemProgressRepositoryAdapter lectureProblemProgressRepositoryAdapter;
 
@@ -39,14 +42,13 @@ class LectureProblemProgressRepositoryAdapterTest {
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
-        LectureProblemProgressJpaEntity existingEntity = LectureProblemProgressJpaEntity.from(existingProgress);
 
         willThrow(new DataIntegrityViolationException("duplicate key"))
                 .given(springDataLectureProblemProgressRepository)
                 .save(any(LectureProblemProgressJpaEntity.class));
-        given(springDataLectureProblemProgressRepository
-                .findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
-                .willReturn(Optional.of(existingEntity));
+        given(lectureProblemProgressConflictResolver
+                .findAfterInsertConflict(userId, lectureProblemSetId))
+                .willReturn(Optional.of(existingProgress));
 
         LectureProblemProgress result = lectureProblemProgressRepositoryAdapter.save(newProgress);
 

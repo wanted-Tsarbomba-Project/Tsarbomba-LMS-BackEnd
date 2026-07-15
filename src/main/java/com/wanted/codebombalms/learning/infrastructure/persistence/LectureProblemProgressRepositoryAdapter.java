@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 public class LectureProblemProgressRepositoryAdapter implements LectureProblemProgressRepository {
 
     private final SpringDataLectureProblemProgressRepository springDataLectureProblemProgressRepository;
+    private final LectureProblemProgressConflictResolver lectureProblemProgressConflictResolver;
 
     @Override
     public LectureProblemProgress save(LectureProblemProgress lectureProblemProgress) {
@@ -38,6 +39,7 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
     /**
      * 동일 사용자의 최초 진입 요청이 겹치면 두 요청 모두 기존 행이 없다고 판단해 동시에 INSERT를 시도할 수 있다.
      * 이 경우 나중 INSERT는 유니크 제약 위반으로 실패하므로, 먼저 성공한 행을 재조회해 그대로 반환한다.
+     * 재조회는 현재(오염됐을 수 있는) 트랜잭션이 아니라 별도 트랜잭션(REQUIRES_NEW)에서 수행한다.
      */
     private LectureProblemProgress insert(LectureProblemProgress lectureProblemProgress) {
         try {
@@ -45,12 +47,11 @@ public class LectureProblemProgressRepositoryAdapter implements LectureProblemPr
                     .save(LectureProblemProgressJpaEntity.from(lectureProblemProgress))
                     .toDomain();
         } catch (DataIntegrityViolationException e) {
-            return springDataLectureProblemProgressRepository
-                    .findByUserIdAndLectureProblemSetId(
+            return lectureProblemProgressConflictResolver
+                    .findAfterInsertConflict(
                             lectureProblemProgress.getUserId(),
                             lectureProblemProgress.getLectureProblemSetId()
                     )
-                    .map(LectureProblemProgressJpaEntity::toDomain)
                     .orElseThrow(() -> e);
         }
     }
