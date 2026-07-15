@@ -27,12 +27,14 @@ public class ResetPasswordService implements ResetPasswordUseCase {
     private final PasswordResetRepository passwordResetRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void resetPassword(String email, String code, String newPassword) {
 
         // 0. 시도 횟수 제한 (email 단위) — 무차별 대입 차단 (429)
-        if (passwordResetRepository.getFailCount(email) >= PasswordResetPolicy.MAX_FAIL_ATTEMPTS) {            throw new TooManyRequestsException(AuthErrorCode.AUTH_PASSWORD_RESET_TOO_MANY);
+        if (passwordResetRepository.getFailCount(email) >= PasswordResetPolicy.MAX_FAIL_ATTEMPTS) {
+            throw new TooManyRequestsException(AuthErrorCode.AUTH_PASSWORD_RESET_TOO_MANY);
         }
 
         // 1. 코드 비파괴 조회 (짝 안 맞으면 코드 보존 → 타인 코드 무효화 DoS 방지)
@@ -57,8 +59,11 @@ public class ResetPasswordService implements ResetPasswordUseCase {
         user.changePassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // 6. Refresh Token 전체 삭제 (강제 재로그인)
+        // 6. Refresh Token 전체 삭제 (재발급 차단)
         refreshTokenRepository.deleteByUserId(user.getUserId());
+
+        // 6-1. 세션(sid) 폐기 → 발급된 AccessToken 즉시 무효 (계정 탈취 시 공격자 세션 차단)
+        authSessionManager.close(user.getUserId());
 
         // 7. 성공 — 실패 카운터 초기화
         passwordResetRepository.clearFailCount(email);

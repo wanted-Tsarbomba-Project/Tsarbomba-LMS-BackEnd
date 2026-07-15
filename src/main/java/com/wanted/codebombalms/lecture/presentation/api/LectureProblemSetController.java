@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name = "Lecture Problem Set", description = "Lecture problem set connection APIs")
+@Tag(name = "강의 문제세트", description = "강의-문제세트 연결 관리 API")
 public class LectureProblemSetController {
 
     private static final Logger log = LoggerFactory.getLogger(LectureProblemSetController.class);
@@ -36,7 +36,7 @@ public class LectureProblemSetController {
     private final LectureProblemSetQueryUseCase lectureProblemSetQueryUseCase;
 
     @GetMapping("/courses/{courseId}/lecture-problem-sets")
-    @Operation(summary = "Find lecture problem sets by course")
+    @Operation(summary = "강좌별 강의 문제세트 목록 조회")
     public ResponseEntity<ApiResponse<?>> findProblemSetsByCourse(
             @PathVariable Long courseId,
             @AuthenticationPrincipal Long userId,
@@ -59,7 +59,7 @@ public class LectureProblemSetController {
     }
 
     @GetMapping("/lectures/{lectureId}/lecture-problem-sets")
-    @Operation(summary = "Find lecture problem sets by lecture")
+    @Operation(summary = "강의별 강의 문제세트 목록 조회")
     public ResponseEntity<ApiResponse<?>> findProblemSetsByLecture(
             @PathVariable Long lectureId,
             @AuthenticationPrincipal Long userId,
@@ -82,7 +82,7 @@ public class LectureProblemSetController {
     }
 
     @PutMapping("/courses/{courseId}/lecture-problem-sets")
-    @Operation(summary = "Configure course lecture problem sets")
+    @Operation(summary = "강좌 강의 문제세트 구성 설정")
     @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<ApiResponse<?>> configureProblemSets(
             @PathVariable Long courseId,

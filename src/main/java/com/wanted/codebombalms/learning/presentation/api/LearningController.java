@@ -21,6 +21,7 @@ import com.wanted.codebombalms.learning.presentation.api.response.LectureProblem
 import com.wanted.codebombalms.learning.presentation.api.response.LectureProgressResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.StudentLearningProgressPageResponse;
 import com.wanted.codebombalms.learning.presentation.api.response.StudentLearningProgressResponse;
+import com.wanted.codebombalms.problems.explanation.presentation.api.response.ExplanationViewResponse;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.presentation.request.SubmissionRequest;
 import com.wanted.codebombalms.submission.presentation.response.SubmissionResponse;
@@ -116,7 +117,7 @@ public class LearningController {
     }
 
     @GetMapping("/admin/courses/{courseId}/students/{userId}/lecture-problem-sets/{lectureProblemSetId}")
-    @Operation(summary = "Admin student lecture problem set entry status")
+    @Operation(summary = "관리자 - 학생 강의 문제세트 진입 상태 조회")
     @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR')")
     public ResponseEntity<ApiResponse<LectureProblemSetEntryResponse>> findStudentLectureProblemSet(
             @PathVariable Long courseId,
@@ -190,6 +191,23 @@ public class LearningController {
                         problemId,
                         new SubmitCodeCommand(userId, request.getCode())
                 ))
+        ));
+    }
+
+    @PostMapping("/lecture-problem-sets/{lectureProblemSetId}/problems/{problemId}/explanation-view")
+    @Operation(summary = "강의 문제 해설 조회")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<ExplanationViewResponse>> viewLectureProblemExplanation(
+            @PathVariable Long lectureProblemSetId,
+            @PathVariable Long problemId,
+            @AuthenticationPrincipal Long userId
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(
+                LearningResponseCode.EXPLANATION_VIEWED,
+                LearningResponseMessage.EXPLANATION_VIEWED,
+                ExplanationViewResponse.from(
+                        lectureProblemSubmissionUseCase.viewExplanation(userId, lectureProblemSetId, problemId)
+                )
         ));
     }
 

@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.learning.application.policy;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.learning.application.port.LearningEnrollmentPort;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
@@ -14,7 +16,10 @@ public class LearningAccessPolicy {
     private final LearningEnrollmentPort learningEnrollmentPort;
 
     public void validateLectureProblemSetAccess(Long userId, LearningLectureProblemSet lectureProblemSet) {
-        if (userId == null || !learningEnrollmentPort.isActiveStudentOfCourse(
+        if (userId == null) {
+            throw new UnauthorizedException(AuthErrorCode.AUTH_REQUIRED);
+        }
+        if (!learningEnrollmentPort.isActiveStudentOfCourse(
                 lectureProblemSet.courseId(),
                 userId
         )) {
