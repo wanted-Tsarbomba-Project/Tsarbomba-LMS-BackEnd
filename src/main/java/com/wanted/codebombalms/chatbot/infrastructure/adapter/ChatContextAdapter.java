@@ -32,16 +32,17 @@ public class ChatContextAdapter implements ChatContextPort {
     public List<ProblemInfo> findProblems(Long problemSetId, Long userId) {
         return problemQueryService.findProblemsForChat(problemSetId).stream()
                 .map(p -> {
-                    String submittedCode = submissionQueryService
-                            .findLatestResult(userId, p.problemId())
-                            .map(LatestSubmission::submittedCode)
-                            .orElse(null);
+                    var latest = submissionQueryService.findLatestResult(userId, p.problemId());
                     return new ProblemInfo(
                             p.title(),
                             p.content(),
                             p.problemType(),
                             p.explanation(),
-                            submittedCode
+                            latest.map(LatestSubmission::submittedCode).orElse(null),
+                            latest.map(LatestSubmission::executionStatus).orElse(null),
+                            latest.map(LatestSubmission::passedTestCount).orElse(null),
+                            latest.map(LatestSubmission::totalTestCount).orElse(null),
+                            latest.map(LatestSubmission::errorMessage).orElse(null)
                     );
                 })
                 .toList();
