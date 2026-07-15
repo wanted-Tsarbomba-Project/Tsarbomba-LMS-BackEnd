@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class LogoutService implements LogoutUseCase {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void logout(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
+        authSessionManager.close(userId);
     }
 }
