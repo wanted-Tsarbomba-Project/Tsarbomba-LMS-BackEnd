@@ -30,7 +30,11 @@ public interface ChatContextPort {
             String content,
             String problemType,
             String explanation,
-            String submittedCode
+            String submittedCode,
+            String executionStatus,
+            Integer passedTestCount,
+            Integer totalTestCount,
+            String errorMessage
     ) {}
 
     record SessionProgressInfo(

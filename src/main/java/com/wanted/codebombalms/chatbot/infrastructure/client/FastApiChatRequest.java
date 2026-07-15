@@ -62,6 +62,18 @@ public class FastApiChatRequest {
 
         @JsonProperty("submitted_answer")
         private String submittedCode;
+
+        @JsonProperty("execution_status")
+        private String executionStatus;
+
+        @JsonProperty("passed_test_count")
+        private Integer passedTestCount;
+
+        @JsonProperty("total_test_count")
+        private Integer totalTestCount;
+
+        @JsonProperty("error_message")
+        private String errorMessage;
     }
 
     @Getter

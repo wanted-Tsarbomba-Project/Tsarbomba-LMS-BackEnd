@@ -103,6 +103,10 @@ public class FastApiChatClient implements AiChatClient {
                         .problemType(p.problemType())
                         .explanation(p.explanation())
                         .submittedCode(p.submittedCode())
+                        .executionStatus(p.executionStatus())
+                        .passedTestCount(p.passedTestCount())
+                        .totalTestCount(p.totalTestCount())
+                        .errorMessage(p.errorMessage())
                         .build())
                 .collect(Collectors.toList());
 

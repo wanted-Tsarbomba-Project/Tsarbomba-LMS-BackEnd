@@ -173,5 +173,28 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             """)
     int deleteProblemSetsByIds(@Param("problemSetIds") List<Long> problemSetIds);
 
-
+    @Query("""
+        select ps
+        from ProblemSetJpaEntity ps
+        left join ProgressJpaEntity progress
+          on progress.problemSet = ps
+         and progress.userId = :userId
+        where ps.status = :status
+          and (:categoryId is null or ps.category.categoryId = :categoryId)
+          and (:difficulty is null or ps.difficulty = :difficulty)
+          and (
+              :completionStatus is null
+              or (:completionStatus = 'NOT_STARTED' and progress.progressId is null)
+              or (:completionStatus = 'IN_PROGRESS' and progress.progressId is not null and progress.isCompleted = false)
+              or (:completionStatus = 'COMPLETED' and progress.progressId is not null and progress.isCompleted = true)
+          )
+        """)
+    Page<ProblemSetJpaEntity> findActiveProblemSetsWithFilters(
+            @Param("status") ProblemSetStatus status,
+            @Param("categoryId") Long categoryId,
+            @Param("difficulty") String difficulty,
+            @Param("userId") Long userId,
+            @Param("completionStatus") String completionStatus,
+            Pageable pageable
+    );
 }
