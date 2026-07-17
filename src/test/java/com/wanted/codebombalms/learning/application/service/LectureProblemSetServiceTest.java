@@ -207,7 +207,7 @@ class LectureProblemSetServiceTest {
         );
 
         assertFalse(result.correct());
-        assertEquals(2, result.remainingAttemptCount());
+        assertEquals(null, result.remainingAttemptCount());
         assertEquals(null, result.nextProblemId());
         verify(learningAccessPolicy).validateLectureProblemSetAccess(
                 userId,
@@ -248,30 +248,34 @@ class LectureProblemSetServiceTest {
     }
 
     @Test
-    void submit_attemptLimitExceeded_doesNotGradeOrSave() {
+    void submit_pastAttemptLimit_stillGradesAndSaves() {
         Long userId = 10L;
         Long lectureProblemSetId = 6001L;
         Long problemSetId = 2001L;
         Long problemId = 3001L;
         var currentProgress = progress(userId, lectureProblemSetId, 1, false);
         givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 3, 3);
+        given(learningProblemGradingPort.grade(problemSetId, problemId, "answer"))
+                .willReturn(new LearningProblemGradingPort.GradingResult(
+                        false,
+                        1,
+                        2,
+                        "WRONG_ANSWER",
+                        "failed"
+                ));
+        given(lectureProblemSubmissionRepository.save(any(LectureProblemSubmission.class)))
+                .willReturn(submission(9003L, userId, lectureProblemSetId, problemId, false, 4));
 
-        assertThrows(
-                com.wanted.codebombalms.global.domain.common.error.exception.ValidationException.class,
-                () -> lectureProblemSetService.submit(
-                        lectureProblemSetId,
-                        problemId,
-                        new SubmitCodeCommand(userId, "answer")
-                )
+        var result = lectureProblemSetService.submit(
+                lectureProblemSetId,
+                problemId,
+                new SubmitCodeCommand(userId, "answer")
         );
 
-        verify(learningProblemGradingPort, never()).grade(any(), any(), any());
-        verify(lectureProblemSubmissionRepository, never()).save(any());
-        verify(learningAccessPolicy).validateLectureProblemSetAccess(
-                userId,
-                new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId)
-        );
-        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+        assertFalse(result.correct());
+        assertEquals(null, result.remainingAttemptCount());
+        verify(learningProblemGradingPort).grade(problemSetId, problemId, "answer");
+        verify(lectureProblemSubmissionRepository).save(any(LectureProblemSubmission.class));
     }
 
     @Test
