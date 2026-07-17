@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.user.application.service;
 
+import com.wanted.codebombalms.auth.application.service.AuthSessionManager;
 import com.wanted.codebombalms.auth.domain.repository.RefreshTokenRepository;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
@@ -25,6 +26,7 @@ public class ChangePasswordService implements ChangePasswordUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final ProfileEditVerificationRepository profileEditVerificationRepository;
+    private final AuthSessionManager authSessionManager;
 
     @Override
     public void changePassword(Long userId, String newPassword, String confirmPassword) {
@@ -46,10 +48,13 @@ public class ChangePasswordService implements ChangePasswordUseCase {
         user.changePassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
-        // 4. Refresh Token 전체 삭제 (강제 재로그인)
+        // 4. Refresh Token 전체 삭제 (재발급 차단)
         refreshTokenRepository.deleteByUserId(userId);
 
-        // 5. 재인증 도장 제거 (어차피 강제 재로그인 → 세션 종료)
+        // 4-1. 세션(sid) 폐기 → 발급된 AccessToken 즉시 무효 (진짜 강제 재로그인)
+        authSessionManager.close(userId);
+
+        // 5. 재인증 도장 제거
         profileEditVerificationRepository.clearVerified(userId);
 
         log.info("비밀번호 변경 완료 - userId={}", userId);
