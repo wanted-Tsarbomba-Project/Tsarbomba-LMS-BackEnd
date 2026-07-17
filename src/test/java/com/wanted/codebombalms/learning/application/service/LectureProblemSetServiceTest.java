@@ -279,6 +279,29 @@ class LectureProblemSetServiceTest {
     }
 
     @Test
+    void submit_notRetriableWithPriorAttempt_throwsException() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 1, false);
+        givenSubmitContext(userId, lectureProblemSetId, problemSetId, problemId, currentProgress, 1, 3, false);
+
+        assertThrows(
+                com.wanted.codebombalms.global.domain.common.error.exception.ValidationException.class,
+                () -> lectureProblemSetService.submit(
+                        lectureProblemSetId,
+                        problemId,
+                        new SubmitCodeCommand(userId, "answer")
+                )
+        );
+
+        verify(learningProblemGradingPort, never()).grade(any(), any(), any());
+        verify(lectureProblemSubmissionRepository, never()).save(any());
+        verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
+    }
+
+    @Test
     void submit_gradingFailure_doesNotSaveSubmissionOrProgress() {
         Long userId = 10L;
         Long lectureProblemSetId = 6001L;
@@ -428,6 +451,28 @@ class LectureProblemSetServiceTest {
             int previousAttemptCount,
             int attemptLimit
     ) {
+        givenSubmitContext(
+                userId,
+                lectureProblemSetId,
+                problemSetId,
+                problemId,
+                progress,
+                previousAttemptCount,
+                attemptLimit,
+                true
+        );
+    }
+
+    private void givenSubmitContext(
+            Long userId,
+            Long lectureProblemSetId,
+            Long problemSetId,
+            Long problemId,
+            LectureProblemProgress progress,
+            int previousAttemptCount,
+            int attemptLimit,
+            boolean retriable
+    ) {
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
                 .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
         given(learningProblemPort.existsProblem(problemId)).willReturn(true);
@@ -440,7 +485,7 @@ class LectureProblemSetServiceTest {
                         "explanation",
                         10,
                         attemptLimit,
-                        true
+                        retriable
                 )
         );
         given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(
