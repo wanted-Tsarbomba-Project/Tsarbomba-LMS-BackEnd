@@ -4,8 +4,10 @@ import com.wanted.codebombalms.inquiry.domain.model.InquiryAiCorrection;
 import com.wanted.codebombalms.inquiry.domain.model.InquiryCorrectionField;
 import com.wanted.codebombalms.inquiry.domain.repository.InquiryAiCorrectionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,6 +20,14 @@ public class InquiryAiCorrectionRepositoryAdapter implements InquiryAiCorrection
     public Optional<InquiryAiCorrection> findByInquiryIdAndFieldName(Long inquiryId, InquiryCorrectionField fieldName) {
         return springDataRepository.findByInquiryIdAndFieldName(inquiryId, fieldName)
                 .map(InquiryAiCorrectionMapper::toDomain);
+    }
+
+    @Override
+    public List<InquiryAiCorrection> findRecentCorrections(int limit) {
+        return springDataRepository.findAllByOrderByUpdatedAtDesc(PageRequest.of(0, limit))
+                .stream()
+                .map(InquiryAiCorrectionMapper::toDomain)
+                .toList();
     }
 
     @Override

@@ -67,6 +67,30 @@ public class Inquiry {
         this.updatedAt = updatedAt;
     }
 
+    // 사용자가 새로 등록한 문의를 생성한다. AI 분석 전까지는 기본값(OPEN/LOW/ETC)을 갖는다.
+    public static Inquiry create(Long userId, String content, String sourceUrl, LocalDateTime createdAt) {
+        return new Inquiry(
+                null,
+                userId,
+                null,
+                content,
+                InquiryStatus.OPEN,
+                InquirySeverity.LOW,
+                InquiryDomain.ETC,
+                sourceUrl,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                createdAt,
+                createdAt
+        );
+    }
+
     // DB에서 조회한 값으로 도메인 모델을 복원한다.
     public static Inquiry restore(
             Long inquiryId,
@@ -108,6 +132,27 @@ public class Inquiry {
                 createdAt,
                 updatedAt
         );
+    }
+
+    // Python AI 분석 결과를 반영한다. 관리자가 아직 보정하지 않은 초기값이므로 전체 필드를 덮어쓴다.
+    public void applyAiAnalysis(
+            String title,
+            String aiSummary,
+            InquirySeverity severity,
+            InquiryDomain domain,
+            String estimatedUrl,
+            String aiRecommendedAction,
+            boolean filtered,
+            LocalDateTime updatedAt
+    ) {
+        this.title = title;
+        this.aiSummary = aiSummary;
+        this.severity = severity;
+        this.domain = domain;
+        this.estimatedUrl = estimatedUrl;
+        this.aiRecommendedAction = aiRecommendedAction;
+        this.filtered = filtered;
+        this.updatedAt = updatedAt;
     }
 
     // 관리자가 AI 분류(도메인/심각도)를 보정한다.
