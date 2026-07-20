@@ -95,6 +95,14 @@ cors:
 fastapi:
   url: ${FASTAPI_URL:http://localhost:8000}
 
+learning:
+  recommendation:
+    python:
+      enabled: ${LEARNING_RECOMMENDATION_ENABLED:true}
+      rank-path: ${LEARNING_RECOMMENDATION_RANK_PATH:/internal/learning/final-problem-sets/rank}
+      connect-timeout-ms: ${LEARNING_RECOMMENDATION_CONNECT_TIMEOUT_MS:3000}
+      read-timeout-ms: ${LEARNING_RECOMMENDATION_READ_TIMEOUT_MS:10000}
+
 chat:
   max-history-messages: 20
 

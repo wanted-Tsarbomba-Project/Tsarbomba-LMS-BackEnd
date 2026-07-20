@@ -7,4 +7,6 @@ import java.util.Set;
 public interface FinalProblemSetCandidatePort {
 
     List<ProblemSetSummary> findCandidates(Long problemCategoryId, Set<Long> excludedProblemSetIds, int limit);
+
+    List<ProblemSetSummary> findByProblemSetIds(List<Long> problemSetIds);
 }

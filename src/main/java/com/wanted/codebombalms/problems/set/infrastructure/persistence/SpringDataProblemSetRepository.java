@@ -35,6 +35,11 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             ProblemSetStatus status
     );
 
+    List<ProblemSetJpaEntity> findByProblemSetIdInAndStatus(
+            Collection<Long> problemSetIds,
+            ProblemSetStatus status
+    );
+
     Page<ProblemSetJpaEntity> findByStatusOrderByProblemSetIdAsc(
             ProblemSetStatus status,
             Pageable pageable

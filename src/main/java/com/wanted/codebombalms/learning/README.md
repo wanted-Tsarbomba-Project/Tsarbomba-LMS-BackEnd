@@ -10,6 +10,7 @@
 - 문제 제출을 학습 흐름에서 처리한다.
 - 강좌별, 사용자별, 강의별 학습 진행률을 집계한다.
 - 학습 진행률 요약과 문제 통계를 제공한다.
+- 강좌 완료 시 MAIN 풀이·해설 기록을 조립해 Python AI 문제세트 추천을 요청한다.
 
 ## 패키지 구조
 
@@ -29,6 +30,7 @@ learning
 │   ├── lecture
 │   ├── persistence
 │   ├── problem
+│   ├── client
 │   └── user
 └── presentation
     └── api          # LearningController, request/response DTO
@@ -53,6 +55,7 @@ learning
 | `LectureProblemProgressService` | 강의 문제 진행률 기록/조회 |
 | `LectureProblemSetService` | 강의 문제 세트 상세 조회와 제출 흐름 |
 | `AdminLearningProgressQueryService` | 관리자용 학습 진행률 집계 조회 |
+| `FinalProblemSetRankingService` | MAIN 학습 지표·강좌 문맥 조립과 Python 추천 요청 |
 
 ## API 목록
 
@@ -82,4 +85,13 @@ learning
 | `submission` | 문제 제출 결과와 풀이 상태 반영 |
 | `enrollment` | 수강 중인 사용자/강좌 기준 검증 |
 | `user` | 사용자별 학습 진행률 집계 |
+
+## 강좌 완료 AI 문제세트 추천
+
+- 기존 `GET /api/v1/lectures/{lectureId}/final-problem-set-candidates`의 마지막 강의·완료 조건은 lecture 도메인이 유지한다.
+- learning 도메인은 MAIN 문제의 정답 제출, 해설 조회, 제출 횟수, 최신 테스트 통과율을 집계한다.
+- 직접 풀이는 정답 제출이 있고 해설 조회 이력이 없는 문제로 계산한다.
+- MAIN 문제가 없거나 운영자 미리보기이면 개인 학습 지표를 모두 0으로 전달한다.
+- Python은 같은 문제 카테고리에서 MAIN 문제세트를 제외하고 최대 2개를 점수순으로 반환한다.
+- Python 호출이 실패하거나 응답이 잘못되면 기존 ID순 후보 조회로 복구한다.
 
