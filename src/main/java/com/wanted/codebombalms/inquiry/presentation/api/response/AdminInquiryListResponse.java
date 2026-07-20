@@ -2,26 +2,20 @@ package com.wanted.codebombalms.inquiry.presentation.api.response;
 
 import com.wanted.codebombalms.admin.operation.common.application.PageResult;
 import com.wanted.codebombalms.inquiry.application.query.AdminInquiryListItem;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
-public class AdminInquiryListResponse {
-
-    private List<AdminInquiryResponse> content;
-    private int page;
-    private int size;
-    private long totalElements;
-    private int totalPages;
-    private boolean first;
-    private boolean last;
-    private boolean hasNext;
-    private boolean hasPrevious;
+public record AdminInquiryListResponse(
+        List<AdminInquiryResponse> content,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages,
+        boolean first,
+        boolean last,
+        boolean hasNext,
+        boolean hasPrevious
+) {
 
     public static AdminInquiryListResponse from(PageResult<AdminInquiryListItem> pageResult) {
         return new AdminInquiryListResponse(

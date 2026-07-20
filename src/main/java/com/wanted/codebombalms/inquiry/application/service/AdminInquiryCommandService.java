@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -89,16 +90,17 @@ public class AdminInquiryCommandService implements
                 .orElseThrow(() -> new NotFoundException(InquiryErrorCode.INQUIRY_NOT_FOUND));
     }
 
-    // AI 값과 관리자 값이 다를 때만 inquiry_id + field_name 기준으로 마지막 보정값을 upsert한다.
+    // 수정 전 값과 관리자 값이 다를 때만 inquiry_id + field_name 기준으로 마지막 보정값을 upsert한다.
+    // previousValue는 비교 기준이면서, 보정 row가 처음 생성될 때는 그대로 ai_value로 저장된다.
     private void upsertCorrectionIfChanged(
             Long inquiryId,
             Long adminId,
             InquiryCorrectionField fieldName,
-            String aiValue,
+            String previousValue,
             String correctedValue,
             String reason
     ) {
-        if (aiValue.equals(correctedValue)) {
+        if (Objects.equals(previousValue, correctedValue)) {
             return;
         }
 
@@ -109,7 +111,7 @@ public class AdminInquiryCommandService implements
                     return existing;
                 })
                 .orElseGet(() -> InquiryAiCorrection.create(
-                        inquiryId, adminId, fieldName, aiValue, correctedValue, reason, now
+                        inquiryId, adminId, fieldName, previousValue, correctedValue, reason, now
                 ));
 
         inquiryAiCorrectionRepository.save(correction);

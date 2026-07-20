@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -99,7 +100,7 @@ public class AdminInquiryController {
     public ResponseEntity<ApiResponse<InquiryClassificationUpdateResponse>> updateInquiryClassification(
             @PathVariable Long inquiryId,
             @AuthenticationPrincipal Long adminId,
-            @RequestBody InquiryClassificationUpdateRequest request
+            @Valid @RequestBody InquiryClassificationUpdateRequest request
     ) {
         var result = updateInquiryClassificationUseCase.updateClassification(
                 request.toCommand(inquiryId, adminId)
@@ -123,7 +124,7 @@ public class AdminInquiryController {
     public ResponseEntity<ApiResponse<InquiryFilterUpdateResponse>> updateInquiryFilter(
             @PathVariable Long inquiryId,
             @AuthenticationPrincipal Long adminId,
-            @RequestBody InquiryFilterUpdateRequest request
+            @Valid @RequestBody InquiryFilterUpdateRequest request
     ) {
         var result = updateInquiryFilterUseCase.updateFilter(
                 request.toCommand(inquiryId, adminId)
@@ -147,7 +148,7 @@ public class AdminInquiryController {
     public ResponseEntity<ApiResponse<InquiryReplyResponse>> replyInquiry(
             @PathVariable Long inquiryId,
             @AuthenticationPrincipal Long adminId,
-            @RequestBody InquiryReplyRequest request
+            @Valid @RequestBody InquiryReplyRequest request
     ) {
         var result = replyInquiryUseCase.reply(
                 request.toCommand(inquiryId, adminId)
