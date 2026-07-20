@@ -137,6 +137,12 @@ public class Inquiry {
         this.updatedAt = repliedAt;
     }
 
+    // 사용자가 답변을 확인하면 로그인 첫 화면에 다시 노출하지 않는다.
+    public void hideReply(LocalDateTime updatedAt) {
+        this.replyVisible = false;
+        this.updatedAt = updatedAt;
+    }
+
     public Long getInquiryId() {
         return inquiryId;
     }
