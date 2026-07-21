@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -33,6 +34,11 @@ public class OpsChatFastApiClient {
     private static final String CALL_FAILED_DATA =
             "{\"code\": \"" + OPS_RESPONSE_FAILED_CODE + "\", \"message\": \"운영 챗봇 호출에 실패했습니다.\"}";
 
+    // 프레임 간(토큰 사이) 무응답 상한 — FastAPI 가 멈추거나 스트림을 닫지 않을 때
+    // 커넥션을 무한 점유하지 않도록 캡한다(정상 스트리밍은 프레임이 계속 흘러 안 걸림).
+    // 도구 라운드 사이 공백까지 감안한 여유값. 초과 시 아래 onErrorResume 으로 흡수.
+    private static final Duration STREAM_TIMEOUT = Duration.ofSeconds(150);
+
     private final WebClient webClient;
 
     public Flux<ServerSentEvent<String>> stream(OpsChatRequest request, String traceId) {
@@ -48,6 +54,7 @@ public class OpsChatFastApiClient {
                 .retrieve()
                 .bodyToFlux(new ParameterizedTypeReference<ServerSentEvent<String>>() {})
                 .map(this::passThrough)
+                .timeout(STREAM_TIMEOUT)
                 .onErrorResume(e -> {
                     log.warn("event=opschat_ai_call_failed traceId={} - FastAPI 운영 챗봇 호출 실패", traceId, e);
                     return Flux.just(ServerSentEvent.<String>builder()

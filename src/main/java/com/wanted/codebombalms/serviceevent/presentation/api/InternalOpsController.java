@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,6 +34,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InternalOpsController {
 
+    // 조회 기간 상한 — GROUP BY 집계가 넓은 기간에 풀스캔되는 것을 막는다 (LLM 오요청 방어)
+    private static final Duration MAX_RANGE = Duration.ofDays(31);
+
     private final OpsQueryPort opsQueryPort;
     private final BriefingService briefingService;
 
@@ -48,6 +52,7 @@ public class InternalOpsController {
             @RequestParam(required = false) String eventType
     ) {
         verify(token);
+        guardRange(start, end);
         List<OpsQueryPort.TypeCount> rows = opsQueryPort.countEvents(start, end, category, eventType);
         long total = rows.stream().mapToLong(OpsQueryPort.TypeCount::cnt).sum();
         return new CountResponse(start, end, total, rows);
@@ -62,6 +67,7 @@ public class InternalOpsController {
             @RequestParam(required = false) String eventType
     ) {
         verify(token);
+        guardRange(start, end);
         return new TimelineResponse(start, end, "hour", opsQueryPort.eventTimeline(start, end, category, eventType));
     }
 
@@ -75,6 +81,7 @@ public class InternalOpsController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         verify(token);
+        guardRange(start, end);
         return new TopIpsResponse(start, end, opsQueryPort.topIps(start, end, category, eventType, limit));
     }
 
@@ -88,6 +95,7 @@ public class InternalOpsController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         verify(token);
+        guardRange(start, end);
         return new RecentEventsResponse(start, end, opsQueryPort.recentEvents(start, end, category, eventType, limit));
     }
 
@@ -107,6 +115,16 @@ public class InternalOpsController {
                 token.getBytes(StandardCharsets.UTF_8));
         if (!matches) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 내부 토큰");
+        }
+    }
+
+    /** 조회 기간 검증 — 역순/과대 범위를 400 으로 거절 (넓은 GROUP BY 풀스캔 방어) */
+    private void guardRange(LocalDateTime start, LocalDateTime end) {
+        if (!start.isBefore(end)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "start 는 end 보다 앞이어야 합니다.");
+        }
+        if (Duration.between(start, end).compareTo(MAX_RANGE) > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "조회 기간은 최대 31일까지입니다.");
         }
     }
 
