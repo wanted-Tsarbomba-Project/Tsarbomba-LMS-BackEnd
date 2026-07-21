@@ -1,5 +1,6 @@
 package com.wanted.codebombalms.inquiry.infrastructure.client;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wanted.codebombalms.inquiry.application.command.ApplyInquiryAiAnalysisCommand;
 import com.wanted.codebombalms.inquiry.application.command.CorrectionExample;
 import com.wanted.codebombalms.inquiry.application.command.RequestInquiryAnalysisCommand;
@@ -19,7 +20,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
-/** 문의 원문을 Python AI 분석 endpoint로 비동기 전달하고, 응답을 받아 문의에 반영하는 client입니다. */
+/** 문의 원문을 Python AI 분석 endpoint로 비동기 전달하고, 응답을 받아 문의에 반영하는 client입니다.
+ *  chatbot(FastApiChatRequest)과 동일하게 필드별 {@code @JsonProperty}로 snake_case 계약을 맞춘다. */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -45,13 +47,7 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
         try {
             PythonInquiryAnalysisResponse response = webClient().post()
                     .uri(properties.getAnalyzePath())
-                    .bodyValue(new PythonInquiryAnalysisRequest(
-                            command.inquiryId(),
-                            command.userId(),
-                            command.sourceUrl(),
-                            command.content(),
-                            command.correctionExamples()
-                    ))
+                    .bodyValue(toRequest(command))
                     .retrieve()
                     .bodyToMono(PythonInquiryAnalysisResponse.class)
                     .block();
@@ -71,6 +67,16 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
         }
     }
 
+    private PythonInquiryAnalysisRequest toRequest(RequestInquiryAnalysisCommand command) {
+        return new PythonInquiryAnalysisRequest(
+                command.inquiryId(),
+                command.userId(),
+                command.sourceUrl(),
+                command.content(),
+                command.correctionExamples().stream().map(PythonCorrectionExample::from).toList()
+        );
+    }
+
     /** 문의 기능이 다른 도메인의 WebClient 설정에 의존하지 않도록 전용 client를 구성합니다. */
     private WebClient webClient() {
         HttpClient httpClient = HttpClient.create()
@@ -83,14 +89,31 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
                 .build();
     }
 
-    /** Python 문의 분석 API에 전달하는 요청 본문입니다. */
+    /** Python 문의 분석 API에 전달하는 요청 본문. 단어 하나짜리 필드(content)는 어노테이션이 필요 없다. */
     private record PythonInquiryAnalysisRequest(
-            Long inquiryId,
-            Long userId,
-            String sourceUrl,
+            @JsonProperty("inquiry_id") Long inquiryId,
+            @JsonProperty("user_id") Long userId,
+            @JsonProperty("source_url") String sourceUrl,
             String content,
-            List<CorrectionExample> correctionExamples
+            @JsonProperty("correction_examples") List<PythonCorrectionExample> correctionExamples
     ) {
+    }
+
+    /** 관리자 보정 사례 한 건. 애플리케이션 커맨드(CorrectionExample)가 JSON 표현을 몰라도 되도록 어댑터 전용 타입으로 매핑한다. */
+    private record PythonCorrectionExample(
+            @JsonProperty("field_name") String fieldName,
+            @JsonProperty("ai_value") String aiValue,
+            @JsonProperty("corrected_value") String correctedValue,
+            String reason
+    ) {
+        private static PythonCorrectionExample from(CorrectionExample example) {
+            return new PythonCorrectionExample(
+                    example.fieldName().name(),
+                    example.aiValue(),
+                    example.correctedValue(),
+                    example.reason()
+            );
+        }
     }
 
     /** Python 문의 분석 API의 응답 본문입니다. */
@@ -99,8 +122,8 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
             String summary,
             InquirySeverity severity,
             InquiryDomain domain,
-            String estimatedUrl,
-            String recommendedAction,
+            @JsonProperty("estimated_url") String estimatedUrl,
+            @JsonProperty("recommended_action") String recommendedAction,
             Boolean filtered
     ) {
 

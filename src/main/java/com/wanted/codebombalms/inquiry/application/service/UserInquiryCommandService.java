@@ -1,12 +1,10 @@
 package com.wanted.codebombalms.inquiry.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
-import com.wanted.codebombalms.inquiry.application.command.ApplyInquiryAiAnalysisCommand;
 import com.wanted.codebombalms.inquiry.application.command.CorrectionExample;
 import com.wanted.codebombalms.inquiry.application.command.CreateInquiryCommand;
 import com.wanted.codebombalms.inquiry.application.command.RequestInquiryAnalysisCommand;
 import com.wanted.codebombalms.inquiry.application.port.InquiryAnalysisClient;
-import com.wanted.codebombalms.inquiry.application.usecase.ApplyInquiryAiAnalysisUseCase;
 import com.wanted.codebombalms.inquiry.application.usecase.CreateInquiryUseCase;
 import com.wanted.codebombalms.inquiry.application.usecase.HideInquiryReplyUseCase;
 import com.wanted.codebombalms.inquiry.domain.exception.InquiryErrorCode;
@@ -23,8 +21,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserInquiryCommandService
-        implements CreateInquiryUseCase, HideInquiryReplyUseCase, ApplyInquiryAiAnalysisUseCase {
+public class UserInquiryCommandService implements CreateInquiryUseCase, HideInquiryReplyUseCase {
 
     // 운영 데이터가 쌓일수록 AI 분석 컨텍스트가 좋아지도록, 지금 규모에서는 사실상 전체 보정 이력을 보낸다는 의미의 상한이다.
     private static final int MAX_CORRECTION_EXAMPLES_FOR_AI_CONTEXT = 1000;
@@ -55,26 +52,6 @@ public class UserInquiryCommandService
         ));
 
         return saved;
-    }
-
-    @Override
-    // Python AI 분석 응답을 받아 문의의 분류/요약/추정 URL/필터링 여부를 반영한다.
-    public Inquiry applyAiAnalysis(ApplyInquiryAiAnalysisCommand command) {
-        Inquiry inquiry = inquiryRepository.findById(command.inquiryId())
-                .orElseThrow(() -> new NotFoundException(InquiryErrorCode.INQUIRY_NOT_FOUND));
-
-        inquiry.applyAiAnalysis(
-                command.title(),
-                command.aiSummary(),
-                command.severity(),
-                command.domain(),
-                command.estimatedUrl(),
-                command.aiRecommendedAction(),
-                command.filtered(),
-                LocalDateTime.now()
-        );
-
-        return inquiryRepository.save(inquiry);
     }
 
     @Override
