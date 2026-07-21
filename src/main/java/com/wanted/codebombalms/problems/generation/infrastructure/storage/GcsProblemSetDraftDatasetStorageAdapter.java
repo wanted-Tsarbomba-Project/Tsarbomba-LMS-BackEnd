@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -54,7 +55,9 @@ public class GcsProblemSetDraftDatasetStorageAdapter implements
                     .setContentType(CSV_CONTENT_TYPE)
                     .build();
 
-            getStorage().create(blobInfo, command.content());
+            try (InputStream content = command.content()) {
+                getStorage().createFrom(blobInfo, content);
+            }
 
             return new StoredProblemSetDraftDataset(
                     originalFileName,

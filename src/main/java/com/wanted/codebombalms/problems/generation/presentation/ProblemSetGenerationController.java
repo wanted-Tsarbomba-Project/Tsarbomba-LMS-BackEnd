@@ -1,9 +1,12 @@
 package com.wanted.codebombalms.problems.generation.presentation;
 
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseCode;
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponseMessage;
+import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
+import com.wanted.codebombalms.problems.generation.application.command.GenerateProblemSetDraftCommand;
 import com.wanted.codebombalms.problems.generation.application.result.ProblemSetDraftResult;
 import com.wanted.codebombalms.problems.generation.application.usecase.GenerateProblemSetDraftUseCase;
 import com.wanted.codebombalms.problems.generation.presentation.api.request.ProblemSetDraftGenerateRequest;
@@ -24,6 +27,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Tag(
         name = "문제세트 AI 초안 생성",
@@ -67,9 +72,7 @@ public class ProblemSetGenerationController {
             @RequestPart("datasetFile") MultipartFile datasetFile
     ) {
         ProblemSetDraftResult result = generateProblemSetDraftUseCase.generate(
-                userId,
-                request,
-                datasetFile
+                toCommand(userId, request, datasetFile)
         );
 
         return ResponseEntity.ok(ApiResponse.success(
@@ -77,5 +80,39 @@ public class ProblemSetGenerationController {
                 ApiResponseMessage.SUCCESS,
                 ProblemSetDraftGenerateResponse.from(result)
         ));
+    }
+
+    private GenerateProblemSetDraftCommand toCommand(
+            Long operatorId,
+            ProblemSetDraftGenerateRequest request,
+            MultipartFile datasetFile
+    ) {
+        if (datasetFile == null || datasetFile.isEmpty()) {
+            throw new ValidationException(
+                    ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE
+            );
+        }
+
+        try {
+            return new GenerateProblemSetDraftCommand(
+                    operatorId,
+                    request.question(),
+                    request.dataFileName(),
+                    request.topic(),
+                    request.categoryName(),
+                    request.difficulty(),
+                    request.problemCount(),
+                    request.subProblemCount(),
+                    datasetFile.getOriginalFilename(),
+                    datasetFile.getContentType(),
+                    datasetFile.getInputStream(),
+                    datasetFile.getSize()
+            );
+        } catch (IOException e) {
+            throw new ValidationException(
+                    ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE,
+                    e
+            );
+        }
     }
 }

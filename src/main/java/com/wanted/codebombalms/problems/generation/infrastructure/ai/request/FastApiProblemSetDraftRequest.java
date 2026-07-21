@@ -1,7 +1,7 @@
 package com.wanted.codebombalms.problems.generation.infrastructure.ai.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.wanted.codebombalms.problems.generation.application.command.GenerateProblemSetDraftCommand;
+import com.wanted.codebombalms.problems.generation.application.command.GenerateProblemSetDraftAiCommand;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ public record FastApiProblemSetDraftRequest(
         List<Object> history
 ) {
 
-    public static FastApiProblemSetDraftRequest from(GenerateProblemSetDraftCommand command) {
+    public static FastApiProblemSetDraftRequest from(GenerateProblemSetDraftAiCommand command) {
         return new FastApiProblemSetDraftRequest(
                 command.question(),
                 command.operatorId(),

@@ -1,19 +1,14 @@
 package com.wanted.codebombalms.problems.generation.application.command;
 
-import java.io.InputStream;
-
-public record GenerateProblemSetDraftCommand(
+public record GenerateProblemSetDraftAiCommand(
         Long operatorId,
         String question,
+        String datasetUrl,
         String dataFileName,
         String topic,
         String categoryName,
         String difficulty,
         int problemCount,
-        int subProblemCount,
-        String originalFileName,
-        String contentType,
-        InputStream datasetContent,
-        long datasetFileSize
+        int subProblemCount
 ) {
 }

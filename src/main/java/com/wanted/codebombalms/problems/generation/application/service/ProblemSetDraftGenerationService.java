@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.problems.generation.application.service;
 
 import com.wanted.codebombalms.global.domain.common.error.exception.ValidationException;
+import com.wanted.codebombalms.problems.generation.application.command.GenerateProblemSetDraftAiCommand;
 import com.wanted.codebombalms.problems.generation.application.command.GenerateProblemSetDraftCommand;
 import com.wanted.codebombalms.problems.generation.application.command.StoreProblemSetDraftDatasetCommand;
 import com.wanted.codebombalms.problems.generation.application.port.GenerateProblemSetDraftAiPort;
@@ -9,13 +10,10 @@ import com.wanted.codebombalms.problems.generation.application.port.StoreProblem
 import com.wanted.codebombalms.problems.generation.application.result.ProblemSetDraftResult;
 import com.wanted.codebombalms.problems.generation.application.usecase.GenerateProblemSetDraftUseCase;
 import com.wanted.codebombalms.problems.generation.domain.StoredProblemSetDraftDataset;
-import com.wanted.codebombalms.problems.generation.presentation.api.request.ProblemSetDraftGenerateRequest;
 import com.wanted.codebombalms.problems.exception.ProblemErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.UUID;
 
 @Service
@@ -27,42 +25,36 @@ public class ProblemSetDraftGenerationService implements GenerateProblemSetDraft
     private final GenerateProblemSetDraftDatasetUrlPort generateProblemSetDraftDatasetUrlPort;
 
     @Override
-    public ProblemSetDraftResult generate(
-            Long operatorId,
-            ProblemSetDraftGenerateRequest request,
-            MultipartFile datasetFile
-    ) {
-        validateDatasetFile(datasetFile);
+    public ProblemSetDraftResult generate(GenerateProblemSetDraftCommand command) {
+        validateDatasetFile(command);
 
         String draftToken = UUID.randomUUID().toString();
         StoredProblemSetDraftDataset storedDataset = storeProblemSetDraftDataset(
-                operatorId,
+                command.operatorId(),
                 draftToken,
-                datasetFile
+                command
         );
         String datasetUrl = generateProblemSetDraftDatasetUrlPort.generate(
                 storedDataset.objectName()
         );
 
-        GenerateProblemSetDraftCommand command = new GenerateProblemSetDraftCommand(
-                operatorId,
-                request.question(),
+        GenerateProblemSetDraftAiCommand aiCommand = new GenerateProblemSetDraftAiCommand(
+                command.operatorId(),
+                command.question(),
                 datasetUrl,
-                draftToken,
-                storedDataset.objectName(),
-                resolveDataFileName(request, storedDataset),
-                request.topic(),
-                request.categoryName(),
-                request.difficulty(),
-                request.problemCount(),
-                request.subProblemCount()
+                resolveDataFileName(command, storedDataset),
+                command.topic(),
+                command.categoryName(),
+                command.difficulty(),
+                command.problemCount(),
+                command.subProblemCount()
         );
 
-        return generateProblemSetDraftAiPort.generate(command);
+        return generateProblemSetDraftAiPort.generate(aiCommand);
     }
 
-    private void validateDatasetFile(MultipartFile datasetFile) {
-        if (datasetFile == null || datasetFile.isEmpty()) {
+    private void validateDatasetFile(GenerateProblemSetDraftCommand command) {
+        if (command.datasetContent() == null || command.datasetFileSize() <= 0) {
             throw new ValidationException(
                     ProblemErrorCode.PROBLEM_DATASET_INVALID_FILE
             );
@@ -72,33 +64,26 @@ public class ProblemSetDraftGenerationService implements GenerateProblemSetDraft
     private StoredProblemSetDraftDataset storeProblemSetDraftDataset(
             Long operatorId,
             String draftToken,
-            MultipartFile datasetFile
+            GenerateProblemSetDraftCommand command
     ) {
-        try {
-            return storeProblemSetDraftDatasetPort.store(
-                    new StoreProblemSetDraftDatasetCommand(
-                            operatorId,
-                            draftToken,
-                            datasetFile.getOriginalFilename(),
-                            datasetFile.getContentType(),
-                            datasetFile.getBytes(),
-                            datasetFile.getSize()
-                    )
-            );
-        } catch (IOException e) {
-            throw new ValidationException(
-                    ProblemErrorCode.PROBLEM_DATASET_UPLOAD_FAILED,
-                    e
-            );
-        }
+        return storeProblemSetDraftDatasetPort.store(
+                new StoreProblemSetDraftDatasetCommand(
+                        operatorId,
+                        draftToken,
+                        command.originalFileName(),
+                        command.contentType(),
+                        command.datasetContent(),
+                        command.datasetFileSize()
+                )
+        );
     }
 
     private String resolveDataFileName(
-            ProblemSetDraftGenerateRequest request,
+            GenerateProblemSetDraftCommand command,
             StoredProblemSetDraftDataset storedDataset
     ) {
-        if (request.dataFileName() != null && !request.dataFileName().isBlank()) {
-            return request.dataFileName();
+        if (command.dataFileName() != null && !command.dataFileName().isBlank()) {
+            return command.dataFileName();
         }
 
         return storedDataset.originalFileName();
