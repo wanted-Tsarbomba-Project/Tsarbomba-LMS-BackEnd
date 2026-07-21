@@ -27,6 +27,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
     interface TypeCountRow { String getEventType(); long getCnt(); }
     interface IpCountRow { String getIpAddress(); long getCnt(); }
     interface RouteAnomalyRow { String getUri(); String getEventType(); long getCnt(); Integer getMaxDuration(); }
+    interface HttpStatusBreakdownRow { String getUri(); String getEventType(); Integer getStatus(); long getCnt(); }
     interface HourlyRow { int getHr(); long getCnt(); }
     interface ConcurrentPeakRow { long getPeak(); LocalDateTime getOccurredAt(); }
 
@@ -98,6 +99,19 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
     List<RouteAnomalyRow> findHttpAnomalies(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query(value = """
+            SELECT uri AS uri, event_type AS eventType, http_status AS status, COUNT(*) AS cnt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND category = 'http_anomaly'
+              AND http_status >= 400
+              AND uri IN (:uris)
+            GROUP BY uri, event_type, http_status
+            """, nativeQuery = true)
+    List<HttpStatusBreakdownRow> findHttpStatusBreakdown(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("uris") List<String> uris);
+
+    @Query(value = """
             SELECT HOUR(created_at) AS hr, COUNT(*) AS cnt
             FROM service_event
             WHERE created_at >= :start AND created_at < :end
@@ -116,4 +130,73 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             LIMIT 1
             """, nativeQuery = true)
     ConcurrentPeakRow findConcurrentPeak(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // ===== 이하 운영 Q&A 챗봇(opschat) 도구용 — 전부 읽기 전용, 필터는 null=전체 =====
+    // LIMIT 고정 상수 규칙 유지: 동적 limit 은 OpsQueryAdapter 에서 subList 로 자른다.
+
+    interface TimelineBucketRow { String getBucket(); long getCnt(); }
+    interface RecentEventRow {
+        String getCategory(); String getEventType(); Long getUserId(); String getIpAddress();
+        String getUri(); Integer getHttpStatus(); Integer getDurationMs(); String getTraceId();
+        LocalDateTime getCreatedAt();
+    }
+
+    @Query(value = """
+            SELECT event_type AS eventType, COUNT(*) AS cnt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND (:category IS NULL OR category = :category)
+              AND (:eventType IS NULL OR event_type = :eventType)
+            GROUP BY event_type
+            ORDER BY cnt DESC
+            """, nativeQuery = true)
+    List<TypeCountRow> countByTypeFiltered(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("category") String category, @Param("eventType") String eventType);
+
+    /** 시간(hour) 버킷 추이 — 최대 7일치(168버킷) */
+    @Query(value = """
+            SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:00') AS bucket, COUNT(*) AS cnt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND (:category IS NULL OR category = :category)
+              AND (:eventType IS NULL OR event_type = :eventType)
+            GROUP BY bucket
+            ORDER BY bucket
+            LIMIT 168
+            """, nativeQuery = true)
+    List<TimelineBucketRow> eventTimeline(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("category") String category, @Param("eventType") String eventType);
+
+    @Query(value = """
+            SELECT ip_address AS ipAddress, COUNT(*) AS cnt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND ip_address IS NOT NULL
+              AND (:category IS NULL OR category = :category)
+              AND (:eventType IS NULL OR event_type = :eventType)
+            GROUP BY ip_address
+            ORDER BY cnt DESC
+            LIMIT 20
+            """, nativeQuery = true)
+    List<IpCountRow> topIpsFiltered(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("category") String category, @Param("eventType") String eventType);
+
+    /** detail 컬럼 미포함(개인정보 방침) — opschat recent_events 도구 전용 */
+    @Query(value = """
+            SELECT category AS category, event_type AS eventType, user_id AS userId,
+                   ip_address AS ipAddress, uri AS uri, http_status AS httpStatus,
+                   duration_ms AS durationMs, trace_id AS traceId, created_at AS createdAt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND (:category IS NULL OR category = :category)
+              AND (:eventType IS NULL OR event_type = :eventType)
+            ORDER BY created_at DESC
+            LIMIT 20
+            """, nativeQuery = true)
+    List<RecentEventRow> recentEvents(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("category") String category, @Param("eventType") String eventType);
 }

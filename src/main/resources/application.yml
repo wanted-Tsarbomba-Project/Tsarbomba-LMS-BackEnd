@@ -95,6 +95,18 @@ cors:
 fastapi:
   url: ${FASTAPI_URL:http://localhost:8000}
 
+# FastAPI opschat 도구 → /internal/ops/* 호출용 공유 시크릿 (비어 있으면 fail-closed 전부 401)
+internal:
+  api-token: ${INTERNAL_API_TOKEN:}
+
+learning:
+  recommendation:
+    python:
+      enabled: ${LEARNING_RECOMMENDATION_ENABLED:true}
+      rank-path: ${LEARNING_RECOMMENDATION_RANK_PATH:/internal/learning/final-problem-sets/rank}
+      connect-timeout-ms: ${LEARNING_RECOMMENDATION_CONNECT_TIMEOUT_MS:3000}
+      read-timeout-ms: ${LEARNING_RECOMMENDATION_READ_TIMEOUT_MS:15000}
+
 chat:
   max-history-messages: 20
 

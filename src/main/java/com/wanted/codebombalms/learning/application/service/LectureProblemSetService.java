@@ -186,7 +186,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 lectureProblemSetId,
                 problemId
         );
-        validateAttempt(problem.attemptLimit(), problem.retriable(), previousAttemptCount);
+        validateAttempt(problem.retriable(), previousAttemptCount);
 
         var gradingResult = learningProblemGradingPort.grade(
                 lectureProblemSet.problemSetId(),
@@ -232,10 +232,8 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
             }
         }
 
-        Integer remainingAttemptCount = calculateRemainingAttempts(problem.attemptLimit(), attemptNo);
-        boolean canRetry = !gradingResult.correct()
-                && Boolean.TRUE.equals(problem.retriable())
-                && (remainingAttemptCount == null || remainingAttemptCount > 0);
+        Integer remainingAttemptCount = null;
+        boolean canRetry = !gradingResult.correct() && Boolean.TRUE.equals(problem.retriable());
 
         return new SubmissionView(
                 savedSubmission.lectureProblemSubmissionId(),
@@ -433,17 +431,10 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         return progress.getCurrentProblemNumber().equals(problemNumber);
     }
 
-    private void validateAttempt(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {
+    private void validateAttempt(Boolean retriable, int previousAttemptCount) {
         if (!Boolean.TRUE.equals(retriable) && previousAttemptCount > 0) {
             throw new ValidationException(SubmissionErrorCode.PROBLEM_NOT_RETRIABLE);
         }
-        if (attemptLimit != null && previousAttemptCount >= attemptLimit) {
-            throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
-        }
-    }
-
-    private Integer calculateRemainingAttempts(Integer attemptLimit, int attemptNo) {
-        return attemptLimit == null ? null : Math.max(attemptLimit - attemptNo, 0);
     }
 
     private Long findNextProblemId(

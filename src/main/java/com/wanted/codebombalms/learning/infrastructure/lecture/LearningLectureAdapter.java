@@ -54,7 +54,11 @@ public class LearningLectureAdapter implements LearningLecturePort {
         try {
             return lectureQueryUseCase.findLecturesByCourseId(courseId)
                     .stream()
-                    .map(lecture -> new LearningLecture(lecture.getLectureId(), lecture.getTitle()))
+                    .map(lecture -> new LearningLecture(
+                            lecture.getLectureId(),
+                            lecture.getTitle(),
+                            lecture.getDescription()
+                    ))
                     .toList();
         } catch (NotFoundException e) {
             throw new NotFoundException(LearningErrorCode.COURSE_NOT_FOUND, e);

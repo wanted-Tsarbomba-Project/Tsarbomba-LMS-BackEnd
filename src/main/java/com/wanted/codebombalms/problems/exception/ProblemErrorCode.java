@@ -3,7 +3,6 @@ package com.wanted.codebombalms.problems.exception;
 import com.wanted.codebombalms.global.domain.common.error.ErrorCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
@@ -14,19 +13,19 @@ public enum ProblemErrorCode implements ErrorCode {
     ACCESS_DENIED("PRB-PBL-002", "문제 접근 권한이 없습니다."),
     PROBLEM_NOT_UNLOCKED("PRB-PBL-003", "이전 문제를 먼저 풀어야 합니다."),
     PROBLEM_HAS_SUBMISSION("PRB-PBL-004", "제출 기록이 존재합니다."),
-    PROBLEM_NOT_IN_SET("PRB-PBL-005", "해당 문제 세트에 속한 문제가 아닙니다."),
+    PROBLEM_NOT_IN_SET("PRB-PBL-005", "해당 문제세트에 속한 문제가 아닙니다."),
     PROBLEM_TITLE_REQUIRED("PRB-PBL-006", "소문제 제목은 필수입니다."),
     PROBLEM_CONTENT_REQUIRED("PRB-PBL-007", "소문제 내용은 필수입니다."),
     PROBLEM_REQUIRED("PRB-PBL-009", "소문제는 1개 이상 필요합니다."),
     PROBLEM_POINT_REQUIRED("PRB-PBL-010", "문제 포인트는 1 이상이어야 합니다."),
 
     // 문제 세트 (PRB-SET)
-    PROBLEM_SET_NOT_FOUND("PRB-SET-001", "문제 세트를 찾을 수 없습니다."),
+    PROBLEM_SET_NOT_FOUND("PRB-SET-001", "문제세트를 찾을 수 없습니다."),
     ATTEMPT_LIMIT_EXCEEDED("PRB-SET-002", "제출 가능 횟수를 초과했습니다."),
-    ALREADY_COMPLETED("PRB-SET-003", "이미 완료한 문제 세트입니다."),
-    PROBLEM_SET_NOT_COMPLETED("PRB-SET-004", "문제 세트를 끝까지 풀지 않았습니다."),
+    ALREADY_COMPLETED("PRB-SET-003", "이미 완료한 문제세트입니다."),
+    PROBLEM_SET_NOT_COMPLETED("PRB-SET-004", "문제세트를 끝까지 풀지 않았습니다."),
     NO_CURRENT_PROBLEM("PRB-SET-005", "현재 풀 문제가 없습니다."),
-    PROBLEM_SET_TITLE_REQUIRED("PRB-SET-006", "문제 세트 제목은 필수입니다."),
+    PROBLEM_SET_TITLE_REQUIRED("PRB-SET-006", "문제세트 제목은 필수입니다."),
 
     // 카테고리 (PRB-CAT)
     CATEGORY_NOT_FOUND("PRB-CAT-001", "문제 분야를 찾을 수 없습니다."),
@@ -40,18 +39,19 @@ public enum ProblemErrorCode implements ErrorCode {
 
     // 데이터셋 (PRB-DAT)
     PROBLEM_DATASET_NOT_FOUND("PRB-DAT-001", "데이터셋을 찾을 수 없습니다."),
-    PROBLEM_DATASET_ALREADY_CONNECTED("PRB-DAT-002", "이미 문제 세트에 연결된 데이터셋입니다."),
+    PROBLEM_DATASET_ALREADY_CONNECTED("PRB-DAT-002", "이미 문제세트에 연결된 데이터셋입니다."),
     PROBLEM_DATASET_INVALID_PROBLEM_TYPE("PRB-DAT-003", "코드 실행형 문제에만 데이터셋을 연결할 수 있습니다."),
     PROBLEM_DATASET_INVALID_FILE("PRB-DAT-004", "CSV 파일만 업로드할 수 있습니다."),
     PROBLEM_DATASET_UPLOAD_FAILED("PRB-DAT-005", "데이터셋 업로드에 실패했습니다."),
+    PROBLEM_SET_DATASET_CONNECTION_FAILED("PRB-DAT-006", "문제세트와 데이터셋 연결에 실패했습니다."),
     PROBLEM_DATASET_ACCESS_URL_FAILED("PRB-DAT-007", "데이터셋 접근 URL 생성에 실패했습니다."),
 
-    // 테스트케이스 (PRB-TC)
-    PROBLEM_TEST_CASE_NOT_FOUND("PRB-TC-001", "테스트케이스를 찾을 수 없습니다."),
-    PROBLEM_TEST_CASE_INVALID_INPUT("PRB-TC-002", "테스트케이스 입력값이 올바르지 않습니다."),
-    PROBLEM_TEST_CASE_ALREADY_EXISTS("PRB-TC-003", "이미 등록된 테스트케이스가 있습니다."),
-    PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE("PRB-TC-004", "코드 문제에만 테스트케이스를 등록할 수 있습니다."),
-    PROBLEM_TEST_CASE_DUPLICATE_ORDER( "PRB-TC-006", "이미 같은 순서의 테스트케이스가 존재합니다."),
+    // 테스트 케이스 (PRB-TC)
+    PROBLEM_TEST_CASE_NOT_FOUND("PRB-TC-001", "테스트 케이스를 찾을 수 없습니다."),
+    PROBLEM_TEST_CASE_INVALID_INPUT("PRB-TC-002", "테스트 케이스 입력값이 올바르지 않습니다."),
+    PROBLEM_TEST_CASE_ALREADY_EXISTS("PRB-TC-003", "이미 등록된 테스트 케이스가 있습니다."),
+    PROBLEM_TEST_CASE_INVALID_PROBLEM_TYPE("PRB-TC-004", "코드 문제에만 테스트 케이스를 등록할 수 있습니다."),
+    PROBLEM_TEST_CASE_DUPLICATE_ORDER("PRB-TC-006", "이미 같은 순서의 테스트 케이스가 존재합니다."),
 
     // 코드 실행 (PRB-EXE)
     PROBLEM_CODE_INVALID_INPUT("PRB-EXE-001", "코드 값이 비어 있습니다."),
@@ -64,8 +64,8 @@ public enum ProblemErrorCode implements ErrorCode {
     INVALID_INPUT("PRB-001", "필수값이 누락되었습니다."),
     SERVER_ERROR("PRB-002", "문제 도메인 처리 중 서버 오류가 발생했습니다."),
 
-    // 데이터셋 (PRB-DAT)
-    PROBLEM_SET_DATASET_CONNECTION_FAILED("PRB-DAT-006", "문제 세트와 데이터셋 연결에 실패했습니다.");
+    // AI 문제세트 생성 (PRB-GEN)
+    PROBLEM_SET_DRAFT_GENERATION_FAILED("PRB-GEN-001", "AI 문제세트 초안 생성에 실패했습니다.");
 
     private final String code;
     private final String message;

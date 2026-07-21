@@ -36,6 +36,10 @@ public class LearningCourseAdapter implements LearningCoursePort {
     }
 
     private LearningCourse toLearningCourse(Course course) {
-        return new LearningCourse(course.getCourseId(), course.getTitle());
+        return new LearningCourse(
+                course.getCourseId(),
+                course.getTitle(),
+                course.getDescription()
+        );
     }
 }
