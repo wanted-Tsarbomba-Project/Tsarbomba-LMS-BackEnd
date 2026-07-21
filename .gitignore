@@ -120,3 +120,7 @@ architecture-user-auth.html
 /src/main/resources/db/seed/03_trusted_device_loadtest.sql
 /rds-tunnel.sh
 /src/main/resources/db/schema/ops_briefing.sql
+
+### Python generated files ###
+__pycache__/
+*.pyc
