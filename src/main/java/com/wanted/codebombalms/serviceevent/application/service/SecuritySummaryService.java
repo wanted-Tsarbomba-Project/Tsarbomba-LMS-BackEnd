@@ -99,13 +99,19 @@ public class SecuritySummaryService {
                 enrollmentsDelta
         );
 
+        List<SecuritySummaryQueryPort.RouteAnomaly> anomalies = summaryQuery.findHttpAnomalies(start, end);
+        List<String> anomalyRoutes = anomalies.stream()
+                .map(SecuritySummaryQueryPort.RouteAnomaly::route)
+                .distinct()
+                .toList();
+        List<SecuritySummaryQueryPort.StatusBreakdown> breakdowns =
+                summaryQuery.findHttpStatusBreakdown(start, end, anomalyRoutes);
+
         return new SecuritySummaryResult(
                 period.code,
                 kpi,
                 toDomainCounts(categoryCounts),
-                toHttpAnomalies(
-                        summaryQuery.findHttpAnomalies(start, end),
-                        summaryQuery.findHttpStatusBreakdown(start, end)),
+                toHttpAnomalies(anomalies, breakdowns),
                 toRiskIps(summaryQuery.findTopRiskIps(start, end)),
                 toHourly(summaryQuery.hourlyDistribution(start, end))
         );
