@@ -27,6 +27,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
     interface TypeCountRow { String getEventType(); long getCnt(); }
     interface IpCountRow { String getIpAddress(); long getCnt(); }
     interface RouteAnomalyRow { String getUri(); String getEventType(); long getCnt(); Integer getMaxDuration(); }
+    interface HttpStatusBreakdownRow { String getUri(); String getEventType(); Integer getStatus(); long getCnt(); }
     interface HourlyRow { int getHr(); long getCnt(); }
     interface ConcurrentPeakRow { long getPeak(); LocalDateTime getOccurredAt(); }
 
@@ -96,6 +97,17 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             LIMIT 10
             """, nativeQuery = true)
     List<RouteAnomalyRow> findHttpAnomalies(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query(value = """
+            SELECT uri AS uri, event_type AS eventType, http_status AS status, COUNT(*) AS cnt
+            FROM service_event
+            WHERE created_at >= :start AND created_at < :end
+              AND category = 'http_anomaly'
+              AND http_status IS NOT NULL
+            GROUP BY uri, event_type, http_status
+            """, nativeQuery = true)
+    List<HttpStatusBreakdownRow> findHttpStatusBreakdown(
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query(value = """
             SELECT HOUR(created_at) AS hr, COUNT(*) AS cnt
