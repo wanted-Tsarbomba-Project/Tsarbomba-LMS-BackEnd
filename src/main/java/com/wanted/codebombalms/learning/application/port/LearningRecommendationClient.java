@@ -6,6 +6,8 @@ import java.util.List;
 /** Python FastAPI의 강좌 완료 문제세트 추천을 호출하는 출력 포트입니다. */
 public interface LearningRecommendationClient {
 
+    int MAX_RECOMMENDATION_COUNT = 2;
+
     LearningRecommendationResult rankFinalProblemSets(LearningRecommendationRequest request);
 
     record LearningRecommendationRequest(

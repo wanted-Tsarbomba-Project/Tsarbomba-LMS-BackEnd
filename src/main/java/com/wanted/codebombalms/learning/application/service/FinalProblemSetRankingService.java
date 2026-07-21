@@ -39,7 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class FinalProblemSetRankingService implements FinalProblemSetRankingUseCase {
 
-    private static final int RECOMMENDATION_COUNT = 2;
     private static final int MAX_EXCLUDED_PROBLEM_SET_COUNT = 100;
     private static final int MAX_LECTURE_CONTEXT_COUNT = 100;
     private static final int MAX_TITLE_LENGTH = 100;
@@ -57,6 +56,39 @@ public class FinalProblemSetRankingService implements FinalProblemSetRankingUseC
     @Override
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LearningRecommendationResult rankFinalProblemSets(
+            Long userId,
+            Long courseId,
+            Long lectureId,
+            Long problemCategoryId,
+            Set<Long> excludedProblemSetIds,
+            boolean operator
+    ) {
+        try {
+            return requestRanking(
+                    userId,
+                    courseId,
+                    lectureId,
+                    problemCategoryId,
+                    excludedProblemSetIds,
+                    operator
+            );
+        } catch (ExternalServiceException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            log.warn(
+                    "event=learning_recommendation_preparation_failed courseId={} lectureId={} exceptionType={}",
+                    courseId,
+                    lectureId,
+                    exception.getClass().getSimpleName()
+            );
+            throw new ExternalServiceException(
+                    LearningErrorCode.LEARNING_RECOMMENDATION_UNAVAILABLE,
+                    exception
+            );
+        }
+    }
+
+    private LearningRecommendationResult requestRanking(
             Long userId,
             Long courseId,
             Long lectureId,
@@ -82,7 +114,7 @@ public class FinalProblemSetRankingService implements FinalProblemSetRankingUseC
                 lectureId,
                 problemCategoryId,
                 excludedProblemSetIds.stream().sorted().toList(),
-                RECOMMENDATION_COUNT,
+                LearningRecommendationClient.MAX_RECOMMENDATION_COUNT,
                 profile,
                 context
         );

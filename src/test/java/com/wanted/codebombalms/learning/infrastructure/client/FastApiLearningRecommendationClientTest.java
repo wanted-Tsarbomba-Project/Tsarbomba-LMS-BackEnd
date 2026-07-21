@@ -8,6 +8,7 @@ import com.wanted.codebombalms.learning.application.port.LearningRecommendationC
 import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.LearningRecommendationRequest;
 import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.LectureContext;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -97,6 +98,43 @@ class FastApiLearningRecommendationClientTest {
 
         assertThrows(ExternalServiceException.class, () ->
                 client.rankFinalProblemSets(request())
+        );
+    }
+
+    @Test
+    void rankFinalProblemSets_rejectsCall_whenRecommendationIsDisabled() {
+        LearningRecommendationProperties properties = new LearningRecommendationProperties();
+        properties.setEnabled(false);
+        FastApiLearningRecommendationClient disabledClient =
+                new FastApiLearningRecommendationClient(
+                        properties,
+                        server.url("/").toString()
+                );
+
+        assertThrows(ExternalServiceException.class, () ->
+                disabledClient.rankFinalProblemSets(request())
+        );
+
+        assertEquals(0, server.getRequestCount());
+    }
+
+    @Test
+    void rankFinalProblemSets_convertsReadTimeoutToFallbackSignal() {
+        LearningRecommendationProperties properties = new LearningRecommendationProperties();
+        properties.setReadTimeoutMs(50);
+        FastApiLearningRecommendationClient timeoutClient =
+                new FastApiLearningRecommendationClient(
+                        properties,
+                        server.url("/").toString()
+                );
+        server.enqueue(new MockResponse()
+                .setResponseCode(200)
+                .addHeader("Content-Type", "application/json")
+                .setBody("{}")
+                .setBodyDelay(500, TimeUnit.MILLISECONDS));
+
+        assertThrows(ExternalServiceException.class, () ->
+                timeoutClient.rankFinalProblemSets(request())
         );
     }
 

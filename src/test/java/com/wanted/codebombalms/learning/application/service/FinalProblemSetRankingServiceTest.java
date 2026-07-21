@@ -1,5 +1,7 @@
 package com.wanted.codebombalms.learning.application.service;
 
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
+import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.learning.application.port.LearningCourseProblemPort;
 import com.wanted.codebombalms.learning.application.port.LearningCoursePort;
 import com.wanted.codebombalms.learning.application.port.LearningLecture;
@@ -13,10 +15,13 @@ import com.wanted.codebombalms.learning.application.port.LearningRecommendationC
 import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.LearningRecommendationResult;
 import com.wanted.codebombalms.learning.domain.model.LearningCourse;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemSubmission;
+import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemSubmissionRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +30,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -138,6 +145,79 @@ class FinalProblemSetRankingServiceTest {
         assertEquals(LearningRecommendationClient.LearningProfile.empty(),
                 captor.getValue().learningProfile());
         verify(learningCourseProblemPort, never()).findMainLectureProblemSetIdsByCourse(1L);
+    }
+
+    @Test
+    void rankFinalProblemSets_rejectsMoreThanMaximumExcludedProblemSets() {
+        Set<Long> excludedProblemSetIds = LongStream.rangeClosed(1, 101)
+                .boxed()
+                .collect(Collectors.toSet());
+
+        assertThrows(ExternalServiceException.class, () ->
+                service.rankFinalProblemSets(
+                        20L,
+                        1L,
+                        10L,
+                        3001L,
+                        excludedProblemSetIds,
+                        false
+                )
+        );
+
+        verify(learningRecommendationClient, never())
+                .rankFinalProblemSets(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void rankFinalProblemSets_convertsProfileAssemblyFailureToFallbackSignal() {
+        NotFoundException cause = new NotFoundException(
+                LearningErrorCode.LECTURE_PROBLEM_SET_NOT_FOUND
+        );
+        given(learningCourseProblemPort.findMainLectureProblemSetIdsByCourse(1L))
+                .willThrow(cause);
+
+        ExternalServiceException exception = assertThrows(
+                ExternalServiceException.class,
+                () -> service.rankFinalProblemSets(
+                        20L,
+                        1L,
+                        10L,
+                        3001L,
+                        Set.of(),
+                        false
+                )
+        );
+
+        assertSame(cause, exception.getCause());
+        verify(learningRecommendationClient, never())
+                .rankFinalProblemSets(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void rankFinalProblemSets_propagatesRecommendationClientFallbackSignal() {
+        given(learningCoursePort.findActiveCourse(1L))
+                .willReturn(new LearningCourse(1L, "Python", null));
+        given(learningLecturePort.findLecturesByCourse(1L)).willReturn(List.of());
+        ExternalServiceException cause = new ExternalServiceException(
+                LearningErrorCode.LEARNING_RECOMMENDATION_UNAVAILABLE
+        );
+        given(learningRecommendationClient.rankFinalProblemSets(
+                org.mockito.ArgumentMatchers.any()
+        )).willThrow(cause);
+
+        ExternalServiceException exception = assertThrows(
+                ExternalServiceException.class,
+                () -> service.rankFinalProblemSets(
+                        null,
+                        1L,
+                        10L,
+                        3001L,
+                        Set.of(),
+                        true
+                )
+        );
+
+        assertSame(cause, exception);
     }
 
     private LearningProblemPort.ProblemSetForLearning problemSet(

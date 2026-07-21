@@ -21,7 +21,6 @@ import reactor.netty.http.client.HttpClient;
 @Component
 public class FastApiLearningRecommendationClient implements LearningRecommendationClient {
 
-    private static final int MAX_RECOMMENDATION_COUNT = 2;
     private static final int MAX_REASON_LENGTH = 300;
     private static final int MAX_RESPONSE_IN_MEMORY_BYTES = 512 * 1024;
 
@@ -78,7 +77,8 @@ public class FastApiLearningRecommendationClient implements LearningRecommendati
                 || response.algorithm() == null
                 || response.algorithm().isBlank()
                 || response.recommendations() == null
-                || response.recommendations().size() > MAX_RECOMMENDATION_COUNT) {
+                || response.recommendations().size()
+                > LearningRecommendationClient.MAX_RECOMMENDATION_COUNT) {
             throw new ExternalServiceException(LearningErrorCode.LEARNING_RECOMMENDATION_INVALID_RESPONSE);
         }
 

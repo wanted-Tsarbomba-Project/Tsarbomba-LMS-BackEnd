@@ -3,6 +3,7 @@ package com.wanted.codebombalms.lecture.application.service;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
+import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient;
 import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.LearningRecommendationResult;
 import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.RankedProblemSet;
 import com.wanted.codebombalms.learning.application.usecase.FinalProblemSetRankingUseCase;
@@ -33,8 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FinalProblemSetRecommendationService implements FinalProblemSetRecommendationUseCase {
-
-    private static final int MAX_RECOMMENDATION_COUNT = 2;
 
     private final LectureRepository lectureRepository;
     private final LectureProblemSetRepository lectureProblemSetRepository;
@@ -142,7 +141,7 @@ public class FinalProblemSetRecommendationService implements FinalProblemSetReco
         return finalProblemSetCandidatePort.findCandidates(
                         lecture.getProblemCategoryId(),
                         excludedProblemSetIds,
-                        MAX_RECOMMENDATION_COUNT
+                        LearningRecommendationClient.MAX_RECOMMENDATION_COUNT
                 )
                 .stream()
                 .map(this::toFallbackView)
