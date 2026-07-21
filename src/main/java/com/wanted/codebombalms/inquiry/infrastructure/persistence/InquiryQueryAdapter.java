@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.inquiry.infrastructure.persistence;
 
 import com.wanted.codebombalms.admin.operation.common.application.PageResult;
+import com.wanted.codebombalms.inquiry.application.query.ActiveInquiryReply;
 import com.wanted.codebombalms.inquiry.application.query.AdminInquiryDetail;
 import com.wanted.codebombalms.inquiry.application.query.AdminInquiryListItem;
 import com.wanted.codebombalms.inquiry.application.query.GetAdminInquiriesQuery;
@@ -60,6 +61,12 @@ public class InquiryQueryAdapter implements InquiryQueryRepository {
     public Optional<AdminInquiryDetail> findAdminInquiryDetail(Long inquiryId) {
         return springDataRepository.findById(inquiryId)
                 .map(this::toDetail);
+    }
+
+    @Override
+    // 로그인 첫 화면에 필요한 미확인 답변만 최신 답변순으로 조회한다.
+    public List<ActiveInquiryReply> findActiveRepliesByUserId(Long userId) {
+        return springDataRepository.findActiveRepliesByUserId(userId);
     }
 
     private AdminInquiryListItem toListItem(InquiryListProjection projection) {

@@ -20,6 +20,12 @@ public class InquiryRepositoryAdapter implements InquiryRepository {
     }
 
     @Override
+    public Optional<Inquiry> findByIdAndUserId(Long inquiryId, Long userId) {
+        return springDataRepository.findByInquiryIdAndUserId(inquiryId, userId)
+                .map(InquiryMapper::toDomain);
+    }
+
+    @Override
     public Inquiry save(Inquiry inquiry) {
         InquiryJpaEntity saved = springDataRepository.save(InquiryMapper.toEntity(inquiry));
 
