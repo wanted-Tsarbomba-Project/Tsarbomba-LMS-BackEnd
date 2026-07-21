@@ -62,6 +62,10 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         // 모니터링 (Prometheus 스크레이핑)
                         .requestMatchers("/actuator/**").permitAll()
+                        // FastAPI opschat 도구 전용 내부 API — JWT 미사용.
+                        // 인증은 InternalOpsController 의 X-Internal-Token 검증(fail-closed)이 담당하고,
+                        // 배포에서는 SG 로 파이썬 박스만 접근 허용 (이중 방어)
+                        .requestMatchers("/internal/ops/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         // 인증 불필요
                         .requestMatchers("/api/v1/auth/**").permitAll()
