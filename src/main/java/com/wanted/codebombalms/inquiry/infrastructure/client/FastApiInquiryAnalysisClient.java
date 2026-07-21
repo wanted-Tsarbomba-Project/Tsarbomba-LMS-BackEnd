@@ -9,6 +9,7 @@ import com.wanted.codebombalms.inquiry.application.usecase.ApplyInquiryAiAnalysi
 import com.wanted.codebombalms.inquiry.domain.model.InquiryDomain;
 import com.wanted.codebombalms.inquiry.domain.model.InquirySeverity;
 import io.netty.channel.ChannelOption;
+import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,22 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
     @Value("${fastapi.url}")
     private String fastApiBaseUrl;
 
+    private WebClient webClient;
+
+    // @Value 필드 주입이 끝난 뒤(생성자 호출 이후) 커넥션 풀을 가진 WebClient를 한 번만 만들어 재사용한다.
+    // 호출마다 새로 만들면 매번 새 커넥션 풀이 생겨 재사용이 안 되고 리소스가 낭비된다.
+    @PostConstruct
+    private void initWebClient() {
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutMs())
+                .responseTimeout(Duration.ofMillis(properties.getReadTimeoutMs()));
+
+        this.webClient = WebClient.builder()
+                .baseUrl(fastApiBaseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
+
     /** 문의 등록 요청 스레드를 막지 않도록 전용 executor에서 Python 분석 endpoint를 호출하고, 응답을 받으면 바로 문의에 반영합니다. */
     @Async("inquiryTaskExecutor")
     @Override
@@ -45,7 +62,7 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
         long startedAt = System.nanoTime();
 
         try {
-            PythonInquiryAnalysisResponse response = webClient().post()
+            PythonInquiryAnalysisResponse response = webClient.post()
                     .uri(properties.getAnalyzePath())
                     .bodyValue(toRequest(command))
                     .retrieve()
@@ -75,18 +92,6 @@ public class FastApiInquiryAnalysisClient implements InquiryAnalysisClient {
                 command.content(),
                 command.correctionExamples().stream().map(PythonCorrectionExample::from).toList()
         );
-    }
-
-    /** 문의 기능이 다른 도메인의 WebClient 설정에 의존하지 않도록 전용 client를 구성합니다. */
-    private WebClient webClient() {
-        HttpClient httpClient = HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutMs())
-                .responseTimeout(Duration.ofMillis(properties.getReadTimeoutMs()));
-
-        return WebClient.builder()
-                .baseUrl(fastApiBaseUrl)
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .build();
     }
 
     /** Python 문의 분석 API에 전달하는 요청 본문. 단어 하나짜리 필드(content)는 어노테이션이 필요 없다. */

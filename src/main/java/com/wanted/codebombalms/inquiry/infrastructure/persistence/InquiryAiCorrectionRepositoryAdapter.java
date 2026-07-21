@@ -24,7 +24,7 @@ public class InquiryAiCorrectionRepositoryAdapter implements InquiryAiCorrection
 
     @Override
     public List<InquiryAiCorrection> findRecentCorrections(int limit) {
-        return springDataRepository.findAllByOrderByUpdatedAtDesc(PageRequest.of(0, limit))
+        return springDataRepository.findAllByOrderByUpdatedAtDescCorrectionIdDesc(PageRequest.of(0, limit))
                 .stream()
                 .map(InquiryAiCorrectionMapper::toDomain)
                 .toList();

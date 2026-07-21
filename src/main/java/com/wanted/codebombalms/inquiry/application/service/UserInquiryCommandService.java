@@ -14,6 +14,8 @@ import com.wanted.codebombalms.inquiry.domain.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,12 +33,27 @@ public class UserInquiryCommandService implements CreateInquiryUseCase, HideInqu
     private final InquiryAnalysisClient inquiryAnalysisClient;
 
     @Override
-    // 문의를 등록하고 저장이 끝난 뒤 Python AI 분석을 비동기로 요청한다. 사용자 응답은 분석 결과를 기다리지 않는다.
+    // 문의를 등록하고, 트랜잭션이 실제로 커밋된 뒤에 Python AI 분석을 비동기로 요청한다.
+    // 사용자 응답은 분석 결과를 기다리지 않는다.
     public Inquiry create(CreateInquiryCommand command) {
         Inquiry inquiry = Inquiry.create(command.userId(), command.content(), command.sourceUrl(), LocalDateTime.now());
 
         Inquiry saved = inquiryRepository.save(inquiry);
 
+        // 커밋 전에 analyze()(@Async)를 호출하면, Python 응답이 아주 빠르거나 커밋이 지연될 때
+        // 분석 결과 반영(findById)이 아직 안 보이는 row를 조회해 NotFoundException이 날 수 있다.
+        // 커밋 완료 후로 미뤄서 이 레이스 컨디션을 없앤다.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                requestAiAnalysis(saved);
+            }
+        });
+
+        return saved;
+    }
+
+    private void requestAiAnalysis(Inquiry saved) {
         List<CorrectionExample> correctionExamples = inquiryAiCorrectionRepository
                 .findRecentCorrections(MAX_CORRECTION_EXAMPLES_FOR_AI_CONTEXT)
                 .stream()
@@ -50,8 +67,6 @@ public class UserInquiryCommandService implements CreateInquiryUseCase, HideInqu
                 saved.getContent(),
                 correctionExamples
         ));
-
-        return saved;
     }
 
     @Override

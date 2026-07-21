@@ -11,5 +11,6 @@ public interface SpringDataInquiryAiCorrectionRepository extends JpaRepository<I
 
     Optional<InquiryAiCorrectionJpaEntity> findByInquiryIdAndFieldName(Long inquiryId, InquiryCorrectionField fieldName);
 
-    List<InquiryAiCorrectionJpaEntity> findAllByOrderByUpdatedAtDesc(Pageable pageable);
+    // updatedAt만으로는 동시각 row 간 순서가 안정적이지 않아, 고유 식별자(correctionId)를 2차 정렬 기준으로 둔다.
+    List<InquiryAiCorrectionJpaEntity> findAllByOrderByUpdatedAtDescCorrectionIdDesc(Pageable pageable);
 }
