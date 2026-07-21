@@ -95,6 +95,10 @@ cors:
 fastapi:
   url: ${FASTAPI_URL:http://localhost:8000}
 
+# FastAPI opschat 도구 → /internal/ops/* 호출용 공유 시크릿 (비어 있으면 fail-closed 전부 401)
+internal:
+  api-token: ${INTERNAL_API_TOKEN:}
+
 chat:
   max-history-messages: 20
 
