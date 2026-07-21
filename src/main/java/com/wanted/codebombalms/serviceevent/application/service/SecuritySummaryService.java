@@ -103,7 +103,9 @@ public class SecuritySummaryService {
                 period.code,
                 kpi,
                 toDomainCounts(categoryCounts),
-                toHttpAnomalies(summaryQuery.findHttpAnomalies(start, end)),
+                toHttpAnomalies(
+                        summaryQuery.findHttpAnomalies(start, end),
+                        summaryQuery.findHttpStatusBreakdown(start, end)),
                 toRiskIps(summaryQuery.findTopRiskIps(start, end)),
                 toHourly(summaryQuery.hourlyDistribution(start, end))
         );
@@ -145,10 +147,24 @@ public class SecuritySummaryService {
     }
 
     private List<SecuritySummaryResult.HttpAnomaly> toHttpAnomalies(
-            List<SecuritySummaryQueryPort.RouteAnomaly> anomalies) {
+            List<SecuritySummaryQueryPort.RouteAnomaly> anomalies,
+            List<SecuritySummaryQueryPort.StatusBreakdown> breakdowns) {
+        Map<String, Map<Integer, Long>> byRouteType = breakdowns.stream()
+                .collect(Collectors.groupingBy(
+                        b -> routeTypeKey(b.route(), b.type()),
+                        Collectors.toMap(
+                                SecuritySummaryQueryPort.StatusBreakdown::status,
+                                SecuritySummaryQueryPort.StatusBreakdown::count)));
         return anomalies.stream()
-                .map(a -> new SecuritySummaryResult.HttpAnomaly(a.route(), a.type(), a.count(), a.maxDurationMs()))
+                .map(a -> new SecuritySummaryResult.HttpAnomaly(
+                        a.route(), a.type(), a.count(), a.maxDurationMs(),
+                        byRouteType.getOrDefault(routeTypeKey(a.route(), a.type()), Map.of())))
                 .toList();
+    }
+
+    /** (route, type) 복합 키 — 널 안전, 구분자로 route 값 충돌 방지 */
+    private String routeTypeKey(String route, String type) {
+        return route + ' ' + type;
     }
 
     private List<SecuritySummaryResult.RiskIp> toRiskIps(List<SecuritySummaryQueryPort.RiskIp> riskIps) {

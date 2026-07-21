@@ -50,6 +50,14 @@ public class SecuritySummaryQueryAdapter implements SecuritySummaryQueryPort {
     }
 
     @Override
+    public List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end) {
+        return repository.findHttpStatusBreakdown(start, end).stream()
+                .map(row -> new StatusBreakdown(
+                        row.getUri(), row.getEventType(), row.getStatus(), row.getCnt()))
+                .toList();
+    }
+
+    @Override
     public List<HourlyCount> hourlyDistribution(LocalDateTime start, LocalDateTime end) {
         return repository.hourlyDistribution(start, end).stream()
                 .map(row -> new HourlyCount(row.getHr(), row.getCnt()))

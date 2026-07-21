@@ -2,6 +2,7 @@ package com.wanted.codebombalms.serviceevent.application.query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * GET /api/v1/admin/security/summary 응답 data 형태.
@@ -32,7 +33,9 @@ public record SecuritySummaryResult(
 
     public record DomainCount(String group, String label, long count) {}
 
-    public record HttpAnomaly(String route, String type, long count, Integer maxDurationMs) {}
+    public record HttpAnomaly(
+            String route, String type, long count, Integer maxDurationMs,
+            Map<Integer, Long> statusBreakdown) {}
 
     public record RiskIp(String ip, String country, long eventCount, String mainType, List<Long> targetUserIds) {}
 
