@@ -1,6 +1,7 @@
 package com.wanted.codebombalms.lecture.application.usecase;
 
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface FinalProblemSetRecommendationUseCase {
@@ -14,7 +15,33 @@ public interface FinalProblemSetRecommendationUseCase {
             String description,
             String difficulty,
             Double accuracyRate,
-            LocalDateTime createdAt
+            LocalDateTime createdAt,
+            BigDecimal score,
+            String reasonCode,
+            String recommendationReason
     ) {
+
+        public FinalProblemSetCandidateView(
+                Long problemSetId,
+                Integer problemNumber,
+                String title,
+                String description,
+                String difficulty,
+                Double accuracyRate,
+                LocalDateTime createdAt
+        ) {
+            this(
+                    problemSetId,
+                    problemNumber,
+                    title,
+                    description,
+                    difficulty,
+                    accuracyRate,
+                    createdAt,
+                    null,
+                    null,
+                    null
+            );
+        }
     }
 }

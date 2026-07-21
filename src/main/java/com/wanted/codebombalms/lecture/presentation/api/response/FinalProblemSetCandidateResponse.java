@@ -2,6 +2,7 @@ package com.wanted.codebombalms.lecture.presentation.api.response;
 
 import com.wanted.codebombalms.lecture.application.usecase.FinalProblemSetRecommendationUseCase.FinalProblemSetCandidateView;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public record FinalProblemSetCandidateResponse(
         Long problemSetId,
@@ -11,7 +12,10 @@ public record FinalProblemSetCandidateResponse(
         String difficulty,
         Double accuracyRate,
         LocalDateTime createdAt,
-        String entryPath
+        String entryPath,
+        BigDecimal score,
+        String reasonCode,
+        String recommendationReason
 ) {
 
     private static final String PROBLEM_SET_ENTRY_PATH_PREFIX = "/api/v1/problem-sets/";
@@ -25,7 +29,10 @@ public record FinalProblemSetCandidateResponse(
                 candidate.difficulty(),
                 candidate.accuracyRate(),
                 candidate.createdAt(),
-                PROBLEM_SET_ENTRY_PATH_PREFIX + candidate.problemSetId()
+                PROBLEM_SET_ENTRY_PATH_PREFIX + candidate.problemSetId(),
+                candidate.score(),
+                candidate.reasonCode(),
+                candidate.recommendationReason()
         );
     }
 }
