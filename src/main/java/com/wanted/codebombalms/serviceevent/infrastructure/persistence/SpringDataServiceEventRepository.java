@@ -103,7 +103,7 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             FROM service_event
             WHERE created_at >= :start AND created_at < :end
               AND category = 'http_anomaly'
-              AND http_status IS NOT NULL
+              AND http_status >= 400
               AND uri IN (:uris)
             GROUP BY uri, event_type, http_status
             """, nativeQuery = true)
