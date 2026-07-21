@@ -104,10 +104,12 @@ public interface SpringDataServiceEventRepository extends JpaRepository<ServiceE
             WHERE created_at >= :start AND created_at < :end
               AND category = 'http_anomaly'
               AND http_status IS NOT NULL
+              AND uri IN (:uris)
             GROUP BY uri, event_type, http_status
             """, nativeQuery = true)
     List<HttpStatusBreakdownRow> findHttpStatusBreakdown(
-            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+            @Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("uris") List<String> uris);
 
     @Query(value = """
             SELECT HOUR(created_at) AS hr, COUNT(*) AS cnt

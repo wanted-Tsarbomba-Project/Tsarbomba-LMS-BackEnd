@@ -24,8 +24,8 @@ public interface SecuritySummaryQueryPort {
 
     List<RouteAnomaly> findHttpAnomalies(LocalDateTime start, LocalDateTime end);
 
-    /** (route, type) 별 http_status 세부 분포 — statusBreakdown 맵 조립용 */
-    List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end);
+    /** 지정 라우트 집합의 http_status 세부 분포 — statusBreakdown 맵 조립용 (top-N 라우트로 스코핑) */
+    List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end, List<String> routes);
 
     List<HourlyCount> hourlyDistribution(LocalDateTime start, LocalDateTime end);
 

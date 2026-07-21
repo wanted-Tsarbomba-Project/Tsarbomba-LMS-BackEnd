@@ -50,8 +50,11 @@ public class SecuritySummaryQueryAdapter implements SecuritySummaryQueryPort {
     }
 
     @Override
-    public List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end) {
-        return repository.findHttpStatusBreakdown(start, end).stream()
+    public List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end, List<String> routes) {
+        if (routes.isEmpty()) {
+            return List.of(); // 빈 목록이면 native IN () 문법 오류 방지 — 조회 생략
+        }
+        return repository.findHttpStatusBreakdown(start, end, routes).stream()
                 .map(row -> new StatusBreakdown(
                         row.getUri(), row.getEventType(), row.getStatus(), row.getCnt()))
                 .toList();
