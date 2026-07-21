@@ -25,5 +25,5 @@ public class LearningRecommendationProperties {
     private int connectTimeoutMs = 3000;
 
     @Positive
-    private int readTimeoutMs = 10000;
+    private int readTimeoutMs = 15000;
 }
