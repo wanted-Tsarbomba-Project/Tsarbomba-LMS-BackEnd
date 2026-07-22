@@ -381,6 +381,7 @@ class LectureProblemSetServiceTest {
         Long lectureProblemSetId = 6001L;
         Long problemSetId = 2001L;
         Long problemId = 3001L;
+        var advancedProgress = progress(userId, lectureProblemSetId, 2, false);
 
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
                 .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
@@ -399,6 +400,12 @@ class LectureProblemSetServiceTest {
         );
         given(lectureProblemSubmissionRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
                 .willReturn(List.of(submission(9001L, userId, lectureProblemSetId, problemId, true, 1)));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
+                .willReturn(Optional.of(advancedProgress));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetIdForUpdate(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(advancedProgress));
 
         ExplanationView result = lectureProblemSetService.viewExplanation(userId, lectureProblemSetId, problemId);
 
@@ -409,11 +416,12 @@ class LectureProblemSetServiceTest {
     }
 
     @Test
-    void viewExplanation_alreadyViewed_returnsReadOnlyWithoutSideEffects() {
+    void viewExplanation_alreadyViewedAndCurrent_repairsLectureProgress() {
         Long userId = 10L;
         Long lectureProblemSetId = 6001L;
         Long problemSetId = 2001L;
         Long problemId = 3001L;
+        var currentProgress = progress(userId, lectureProblemSetId, 1, false);
 
         given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
                 .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
@@ -433,11 +441,62 @@ class LectureProblemSetServiceTest {
         given(lectureProblemSubmissionRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
                 .willReturn(List.of());
         given(learningProblemExplanationPort.existsViewed(userId, problemId)).willReturn(true);
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
+                .willReturn(Optional.of(currentProgress));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetIdForUpdate(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(currentProgress));
+        given(learningProblemPort.loadProblemSet(problemSetId)).willReturn(problemSet(problemSetId));
+
+        ExplanationView result = lectureProblemSetService.viewExplanation(userId, lectureProblemSetId, problemId);
+
+        assertEquals(ProblemProgressStatus.EXPLANATION_VIEWED, result.status());
+        assertEquals(3002L, result.nextProblemId());
+        assertFalse(result.problemSetCompleted());
+        verify(learningProblemExplanationPort, never()).saveViewed(any(), any(), any());
+        verify(lectureProblemProgressCommandUseCase).recordProgress(any());
+    }
+
+    @Test
+    void viewExplanation_alreadyViewedAndProgressAdvanced_returnsReadOnlyWithoutSideEffects() {
+        Long userId = 10L;
+        Long lectureProblemSetId = 6001L;
+        Long problemSetId = 2001L;
+        Long problemId = 3001L;
+        var advancedProgress = progress(userId, lectureProblemSetId, 2, false);
+
+        given(learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId))
+                .willReturn(new LearningLectureProblemSet(lectureProblemSetId, 1L, 101L, problemSetId));
+        given(learningProblemPort.existsProblem(problemId)).willReturn(true);
+        given(learningProblemPort.existsProblemInSet(problemSetId, problemId)).willReturn(true);
+        given(learningProblemPort.loadProblem(problemId)).willReturn(
+                new LearningProblemPort.ProblemForLearning(
+                        problemId,
+                        problemSetId,
+                        1,
+                        "explanation text",
+                        10,
+                        3,
+                        true
+                )
+        );
+        given(lectureProblemSubmissionRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
+                .willReturn(List.of());
+        given(learningProblemExplanationPort.existsViewed(userId, problemId)).willReturn(true);
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetId(userId, lectureProblemSetId))
+                .willReturn(Optional.of(advancedProgress));
+        given(lectureProblemProgressRepository.findByUserIdAndLectureProblemSetIdForUpdate(
+                userId,
+                lectureProblemSetId
+        )).willReturn(Optional.of(advancedProgress));
 
         ExplanationView result = lectureProblemSetService.viewExplanation(userId, lectureProblemSetId, problemId);
 
         assertEquals(ProblemProgressStatus.EXPLANATION_VIEWED, result.status());
         assertTrue(result.explanation() != null);
+        assertEquals(null, result.nextProblemId());
+        assertFalse(result.problemSetCompleted());
         verify(learningProblemExplanationPort, never()).saveViewed(any(), any(), any());
         verify(lectureProblemProgressCommandUseCase, never()).recordProgress(any());
     }
