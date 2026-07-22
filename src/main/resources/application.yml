@@ -31,8 +31,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:validate}   # 공통 기본 validate. loadtest 는 update override, deploy 는 .env
-    open-in-view:
-      false
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul   # Instant → DATETIME 저장 시 KST 기준 변환 (챗봇 created_at 통일)
 
   data:
     redis:
