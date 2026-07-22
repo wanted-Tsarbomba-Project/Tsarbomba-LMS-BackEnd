@@ -8,7 +8,7 @@
 export const BASE_URL = __ENV.BASE_URL || "http://15.164.120.81:8080";
 
 // 사용자가 요청 사이에 쉬는 시간 (실제 사용자 흉내)
-export const MIN_SLEEP = Number(__ENV.MIN_SLEEP || 0.5);
+export const MIN_SLEEP  = Number(__ENV.MIN_SLEEP || 0.5);
 export const MAX_SLEEP = Number(__ENV.MAX_SLEEP || 2);
 
 export function randomInt(min, max) {

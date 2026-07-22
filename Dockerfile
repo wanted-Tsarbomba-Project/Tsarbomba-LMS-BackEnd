@@ -12,6 +12,9 @@ RUN ./gradlew clean bootJar --no-daemon -x test
 # ===== run: JRE 17 =====
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+# 컨테이너/JVM 타임존 KST 고정 (기본 UTC → created_at·로그 시각 KST 통일)
+ENV TZ=Asia/Seoul
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# -Duser.timezone: OS tzdata 유무와 무관하게 JVM 기본 타임존을 KST로 못박음
+ENTRYPOINT ["java", "-Duser.timezone=Asia/Seoul", "-jar", "/app/app.jar"]
