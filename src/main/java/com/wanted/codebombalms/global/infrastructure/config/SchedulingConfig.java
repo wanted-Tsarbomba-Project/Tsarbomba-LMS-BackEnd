@@ -46,6 +46,20 @@ public class SchedulingConfig {
     }
 
 
+    /** 문의 등록 후 Python AI 분석 호출 전용 풀 — 포화 시 드랍 + 로그 기록 (best-effort, 사용자 응답에 영향 없음). */
+    @Bean(name = "inquiryTaskExecutor")
+    public Executor inquiryTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("inquiry-ai-");
+        executor.setRejectedExecutionHandler((runnable, pool) ->
+                log.warn("event=inquiry_ai_analysis_dropped reason=queue_full queueCapacity=100"));
+        executor.initialize();
+        return executor;
+    }
+
     /**
      * 서비스 이벤트 적재 전용 풀 — 포화 시 드랍 + 카운터 기록 (best-effort, 응답 보호).
      * 기존 풀(추천·메일) 재사용 금지 — 즉시 거절 또는 요청 스레드 역류로 응답 지연 전파.

@@ -4,5 +4,5 @@ import com.wanted.codebombalms.user.application.query.StudentPageResult;
 
 public interface GetStudentsUseCase {
 
-    StudentPageResult getStudents(int page, int size);
+    StudentPageResult getStudents(int page, int size, String keyword);
 }

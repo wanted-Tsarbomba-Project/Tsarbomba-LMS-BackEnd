@@ -25,30 +25,15 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
     @Transactional(readOnly = true)
     public ProblemSetPageView handle(GetProblemSetsQuery query) {
         validatePageRequest(query.page(), query.size());
+        validateLoginRequiredFilter(query);
 
-        boolean popularSort = query.isPopularSort();
-
-        ProblemSetSummaryPage problemSets;
-
-        if (query.categoryId() == null) {
-            problemSets = loadProblemSetPort.loadActiveProblemSets(
-                    query.page(),
-                    query.size(),
-                    popularSort
-            );
-            return toPageView(problemSets);
-        }
-
-        if (!checkProblemSetCategoryPort.existsActiveCategory(query.categoryId())) {
+        if (query.categoryId() != null
+                && !checkProblemSetCategoryPort.existsActiveCategory(query.categoryId())) {
             throw new NotFoundException(ProblemErrorCode.CATEGORY_NOT_FOUND);
         }
 
-        problemSets = loadProblemSetPort.loadActiveProblemSetsByCategory(
-                query.categoryId(),
-                query.page(),
-                query.size(),
-                popularSort
-        );
+        ProblemSetSummaryPage problemSets = loadProblemSetPort.loadActiveProblemSets(query);
+
         return toPageView(problemSets);
     }
     private static final int MAX_PAGE_SIZE = 100;
@@ -110,5 +95,11 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
                 problemSet.getStartedUserCount(),
                 problemSet.getCreatedAt()
         );
+    }
+
+    private void validateLoginRequiredFilter(GetProblemSetsQuery query) {
+        if (query.hasCompletionStatusFilter() && query.userId() == null) {
+            throw new ValidationException(ProblemErrorCode.PROBLEM_INVALID_INPUT);
+        }
     }
 }

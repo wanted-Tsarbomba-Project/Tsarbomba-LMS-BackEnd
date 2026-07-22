@@ -1,6 +1,8 @@
 package com.wanted.codebombalms.learning.application.policy;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.learning.application.port.LearningEnrollmentPort;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
@@ -40,15 +42,15 @@ class LearningAccessPolicyTest {
     }
 
     @Test
-    void validateLectureProblemSetAccess_throwsForbidden_whenUserIdIsNull() {
+    void validateLectureProblemSetAccess_throwsUnauthorized_whenUserIdIsNull() {
         LearningLectureProblemSet lectureProblemSet = new LearningLectureProblemSet(6001L, 1L, 101L, 2001L);
 
-        ForbiddenException exception = assertThrows(
-                ForbiddenException.class,
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
                 () -> learningAccessPolicy.validateLectureProblemSetAccess(null, lectureProblemSet)
         );
 
-        assertEquals(LearningErrorCode.LECTURE_PROGRESS_ACCESS_DENIED, exception.getErrorCode());
+        assertEquals(AuthErrorCode.AUTH_REQUIRED, exception.getErrorCode());
         verify(learningEnrollmentPort, never()).isActiveStudentOfCourse(1L, null);
     }
 

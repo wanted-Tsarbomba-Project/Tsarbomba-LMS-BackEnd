@@ -24,6 +24,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.Arrays;
@@ -63,6 +64,7 @@ public class GlobalExceptionHandler {
             HandlerMethodValidationException.class,
             HttpMessageNotReadableException.class,
             HttpMediaTypeNotSupportedException.class,
+            MultipartException.class,
             MaxUploadSizeExceededException.class
     })
     public ResponseEntity<ApiErrorResponse> handleBadRequestException(

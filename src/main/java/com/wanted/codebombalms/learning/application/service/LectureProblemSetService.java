@@ -7,6 +7,7 @@ import com.wanted.codebombalms.learning.application.command.RecordLectureProblem
 import com.wanted.codebombalms.learning.application.policy.LearningAccessPolicy;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSet;
 import com.wanted.codebombalms.learning.application.port.LearningLectureProblemSetPort;
+import com.wanted.codebombalms.learning.application.port.LearningProblemExplanationPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemGradingPort;
 import com.wanted.codebombalms.learning.application.port.LearningProblemPort;
 import com.wanted.codebombalms.learning.application.usecase.LectureProblemProgressCommandUseCase;
@@ -17,12 +18,15 @@ import com.wanted.codebombalms.learning.domain.model.LectureProblemProgress;
 import com.wanted.codebombalms.learning.domain.model.LectureProblemSubmission;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemProgressRepository;
 import com.wanted.codebombalms.learning.domain.repository.LectureProblemSubmissionRepository;
+import com.wanted.codebombalms.problems.explanation.application.usecase.ViewProblemExplanationUseCase.ExplanationView;
+import com.wanted.codebombalms.problems.progress.enums.ProblemProgressStatus;
 import com.wanted.codebombalms.submission.application.command.SubmitCodeCommand;
 import com.wanted.codebombalms.submission.application.usecase.SubmissionCommandUseCase.SubmissionView;
 import com.wanted.codebombalms.submission.exception.SubmissionErrorCode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +42,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     private final LearningLectureProblemSetPort learningLectureProblemSetPort;
     private final LearningProblemPort learningProblemPort;
     private final LearningProblemGradingPort learningProblemGradingPort;
+    private final LearningProblemExplanationPort learningProblemExplanationPort;
     private final LectureProblemProgressCommandUseCase lectureProblemProgressCommandUseCase;
     private final LectureProblemProgressRepository lectureProblemProgressRepository;
     private final LectureProblemSubmissionRepository lectureProblemSubmissionRepository;
@@ -81,6 +86,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         );
         Map<Long, LectureProblemSubmission> latestSubmissions =
                 findLatestSubmissions(userId, lectureProblemSet.lectureProblemSetId());
+        Set<Long> viewedProblemIds = findViewedProblemIds(userId, problemSet.problems());
         List<ProblemDetailView> problems = problemSet.problems()
                 .stream()
                 .map(problem -> new ProblemDetailView(
@@ -91,7 +97,13 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                         problem.problemType(),
                         problem.point(),
                         problem.startCode(),
-                        statusOf(problem.problemNumber(), progress, latestSubmissions.get(problem.problemId())),
+                        statusOf(
+                                problem.problemId(),
+                                problem.problemNumber(),
+                                progress,
+                                latestSubmissions.get(problem.problemId()),
+                                viewedProblemIds
+                        ),
                         latestSubmissionId(latestSubmissions.get(problem.problemId()))
                 ))
                 .toList();
@@ -122,6 +134,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 .orElseGet(() -> LectureProblemProgress.create(userId, lectureProblemSetId));
         Map<Long, LectureProblemSubmission> latestSubmissions =
                 findLatestSubmissions(userId, lectureProblemSetId);
+        Set<Long> viewedProblemIds = findViewedProblemIds(userId, problemSet.problems());
 
         return new LectureProblemSetProgressView(
                 lectureProblemSet.lectureProblemSetId(),
@@ -137,9 +150,11 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                                 problem.problemId(),
                                 problem.problemNumber(),
                                 statusOf(
+                                        problem.problemId(),
                                         problem.problemNumber(),
                                         progress,
-                                        latestSubmissions.get(problem.problemId())
+                                        latestSubmissions.get(problem.problemId()),
+                                        viewedProblemIds
                                 )
                         ))
                         .toList()
@@ -162,6 +177,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         }
 
         var problem = learningProblemPort.loadProblem(problemId);
+
         LectureProblemProgress progress = lockProgress(command.userId(), lectureProblemSetId);
         validateSubmissionProgress(progress, problem.problemNumber());
 
@@ -170,7 +186,7 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 lectureProblemSetId,
                 problemId
         );
-        validateAttempt(problem.attemptLimit(), problem.retriable(), previousAttemptCount);
+        validateAttempt(problem.retriable(), previousAttemptCount);
 
         var gradingResult = learningProblemGradingPort.grade(
                 lectureProblemSet.problemSetId(),
@@ -216,10 +232,8 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
             }
         }
 
-        Integer remainingAttemptCount = calculateRemainingAttempts(problem.attemptLimit(), attemptNo);
-        boolean canRetry = !gradingResult.correct()
-                && Boolean.TRUE.equals(problem.retriable())
-                && (remainingAttemptCount == null || remainingAttemptCount > 0);
+        Integer remainingAttemptCount = null;
+        boolean canRetry = !gradingResult.correct() && Boolean.TRUE.equals(problem.retriable());
 
         return new SubmissionView(
                 savedSubmission.lectureProblemSubmissionId(),
@@ -237,6 +251,110 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
                 0,
                 false,
                 gradingResult.correct() ? problem.explanation() : null
+        );
+    }
+
+    @Override
+    @Transactional
+    public ExplanationView viewExplanation(Long userId, Long lectureProblemSetId, Long problemId) {
+        LearningLectureProblemSet lectureProblemSet =
+                learningLectureProblemSetPort.findLectureProblemSet(lectureProblemSetId);
+        learningAccessPolicy.validateLectureProblemSetAccess(userId, lectureProblemSet);
+
+        if (!learningProblemPort.existsProblem(problemId)) {
+            throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_FOUND);
+        }
+        if (!learningProblemPort.existsProblemInSet(lectureProblemSet.problemSetId(), problemId)) {
+            throw new NotFoundException(LearningErrorCode.PROBLEM_NOT_IN_LECTURE_PROBLEM_SET);
+        }
+
+        var problem = learningProblemPort.loadProblem(problemId);
+        LectureProblemProgress progress = lockProgress(userId, lectureProblemSetId);
+
+        LectureProblemSubmission latestSubmission =
+                findLatestSubmissions(userId, lectureProblemSetId).get(problemId);
+        if (latestSubmission != null && latestSubmission.correct()) {
+            return advanceExplanationProgressIfCurrent(
+                    userId,
+                    lectureProblemSet,
+                    problem,
+                    progress,
+                    ProblemProgressStatus.CORRECT
+            );
+        }
+
+        if (learningProblemExplanationPort.existsViewed(userId, problemId)) {
+            return advanceExplanationProgressIfCurrent(
+                    userId,
+                    lectureProblemSet,
+                    problem,
+                    progress,
+                    ProblemProgressStatus.EXPLANATION_VIEWED
+            );
+        }
+
+        validateSubmissionProgress(progress, problem.problemNumber());
+
+        learningProblemExplanationPort.saveViewed(userId, problemId, lectureProblemSet.problemSetId());
+
+        return advanceExplanationProgressIfCurrent(
+                userId,
+                lectureProblemSet,
+                problem,
+                progress,
+                ProblemProgressStatus.EXPLANATION_VIEWED
+        );
+    }
+
+    private ExplanationView advanceExplanationProgressIfCurrent(
+            Long userId,
+            LearningLectureProblemSet lectureProblemSet,
+            LearningProblemPort.ProblemForLearning problem,
+            LectureProblemProgress progress,
+            ProblemProgressStatus status
+    ) {
+        if (progress.isCompleted() || !isCurrentProblem(progress, problem.problemNumber())) {
+            return readOnlyExplanation(problem, status);
+        }
+
+        var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
+        Long nextProblemId = findNextProblemId(problemSet.problems(), problem.problemNumber());
+        boolean completed = nextProblemId == null;
+        int nextProblemNumber = completed ? problem.problemNumber() : problem.problemNumber() + 1;
+        recordLectureProblemProgress(userId, lectureProblemSet, nextProblemNumber, completed);
+
+        if (completed) {
+            serviceEventRecorder.record(ServiceEventEnvelope.business(
+                    ServiceEventType.PROBLEM_SET_COMPLETED, userId,
+                    lectureProblemSet.problemSetId(),
+                    "source=lecture lectureProblemSetId=" + lectureProblemSet.lectureProblemSetId()));
+        }
+
+        return new ExplanationView(
+                problem.problemId(),
+                status,
+                ProblemProgressStatus.CORRECT,
+                problem.explanation(),
+                nextProblemId,
+                completed,
+                0,
+                false
+        );
+    }
+
+    private ExplanationView readOnlyExplanation(
+            LearningProblemPort.ProblemForLearning problem,
+            ProblemProgressStatus status
+    ) {
+        return new ExplanationView(
+                problem.problemId(),
+                status,
+                ProblemProgressStatus.CORRECT,
+                problem.explanation(),
+                null,
+                false,
+                0,
+                false
         );
     }
 
@@ -279,17 +397,35 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
     }
 
     private String statusOf(
+            Long problemId,
             Integer problemNumber,
             LectureProblemProgress progress,
-            LectureProblemSubmission submission
+            LectureProblemSubmission submission,
+            Set<Long> viewedProblemIds
     ) {
         if (!progress.isCompleted() && problemNumber > progress.getCurrentProblemNumber()) {
             return "LOCKED";
         }
+        if (submission != null && submission.correct()) {
+            return "CORRECT";
+        }
+        if (viewedProblemIds.contains(problemId)) {
+            return "EXPLANATION_VIEWED";
+        }
         if (submission == null) {
             return "UNSOLVED";
         }
-        return submission.correct() ? "CORRECT" : "WRONG";
+        return "WRONG";
+    }
+
+    private Set<Long> findViewedProblemIds(
+            Long userId,
+            List<LearningProblemPort.ProblemDetailForLearning> problems
+    ) {
+        return learningProblemExplanationPort.findViewedProblemIds(
+                userId,
+                problems.stream().map(LearningProblemPort.ProblemDetailForLearning::problemId).toList()
+        );
     }
 
     private Long latestSubmissionId(LectureProblemSubmission submission) {
@@ -327,17 +463,10 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         return progress.getCurrentProblemNumber().equals(problemNumber);
     }
 
-    private void validateAttempt(Integer attemptLimit, Boolean retriable, int previousAttemptCount) {
+    private void validateAttempt(Boolean retriable, int previousAttemptCount) {
         if (!Boolean.TRUE.equals(retriable) && previousAttemptCount > 0) {
             throw new ValidationException(SubmissionErrorCode.PROBLEM_NOT_RETRIABLE);
         }
-        if (attemptLimit != null && previousAttemptCount >= attemptLimit) {
-            throw new ValidationException(SubmissionErrorCode.ATTEMPT_LIMIT_EXCEEDED);
-        }
-    }
-
-    private Integer calculateRemainingAttempts(Integer attemptLimit, int attemptNo) {
-        return attemptLimit == null ? null : Math.max(attemptLimit - attemptNo, 0);
     }
 
     private Long findNextProblemId(
