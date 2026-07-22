@@ -6,9 +6,11 @@ import com.wanted.codebombalms.chatbot.presentation.api.response.SuggestedQuesti
 import com.wanted.codebombalms.global.presentation.api.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/chat")
 @RequiredArgsConstructor
+@Validated
 public class SuggestedQuestionController {
 
     private final GetSuggestedQuestionsUseCase getSuggestedQuestionsUseCase;
@@ -30,8 +33,8 @@ public class SuggestedQuestionController {
     )
     @GetMapping("/suggested-questions")
     public ResponseEntity<ApiResponse<SuggestedQuestionsResponse>> getSuggestedQuestions(
-            @RequestParam Long problemSetId,
-            @RequestParam Long problemId
+            @RequestParam @Positive Long problemSetId,
+            @RequestParam @Positive Long problemId
     ) {
         SuggestedQuestionsResult result = getSuggestedQuestionsUseCase.get(problemSetId, problemId);
 

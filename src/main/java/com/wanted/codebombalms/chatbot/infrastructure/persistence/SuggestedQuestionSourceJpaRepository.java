@@ -41,7 +41,7 @@ public interface SuggestedQuestionSourceJpaRepository extends JpaRepository<Chat
             WHERE cr.problem_set_id = :problemSetId
               AND cr.problem_id = :problemId
               AND cm.role = 'USER'
-            ORDER BY cm.created_at DESC
+            ORDER BY cm.created_at DESC, cm.id DESC
             LIMIT :limit
             """, nativeQuery = true)
     List<String> findRecentUserQuestions(@Param("problemSetId") Long problemSetId,
