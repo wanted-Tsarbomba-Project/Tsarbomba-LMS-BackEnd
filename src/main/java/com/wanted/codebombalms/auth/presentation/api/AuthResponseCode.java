@@ -24,4 +24,7 @@ public class AuthResponseCode {
     public static final String STEP_UP_VERIFIED = "AUTH-STEP-UP-VERIFIED";
     public static final String STEP_UP_CODE_RESENT = "AUTH-STEP-UP-CODE-RESENT";
     public static final String ACCOUNT_LOCKED = "AUTH-ACCOUNT-LOCKED";
+
+    public static final String SESSION_STATUS_RETRIEVED = "AUTH-SESSION-STATUS-RETRIEVED";
+    public static final String SESSION_EXTENDED = "AUTH-SESSION-EXTENDED";
 }
