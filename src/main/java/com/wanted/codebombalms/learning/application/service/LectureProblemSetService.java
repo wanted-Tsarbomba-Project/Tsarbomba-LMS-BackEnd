@@ -269,21 +269,53 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
         }
 
         var problem = learningProblemPort.loadProblem(problemId);
+        LectureProblemProgress progress = lockProgress(userId, lectureProblemSetId);
 
         LectureProblemSubmission latestSubmission =
                 findLatestSubmissions(userId, lectureProblemSetId).get(problemId);
         if (latestSubmission != null && latestSubmission.correct()) {
-            return readOnlyExplanation(problem, ProblemProgressStatus.CORRECT);
+            return advanceExplanationProgressIfCurrent(
+                    userId,
+                    lectureProblemSet,
+                    problem,
+                    progress,
+                    ProblemProgressStatus.CORRECT
+            );
         }
 
         if (learningProblemExplanationPort.existsViewed(userId, problemId)) {
-            return readOnlyExplanation(problem, ProblemProgressStatus.EXPLANATION_VIEWED);
+            return advanceExplanationProgressIfCurrent(
+                    userId,
+                    lectureProblemSet,
+                    problem,
+                    progress,
+                    ProblemProgressStatus.EXPLANATION_VIEWED
+            );
         }
 
-        LectureProblemProgress progress = lockProgress(userId, lectureProblemSetId);
         validateSubmissionProgress(progress, problem.problemNumber());
 
         learningProblemExplanationPort.saveViewed(userId, problemId, lectureProblemSet.problemSetId());
+
+        return advanceExplanationProgressIfCurrent(
+                userId,
+                lectureProblemSet,
+                problem,
+                progress,
+                ProblemProgressStatus.EXPLANATION_VIEWED
+        );
+    }
+
+    private ExplanationView advanceExplanationProgressIfCurrent(
+            Long userId,
+            LearningLectureProblemSet lectureProblemSet,
+            LearningProblemPort.ProblemForLearning problem,
+            LectureProblemProgress progress,
+            ProblemProgressStatus status
+    ) {
+        if (progress.isCompleted() || !isCurrentProblem(progress, problem.problemNumber())) {
+            return readOnlyExplanation(problem, status);
+        }
 
         var problemSet = learningProblemPort.loadProblemSet(lectureProblemSet.problemSetId());
         Long nextProblemId = findNextProblemId(problemSet.problems(), problem.problemNumber());
@@ -295,12 +327,12 @@ public class LectureProblemSetService implements LectureProblemSetQueryUseCase, 
             serviceEventRecorder.record(ServiceEventEnvelope.business(
                     ServiceEventType.PROBLEM_SET_COMPLETED, userId,
                     lectureProblemSet.problemSetId(),
-                    "source=lecture lectureProblemSetId=" + lectureProblemSetId));
+                    "source=lecture lectureProblemSetId=" + lectureProblemSet.lectureProblemSetId()));
         }
 
         return new ExplanationView(
-                problemId,
-                ProblemProgressStatus.EXPLANATION_VIEWED,
+                problem.problemId(),
+                status,
                 ProblemProgressStatus.CORRECT,
                 problem.explanation(),
                 nextProblemId,

@@ -1,0 +1,788 @@
+{
+  "uid": "domain-learning-progress",
+  "title": "Domain - Learning Progress",
+  "tags": [
+    "learning",
+    "course",
+    "operator",
+    "bottleneck",
+    "prod-monitoring"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "editable": true,
+  "graphTooltip": 1,
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "이 화면의 역할",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 4
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "### 이 화면의 역할\n- Operator가 강좌별 학생 학습률을 조회할 때 **어느 내부 단계에서 병목이 생기는지** 확인합니다.\n- 학습률 조회는 학생 목록 조회뿐 아니라 강의 완료 수, 문제 완료 수, 사용자명 조회, 응답 조립이 함께 일어납니다.\n- 시연 중 응답 지연이 보이면 `내부 단계별 처리 시간` → `DB 커넥션 사용/대기` → `상세 로그` 순서로 원인을 좁힙니다."
+      }
+    },
+    {
+      "id": 100,
+      "type": "row",
+      "title": "1. 학습률 조회 현황",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "[요약] 학습률 조회 요청 수",
+      "description": "최근 5분 동안 Operator 학습률 조회 API가 몇 번 호출됐는지 보여줍니다. 반복 클릭이나 페이지 조회가 몰리는 시점을 확인하기 위한 패널입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}[5m])) or vector(0)",
+          "legendFormat": "요청 수",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "[응답지연] 학습률 조회 최대 응답 시간",
+      "description": "학습률 조회 요청 중 가장 오래 걸린 응답 시간을 보여줍니다. 평균은 정상이어도 특정 강좌/학생 수 조건에서 튀는 요청을 잡기 위한 패널입니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1000 * max(http_server_requests_seconds_max{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}) or vector(0)",
+          "legendFormat": "최대 응답 시간",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "[오류] 학습률 조회 에러율",
+      "description": "학습률 조회 API의 4xx/5xx 비율입니다. 지연 문제가 아니라 인증/권한/서버 예외 문제인지 구분하기 위해 봅니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 5,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(100 * sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/courses/{courseId}/users/learning-progress\",status=~\"4..|5..\"}[1m])) / clamp_min(sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "에러율",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "2. 내부 병목 분해",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "[병목] 내부 단계별 처리 시간",
+      "description": "학습률 조회 내부를 단계별로 나눠 어느 구간이 느린지 확인합니다. completed_lecture_counts 또는 completed_problem_counts가 튀면 완료 집계 쿼리/캐시를 먼저 봅니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"student_count\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"student_count\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "학생 수 조회",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"student_id_page\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"student_id_page\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "학생 페이지 조회",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "C",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"lecture_ids\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"lecture_ids\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "강의 ID 조회",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "D",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"problem_set_ids\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"problem_set_ids\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "문제세트 ID 조회",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "E",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"user_names\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"user_names\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "사용자명 조회",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "F",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"completed_lecture_counts\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"completed_lecture_counts\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "완료 강의 수 집계",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "G",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"completed_problem_counts\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"completed_problem_counts\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "완료 문제 수 집계",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "H",
+          "expr": "(1000 * sum(rate(learning_student_progress_section_duration_seconds_sum{section=\"build_total\"}[1m])) / clamp_min(sum(rate(learning_student_progress_section_duration_seconds_count{section=\"build_total\"}[1m])), 0.0001)) or vector(0)",
+          "legendFormat": "응답 조립 전체",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "[병목] 내부 전체 조회 처리 시간",
+      "description": "서비스 내부 전체 처리 시간과 학생 1명 단위 조립 시간을 함께 봅니다. HTTP 응답 지연과 이 값이 같이 오르면 병목은 애플리케이션 내부 집계 구간일 가능성이 큽니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1000 * rate(learning_student_progress_query_duration_seconds_sum[1m]) / clamp_min(rate(learning_student_progress_query_duration_seconds_count[1m]), 0.0001)) or vector(0)",
+          "legendFormat": "전체 조회 평균",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "(1000 * rate(learning_student_progress_item_duration_seconds_sum[1m]) / clamp_min(rate(learning_student_progress_item_duration_seconds_count[1m]), 0.0001)) or vector(0)",
+          "legendFormat": "학생 1명 조립 평균",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "[응답지연] 학습률 조회 RPS",
+      "description": "초당 학습률 조회 요청량입니다. 요청량 상승과 내부 처리 시간 상승이 같이 보이면 부하에 따른 병목 가능성이 높습니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(rate(http_server_requests_seconds_count{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}[1m]))) or vector(0)",
+          "legendFormat": "학습률 조회 RPS",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "3. DB 커넥션 위험",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 25,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "[DB위험] 커넥션 풀 사용/대기",
+      "description": "Hikari active는 사용 중인 DB 커넥션, pending은 커넥션을 못 잡고 기다리는 요청 수입니다. pending이 0보다 큰 상태로 지속되면 DB 커넥션 고갈이나 느린 쿼리를 의심합니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(hikaricp_connections_active) or vector(0)",
+          "legendFormat": "active 사용 중",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "(hikaricp_connections_pending) or vector(0)",
+          "legendFormat": "pending 대기",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "C",
+          "expr": "(hikaricp_connections_max) or vector(0)",
+          "legendFormat": "max 최대",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "4. 비정상 조회 패턴",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 33,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "[비정상] 반복 조회 요청 수",
+      "description": "Operator가 같은 학습률 화면을 반복 새로고침하거나 페이지 조회가 몰릴 때 요청 수가 상승합니다. 급증하면 내부 단계별 처리 시간과 DB pending을 같이 확인합니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(increase(http_server_requests_seconds_count{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}[1m]))) or vector(0)",
+          "legendFormat": "1분 요청 수",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "[비정상] 느린 학습률 조회 요청",
+      "description": "가장 느린 요청 시간을 봅니다. 특정 시점에 튀면 Loki 상세 로그에서 courseId, studentCount, totalStudentCount를 확인합니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1000 * max(learning_student_progress_query_duration_seconds_max) or vector(0)",
+          "legendFormat": "내부 최대 처리 시간",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        },
+        {
+          "refId": "B",
+          "expr": "1000 * max(http_server_requests_seconds_max{uri=\"/api/v1/courses/{courseId}/users/learning-progress\"}) or vector(0)",
+          "legendFormat": "HTTP 최대 응답 시간",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "type": "row",
+      "title": "5. 근거 로그",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 41,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 11,
+      "type": "logs",
+      "title": "[근거] 학습률 조회 상세 로그",
+      "description": "그래프에서 이상치가 보일 때 실제 요청 단위의 courseId, studentCount, totalStudentCount, 단계별 durationMs를 확인합니다.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 8
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": false,
+        "wrapLogMessage": false,
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"lms\"} |= \"event=learning_student_progress_breakdown\"",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          }
+        }
+      ]
+    }
+  ]
+}
