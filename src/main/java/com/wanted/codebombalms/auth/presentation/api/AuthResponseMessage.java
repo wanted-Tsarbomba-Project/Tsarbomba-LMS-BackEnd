@@ -24,4 +24,7 @@ public class AuthResponseMessage {
     public static final String STEP_UP_VERIFIED = "추가 인증이 완료되었습니다.";
     public static final String STEP_UP_CODE_RESENT = "인증 코드를 재발송했습니다.";
     public static final String ACCOUNT_LOCKED = "계정이 잠겼습니다. 비밀번호 재설정 후 이용해주세요.";
+
+    public static final String SESSION_STATUS_RETRIEVED = "세션 정보를 조회했습니다.";
+    public static final String SESSION_EXTENDED = "세션이 연장되었습니다.";
 }
