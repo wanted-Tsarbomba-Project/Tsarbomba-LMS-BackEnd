@@ -30,6 +30,9 @@ import org.springframework.web.util.WebUtils;
 @RequiredArgsConstructor
 public class SessionController {
 
+    private static final String COOKIE_ACCESS_TOKEN = "accessToken";
+    private static final String COOKIE_REFRESH_TOKEN = "refreshToken";
+
     private final SessionQueryUseCase sessionQueryUseCase;
     private final TokenReissueUseCase tokenReissueUseCase;
     private final JwtTokenProvider jwtTokenProvider;
@@ -46,8 +49,8 @@ public class SessionController {
     public ResponseEntity<ApiResponse<SessionStatusResponse>> status(HttpServletRequest request) {
 
         SessionStatus status = sessionQueryUseCase.query(
-                cookieValue(request, "accessToken"),
-                cookieValue(request, "refreshToken")
+                cookieValue(request, COOKIE_ACCESS_TOKEN),
+                cookieValue(request, COOKIE_REFRESH_TOKEN)
         );
 
         return ResponseEntity.ok(ApiResponse.success(
@@ -70,7 +73,7 @@ public class SessionController {
             HttpServletResponse response
     ) {
         // 1. 쿠키에서 refreshToken 추출
-        String refreshToken = cookieValue(request, "refreshToken");
+        String refreshToken = cookieValue(request, COOKIE_REFRESH_TOKEN);
         if (refreshToken == null) {
             throw new UnauthorizedException(AuthErrorCode.AUTH_REFRESH_TOKEN_INVALID);
         }
@@ -79,16 +82,7 @@ public class SessionController {
         TokenPair pair = tokenReissueUseCase.reissue(refreshToken);
 
         // 3. 새 쿠키 2개 발급 (기존 쿠키 덮어쓰기)
-        response.addCookie(authCookieFactory.create(
-                "accessToken",
-                pair.accessToken(),
-                (int) (jwtTokenProvider.getAccessExpiration() / 1000)
-        ));
-        response.addCookie(authCookieFactory.create(
-                "refreshToken",
-                pair.refreshToken(),
-                (int) (jwtTokenProvider.getRefreshExpiration() / 1000)
-        ));
+        issueTokenCookies(response, pair);
 
         // 4. 갱신된 잔여 시간 응답 — 프론트가 타이머를 곧바로 리셋할 수 있게
         SessionStatus status = sessionQueryUseCase.query(pair.accessToken(), pair.refreshToken());
@@ -97,6 +91,20 @@ public class SessionController {
                 AuthResponseCode.SESSION_EXTENDED,
                 AuthResponseMessage.SESSION_EXTENDED,
                 SessionStatusResponse.from(status)
+        ));
+    }
+
+    /** 재발급된 토큰 쌍을 쿠키로 내려준다 (기존 쿠키 덮어쓰기). */
+    private void issueTokenCookies(HttpServletResponse response, TokenPair pair) {
+        response.addCookie(authCookieFactory.create(
+                COOKIE_ACCESS_TOKEN,
+                pair.accessToken(),
+                (int) (jwtTokenProvider.getAccessExpiration() / 1000)
+        ));
+        response.addCookie(authCookieFactory.create(
+                COOKIE_REFRESH_TOKEN,
+                pair.refreshToken(),
+                (int) (jwtTokenProvider.getRefreshExpiration() / 1000)
         ));
     }
 
