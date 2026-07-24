@@ -85,6 +85,7 @@ jobs:
           GCP_STORAGE_BUCKET: ${{ vars.GCP_STORAGE_BUCKET }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           BRIEFING_API_KEY: ${{ secrets.BRIEFING_API_KEY }}
+          INTERNAL_API_TOKEN: ${{ secrets.INTERNAL_API_TOKEN }}
         run: |
           set -euo pipefail
           umask 077
@@ -110,7 +111,7 @@ jobs:
                    CORS_ALLOWED_ORIGINS FASTAPI_URL JWT_SECRET MAIL_USERNAME MAIL_PASSWORD \
                    GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REDIRECT_URI \
                    OAUTH_ADDITIONAL_INFO_URI OAUTH_SUCCESS_URI OAUTH_ERROR_URI COOKIE_SECURE \
-                   GCP_PROJECT_ID GCP_STORAGE_BUCKET BRIEFING_API_KEY; do
+                   GCP_PROJECT_ID GCP_STORAGE_BUCKET BRIEFING_API_KEY INTERNAL_API_TOKEN; do
             v="${!k}"
             [ -n "$v" ] && printf '%s=%s\n' "$k" "$v" >> deploy.env
           done
@@ -140,7 +141,9 @@ jobs:
           cat > params.json <<EOF
           {"commands":[
             "set -e",
+            "ts() { TZ=Asia/Seoul date '+%Y-%m-%d %H:%M:%S KST'; }",
             "export ECR_REGISTRY=$REGISTRY",
+            "echo \"[\$(ts)] === 배포 시작 (EC2) ===\"",
             "mkdir -p /opt/spring/secrets",
             "aws s3 sync $S3_PREFIX /opt/spring",
             "cd /opt/spring",
@@ -148,9 +151,10 @@ jobs:
             "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY",
             "docker compose pull",
             "docker compose up -d",
-            "echo '헬스 체크: localhost:8080/actuator/health 대기...'",
-            "for i in \$(seq 1 40); do curl -fs -o /dev/null http://localhost:8080/actuator/health && { echo 'OK: health UP'; break; }; [ \$i -eq 40 ] && { echo 'FAIL: 200초 후에도 비정상'; docker compose logs --tail 80 spring; exit 1; }; sleep 5; done",
-            "docker image prune -f"
+            "echo \"[\$(ts)] 헬스 체크: localhost:8080/actuator/health 대기...\"",
+            "for i in \$(seq 1 40); do curl -fs -o /dev/null http://localhost:8080/actuator/health && { echo \"[\$(ts)] OK: health UP\"; break; }; [ \$i -eq 40 ] && { echo \"[\$(ts)] FAIL: 200초 후에도 비정상\"; docker compose logs --tail 80 spring; exit 1; }; sleep 5; done",
+            "docker image prune -f",
+            "echo \"[\$(ts)] === 배포 완료 (EC2) ===\""
           ]}
           EOF
 

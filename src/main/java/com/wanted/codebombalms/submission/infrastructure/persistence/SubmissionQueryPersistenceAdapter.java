@@ -30,7 +30,11 @@ public class SubmissionQueryPersistenceAdapter implements SubmissionQueryPort {
                 submission.getProblem().getProblemOrder(),
                 submission.getSubmittedCode(),
                 submission.getCorrect(),
-                submission.getSubmittedAt()
+                submission.getSubmittedAt(),
+                submission.getExecutionStatus(),
+                submission.getPassedTestCount(),
+                submission.getTotalTestCount(),
+                submission.getErrorMessage()
         );
     }
 

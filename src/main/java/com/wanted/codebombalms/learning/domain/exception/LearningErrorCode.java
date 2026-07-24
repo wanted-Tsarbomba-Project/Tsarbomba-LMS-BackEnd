@@ -18,7 +18,9 @@ public enum LearningErrorCode implements ErrorCode {
     LECTURE_PROBLEM_NOT_UNLOCKED("LRN-008", "Lecture problem is not unlocked."),
     LECTURE_PROBLEM_SET_ALREADY_COMPLETED("LRN-009", "Lecture problem set is already completed."),
     INVALID_LECTURE_PROGRESS("LRN-010", "Lecture progress value is invalid."),
-    LECTURE_PROGRESS_ACCESS_DENIED("LRN-011", "Only enrolled students can access lecture learning content.");
+    LECTURE_PROGRESS_ACCESS_DENIED("LRN-011", "Only enrolled students can access lecture learning content."),
+    LEARNING_RECOMMENDATION_UNAVAILABLE("LRN-012", "AI learning recommendation service is unavailable."),
+    LEARNING_RECOMMENDATION_INVALID_RESPONSE("LRN-013", "AI learning recommendation response is invalid.");
 
     private final String code;
     private final String message;

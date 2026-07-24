@@ -8,6 +8,10 @@ public record LatestSubmission(
         Integer problemOrder,
         String submittedCode,
         Boolean correct,
-        LocalDateTime submittedAt
+        LocalDateTime submittedAt,
+        String executionStatus,
+        Integer passedTestCount,
+        Integer totalTestCount,
+        String errorMessage
 ) {
 }

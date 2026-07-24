@@ -2,7 +2,13 @@ package com.wanted.codebombalms.lecture.application.service;
 
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
+import com.wanted.codebombalms.global.domain.common.error.exception.ExternalServiceException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.LearningRecommendationResult;
+import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.RankedProblemSet;
+import com.wanted.codebombalms.learning.application.port.LearningRecommendationClient.ReasonCode;
+import com.wanted.codebombalms.learning.application.usecase.FinalProblemSetRankingUseCase;
+import com.wanted.codebombalms.learning.domain.exception.LearningErrorCode;
 import com.wanted.codebombalms.lecture.application.port.FinalProblemSetCandidatePort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.application.policy.LectureAccessPolicy;
@@ -15,9 +21,11 @@ import com.wanted.codebombalms.lecture.domain.repository.LectureProblemSetReposi
 import com.wanted.codebombalms.lecture.domain.repository.LectureRepository;
 import com.wanted.codebombalms.problems.set.domain.model.ProblemSetSummary;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,8 +42,10 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class FinalProblemSetRecommendationServiceTest {
@@ -55,8 +65,21 @@ class FinalProblemSetRecommendationServiceTest {
     @Mock
     private LectureProgressPort lectureProgressPort;
 
+    @Mock
+    private FinalProblemSetRankingUseCase finalProblemSetRankingUseCase;
+
     @InjectMocks
     private FinalProblemSetRecommendationService service;
+
+    @BeforeEach
+    void setUpAiFallback() {
+        lenient().when(finalProblemSetRankingUseCase.rankFinalProblemSets(
+                        any(), anyLong(), anyLong(), anyLong(), anySet(), any(Boolean.class)
+                ))
+                .thenThrow(new ExternalServiceException(
+                        LearningErrorCode.LEARNING_RECOMMENDATION_UNAVAILABLE
+                ));
+    }
 
     @Test
     void findFinalProblemSetCandidates_returnsEmpty_whenLectureHasNoProblemCategory() {
@@ -95,6 +118,47 @@ class FinalProblemSetRecommendationServiceTest {
         assertEquals(Set.of(4001L, 4002L), excludedCaptor.getValue());
         assertEquals(1, result.size());
         assertEquals(4003L, result.get(0).problemSetId());
+    }
+
+    @Test
+    void findFinalProblemSetCandidates_preservesPythonRankingAndReason() {
+        Lecture lecture = lecture(10L, 1L, 3001L);
+        given(lectureRepository.findByLectureIdAndDeletedAtIsNull(10L)).willReturn(Optional.of(lecture));
+        given(lectureRepository.existsNextLecture(1L, 1)).willReturn(false);
+        given(lectureProgressPort.areLecturesCompleted(20L, List.of(10L))).willReturn(true);
+        given(lectureProblemSetRepository.findByCourseIdAndRole(1L, LectureProblemSetRole.MAIN))
+                .willReturn(List.of());
+        doReturn(new LearningRecommendationResult(
+                "GEMINI_EMBEDDING_PERSONALIZED",
+                List.of(
+                        new RankedProblemSet(
+                                4004L,
+                                new BigDecimal("0.9123"),
+                                ReasonCode.LEVEL_MATCHED,
+                                "현재 학습 수준에 적합한 문제 세트예요."
+                        ),
+                        new RankedProblemSet(
+                                4003L,
+                                new BigDecimal("0.8123"),
+                                ReasonCode.COURSE_RELATED,
+                                "강좌 내용과 연관된 문제 세트예요."
+                        )
+                )
+        )).when(finalProblemSetRankingUseCase).rankFinalProblemSets(
+                20L, 1L, 10L, 3001L, Set.of(), false
+        );
+        given(finalProblemSetCandidatePort.findByProblemSetIds(List.of(4004L, 4003L)))
+                .willReturn(List.of(problemSet(4004L), problemSet(4003L)));
+
+        var result = service.findFinalProblemSetCandidates(10L, 20L, false);
+
+        assertEquals(List.of(4004L, 4003L), result.stream()
+                .map(view -> view.problemSetId())
+                .toList());
+        assertEquals(new BigDecimal("0.9123"), result.get(0).score());
+        assertEquals("LEVEL_MATCHED", result.get(0).reasonCode());
+        assertEquals("현재 학습 수준에 적합한 문제 세트예요.", result.get(0).recommendationReason());
+        verify(finalProblemSetCandidatePort, never()).findCandidates(anyLong(), anySet(), anyInt());
     }
 
     @Test

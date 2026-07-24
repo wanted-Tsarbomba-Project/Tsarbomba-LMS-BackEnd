@@ -11,6 +11,7 @@ public interface SecuritySummaryQueryPort {
     record TypeCount(String type, long count) {}
     record RiskIp(String ip, long count, String mainType, List<Long> targetUserIds) {}
     record RouteAnomaly(String route, String type, long count, Integer maxDurationMs) {}
+    record StatusBreakdown(String route, String type, int status, long count) {}
     record HourlyCount(int hour, long count) {}
     record ConcurrentPeak(long peak, LocalDateTime occurredAt) {}
 
@@ -22,6 +23,9 @@ public interface SecuritySummaryQueryPort {
     List<RiskIp> findTopRiskIps(LocalDateTime start, LocalDateTime end);
 
     List<RouteAnomaly> findHttpAnomalies(LocalDateTime start, LocalDateTime end);
+
+    /** 지정 라우트 집합의 http_status 세부 분포 — statusBreakdown 맵 조립용 (top-N 라우트로 스코핑) */
+    List<StatusBreakdown> findHttpStatusBreakdown(LocalDateTime start, LocalDateTime end, List<String> routes);
 
     List<HourlyCount> hourlyDistribution(LocalDateTime start, LocalDateTime end);
 

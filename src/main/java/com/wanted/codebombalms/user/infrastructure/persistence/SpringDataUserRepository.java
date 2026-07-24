@@ -26,8 +26,6 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
 
     List<UserJpaEntity> findAllByRoleOrderByCreatedAtDesc(UserRole role, Pageable pageable);
 
-    long countByRole(UserRole role);
-
     @Query("""
             SELECT u
             FROM UserJpaEntity u
@@ -42,6 +40,22 @@ public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, L
             ORDER BY u.createdAt DESC, u.userId DESC
             """)
     Page<UserJpaEntity> findActiveByRoleAndKeyword(
+            @Param("role") UserRole role,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT u
+            FROM UserJpaEntity u
+            WHERE u.role = :role
+              AND (
+                    :keyword IS NULL
+                    OR LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
+              )
+            ORDER BY u.createdAt DESC, u.userId DESC
+            """)
+    Page<UserJpaEntity> findActiveByRoleAndNameKeyword(
             @Param("role") UserRole role,
             @Param("keyword") String keyword,
             Pageable pageable

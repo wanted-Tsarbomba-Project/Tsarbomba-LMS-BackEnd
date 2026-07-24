@@ -1,10 +1,12 @@
 package com.wanted.codebombalms.lecture.application.policy;
 
+import com.wanted.codebombalms.auth.domain.exception.AuthErrorCode;
 import com.wanted.codebombalms.course.domain.exception.CourseErrorCode;
 import com.wanted.codebombalms.course.domain.model.Course;
 import com.wanted.codebombalms.course.domain.model.CourseStatus;
 import com.wanted.codebombalms.global.domain.common.error.exception.ForbiddenException;
 import com.wanted.codebombalms.global.domain.common.error.exception.NotFoundException;
+import com.wanted.codebombalms.global.domain.common.error.exception.UnauthorizedException;
 import com.wanted.codebombalms.lecture.application.port.LectureEnrollmentPort;
 import com.wanted.codebombalms.lecture.application.port.LectureProgressPort;
 import com.wanted.codebombalms.lecture.domain.exception.LectureErrorCode;
@@ -59,15 +61,15 @@ class LectureAccessPolicyTest {
     }
 
     @Test
-    void validateLearningContentAccess_throwsForbidden_whenUserIdIsNull() {
+    void validateLearningContentAccess_throwsUnauthorized_whenUserIdIsNull() {
         Lecture lecture = lecture(1L);
 
-        ForbiddenException exception = assertThrows(
-                ForbiddenException.class,
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
                 () -> lectureAccessPolicy.validateLearningContentAccess(lecture, null, false)
         );
 
-        assertEquals(LectureErrorCode.LECTURE_ACCESS_DENIED, exception.getErrorCode());
+        assertEquals(AuthErrorCode.AUTH_REQUIRED, exception.getErrorCode());
         verify(lectureEnrollmentPort, never()).isActiveStudentOfCourse(1L, null);
     }
 
@@ -119,6 +121,19 @@ class LectureAccessPolicyTest {
         assertDoesNotThrow(
                 () -> lectureAccessPolicy.validateCourseContentAccess(course, userId, false)
         );
+    }
+
+    @Test
+    void validateCourseContentAccess_throwsUnauthorizedForInactiveCourse_whenUserIdIsNull() {
+        Course course = course(1L, CourseStatus.INACTIVE);
+
+        UnauthorizedException exception = assertThrows(
+                UnauthorizedException.class,
+                () -> lectureAccessPolicy.validateCourseContentAccess(course, null, false)
+        );
+
+        assertEquals(AuthErrorCode.AUTH_REQUIRED, exception.getErrorCode());
+        verify(lectureEnrollmentPort, never()).isActiveStudentOfCourse(1L, null);
     }
 
     @Test
