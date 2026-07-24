@@ -18,6 +18,7 @@ public class ProblemSetMapper {
                 problemSet.getDifficulty(),
                 problemSet.getCompletedUserCount(),
                 problemSet.getStartedUserCount(),
+                null,
                 problemSet.getCreatedAt()
         );
     }

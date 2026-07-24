@@ -13,3 +13,10 @@ public interface GetProblemCategoriesUseCase {
     ) {
     }
 }
+
+
+/* comment
+*   CQRS 패턴에 의거한 분리
+*   Query : 조회
+*   Command : DML insert , update , delete
+*  */
