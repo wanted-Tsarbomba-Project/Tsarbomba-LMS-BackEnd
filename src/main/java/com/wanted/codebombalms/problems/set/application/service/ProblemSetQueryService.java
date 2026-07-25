@@ -93,6 +93,7 @@ public class ProblemSetQueryService implements GetProblemSetsUseCase {
                 problemSet.getAccuracyRate(),
                 problemSet.getCompletedUserCount(),
                 problemSet.getStartedUserCount(),
+                problemSet.getCompletionStatus(),
                 problemSet.getCreatedAt()
         );
     }

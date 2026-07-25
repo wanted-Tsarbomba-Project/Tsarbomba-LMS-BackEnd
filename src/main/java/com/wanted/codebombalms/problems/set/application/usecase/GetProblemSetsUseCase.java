@@ -28,6 +28,7 @@ public interface GetProblemSetsUseCase {
             Double accuracyRate,
             Integer completedUserCount,
             Integer startedUserCount,
+            String completionStatus,
             LocalDateTime createdAt
     ) {
     }

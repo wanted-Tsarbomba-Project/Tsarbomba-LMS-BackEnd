@@ -95,7 +95,7 @@ public class ProblemSetPersistenceAdapter implements
                 query.resolvedDirection()
         );
 
-        Page<ProblemSetJpaEntity> problemSets =
+        Page<ProblemSetSummaryRow> problemSets =
                 problemSetRepository.findActiveProblemSetsWithFilters(
                         ProblemSetStatus.ACTIVE,
                         query.categoryId(),
@@ -105,7 +105,48 @@ public class ProblemSetPersistenceAdapter implements
                         pageRequest
                 );
 
-        return toSummaryPage(problemSets, query.page(), query.size());
+        return toSummaryPageFromRows(problemSets, query.page(), query.size());
+    }
+
+    private ProblemSetSummaryPage toSummaryPageFromRows(
+            Page<ProblemSetSummaryRow> problemSets,
+            int page,
+            int size
+    ) {
+        int startNumber = page * size + 1;
+
+        var content = IntStream.range(0, problemSets.getContent().size())
+                .mapToObj(index -> toSummary(
+                        problemSets.getContent().get(index),
+                        startNumber + index
+                ))
+                .toList();
+
+        return new ProblemSetSummaryPage(
+                content,
+                page,
+                size,
+                problemSets.getTotalElements(),
+                problemSets.getTotalPages(),
+                problemSets.hasNext()
+        );
+    }
+
+    private ProblemSetSummary toSummary(
+            ProblemSetSummaryRow row,
+            Integer problemNumber
+    ) {
+        return ProblemSetSummary.of(
+                row.problemSetId(),
+                problemNumber,
+                row.title(),
+                row.description(),
+                row.difficulty(),
+                row.completedUserCount(),
+                row.startedUserCount(),
+                row.completionStatus(),
+                row.createdAt()
+        );
     }
 
     private String normalizeCompletionStatus(ProblemSetCompletionStatus completionStatus) {

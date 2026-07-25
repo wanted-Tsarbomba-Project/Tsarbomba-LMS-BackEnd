@@ -29,6 +29,13 @@ public record ProblemSetListResponse(
 
         @Schema(description = "문제세트에 진입한 사용자 수", example = "42")
         Integer startedUserCount,
+        @Schema(
+                description = "로그인 사용자 기준 문제세트 풀이 상태입니다. 비로그인 요청이면 null입니다.",
+                example = "IN_PROGRESS",
+                nullable = true,
+                allowableValues = {"NOT_STARTED", "IN_PROGRESS", "COMPLETED"}
+        )
+        String completionStatus,
         @Schema(description = "문제 세트 생성일", example = "2026-05-27T10:00:00")
         LocalDateTime createdAt
 ) {
@@ -42,6 +49,7 @@ public record ProblemSetListResponse(
                 problemSet.accuracyRate(),
                 problemSet.completedUserCount(),
                 problemSet.startedUserCount(),
+                problemSet.completionStatus(),
                 problemSet.createdAt()
         );
     }
