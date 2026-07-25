@@ -189,6 +189,7 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
                 ps.completedUserCount,
                 ps.startedUserCount,
                 case
+                    when :userId is null then null
                     when progress.progressId is null then 'NOT_STARTED'
                     when progress.isCompleted = true then 'COMPLETED'
                     else 'IN_PROGRESS'

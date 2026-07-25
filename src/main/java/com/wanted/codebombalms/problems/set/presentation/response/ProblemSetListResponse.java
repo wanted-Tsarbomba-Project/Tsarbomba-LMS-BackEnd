@@ -30,8 +30,9 @@ public record ProblemSetListResponse(
         @Schema(description = "문제세트에 진입한 사용자 수", example = "42")
         Integer startedUserCount,
         @Schema(
-                description = "로그인 사용자 기준 문제세트 풀이 상태",
+                description = "로그인 사용자 기준 문제세트 풀이 상태입니다. 비로그인 요청이면 null입니다.",
                 example = "IN_PROGRESS",
+                nullable = true,
                 allowableValues = {"NOT_STARTED", "IN_PROGRESS", "COMPLETED"}
         )
         String completionStatus,
