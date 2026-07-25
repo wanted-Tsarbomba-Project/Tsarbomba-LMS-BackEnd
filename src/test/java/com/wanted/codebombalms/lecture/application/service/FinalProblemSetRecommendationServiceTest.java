@@ -287,6 +287,7 @@ class FinalProblemSetRecommendationServiceTest {
                 "EASY",
                 1,
                 2,
+                null,
                 LocalDateTime.now()
         );
     }

@@ -178,23 +178,56 @@ public interface SpringDataProblemSetRepository extends JpaRepository<ProblemSet
             """)
     int deleteProblemSetsByIds(@Param("problemSetIds") List<Long> problemSetIds);
 
-    @Query("""
-        select ps
-        from ProblemSetJpaEntity ps
-        left join ProgressJpaEntity progress
-          on progress.problemSet = ps
-         and progress.userId = :userId
-        where ps.status = :status
-          and (:categoryId is null or ps.category.categoryId = :categoryId)
-          and (:difficulty is null or ps.difficulty = :difficulty)
-          and (
-              :completionStatus is null
-              or (:completionStatus = 'NOT_STARTED' and progress.progressId is null)
-              or (:completionStatus = 'IN_PROGRESS' and progress.progressId is not null and progress.isCompleted = false)
-              or (:completionStatus = 'COMPLETED' and progress.progressId is not null and progress.isCompleted = true)
-          )
-        """)
-    Page<ProblemSetJpaEntity> findActiveProblemSetsWithFilters(
+    @Query(
+            value = """
+            select new com.wanted.codebombalms.problems.set.infrastructure.persistence.ProblemSetSummaryRow(
+                ps.problemSetId,
+                null,
+                ps.title,
+                ps.description,
+                ps.difficulty,
+                ps.completedUserCount,
+                ps.startedUserCount,
+                case
+                    when :userId is null then null
+                    when progress.progressId is null then 'NOT_STARTED'
+                    when progress.isCompleted = true then 'COMPLETED'
+                    else 'IN_PROGRESS'
+                end,
+                ps.createdAt
+            )
+            from ProblemSetJpaEntity ps
+            left join ProgressJpaEntity progress
+              on progress.problemSet = ps
+             and progress.userId = :userId
+            where ps.status = :status
+              and (:categoryId is null or ps.category.categoryId = :categoryId)
+              and (:difficulty is null or ps.difficulty = :difficulty)
+              and (
+                  :completionStatus is null
+                  or (:completionStatus = 'NOT_STARTED' and progress.progressId is null)
+                  or (:completionStatus = 'IN_PROGRESS' and progress.progressId is not null and progress.isCompleted = false)
+                  or (:completionStatus = 'COMPLETED' and progress.progressId is not null and progress.isCompleted = true)
+              )
+            """,
+            countQuery = """
+            select count(ps)
+            from ProblemSetJpaEntity ps
+            left join ProgressJpaEntity progress
+              on progress.problemSet = ps
+             and progress.userId = :userId
+            where ps.status = :status
+              and (:categoryId is null or ps.category.categoryId = :categoryId)
+              and (:difficulty is null or ps.difficulty = :difficulty)
+              and (
+                  :completionStatus is null
+                  or (:completionStatus = 'NOT_STARTED' and progress.progressId is null)
+                  or (:completionStatus = 'IN_PROGRESS' and progress.progressId is not null and progress.isCompleted = false)
+                  or (:completionStatus = 'COMPLETED' and progress.progressId is not null and progress.isCompleted = true)
+              )
+            """
+    )
+    Page<ProblemSetSummaryRow> findActiveProblemSetsWithFilters(
             @Param("status") ProblemSetStatus status,
             @Param("categoryId") Long categoryId,
             @Param("difficulty") String difficulty,

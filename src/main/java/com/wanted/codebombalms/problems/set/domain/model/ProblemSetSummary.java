@@ -12,6 +12,7 @@ public class ProblemSetSummary {
     private final Double accuracyRate;
     private final LocalDateTime createdAt;
     private final Integer completedUserCount;
+    private final String completionStatus;
     private final Integer startedUserCount;
 
     private ProblemSetSummary(
@@ -23,6 +24,7 @@ public class ProblemSetSummary {
             Double accuracyRate,
             Integer completedUserCount,
             Integer startedUserCount,
+            String completionStatus,
             LocalDateTime createdAt
     ) {
         this.problemSetId = problemSetId;
@@ -33,6 +35,7 @@ public class ProblemSetSummary {
         this.accuracyRate = accuracyRate;
         this.completedUserCount = completedUserCount;
         this.startedUserCount = startedUserCount;
+        this.completionStatus = completionStatus;
         this.createdAt = createdAt;
     }
 
@@ -44,6 +47,7 @@ public class ProblemSetSummary {
             String difficulty,
             Integer completedUserCount,
             Integer startedUserCount,
+            String completionStatus,
             LocalDateTime createdAt
     ) {
         return new ProblemSetSummary(
@@ -55,6 +59,7 @@ public class ProblemSetSummary {
                 calculateAccuracyRate(completedUserCount, startedUserCount),
                 toZeroIfNull(completedUserCount),
                 toZeroIfNull(startedUserCount),
+                completionStatus,
                 createdAt
         );
     }
@@ -109,6 +114,10 @@ public class ProblemSetSummary {
 
     public Integer getCompletedUserCount() {
         return completedUserCount;
+    }
+
+    public String getCompletionStatus() {
+        return completionStatus;
     }
 
     public Integer getStartedUserCount() {
