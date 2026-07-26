@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class SuggestedQuestionGenerationService implements GenerateSuggestedQuestionsUseCase {
 
-    // 튜닝 상수 (프로덕션 기준; 데모 데이터가 얇으면 낮춰 조정)
-    static final int MIN_USERS = 3;
-    static final int MIN_QUESTIONS = 10;
+    // 튜닝 상수 (데모 데이터 기준으로 낮춤: 최대 문제도 유저 2명/질문 8건이라 3·10이면 전멸)
+    static final int MIN_USERS = 2;
+    static final int MIN_QUESTIONS = 5;
     static final int PER_PROBLEM_LIMIT = 150;
     static final int TOP_N = 5;
 
